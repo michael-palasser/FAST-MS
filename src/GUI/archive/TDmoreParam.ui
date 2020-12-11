@@ -1,0 +1,723 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>configDialog</class>
+ <widget class="QDialog" name="configDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>383</width>
+    <height>389</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QTabWidget" name="tabWidget">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="currentIndex">
+      <number>2</number>
+     </property>
+     <widget class="QWidget" name="tab_2">
+      <attribute name="title">
+       <string>spectrum</string>
+      </attribute>
+      <widget class="QGroupBox" name="mzBox">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>10</y>
+         <width>330</width>
+         <height>150</height>
+        </rect>
+       </property>
+       <property name="autoFillBackground">
+        <bool>false</bool>
+       </property>
+       <property name="title">
+        <string>m/z area containing peaks</string>
+       </property>
+       <widget class="QLabel" name="label_23">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>30</y>
+          <width>60</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>min. m/z</string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_24">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>60</y>
+          <width>171</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>min. max. m/z</string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_25">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>120</y>
+          <width>191</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>window size</string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_26">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>90</y>
+          <width>161</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>tolerance</string>
+        </property>
+       </widget>
+       <widget class="QDoubleSpinBox" name="upperBoundWindowSize">
+        <property name="geometry">
+         <rect>
+          <x>230</x>
+          <y>116</y>
+          <width>80</width>
+          <height>24</height>
+         </rect>
+        </property>
+        <property name="statusTip">
+         <string>window size for noise calculation to find upper m/z bound</string>
+        </property>
+       </widget>
+       <widget class="QSpinBox" name="lowerBound">
+        <property name="geometry">
+         <rect>
+          <x>230</x>
+          <y>26</y>
+          <width>80</width>
+          <height>24</height>
+         </rect>
+        </property>
+        <property name="statusTip">
+         <string>lower m/z bound (just peaks with higher m/z are examined) </string>
+        </property>
+        <property name="maximum">
+         <number>9999</number>
+        </property>
+       </widget>
+       <widget class="QSpinBox" name="minUpperBound">
+        <property name="geometry">
+         <rect>
+          <x>230</x>
+          <y>56</y>
+          <width>80</width>
+          <height>24</height>
+         </rect>
+        </property>
+        <property name="statusTip">
+         <string>minimal upper m/z bound</string>
+        </property>
+        <property name="maximum">
+         <number>9999</number>
+        </property>
+       </widget>
+       <widget class="QSpinBox" name="upperBoundTolerance">
+        <property name="geometry">
+         <rect>
+          <x>230</x>
+          <y>86</y>
+          <width>80</width>
+          <height>24</height>
+         </rect>
+        </property>
+        <property name="statusTip">
+         <string>value is added to calculated upper m/z-bound for final value</string>
+        </property>
+        <property name="maximum">
+         <number>999</number>
+        </property>
+       </widget>
+      </widget>
+     </widget>
+     <widget class="QWidget" name="tab">
+      <attribute name="title">
+       <string>thresholds 1</string>
+      </attribute>
+      <widget class="QGroupBox" name="errorBox">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>10</y>
+         <width>330</width>
+         <height>120</height>
+        </rect>
+       </property>
+       <property name="autoFillBackground">
+        <bool>false</bool>
+       </property>
+       <property name="title">
+        <string>error threshold: threshold [ppm] = k * (m/z) +d</string>
+       </property>
+       <widget class="QLabel" name="label_16">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>30</y>
+          <width>60</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="statusTip">
+         <string>slope</string>
+        </property>
+        <property name="text">
+         <string>k (/ 1000)</string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_17">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>60</y>
+          <width>60</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="statusTip">
+         <string>intercept</string>
+        </property>
+        <property name="text">
+         <string>d</string>
+        </property>
+       </widget>
+       <widget class="QDoubleSpinBox" name="k">
+        <property name="geometry">
+         <rect>
+          <x>240</x>
+          <y>26</y>
+          <width>70</width>
+          <height>24</height>
+         </rect>
+        </property>
+        <property name="statusTip">
+         <string>slope of error</string>
+        </property>
+        <property name="decimals">
+         <number>2</number>
+        </property>
+       </widget>
+       <widget class="QDoubleSpinBox" name="d">
+        <property name="geometry">
+         <rect>
+          <x>240</x>
+          <y>56</y>
+          <width>70</width>
+          <height>24</height>
+         </rect>
+        </property>
+        <property name="statusTip">
+         <string>intercept error</string>
+        </property>
+        <property name="minimum">
+         <double>-9.990000000000000</double>
+        </property>
+       </widget>
+       <widget class="QDoubleSpinBox" name="errorTolerance">
+        <property name="geometry">
+         <rect>
+          <x>240</x>
+          <y>86</y>
+          <width>70</width>
+          <height>24</height>
+         </rect>
+        </property>
+        <property name="statusTip">
+         <string>tolerance for isotope peak search in ppm</string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_19">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>90</y>
+          <width>171</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>tolerance for isotope peaks</string>
+        </property>
+       </widget>
+      </widget>
+      <widget class="QGroupBox" name="qualityBox">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>140</y>
+         <width>330</width>
+         <height>120</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>Quality thresholds</string>
+       </property>
+       <widget class="QLabel" name="label_20">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>64</y>
+          <width>141</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>quality (highlighting)</string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_21">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>94</y>
+          <width>151</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>score (highlightening)</string>
+        </property>
+       </widget>
+       <widget class="QDoubleSpinBox" name="shapeDel">
+        <property name="geometry">
+         <rect>
+          <x>240</x>
+          <y>30</y>
+          <width>70</width>
+          <height>24</height>
+         </rect>
+        </property>
+        <property name="statusTip">
+         <string>ions which have a higher value are highlighted</string>
+        </property>
+       </widget>
+       <widget class="QDoubleSpinBox" name="shapeMarked">
+        <property name="geometry">
+         <rect>
+          <x>240</x>
+          <y>60</y>
+          <width>70</width>
+          <height>24</height>
+         </rect>
+        </property>
+        <property name="statusTip">
+         <string>ions which have a higher value are highlighted</string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_22">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>34</y>
+          <width>141</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>quality (deletion)</string>
+        </property>
+       </widget>
+       <widget class="QDoubleSpinBox" name="scoreMarked">
+        <property name="geometry">
+         <rect>
+          <x>240</x>
+          <y>90</y>
+          <width>70</width>
+          <height>24</height>
+         </rect>
+        </property>
+        <property name="statusTip">
+         <string>ions which have a higher value are highlighted</string>
+        </property>
+       </widget>
+      </widget>
+     </widget>
+     <widget class="QWidget" name="tab_4">
+      <attribute name="title">
+       <string>thresholds 2</string>
+      </attribute>
+      <widget class="QGroupBox" name="noiseBox">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>10</y>
+         <width>330</width>
+         <height>90</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>noise calculation</string>
+       </property>
+       <widget class="QLabel" name="label_29">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>60</y>
+          <width>171</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>noise threshold tolerance</string>
+        </property>
+       </widget>
+       <widget class="QDoubleSpinBox" name="thresholdFactor">
+        <property name="geometry">
+         <rect>
+          <x>240</x>
+          <y>56</y>
+          <width>70</width>
+          <height>24</height>
+         </rect>
+        </property>
+        <property name="statusTip">
+         <string>set it lower to search for more isotope peaks</string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_37">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>30</y>
+          <width>140</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>window size</string>
+        </property>
+       </widget>
+       <widget class="QDoubleSpinBox" name="noiseWindowSize">
+        <property name="geometry">
+         <rect>
+          <x>240</x>
+          <y>26</y>
+          <width>70</width>
+          <height>24</height>
+         </rect>
+        </property>
+        <property name="statusTip">
+         <string>window size for noise calculation</string>
+        </property>
+       </widget>
+      </widget>
+      <widget class="QGroupBox" name="remodellingBox">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>210</y>
+         <width>330</width>
+         <height>90</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>modelling overlaps</string>
+       </property>
+       <widget class="QLabel" name="label_38">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>60</y>
+          <width>141</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>threshold tolerance</string>
+        </property>
+       </widget>
+       <widget class="QDoubleSpinBox" name="overlapThreshold">
+        <property name="geometry">
+         <rect>
+          <x>240</x>
+          <y>56</y>
+          <width>70</width>
+          <height>24</height>
+         </rect>
+        </property>
+        <property name="statusTip">
+         <string>ions which have a lower proportion in overlap pattern are deleted</string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_39">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>30</y>
+          <width>201</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>max. nr. of overlapping ions</string>
+        </property>
+       </widget>
+       <widget class="QSpinBox" name="manualDeletion">
+        <property name="geometry">
+         <rect>
+          <x>240</x>
+          <y>26</y>
+          <width>70</width>
+          <height>24</height>
+         </rect>
+        </property>
+        <property name="toolTip">
+         <string/>
+        </property>
+        <property name="statusTip">
+         <string>if overlap-pattern contains more ions, user is asked to manually delete ions</string>
+        </property>
+       </widget>
+      </widget>
+      <widget class="QGroupBox" name="searchIntensityBox">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>110</y>
+         <width>330</width>
+         <height>90</height>
+        </rect>
+       </property>
+       <property name="title">
+        <string>ion search and modelling</string>
+       </property>
+       <widget class="QDoubleSpinBox" name="outlierLimit">
+        <property name="geometry">
+         <rect>
+          <x>240</x>
+          <y>56</y>
+          <width>70</width>
+          <height>24</height>
+         </rect>
+        </property>
+        <property name="statusTip">
+         <string>ions which have a higher value are highlighted</string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_31">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>30</y>
+          <width>141</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>charge tolerance</string>
+        </property>
+       </widget>
+       <widget class="QDoubleSpinBox" name="zTolerance">
+        <property name="geometry">
+         <rect>
+          <x>240</x>
+          <y>26</y>
+          <width>70</width>
+          <height>24</height>
+         </rect>
+        </property>
+        <property name="statusTip">
+         <string>isotope peaks with higher values are not used for intensity modelling</string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_32">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>60</y>
+          <width>141</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>outlier peak threshold</string>
+        </property>
+       </widget>
+      </widget>
+     </widget>
+     <widget class="QWidget" name="tab_3">
+      <attribute name="title">
+       <string>analysis/output</string>
+      </attribute>
+      <widget class="QGroupBox" name="interestingIonsBox">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>10</y>
+         <width>330</width>
+         <height>90</height>
+        </rect>
+       </property>
+       <property name="statusTip">
+        <string>tick fragment types which should be more deeply analysed</string>
+       </property>
+       <property name="whatsThis">
+        <string>tick fragment types which should be more deeply analysed</string>
+       </property>
+       <property name="title">
+        <string>interesting ions</string>
+       </property>
+       <widget class="QCheckBox" name="aFrag">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>30</y>
+          <width>50</width>
+          <height>20</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>a</string>
+        </property>
+       </widget>
+       <widget class="QCheckBox" name="bFrag">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>60</y>
+          <width>50</width>
+          <height>20</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>b</string>
+        </property>
+       </widget>
+       <widget class="QCheckBox" name="cFrag">
+        <property name="geometry">
+         <rect>
+          <x>80</x>
+          <y>30</y>
+          <width>50</width>
+          <height>20</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>c</string>
+        </property>
+       </widget>
+       <widget class="QCheckBox" name="dFrag">
+        <property name="geometry">
+         <rect>
+          <x>80</x>
+          <y>60</y>
+          <width>50</width>
+          <height>20</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>d</string>
+        </property>
+       </widget>
+       <widget class="QCheckBox" name="wFrag">
+        <property name="geometry">
+         <rect>
+          <x>200</x>
+          <y>30</y>
+          <width>50</width>
+          <height>20</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>w</string>
+        </property>
+        <property name="checked">
+         <bool>false</bool>
+        </property>
+        <property name="tristate">
+         <bool>false</bool>
+        </property>
+       </widget>
+       <widget class="QCheckBox" name="xFrag">
+        <property name="geometry">
+         <rect>
+          <x>200</x>
+          <y>60</y>
+          <width>50</width>
+          <height>20</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>x</string>
+        </property>
+       </widget>
+       <widget class="QCheckBox" name="yFrag">
+        <property name="geometry">
+         <rect>
+          <x>270</x>
+          <y>30</y>
+          <width>50</width>
+          <height>20</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>y</string>
+        </property>
+       </widget>
+       <widget class="QCheckBox" name="zFrag">
+        <property name="geometry">
+         <rect>
+          <x>270</x>
+          <y>60</y>
+          <width>50</width>
+          <height>20</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>z</string>
+        </property>
+       </widget>
+      </widget>
+     </widget>
+    </widget>
+   </item>
+   <item alignment="Qt::AlignHCenter">
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

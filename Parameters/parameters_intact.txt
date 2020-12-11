@@ -1,0 +1,5 @@
+#Search
+minMz		690
+maxMz		1500
+errorLimitCalib	50
+errorLimit	12

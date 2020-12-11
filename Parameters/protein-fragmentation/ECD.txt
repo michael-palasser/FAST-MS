@@ -1,0 +1,23 @@
+#Ion		Loss		Gain		Residue		Radical
+a		CO		-		-		-
+b		-		-		-		-
+c		-		NH3		-		-
+#a-H2O		COH2O		-		-		-
+#a-NH3		CONH3		-		-		-
+#b-H2O		H2O		-		-		-
+#b-NH3		NH3		-		-		-
+#c-H2O		H2O		NH3		-		-
+#c-NH3		NH3		NH3		-		-
+
+
+#Ion		Loss		Gain		Residue		Radical
+#x		-		COH2O		-		-
+y		-		H2O		-		-
+z		NH2		H2O		-		1
+z+H		NH2		HH2O		-		-
+#x-H2O		-		CO		-		-
+#x-NH3		NH3		COH2O		-		-
+#y-H2O		-		-		-		-
+#y-NH3		NH3		H2O		-		-
+#z-H2O		NH2		-		-		1
+#z-NH3		NH2NH3		H2O		-		1

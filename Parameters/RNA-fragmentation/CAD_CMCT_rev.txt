@@ -1,0 +1,26 @@
+#Ion		Loss		Gain		Residue		Radical
+a		H1O3P1		-		-		-
+c		-		-		-		-
+a-G		H1O3P1C5H5N5O1	-		G		-
+a-A		H1O3P1C5H5N5	-		A		-
+#a-C		H1O3P1C4H5N3O1	-		C		-
+c-G		C5H5N5O1	-		G		-
+c-A		C5H5N5		-		A		-
+#c-C		C4H5N3O1	-		C		-
+
+#Ion		Loss		Gain		Residue 	Radical
+w		-		H2O		-		-
+#x		-		-		-		-
+y		PO2		H		-		-
+#z		H2PO3		-		-		-
+w-G		C5H5N5O1	H2O		G		-
+w-A		C5H5N5		H2O		A		-
+#w-C		C4H5N3O1	H2O		C		-
+y-G		PO2C5H5N5O1	H		G		-
+y-A		PO2C5H5N5	H		A		-
+#y-C		PO2C4H5N3O1	H		C		-
+
+#Modifications	Loss		Gain		Residue		Charge effect
++CMCT		-		C14H25N3O	-		0.5
++rev		-		C119H210N60O32	-		1
++rev+CMCT	-		C119H210N60O32C14H25N3O	-	1.5

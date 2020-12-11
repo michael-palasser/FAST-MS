@@ -1,0 +1,39 @@
+#ion	loss		Gain	Residue		radical
+a	H1O3P1		-	-		-
+c	-		-	-		-
+a-G	H1O3P1C5H5N5O1	-	G		-
+a-A	H1O3P1C5H5N5	-	A		-
+#a-C	H1O3P1C4H5N3O1	-	C		-
+c-G	C5H5N5O1	-	G		-
+c-A	C5H5N5		-	A		-
+#c-C	C4H5N3O1	-	C		-
+
+#ion	loss		Gain	Residue
+w	-		H2O	-		-
+#x	-		-	-		-
+y	PO2		H	-		-
+#z	H2PO3		-	-		-
+w-G	C5H5N5O1	H2O	G		-
+w-A	C5H5N5		H2O	A		-
+#w-C	C4H5N3O1	H2O	C		-
+y-G	PO2C5H5N5O1	H	G		-
+y-A	PO2C5H5N5	H	A		-
+#y-C	PO2C4H5N3O1	H	C		-
+
+#modifications		loss	gain		residue	charge effect
++2DEPC+H2O-CO		-	C5H10O4		-	-
++2DEPC+H2O-CO-Eth	C2H6O	C5H10O4		-	-
++2DEPC+H2O-CO-2Eth	C4H12O2	C5H10O4		-	-
++DEPC+H2O-CO		-	C2H6O2		-	-
++DEPC			-	C3H4O2		-	-
+
+
+#remove these fragments
+-+2DEPC+H2O-CO-2Eth-G
+#-+2DEPC+H2O-CO-Eth-G
+-+DEPC+H2O-CO-G
+-+DEPC-G
+-+2DEPC+H2O-CO-2Eth-A
+-+2DEPC+H2O-CO-Eth-A
+-+DEPC+H2O-CO-A
+-+DEPC-A

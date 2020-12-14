@@ -313,9 +313,9 @@ class TD_configurationDialog(DialogWithTabs):
         yPos = self.fillBox(self.remodellingBox, "modelling overlaps", yPos+10,
                             ("max. nr. of overlapping ions","threshold tolerance"),
                             ((QtWidgets.QSpinBox(self.remodellingBox), "manualDeletion",
-                              "if overlap-pattern contains more ions, user is asked to manually delete ions"),
+                              "if overlap-pattern1 contains more ions, user is asked to manually delete ions"),
                              (QtWidgets.QDoubleSpinBox(self.remodellingBox),"overlapThreshold",
-                              "ions which have a lower proportion in overlap pattern are deleted")))
+                              "ions which have a lower proportion in overlap pattern1 are deleted")))
         if yMax < yPos:
             yMax = yPos
 

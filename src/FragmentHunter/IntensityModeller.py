@@ -276,7 +276,7 @@ class IntensityModeller(object):
 
 
     def getIndexToDelete(self, overlapPattern):
-        print("Complicated Overlap pattern: Do you want to delete an ion before modelling?")
+        print("Complicated Overlap pattern1: Do you want to delete an ion before modelling?")
         print('index\t m/z\t\t\tz\tI\t\t\tfragment\t\terror /ppm\tquality')
         count = 1
         for ion in overlapPattern:

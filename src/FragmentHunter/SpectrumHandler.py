@@ -235,7 +235,7 @@ class SpectrumHandler(object):
         """finds fragments and isotope distribution; parameters:
         low_limit  ... peaks with a lower m/z will be neglected
         high_limit ... peaks with a higher m/z will be neglected
-        peakQuantitiy ... how many isotope peaks are used for basic calculation of pattern (highest peakQuantitiy used)"""
+        peakQuantitiy ... how many isotope peaks are used for basic calculation of pattern1 (highest peakQuantitiy used)"""
         np.set_printoptions(suppress=True)
         precModCharge = self.getModCharge(self.precursor)
         self.normalizationFactor = self.getNormalizationFactor()

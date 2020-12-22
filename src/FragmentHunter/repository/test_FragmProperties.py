@@ -29,51 +29,51 @@ class TestFragmentationRepository(TestCase):
 
     def createPatternForTest(self):
         self.makeTables()
-        self.repository.createPattern(pattern1)
-        self.repository.createPattern(pattern3)
+        self.repository.createFragPattern(pattern1)
+        self.repository.createFragPattern(pattern3)
 
     def test_createPattern(self):
         self.createPatternForTest()
-        self.assertEqual(self.repository.getPattern("CAD_CMCT").name, pattern1.name)
+        self.assertEqual(self.repository.getFragPattern("CAD_CMCT").name, pattern1.name)
 
     def test_createItem(self):
         self.createPatternForTest()
-        for item, readItem in zip(self.repository.getPattern("CAD_CMCT").listOfUnmod, pattern1.listOfUnmod):
+        for item, readItem in zip(self.repository.getFragPattern("CAD_CMCT").fragmentTypes, pattern1.fragmentTypes):
             self.assertEqual(item.getAll(),readItem.getAll())
         self.repository.close()
 
     def test_createModItem(self):
         self.createPatternForTest()
-        for item, readItem in zip(self.repository.getPattern("CAD_CMCT").listOfMod, pattern1.listOfMod, ):
+        for item, readItem in zip(self.repository.getFragPattern("CAD_CMCT").listOfMod, pattern1.listOfMod, ):
             self.assertEqual(item.getAll(),readItem.getAll())
         self.repository.close()
 
     def test_get_pattern(self):
         self.setUp()
-        self.assertEqual(self.repository.getPattern("CAD_CMCT").name, pattern1.name)
+        self.assertEqual(self.repository.getFragPattern("CAD_CMCT").name, pattern1.name)
 
     def test_get_items(self):
-        for item, readItem in zip(self.repository.getPattern("CAD_CMCT").listOfUnmod, pattern1.listOfUnmod):
+        for item, readItem in zip(self.repository.getFragPattern("CAD_CMCT").fragmentTypes, pattern1.fragmentTypes):
             self.assertEqual(item.getAll(),readItem.getAll())
 
     def test_get_mod_items(self):
-        for item, readItem in zip(self.repository.getPattern("CAD_CMCT").listOfMod, pattern1.listOfMod, ):
+        for item, readItem in zip(self.repository.getFragPattern("CAD_CMCT").listOfMod, pattern1.listOfMod, ):
             self.assertEqual(item.getAll(),readItem.getAll())
 
 
     def test_updatePattern(self):
         self.createPatternForTest()
-        self.repository.updatePattern(pattern2)
-        for item, readItem in zip(self.repository.getPattern(pattern2.name).listOfUnmod, pattern2.listOfUnmod):
+        self.repository.updateModPattern(pattern2)
+        for item, readItem in zip(self.repository.getFragPattern(pattern2.name).fragmentTypes, pattern2.fragmentTypes):
             self.assertEqual(item.getAll(),readItem.getAll())
 
     def test_deletePattern(self):
         self.createPatternForTest()
-        self.repository.getPattern("CAD_CMCT")
-        self.repository.deletePattern(pattern1)
-        #self.repository.getPattern("CAD_CMCT")
+        self.repository.getFragPattern("CAD_CMCT")
+        self.repository.deleteModPattern(pattern1)
+        #self.repository.getFragPattern("CAD_CMCT")
         with self.assertRaises(IndexError):
-            self.repository.getPattern("CAD_CMCT")
+            self.repository.getFragPattern("CAD_CMCT")
 
 
 

@@ -185,11 +185,10 @@ def run():
     if settings['sprayMode'] == 1:
         strMode = 'positive'
     try:
-        generalParam = [("spectralFile:", spectralFile), ('date:', ""),
+        generalParam = [("spectralFile:", spectralFile),
+                        ('date:', ""),
                         ('noiseLimit:', settings['noiseLimit']),
-                        ('outlier_limit:', configs['outlierLimit']),
-                        ('shape_limit:', configs['shapeDel']),
-                        ('mode:',strMode)]
+                        ('max m/z:',spectrumHandler.upperBound)]
         #percentages = list()
         excelWriter.writeAnalysis(generalParam,
                                   analyser.getModificationLoss(),

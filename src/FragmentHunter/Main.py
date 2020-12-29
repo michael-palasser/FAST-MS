@@ -41,8 +41,8 @@ def sortIonsByName(ionList):
 
 #if __name__ == '__main__':
 def run():
-    settings = ConfigHandler(os.path.join(path,"src","FragmentHunter","settings.json")).getAll()
-    configs = ConfigHandler(os.path.join(path,"src","FragmentHunter","configurations.json")).getAll()
+    settings = ConfigHandler(os.path.join(path,"src","FragmentHunter","Repository","settings.json")).getAll()
+    configs = ConfigHandler(os.path.join(path,"src","FragmentHunter","Repository","configurations.json")).getAll()
     with open(os.path.join(path, 'Parameters','sequences.txt'),'r') as sequenceFile:
             molecule, sequence = findSequence(sequenceFile, settings['sequName'])
             if sequence != None:

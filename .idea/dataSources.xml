@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
+    <data-source source="LOCAL" name="Fragmentation" uuid="db3c6cf9-2b99-4fad-b851-73a2277cdc57">
+      <driver-ref>sqlite.xerial</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
+      <jdbc-url>jdbc:sqlite:$PROJECT_DIR$/src/FragmentHunter/Fragmentation.db</jdbc-url>
+    </data-source>
+    <data-source source="LOCAL" name="Fragmentation [2]" uuid="06fc591a-f37d-4910-86ab-0c2ca2c52a0f">
+      <driver-ref>sqlite.xerial</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
+      <jdbc-url>jdbc:sqlite:$PROJECT_DIR$/src/FragmentHunter/repository/Fragmentation.db</jdbc-url>
+    </data-source>
+  </component>
+</project>

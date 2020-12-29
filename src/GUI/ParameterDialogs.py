@@ -8,7 +8,7 @@ from src.FragmentHunter import Main
 from src.Intact_Ion_Search import ESI_Main
 from os.path import join
 
-fragmentHunterPath = join(path,'src','FragmentHunter')
+fragmentHunterRepPath = join(path, 'src', 'FragmentHunter', 'Repository')
 
 class AbstractDialog(QDialog):
     def __init__(self, dialogName, title, lineSpacing, parent=None):
@@ -152,7 +152,7 @@ class StartDialog(AbstractDialog):
 class TDStartDialog(StartDialog):
     def __init__(self, parent=None):
         super().__init__("startDialog","Settings", 30, parent)
-        self.configHandler = ConfigHandler(join(fragmentHunterPath,"settings.json"))
+        self.configHandler = ConfigHandler(join(fragmentHunterRepPath, "settings.json"))
         self.setupUi(self)
 
     def setupUi(self, startDialog):
@@ -220,7 +220,7 @@ class DialogWithTabs(AbstractDialog):
 class TD_configurationDialog(DialogWithTabs):
     def __init__(self, parent=None):
         super().__init__("configDialog", "Configurations", 30, parent)
-        self.configHandler = ConfigHandler(join(fragmentHunterPath,"configurations.json"))
+        self.configHandler = ConfigHandler(join(fragmentHunterRepPath, "configurations.json"))
         self.interestingIons = list()
         self.tabs = dict()
         self.setupUi(self)
@@ -345,7 +345,7 @@ class TD_configurationDialog(DialogWithTabs):
 class ESI_StartDialog(DialogWithTabs, StartDialog):
     def __init__(self, parent=None):
         super().__init__("ESI_startDialog","Intact Ion Search", 30, parent)
-        self.configHandler = ConfigHandler(join(path,"src","Intact_Ion_Search","configurations.json"))
+        self.configHandler = ConfigHandler(join(path,"src","Intact_Ion_Search","Repository","configurations.json"))
         self.setupUi(self)
 
     def setupUi(self, startDialog):

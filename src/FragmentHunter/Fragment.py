@@ -10,7 +10,7 @@ import numpy as np
 from src.ConfigurationHandler import ConfigHandler
 from src import path
 
-noiseLimit = ConfigHandler(os.path.join(path, "src","FragmentHunter","settings.json")).get('noiseLimit')
+noiseLimit = ConfigHandler(os.path.join(path, "src","FragmentHunter","Repository","settings.json")).get('noiseLimit')
 
 class Fragment(object):
     '''

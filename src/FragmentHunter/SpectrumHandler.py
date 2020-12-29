@@ -11,7 +11,7 @@ from src.FragmentHunter.Fragment import Ion
 from src import path
 from src.ConfigurationHandler import ConfigHandler
 
-configs = ConfigHandler(join(path, "src","FragmentHunter","configurations.json")).getAll()
+configs = ConfigHandler(join(path, "src","FragmentHunter","Repository","configurations.json")).getAll()
 
 def getErrorLimit(mz):
     return configs['k']/1000 * mz + configs['d']
@@ -287,8 +287,9 @@ class SpectrumHandler(object):
                                 searchMask = np.where(abs(self.calculateError(self.spectrum[:, 0], theoPeak['mass']))
                                                       < (getErrorLimit(self.spectrum[:, 0]) + configs['errorTolerance']))
                                 foundPeaks.append(self.getCorrectPeak(self.spectrum[searchMask], theoPeak))
-                            for theoPeak in theoreticalPeaks[inNoise]:
-                                foundPeaks.append((theoPeak['mass'],0,theoPeak['mass'],theoPeak['int'],0,1))
+
+                            """for theoPeak in theoreticalPeaks[inNoise]:
+                                foundPeaks.append((theoPeak['mass'],0,theoPeak['mass'],theoPeak['int'],0,1))"""
                             foundPeaksArr = np.sort(np.array(foundPeaks, dtype=self.peaksArrType),order=['m/z'])
                             if not np.all(foundPeaksArr['int']==0):
                                 self.foundIons.append(Ion(fragment,z,foundPeaksArr, noise))
@@ -300,6 +301,8 @@ class SpectrumHandler(object):
                             else:
                                 self.addToDeletedIons(fragment, foundMainPeaks, noise, z)
                         else:
+                            """for theoPeak in theoreticalPeaks[inNoise]:
+                                foundMainPeaks.append((theoPeak['mass'],0,theoPeak['mass'],theoPeak['int'],0,1))"""
                             self.addToDeletedIons(fragment, foundMainPeaks, noise, z)
 
 

@@ -4,19 +4,24 @@ Created on 29 Dec 2020
 @author: michael
 '''
 import sqlite3
-from src.GeneralRepository.AbstractProperties import AbstractRepository, AbstractItem
+from src.GeneralRepository.AbstractProperties import AbstractRepositoryWithItems, AbstractItem
+from src.GeneralRepository.Exceptions import AlreadyPresentException
 
 
 class IntactModifications(object):
-    def __init__(self, name, modifications):
+    def __init__(self, name, modifications, id):
         self.__name = name
         self.__modifications = modifications
+        self.__id = id
 
     def getName(self):
         return self.__name
 
     def getModification(self):
         return self.__modifications
+
+    def getId(self):
+        return self.__id
 
 class IntactModification(AbstractItem):
     def __init__(self, name, enabled, gain, loss, nrMod, id):
@@ -30,10 +35,10 @@ class IntactModification(AbstractItem):
         super(IntactModification, self).getAll() + [self._nrMod]
 
 
-class ESI_Repository(AbstractRepository):
+class ESI_Repository(AbstractRepositoryWithItems):
     def __init__(self):
-        super(ESI_Repository, self).__init__('modPatterns',("name"))
-        self.modColumns = ('name', 'enabled', 'gain', 'loss', 'residue', 'radicals', 'patternId')
+        super(ESI_Repository, self).__init__('ESI_data.db', 'modPatterns',("name"),
+                            {"intactModItems":('name', 'enabled', 'gain', 'loss', 'residue', 'radicals', 'patternId')})
 
     def makeTables(self):
         self._conn.cursor().execute("""
@@ -50,56 +55,46 @@ class ESI_Repository(AbstractRepository):
                 "nrMod" integer NOT NULL ,
                 "patternId" integer NOT NULL );""")
 
-    #ToDo
-    """def createFragPattern(self, fragmentationPattern):
+
+    def createPattern(self, modificationPattern):
+        """
+        Function create() creates new pattern which is filled by insertIsotopes
+        :param modificationPattern:
+        :return:
+        """
         try:
-            self.insertFragmentTypes(self.create((fragmentationPattern.name,)), fragmentationPattern)
+            self.insertModifications(self.create((modificationPattern.name,)), modificationPattern)
         except sqlite3.IntegrityError:
-            raise Exception(fragmentationPattern.name, "already present")
+            raise AlreadyPresentException(modificationPattern.name)
 
-    def insertFragmentTypes(self, patternId, fragmentationPattern):
-        for item in fragmentationPattern.fragmentTypes:
-            self.createFragItem(item, patternId)
+    def insertModifications(self, patternId, modificationPattern):
+        for item in modificationPattern.fragmentTypes:
+            self.createItem('intactModItems', item.getAll() + [patternId])
 
-    def createFragItem(self, item, patternId):
-        cur = self._conn.cursor()
-        sql = 'INSERT INTO intactModItems(' + ', '.join(self.modColumns) + ''')
-                      VALUES(?, ?, ?, ?, ?, ?,?) '''
-        values = item.getAll() + [patternId]
-        self.create()
-        cur.execute(sql, values)
-        self._conn.commit()
-        return cur.lastrowid
 
-    def getFragPattern(self, name):
+    def getModPattern(self, name):
         pattern = self.get('name', name)
-        return FragmentationPattern(pattern[1], self.getItems(pattern[0]), pattern[0])
+        return IntactModifications(pattern[1], self.getItems(pattern[0]), pattern[0])
 
     def getItems(self, patternId):
-        cur = self._conn.cursor()
-        if patternId != None:
-            cur.execute("SELECT * FROM intactModItems WHERE patternId=?", (patternId,))
-        else:
-            cur.execute("SELECT * FROM intactModItems")
         listOfItems = list()
-        for item in cur.fetchall():
-            listOfItems.append(Item(item[1], item[2], item[3], item[4], item[5], item[6], item[0]))
+        for item in self.getAllItems('intactModItems', patternId):
+            listOfItems.append(IntactModification(item[1], item[2], item[3], item[4], item[5], item[0]))
         return listOfItems
 
     def getAllPatterns(self):
         listOfPatterns = list()
         for pattern in self.getAll():
-            listOfPatterns.append(FragmentationPattern(pattern[1], self.getItems(pattern[0]), pattern[0]))
+            listOfPatterns.append(IntactModifications(pattern[1], self.getItems(pattern[0]), pattern[0]))
         return listOfPatterns
 
 
-    def updateFragPattern(self, fragPattern):
-        self.update(fragPattern.name, fragPattern.id)
-        self.deleteList(fragPattern.id, 'fragmentTypes')
-        self.insertFragmentTypes(fragPattern.id, fragPattern)
+    def updateFragPattern(self, modPattern):
+        self.update(modPattern.getName(), modPattern.getId())
+        self.deleteList(modPattern.getId(), 'intactModItems')
+        self.insertModifications(modPattern.getId(), modPattern)
 
 
     def deleteFragPattern(self, id):
-        self.deleteList(id, 'fragmentTypes')
+        self.deleteList(id, 'intactModItems')
         self.delete(id)
-"""

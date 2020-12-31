@@ -38,8 +38,8 @@ class AbstractItem(ABC):
 
 
 class AbstractRepository(ABC):
-    def __init__(self, tableName, columns):
-        self._conn = sqlite3.connect(join(path,"data.db"))
+    def __init__(self, database, tableName, columns):
+        self._conn = sqlite3.connect(database)
         self.mainTable = tableName
         self.columns = columns
 
@@ -102,8 +102,8 @@ class AbstractRepository(ABC):
 
 
 class AbstractRepositoryWithItems(AbstractRepository):
-    def __init__(self,tableName, columns, itemDict):
-        super(AbstractRepositoryWithItems, self).__init__(tableName, columns)
+    def __init__(self,database, tableName, columns, itemDict):
+        super(AbstractRepositoryWithItems, self).__init__(database, tableName, columns)
         self.itemDict = itemDict
 
     def createItem(self,table, attributes):
@@ -122,12 +122,12 @@ class AbstractRepositoryWithItems(AbstractRepository):
             cur.execute("SELECT * FROM " + table)
         return cur.fetchall()
 
-    def deleteList(self, patternId):
+    def deleteList(self, patternId, table):
         """
 
         :param patternId: id of parent pattern
         :return:
         """
         cur = self._conn.cursor()
-        cur.execute("DELETE FROM " + self.itemTable + " WHERE patternId=?", (patternId,))
+        cur.execute("DELETE FROM " + table + " WHERE patternId=?", (patternId,))
         self._conn.commit()

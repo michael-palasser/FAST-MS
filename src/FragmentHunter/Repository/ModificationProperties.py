@@ -7,6 +7,8 @@ Created on 29 Dec 2020
 import sqlite3
 from src.FragmentHunter.Repository.FragmProperties import FragItem
 from src.GeneralRepository.AbstractProperties import AbstractRepositoryWithItems
+from src.GeneralRepository.Exceptions import AlreadyPresentException
+
 
 class ModifiedItem(FragItem):
     def __init__(self,name,enabled, gain, loss, residue, radicals, zEffect, id):
@@ -31,7 +33,7 @@ class ModificationPattern(object):
 
 class ModificationRepository(AbstractRepositoryWithItems):
     def __init__(self):
-        super(ModificationRepository, self).__init__('modPatterns',("name","modification"),
+        super(ModificationRepository, self).__init__('TD_data.db', 'modPatterns',("name","modification"),
                             {'modItems':('name', 'enabled', 'gain', 'loss', 'residue', 'radicals', 'chargeEffect',
                                'included', 'patternId')})
 
@@ -59,7 +61,7 @@ class ModificationRepository(AbstractRepositoryWithItems):
             self.insertModificationItems(self.create(modificationPattern.name, modificationPattern.modification),
                                          modificationPattern)
         except sqlite3.IntegrityError:
-            raise Exception(modificationPattern.name, "already present")
+            raise AlreadyPresentException(modificationPattern.name)
 
 
     def insertModificationItems(self, patternId, modificationPattern):

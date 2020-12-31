@@ -7,6 +7,7 @@ import sqlite3
 from re import findall
 
 from src.GeneralRepository.AbstractProperties import AbstractRepository
+from src.GeneralRepository.Exceptions import AlreadyPresentException
 
 
 class Sequence(object):
@@ -37,7 +38,7 @@ class Sequence(object):
 
 class SequenceRepository(AbstractRepository):
     def __init__(self):
-        super(SequenceRepository, self).__init__('sequences', ('name', 'sequence', 'molecule'))
+        super(SequenceRepository, self).__init__('Shared_data.db', 'sequences', ('name', 'sequence', 'molecule'))
 
     def makeTables(self):
         self._conn.cursor().execute("""
@@ -51,7 +52,7 @@ class SequenceRepository(AbstractRepository):
         try:
             self.create(sequence.getName(), sequence.getSequence(), sequence.getMolecule())
         except sqlite3.IntegrityError:
-            raise Exception(sequence.getName(), "already present")
+            raise AlreadyPresentException(sequence.getName())
 
     def getSequence(self, name):
         sequenceTuple = self.get('name', name)

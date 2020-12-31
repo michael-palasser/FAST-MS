@@ -53,7 +53,8 @@ def run():
 
     """Analysis and Output"""
     analyser = Analyser(ionList, sequence,precModification,
-                        ConfigHandler(os.path.join(path,"src","FragmentHunter","configurations.json")).getAll())
+                        ConfigHandler(os.path.join(path,"src","FragmentHunter","Repository","configurations.json"))
+                            .getAll())
     excelWriter = BasicExcelWriter(os.path.join(path, "Spectral_data","Occupancies_out.xlsx"))
     date = datetime.now().strftime("%d/%m/%Y %H:%M")
     excelWriter.worksheet1.write(0,0,date)

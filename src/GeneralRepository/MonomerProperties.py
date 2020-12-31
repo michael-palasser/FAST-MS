@@ -1,6 +1,7 @@
 import sqlite3
 
 from src.GeneralRepository.AbstractProperties import AbstractRepository
+from src.GeneralRepository.Exceptions import AlreadyPresentException
 
 
 class Monomere(object):
@@ -25,7 +26,7 @@ class Monomere(object):
 class MonomereRepository(AbstractRepository):
     def __init__(self):
         #self.__conn = sqlite3.connect(dbFile)
-        super(MonomereRepository, self).__init__('monomeres', ("name", "formula", "molecule"))
+        super(MonomereRepository, self).__init__('Shared_data.db', 'monomeres', ("name", "formula", "molecule"))
 
     def makeTable(self):
         self._conn.cursor().execute("""
@@ -36,12 +37,13 @@ class MonomereRepository(AbstractRepository):
                 "molecule" text NOT NULL );""")
 
     def createMonomere(self, monomere):
+        #ToDo: gehoert eig nicht hierher sondern in hoehere Schicht
         if (not monomere.getName()[0].isupper()) or monomere.getName()[1:].isupper():
             raise Exception("First case of monomere name must be upper case, all other letters must be lowercase")
         try:
             self.create(monomere.getName(),monomere.getFormula(), monomere.getMolecule())
         except sqlite3.IntegrityError:
-            raise Exception(monomere.getName(),"already present")
+            raise AlreadyPresentException(monomere.getName())
 
 
     def getMonomeres(self, molecule):

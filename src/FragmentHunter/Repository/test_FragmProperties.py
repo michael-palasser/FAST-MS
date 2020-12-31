@@ -71,7 +71,7 @@ class TestFragmentationRepository(TestCase):
         self.createPatternForTest()
         self.repository.getFragPattern("CAD_CMCT")
         self.repository.deleteModPattern(pattern1)
-        #self.Repository.getFragPattern("CAD_CMCT")
+        #self.Repository.getModPattern("CAD_CMCT")
         with self.assertRaises(IndexError):
             self.repository.getFragPattern("CAD_CMCT")
 

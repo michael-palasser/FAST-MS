@@ -81,7 +81,7 @@ def run():
         output = spectralFile[0:-4] + '_out' + '.xlsx'
     else:
         output = os.path.join(path, 'Spectral_data','ESI', output + '.xlsx')
-    parameters = {'data:':spectralFile,'date:':datetime.now().strftime("%d/%m/%Y %H:%M")}
+    parameters = {'pattern:':spectralFile,'date:':datetime.now().strftime("%d/%m/%Y %H:%M")}
     parameters.update(configHandler.getAll())
     excelWriter = ExcelWriter(output)
     avCharges, avErrors = analyser.calculateAvChargeAndError()

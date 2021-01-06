@@ -37,7 +37,7 @@ class Finder(object):
                     lineList = line.split()
                     spectrum.append((lineList[0], lineList[1][:-1], lineList[2]))
                 except:
-                    print("problem in spectral data file: \nline", line)
+                    print("problem in spectral pattern file: \nline", line)
                     continue
         self.data.append(np.array(spectrum, dtype=[('m/z', np.float64), ('z', np.uint8), ('relAb', np.float64)]))
 

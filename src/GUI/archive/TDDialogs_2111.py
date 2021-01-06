@@ -110,7 +110,7 @@ class TDStartDialog(AbstractDialog):
         self.gridLayout = QtWidgets.QGridLayout(self.layoutWidget)
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
 
-        self.createLabels(self.layoutWidget, ("sequence name", "charge", "modification", "spectral data",
+        self.createLabels(self.layoutWidget, ("sequence name", "charge", "modification", "spectral pattern",
                                               "noise threshold (x10^6)", "spray mode", "dissociation"))
         self.createWidget(QtWidgets.QLineEdit(self.layoutWidget),0, "sequName",
                                           "name of sequence")

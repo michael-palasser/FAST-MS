@@ -9,7 +9,7 @@ def main():
     inputFile = os.path.join(path, 'Spectral_data','model_input.txt')
     subprocess.call(['open', inputFile])
     input('Press any key to start')
-    # get data
+    # get pattern
     with open(inputFile, 'r') as input_file:
         ion_dict = dict()
         raw_list = list()

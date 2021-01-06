@@ -101,5 +101,5 @@ class Ui_startDialog(object):
         self.dissociation.setItemText(0, _translate("startDialog", "CAD"))
         self.dissociation.setItemText(1, _translate("startDialog", "ECD"))
         self.dissociation.setItemText(2, _translate("startDialog", "EDD"))
-        self.labelData.setText(_translate("startDialog", "spectral data"))
+        self.labelData.setText(_translate("startDialog", "spectral pattern"))
         self.defaultButton.setText(_translate("startDialog", "last used"))

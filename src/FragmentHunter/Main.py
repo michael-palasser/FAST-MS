@@ -116,8 +116,8 @@ def run():
             libraryBuilder.saveIsotopePattern(f)
         print("\ndone\nexecution time: ",round((time.time() - start)/60,2),"min\n")
 
-    """Importing spectral data"""
-    print("\n********** Importing spectral data from:", spectralFile, "**********")
+    """Importing spectral pattern"""
+    print("\n********** Importing spectral pattern from:", spectralFile, "**********")
     with open(spectralFile, mode='r') as f:
         spectrumHandler = SpectrumHandler(molecule, sequence, libraryBuilder.fragmentLibrary,
                                           libraryBuilder.getChargedModifications(), settings)

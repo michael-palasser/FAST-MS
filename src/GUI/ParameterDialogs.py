@@ -74,11 +74,9 @@ class AbstractDialog(QDialog):
 
     def createComboBox(self, box, options):
         comboBox = QtWidgets.QComboBox(box)
-        pos = 0
-        for option in options:
+        for i, option in enumerate(options):
             comboBox.addItem("")
-            comboBox.setItemText(pos, self._translate(self.objectName(), option))
-            pos +=1
+            comboBox.setItemText(i, self._translate(self.objectName(), option))
         return comboBox
 
 
@@ -156,7 +154,7 @@ class TDStartDialog(StartDialog):
         self.setupUi(self)
 
     def setupUi(self, startDialog):
-        self.createLabels(("sequence name", "charge", "modification", "spectral data", "noise threshold (x10^6)",
+        self.createLabels(("sequence name", "charge", "modification", "spectral pattern", "noise threshold (x10^6)",
                            "spray mode", "dissociation", "output"),startDialog, 30, 150)
         widgets = ((QtWidgets.QLineEdit(startDialog), "sequName", "name of sequence"),
                    (QtWidgets.QSpinBox(startDialog), "charge","charge of precursor ion"),
@@ -166,7 +164,7 @@ class TDStartDialog(StartDialog):
                    (self.createComboBox(startDialog,("negative","positive")), "sprayMode", "spray mode"),
                    (self.createComboBox(startDialog,("CAD", "ECD", "EDD")), "dissociation", "dissociation mode"),
                    (QtWidgets.QLineEdit(startDialog), "output",
-                        "name of the output Excel file\ndefault: name of spectral data file + _out.xlsx"))
+                        "name of the output Excel file\ndefault: name of spectral pattern file + _out.xlsx"))
         xPos, yPos = self.createWidgets(widgets,190,200)
         #startDialog.resize(412, 307)
         self.buttonBox.setGeometry(QtCore.QRect(210, yPos+20, 164, 32))
@@ -368,15 +366,15 @@ class ESI_StartDialog(DialogWithTabs, StartDialog):
         self.widgets["d"].setMinimum(-9.99)
         self.backToLast()
 
-        self.createLabels(("sequence name", "modification", "spectral data file",
+        self.createLabels(("sequence name", "modification", "spectral pattern file",
                            "spray mode", "output"), self.settingTab, 10, 150)
         settingWidgets = ((QtWidgets.QLineEdit(self.settingTab), "sequName", "name of sequence"),
                    (QtWidgets.QLineEdit(self.settingTab), "modification","modification of precursor ion"),
                    (QtWidgets.QLineEdit(self.settingTab), "spectralData",
-                        "name of the file with monoisotopic data (txt format)"),
+                        "name of the file with monoisotopic pattern (txt format)"),
                    (self.createComboBox(self.settingTab,("negative","positive")), "sprayMode", "spray mode"),
                    (QtWidgets.QLineEdit(self.settingTab), "output",
-                        "name of the output txt file\ndefault: name of spectral data file + _out.txt"))
+                        "name of the output txt file\ndefault: name of spectral pattern file + _out.txt"))
         xPos, yPos = self.createWidgets(settingWidgets,120,160)
         if yMax<yPos:
             yMax=yPos

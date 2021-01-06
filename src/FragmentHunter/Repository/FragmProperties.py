@@ -121,7 +121,7 @@ class FragmentationRepository(AbstractRepositoryWithItems):
 
         """def updatePrecFragment(self, precFragPattern):
         cur = self._conn.cursor()
-        sql = 'UPDATE precFragments SET ' + '=?, '.join(self.itemDict['precFragments']) + '=? WHERE id=?'
+        sql = 'UPDATE precFragments SET ' + '=?, '.join(self._itemDict['precFragments']) + '=? WHERE id=?'
         cur.execute(sql, precFragPattern.fragmentTypes.getAll(), precFragPattern.id)
         self._conn.commit()"""
 

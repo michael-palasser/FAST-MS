@@ -14,7 +14,7 @@ Created on 3 Jul 2020
 @njit
 def getByIndex(isotopeTable, index):
     '''
-    Gets all entries with index. Simulates an 3D data structure
+    Gets all entries with index. Simulates an 3D pattern structure
     :param isotopeTable: numpy array (2D)
     :param index: int
     :return: numpy array

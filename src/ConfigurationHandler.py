@@ -87,6 +87,6 @@ with open(absPath, "w") as f:
     json.dump(json.dumps(conf, indent=3), f)
 
 with open(absPath) as json_data_file:
-    data = json.load(json_data_file)
-print(data)
+    pattern = json.load(json_data_file)
+print(pattern)
 """

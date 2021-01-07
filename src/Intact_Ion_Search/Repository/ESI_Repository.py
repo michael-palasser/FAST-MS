@@ -4,7 +4,7 @@ Created on 29 Dec 2020
 @author: michael
 '''
 import sqlite3
-from src.GeneralRepository.AbstractProperties import AbstractRepositoryWithItems, PatternWithItems
+from src.GeneralRepository.AbstractProperties import AbstractRepositoryWithItems, PatternWithItems, AbstractItem
 from src.GeneralRepository.Exceptions import AlreadyPresentException
 from os.path import join
 
@@ -15,8 +15,6 @@ class IntactPattern(PatternWithItems):
         super(IntactPattern, self).__init__(name, items, id, (3, 4))
 
 
-
-
 """def getItemsAsList(self):
         _itemDict = dict()
         #_itemDict = {"Name":[], "Gain":[], "Loss":[], "NrOfMod":[], "enabled":[]}
@@ -25,16 +23,13 @@ class IntactPattern(PatternWithItems):
                 if item not in
         return {"Name":[], "Gain", "Loss", "NrOfMod", "enabled"}"""
 
-"""class IntactModification(AbstractItem):
+class IntactModification(AbstractItem):
     def __init__(self, name, gain, loss, nrMod, enabled, id):
-        super(IntactModification, self).__init__(name, enabled, gain, loss, id)
+        super(IntactModification, self).__init__(name, enabled, gain, loss)
         self._nrMod = nrMod
 
     def getNrMod(self):
         return self._nrMod
-
-    def getAll(self):
-        super(IntactModification, self).getAll() + [self._nrMod]"""
 
 
 

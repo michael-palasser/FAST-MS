@@ -5,13 +5,11 @@ from src.GeneralRepository.Exceptions import AlreadyPresentException
 
 
 class FragItem(AbstractItem):
-    def __init__(self, name, enabled, gain, loss, residue, radicals, id):
-        super(FragItem, self).__init__(name, enabled, gain, loss, id)
+    def __init__(self, name, enabled, gain, loss, residue, radicals):
+        super(FragItem, self).__init__(name, enabled, gain, loss)
         self._residue = residue
         self._radicals = radicals
 
-    def getAll(self):
-        return super(FragItem, self).getAll() + [self._residue, self._radicals]
 
     def getResidue(self):
         return self._residue

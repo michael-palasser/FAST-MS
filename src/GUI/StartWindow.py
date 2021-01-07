@@ -9,6 +9,8 @@ from PyQt5 import QtCore
 from PyQt5.QtCore import QCoreApplication
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import QApplication, QWidget, QMainWindow, QPushButton, QAction
+
+from src.GUI.FragmentsAndModifs import IntactIonEditorController
 from src.GUI.ParameterDialogs import TDStartDialog, TD_configurationDialog, ESI_StartDialog
 from src.FragmentHunter.ModellingTool import main as modellingTool
 from src.FragmentHunter.OccupancyRecalculator import run as occupancyRecalculator
@@ -49,6 +51,8 @@ class Window(QMainWindow):
                                   'Edit configurations',self.editTopDownConfig)
         self.addActionToStatusBar(self.esiMenu, 'Analyse spectrum',
                                   'Starts analysis of intact spectrum', IntactIonsSearch)
+        self.addActionToStatusBar(self.esiMenu, 'Edit Ions',
+                                  'Edit Intact Ions', IntactIonEditorController)
         self.addActionToStatusBar(self.parameters, 'Sequences','Edit stored sequences', self.editSequences)
         xPos = self.createButton('Analyse top-down\nspectrum','Starts analysis of top-down spectrum',40,
                                   self.startFragmentHunter)
@@ -80,6 +84,9 @@ class Window(QMainWindow):
     def editTopDownConfig(self):
         dialog = TD_configurationDialog(self)
         dialog.exec_()
+
+    """    def editIntactIons(self):
+        IntactIonEditorController()"""
 
     def editSequences(self):
         print('notImplemented')

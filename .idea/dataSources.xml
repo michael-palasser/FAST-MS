@@ -13,5 +13,11 @@
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
       <jdbc-url>jdbc:sqlite:$PROJECT_DIR$/src/FragmentHunter/repository/Fragmentation.db</jdbc-url>
     </data-source>
+    <data-source source="LOCAL" name="ESI_data" uuid="2a2c9def-b737-49ff-b5c9-b6ab791933d6">
+      <driver-ref>sqlite.xerial</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
+      <jdbc-url>jdbc:sqlite:$PROJECT_DIR$/src/Intact_Ion_Search/Repository/ESI_data.db</jdbc-url>
+    </data-source>
   </component>
 </project>

@@ -176,6 +176,8 @@ def calculatePeptFineStructure(isotopePeak, isotopeTable):
     return fineStructure
 
 
+
+
 @njit
 def setIsotopeTable(isotopeTable):
     '''

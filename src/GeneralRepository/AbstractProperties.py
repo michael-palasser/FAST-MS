@@ -3,13 +3,14 @@ Created on 29 Dec 2020
 
 @author: michael
 '''
-
+import re
 from abc import ABC, abstractmethod
 import sqlite3
 from src import path
 from os.path import join
 
 from src.GeneralRepository.Exceptions import AlreadyPresentException
+from src.MolecularFormula import MolecularFormula
 
 
 class AbstractPattern(ABC):
@@ -31,6 +32,13 @@ class AbstractPattern(ABC):
 
 class PatternWithItems(AbstractPattern):
     def __init__(self, name, items, id, integerVals):
+        """
+
+        :param name:
+        :param items: either list of Item objects for LibraryBuilder or 2D list for GUI
+        :param id:
+        :param integerVals:
+        """
         super(PatternWithItems, self).__init__(name, id)
         self._items = items #list of dict of values
         self._integerVals = integerVals
@@ -41,13 +49,14 @@ class PatternWithItems(AbstractPattern):
     def setItems(self, items):
         formatedItems = list()
         for i,row in enumerate(items):
-            formatedRow = list()
+            formatedRow = []
             for j, val in enumerate(items):
                 try:
                     if j in self._integerVals:
                         formatedRow.append(int(val))
                     elif (j == 1) or (j==2):
-                        #ToDo: Ueberpruefen ob Formel passt und ob enabled<2
+                        #ToDo: Ueberpruefen ob Formel passt: alle keys in PeriodicTable
+                        #AbstractItem.stringToFormula(val, dict(),1)
                         formatedRow.append(val)
                 except ValueError:
                     raise Exception("Invalid Input in row "+str(i)+", column "+str(j)+". Input must be an integer!")
@@ -55,6 +64,11 @@ class PatternWithItems(AbstractPattern):
                     formatedRow.append(val)
             formatedItems.append(formatedRow)
         self._items = formatedItems
+
+
+
+
+
 
     """def getItemsAsList(self):
         
@@ -87,13 +101,12 @@ class PatternWithItems(AbstractPattern):
                     itemDict[key].append(val)
         return itemDict"""
 
-"""class AbstractItem(ABC):
-    def __init__(self, name, enabled, gain, loss, id):
+class AbstractItem(ABC):
+    def __init__(self, name, enabled, gain, loss):
         self._name = name
         self._enabled = enabled
         self._gain = gain
         self._loss = loss
-        self._id = id
 
     def getName(self):
         return self._name
@@ -101,21 +114,33 @@ class PatternWithItems(AbstractPattern):
     def enabled(self):
         return (self._enabled == 1)
 
-    def getGain(self):
-        return self._gain
 
-    def getLoss(self):
-        return self._loss
+    @staticmethod
+    def stringToFormula(formulaString, formulaDict, sign):
+        '''
+        Converts a String to a formula - dict and adds or subtracts it to or from an original formula
+        :param formulaString: String which should be converted to a formula
+        :param formulaDict: "old" formula (dictionary)
+        :param sign: +1 or -1 for addition or subtraction of formula to or from formulaDict
+        :return: new formula (dict)
+        '''
+        for item in re.findall('[A-Z][^A-Z]*', formulaString):
+            element = item
+            number = 1
+            match = re.match(r"([a-z]+)([0-9]+)", item, re.I)  # re.I: ignore case: ?
+            if match:
+                element = match.group(1)
+                number = int(match.group(2))
+            if element in formulaDict:
+                formulaDict[element] += number * sign
+            else:
+                formulaDict[element] = number * sign
+        return formulaDict
 
-    def getId(self):
-        return self._id
+    def getFormula(self):
+        formulaDict = self.stringToFormula(self._gain, dict(),1)
+        return self.stringToFormula(self._loss, formulaDict,-1)
 
-    def getAll(self):
-        return [self._name, self._enabled, self._gain, self._loss]
-
-    def getItemsAsList(self):
-        pass
-"""
 
 class AbstractRepository(ABC):
     def __init__(self, database, tableName, columns):
@@ -184,9 +209,12 @@ class AbstractRepository(ABC):
         self._conn.commit()
 
 
-    def delete(self, id):
+    def delete(self, name):
         cur = self._conn.cursor()
-        cur.execute('DELETE FROM ' + self._mainTable + ' WHERE id=?', (id,))
+        cur.execute('SELECT id FROM ' + self._mainTable+ ' WHERE name=?', (name,))
+        id = cur.fetchall()[0]
+        cur.execute('DELETE FROM ' + self._mainTable + ' WHERE name=?', (name,))
+        return id[0]
 
 
     def close(self):
@@ -221,7 +249,6 @@ class AbstractRepositoryWithItems(AbstractRepository, ABC):
         cur = self._conn.cursor()
         sql = 'INSERT INTO ' + table + '(' + ', '.join(self._itemDict[table]) + ''') 
                                       VALUES(''' + (len(self._itemDict[table]) * '?,')[:-1] + ')'
-        print(attributes)
         cur.execute(sql, attributes)
         self._conn.commit()
         return cur.lastrowid
@@ -276,6 +303,6 @@ class AbstractRepositoryWithItems(AbstractRepository, ABC):
             cur.execute("DELETE FROM " + table + " WHERE patternId=?", (patternId,))
         self._conn.commit()
 
-    def deleteFragPattern(self, id):
-        self.deleteAllItems(id)
-        self.delete(id)
+    def delete(self, name):
+        #id = super(AbstractRepositoryWithItems, self).delete(name)
+        self.deleteAllItems(super(AbstractRepositoryWithItems, self).delete(name))

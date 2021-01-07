@@ -11,12 +11,9 @@ from src.GeneralRepository.Exceptions import AlreadyPresentException
 
 
 class ModifiedItem(FragItem):
-    def __init__(self,name,enabled, gain, loss, residue, radicals, zEffect, id):
-        super(ModifiedItem, self).__init__(name, enabled, gain, loss, residue, radicals, id)
+    def __init__(self,name,enabled, gain, loss, residue, radicals, zEffect):
+        super(ModifiedItem, self).__init__(name, enabled, gain, loss, residue, radicals)
         self._zEffect = zEffect
-
-    def getAll(self):
-        return super(ModifiedItem, self).getAll() + [self._zEffect]
 
     def getZEffect(self):
         return self._zEffect

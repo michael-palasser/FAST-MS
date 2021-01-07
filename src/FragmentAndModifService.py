@@ -1,6 +1,5 @@
 from abc import ABC
 
-from src.GeneralRepository.AbstractProperties import PatternWithItems
 from src.Intact_Ion_Search.Repository.ESI_Repository import *
 
 
@@ -28,6 +27,13 @@ class AbstractService(ABC):
     def getHeaders(self,*args):
         return self.repository.getItemColumns(*args)
 
+    def delete(self, name):
+        self.repository.delete(name)
+
+
+
+
+
     def close(self):
         self.repository.close()
 
@@ -46,4 +52,5 @@ class IntactIonService(AbstractService):
             self.repository.createPattern(pattern)
         else:
             self.repository.updateFragPattern(pattern)
+
 

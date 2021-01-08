@@ -1,5 +1,7 @@
 from abc import ABC
 
+from src.FragmentHunter.Repository.FragmProperties import *
+from src.FragmentHunter.Repository.ModificationProperties import ModificationRepository
 from src.Intact_Ion_Search.Repository.ESI_Repository import *
 
 
@@ -22,8 +24,14 @@ class AbstractService(ABC):
     """def updatePattern(self, *args, **kwargs):
         pass"""
 
-    def savePattern(self, *args, **kwargs):
-        pass
+    def savePattern(self, pattern):
+        if pattern.getId() == None:
+            if pattern.getName() in self.repository.getAllPatternNames():
+                raise Exception("Name must be unique!")
+            self.repository.createPattern(pattern)
+        else:
+            self.repository.updatePattern(pattern)
+
     def getHeaders(self,*args):
         return self.repository.getItemColumns(*args)
 
@@ -45,12 +53,24 @@ class IntactIonService(AbstractService):
         #return PatternWithItems("", [{"Name": "", "Gain": "", "Loss": "", "NrOfMod": 0, "enabled": False}], None)
         return IntactPattern("", [["", "", "", "", False]], None)
 
-    def savePattern(self, pattern):
-        if pattern.getId() == None:
-            if pattern.getName() in self.repository.getAllPatternNames():
-                raise Exception("Name must be unique!")
-            self.repository.createPattern(pattern)
-        else:
-            self.repository.updateFragPattern(pattern)
 
+
+
+class FragmentIonService(AbstractService):
+    def __init__(self):
+        super(FragmentIonService, self).__init__(FragmentationRepository())
+
+    def makeNew(self):
+        #return PatternWithItems("", [{"Name": "", "Gain": "", "Loss": "", "NrOfMod": 0, "enabled": False}], None)
+        return FragmentationPattern("", [["", "", "", "", "", "", False]], [["", "", "", "", "", "", False]], None)
+
+
+class ModificationService(AbstractService):
+    def __init__(self):
+        super(ModificationService, self).__init__(ModificationRepository())
+
+    def makeNew(self):
+        #return PatternWithItems("", [{"Name": "", "Gain": "", "Loss": "", "NrOfMod": 0, "enabled": False}], None)
+        return FragmentationPattern("", [["", "", "", "", "", "", "", False]],
+                                    [["", "", "", "", "", "", "", False]], None)
 

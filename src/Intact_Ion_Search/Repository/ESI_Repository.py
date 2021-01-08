@@ -24,7 +24,7 @@ class IntactPattern(PatternWithItems):
         return {"Name":[], "Gain", "Loss", "NrOfMod", "enabled"}"""
 
 class IntactModification(AbstractItem):
-    def __init__(self, name, gain, loss, nrMod, enabled, id):
+    def __init__(self, name, gain, loss, nrMod, enabled):
         super(IntactModification, self).__init__(name, enabled, gain, loss)
         self._nrMod = nrMod
 
@@ -68,19 +68,31 @@ class ESI_Repository(AbstractRepositoryWithItems):
             super(ESI_Repository, self).createPattern(pattern)"""
 
 
+    def getItemColumns(self):
+        return super(ESI_Repository, self).getItemColumns()+['Nr.Mod.','Enabled']
+
+
     def getPattern(self, name):
         pattern = self.get('name', name)
-        return IntactPattern(pattern[1], self.getItems(pattern[0]), pattern[0])
+        return IntactPattern(pattern[1], self.getItems(pattern[0], [key for key in self._itemDict.keys()][0]), pattern[0])
 
-    def getItemColumns(self, *args):
-        return ('Name', 'Gain', 'Loss', 'Nr.Mod.','Enabled')
-
-    def getItems(self,patternId):
+    def getItems(self,patternId, table):
         listOfItems = list()
-        for item in super(ESI_Repository, self).getItems(patternId):
+        for item in super(ESI_Repository, self).getItems(patternId, [key for key in self._itemDict.keys()][0]):
             listOfItems.append((item[1], item[2], item[3], item[4], item[5]) )
         return listOfItems
 
+
+    def getPatternWithObjects(self, name):
+        pattern = self.get('name', name)
+        return IntactPattern(pattern[1], self.getItemsAsObjects(pattern[0]),
+                             pattern[0])
+
+    def getItemsAsObjects(self,patternId):
+        listOfItems = list()
+        for item in super(ESI_Repository, self).getItems(patternId, [key for key in self._itemDict.keys()][0]):
+            listOfItems.append(IntactModification(item[1], item[2], item[3], item[4], item[5]) )
+        return listOfItems
 
     """def createPattern(self, modificationPattern):
         
@@ -114,7 +126,7 @@ class ESI_Repository(AbstractRepositoryWithItems):
             listOfPatterns.append(PatternWithItems(pattern[1], self.getItems(pattern[0]), pattern[0]))
         return listOfPatterns
 
-    def updateFragPattern(self, modPattern):
+    def updatePattern(self, modPattern):
         self.update(modPattern.getName(), modPattern.getId())
         self.deleteList(modPattern.getId(), 'intactModItems')
         self.insertModifications(modPattern.getId(), modPattern)

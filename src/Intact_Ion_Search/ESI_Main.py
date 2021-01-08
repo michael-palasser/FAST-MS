@@ -9,7 +9,9 @@ import subprocess
 import traceback
 from datetime import datetime
 from src.FragmentHunter.Main import findSequence
+from src.Intact_Ion_Search.Repository.ESI_Repository import ESI_Repository
 from src.LibraryBuilder import ESI_LibraryBuilder
+from src.FragmentAndModifService import IntactIonService
 from src.Intact_Ion_Search.Finder import Finder
 from src.ConfigurationHandler import ConfigHandler
 from src.Intact_Ion_Search.ESI_Analyser import Analyser
@@ -61,8 +63,9 @@ def run():
 
     with open(moleculeFile, mode="r") as f:
         libraryBuilder.readMoleculeFile(f)
-    with open(os.path.join(path,'Parameters','intact_modifications.txt'), mode="r") as f:
-        finder = Finder(libraryBuilder.createLibrary(f), configHandler)
+    #with open(os.path.join(path,'Parameters','intact_modifications.txt'), mode="r") as f:
+    finder = Finder(libraryBuilder.createLibrary(ESI_Repository().getPatternWithObjects(
+        configHandler.get('modification'))),configHandler)
 
     """calibrate spectra"""
     print("\n********** calibrating spectralFile **********")

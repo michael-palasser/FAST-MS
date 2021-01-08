@@ -1,3 +1,4 @@
+from abc import ABC
 from functools import partial
 
 from PyQt5 import QtWidgets, QtCore
@@ -6,21 +7,12 @@ import sys
 from src.FragmentAndModifService import IntactIonService, IntactPattern
 
 
-class IntactIonEditorController(object):
-    def __init__(self):
-        self.service = IntactIonService()
-        self.pattern = self.service.makeNew()
-        self.setUpUi("Edit Intact Ions", )
-        self.setUpMenuBar({"New Modification": self.createModification,
-                      "Open Modification": self.openModification,
-                      "Delete Modification": self.deleteModification,
-                      "Save": self.save, "Save As": self.saveNew, "Close": self.close},
-                          {"New Row": self.insertRow}) #"Copy Row":self.copyRow
-        yPos = self.createNames(["Name:"], {"name":QtWidgets.QLineEdit(self.centralwidget)}, 20, 150,
-                                [self.pattern.getName()])
-        self.table = self.createTableWidget(yPos+50)
-        self.mainWindow.show()
+class AbstractIonEditorController(ABC):
 
+    def __init__(self, service, title):
+        self.service = service
+        self.pattern = self.service.makeNew()
+        self.setUpUi(title)
 
     def setUpUi(self, title):
         self.mainWindow = QtWidgets.QMainWindow()
@@ -41,10 +33,6 @@ class IntactIonEditorController(object):
         self.editMenu, self.editMenuActions = self.createMenu("Edit", editOptions, 1)
         self.menubar.addAction(self.fileMenu.menuAction())
         self.menubar.addAction(self.editMenu.menuAction())
-
-        """self.saveButton = QtWidgets.QPushButton(self.centralwidget)
-        self.saveButton.setGeometry(QtCore.QRect(350, 10, 80, 32))
-        self.saveButton.setText(self._translate("MainWindow", "Save"))"""
 
 
     def createMenu(self, name, options, separatorPosition):
@@ -129,7 +117,7 @@ class IntactIonEditorController(object):
                 #tableWidget.setItem(i, j, newitem)
         tableWidget.resizeColumnsToContents()
         tableWidget.resizeRowsToContents()
-        self.formLayout.setWidget(1, QtWidgets.QFormLayout.SpanningRole, tableWidget)
+        self.formLayout.setWidget(1, QtWidgets.QFormLayout.SpanningRole, tableWidget)   #ToDo
         return tableWidget
 
     def createModification(self):
@@ -139,7 +127,7 @@ class IntactIonEditorController(object):
         title = "Open Intact Modification"
         if args != (False,):
             title = args[0]
-        openDialog = OpenDialog(self.service.getAllPatternNames(), title)
+        openDialog = OpenDialog(title, self.service.getAllPatternNames())
         openDialog.show()
         if openDialog.exec_() and openDialog.accepted:
             if openDialog.comboBox.currentText() != "--New--":
@@ -156,7 +144,7 @@ class IntactIonEditorController(object):
         """title = "Delete Intact Modification"
         if args != (False,):
             title = args[0]"""
-        openDialog = OpenDialog(self.service.getAllPatternNames(), "Delete Intact Modification")
+        openDialog = OpenDialog("Delete Intact Modification", self.service.getAllPatternNames())
         openDialog.show()
         if openDialog.exec_() and openDialog.accepted:
             if openDialog.comboBox.currentText() != "--New--":
@@ -242,6 +230,124 @@ class IntactIonEditorController(object):
             table.item(rowCount, columnCount-1).setCheckState(QtCore.Qt.Checked)
 
 
+class IntactIonEditorController(AbstractIonEditorController):
+    def __init__(self):
+        super(IntactIonEditorController, self).__init__(IntactIonService(),"Edit Intact Ions")
+        self.setUpMenuBar({"New Modification": self.createModification,
+                      "Open Modification": self.openModification,
+                      "Delete a Modification": self.deleteModification,
+                      "Save": self.save, "Save As": self.saveNew, "Close": self.close},
+                          {"New Row": self.insertRow}) #"Copy Row":self.copyRow
+        yPos = self.createNames(["Name:"], {"name":QtWidgets.QLineEdit(self.centralwidget)}, 20, 150,
+                                [self.pattern.getName()])
+        self.table = self.createTableWidget(yPos+50)
+        self.mainWindow.show()
+
+
+
+
+
+
+    """def createModification(self):
+        self.openModification("Choose a Template")
+
+    def openModification(self, *args):
+        title = "Open Intact Modification"
+        if args != (False,):
+            title = args[0]
+        openDialog = OpenDialog(title, self.service.getAllPatternNames())
+        openDialog.show()
+        if openDialog.exec_() and openDialog.accepted:
+            if openDialog.comboBox.currentText() != "--New--":
+                print("open",openDialog.comboBox.currentText())
+                self.pattern = self.service.getPattern(openDialog.comboBox.currentText())
+            else:
+                self.pattern = self.service.makeNew()
+            self.widgets["name"].setText(self.pattern.getName())
+            self.table = self.formatTableWidget(self.service.getHeaders(), self.table, self.pattern.getItems())
+
+
+
+    def deleteModification(self):
+        #title = "Delete Intact Modification"
+        #if args != (False,):
+        #    title = args[0]
+        openDialog = OpenDialog("Delete Intact Modification", self.service.getAllPatternNames())
+        openDialog.show()
+        if openDialog.exec_() and openDialog.accepted:
+            if openDialog.comboBox.currentText() != "--New--":
+                print("deleting",openDialog.comboBox.currentText())
+                self.pattern = self.service.delete(openDialog.comboBox.currentText())
+            else:
+                return
+
+    def save(self):
+        self.service.savePattern(IntactPattern(self.widgets["name"].text(),self.readTable(self.table), self.pattern.getId() ))
+
+
+    def readTable(self, table):
+        itemList = []
+        headers = self.service.getHeaders()
+        for row in range(table.rowCount()):
+            if table.item(row,0).text() == "":
+                continue
+            rowData = []
+            for col in range(table.columnCount()):
+                widgetItem = table.item(row, col)
+                #if widgetItem and widgetItem.text():
+                if headers[col] == 'Enabled':
+                    rowData.append(int(widgetItem.checkState()/2))
+                elif widgetItem and widgetItem.text():
+                    #ToDo
+                    rowData.append(widgetItem.text())
+                #elif headers[col] == 'Enabled':
+                    #rowData.append(widgetItem.checkState())
+                else:
+                    rowData.append("")
+            itemList.append(rowData)
+        return itemList
+
+
+
+    def saveNew(self):
+        self.service.savePattern(IntactPattern(self.widgets["name"].text(),self.readTable(self.table), None ))
+
+
+    def close(self):
+        self.service.close()
+        self.mainWindow.close()
+
+    def insertRow(self):
+        self.table.insertRow(self.table.rowCount())
+        newitem = QtWidgets.QTableWidgetItem(0)
+        newitem.setCheckState(QtCore.Qt.Checked)
+        self.table.setItem(self.table.rowCount()-1, self.table.columnCount()-1, newitem)
+
+    
+
+    def editRow(self, table, pos):
+        it = table.itemAt(pos)
+        if it is None:
+            return
+        selectedRowIndex = it.row()
+        columnCount = table.columnCount()
+        item_range = QtWidgets.QTableWidgetSelectionRange(0, selectedRowIndex, columnCount - 1, selectedRowIndex)
+        table.setRangeSelected(item_range, True)
+        menu = QtWidgets.QMenu()
+        deleteColumnAction = menu.addAction("Delete row")
+        copyColumnAction = menu.addAction("Copy and insert row")
+        action = menu.exec_(table.viewport().mapToGlobal(pos))
+        if action == deleteColumnAction:
+            table.removeRow(selectedRowIndex)
+        elif action == copyColumnAction:
+            rowCount = table.rowCount()
+            table.insertRow(rowCount)
+            for j in range(columnCount):
+                if not table.item(selectedRowIndex, j) is None:
+                    table.setItem(rowCount, j, QtWidgets.QTableWidgetItem(table.item(selectedRowIndex, j).text()))
+            table.item(rowCount, columnCount-1).setCheckState(QtCore.Qt.Checked)"""
+
+
 
 """class RowSelecter(QDialog):
     def __init__(self, max, title):
@@ -272,37 +378,55 @@ class IntactIonEditorController(object):
 
 
 class OpenDialog(QtWidgets.QDialog):
-    def __init__(self, names, title):
+    def __init__(self, title, options):
         super(OpenDialog, self).__init__()
         self._translate = QtCore.QCoreApplication.translate
         self.setObjectName("dialog")
-        self.resize(300, 110)
-        self.buttonBox = QtWidgets.QDialogButtonBox(self)
-        self.buttonBox.setGeometry(QtCore.QRect(68, 70, 164, 32))
-        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
-        self.buttonBox.setObjectName("buttonBox_2")
-        self.label = QtWidgets.QLabel(self)
-        self.label.setGeometry(QtCore.QRect(20, 20, 121, 16))
-        self.comboBox = QtWidgets.QComboBox(self)
-        self.comboBox.setGeometry(QtCore.QRect(120, 17, 160, 26))
-        self.comboBox.addItem("")
-        self.comboBox.setItemText(0, self._translate(self.objectName(), "--New--"))
-        for i,name in enumerate(names):
-            self.comboBox.addItem("")
-            self.comboBox.setItemText(i+1, self._translate(self.objectName(), name))
-
-        self.retranslateUi(title)
-        QtCore.QMetaObject.connectSlotsByName(self)
-
-        self.buttonBox.accepted.connect(self.accept)
-        self.buttonBox.rejected.connect(self.reject)
+        self.setWindowTitle(self._translate("dialog", title))
+        widgetWidth = 160
+        maxWidth, yPos = self.createLabels(["Enter Name:"])
+        self.comboBox = self.makeComboBox(["--New--"]+options,widgetWidth, maxWidth, 20)
+        dialogWidth = 20+maxWidth+widgetWidth
+        yPos = self.makeButtonBox(dialogWidth,yPos+20)
+        self.resize(dialogWidth, yPos)
+        #QtCore.QMetaObject.connectSlotsByName(self)
         self.show()
 
-    def retranslateUi(self,title):
-        self.setWindowTitle(self._translate("dialog", title))
-        self.label.setText(self._translate("dialog", "Enter Name:"))
 
+    def makeComboBox(self,options,widgetWidth, xPos, yPos):
+        comboBox = QtWidgets.QComboBox(self)
+        comboBox.setGeometry(QtCore.QRect(xPos, yPos-3, widgetWidth, 26))
+        for i,name in enumerate(options):
+            comboBox.addItem("")
+            comboBox.setItemText(i, self._translate(self.objectName(), name))
+        return comboBox
 
+    def createLabels(self, labels):
+        """
+
+        :param labels: list of Strings
+        :param widgets: dict of {name:widget}
+        :return:
+        """
+        maxWidth = 0
+        yPos = 20
+        for labelName in labels:
+            label = QtWidgets.QLabel(self)
+            width = len(labelName)*10
+            label.setGeometry(QtCore.QRect(20, yPos, width, 16))
+            label.setText(self._translate(self.objectName(), labelName))
+            if width>maxWidth:
+                maxWidth = width
+            yPos += 30
+        return maxWidth, yPos
+
+    def makeButtonBox(self, dialogSize, yPos):
+        self.buttonBox = QtWidgets.QDialogButtonBox(self)
+        self.buttonBox.setGeometry(QtCore.QRect(int((dialogSize-164)/2), yPos, 164, 32))
+        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
+        self.buttonBox.accepted.connect(self.accept)
+        self.buttonBox.rejected.connect(self.reject)
+        return yPos+40
 
 
 d = {"Name":["+Na","K", "+CMCT", "+CMCT+Na", "+CMCT+K", "+2CMCT"],

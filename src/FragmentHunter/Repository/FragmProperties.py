@@ -5,8 +5,8 @@ from src.GeneralRepository.Exceptions import AlreadyPresentException
 
 
 class FragItem(AbstractItem):
-    def __init__(self, name, enabled, gain, loss, residue, radicals):
-        super(FragItem, self).__init__(name, enabled, gain, loss)
+    def __init__(self, name, gain, loss, residue, radicals, enabled):
+        super(FragItem, self).__init__(name, gain, loss, enabled)
         self._residue = residue
         self._radicals = radicals
 
@@ -23,17 +23,17 @@ class FragItem(AbstractItem):
         self.fragmentTypes = fragmentTypes"""
 
 
-class FragmentationPattern(object):
+class FragmentationPattern(PatternWithItems):
     def __init__(self, name, fragmentTypes, precursorFragments, id):
-        self.name = name
-        self.fragmentTypes = fragmentTypes
-        self.precursorFragments = precursorFragments
-        self.id = id
+        super(FragmentationPattern, self).__init__(name, fragmentTypes,id, [4])
+        self.__precursorFragments = precursorFragments
 
+    def getPrcFragments(self):
+        return self.__precursorFragments
 
 
 class FragmentationRepository(AbstractRepositoryWithItems):
-    def __init__(self, dbFile):
+    def __init__(self):
         #self.__conn = sqlite3.connect(dbFile)
         super(FragmentationRepository, self).__init__('TD_data.db', 'fragPatterns',("name",),
                     {'fragmentTypes':('name', 'enabled', 'gain', 'loss', 'residue', 'radicals', 'patternId'),
@@ -49,11 +49,11 @@ class FragmentationRepository(AbstractRepositoryWithItems):
             CREATE TABLE IF NOT EXISTS fragmentTypes (
                 "id"	integer PRIMARY KEY UNIQUE,
                 "name"	text NOT NULL ,
-                "enabled" integer NOT NULL,
                 "gain" text NOT NULL ,
                 "loss" text NOT NULL ,
                 "residue" text NOT NULL ,
                 "radicals" integer NOT NULL ,
+                "enabled" integer NOT NULL,
                 "patternId" integer NOT NULL );""")
         self._conn.cursor().execute("""
                     CREATE TABLE IF NOT EXISTS precFragments (
@@ -67,7 +67,7 @@ class FragmentationRepository(AbstractRepositoryWithItems):
                         "patternId" integer NOT NULL );""")
 
 
-    def createFragPattern(self, fragmentationPattern):
+    """def createFragPattern(self, fragmentationPattern):
         try:
             self.insertFragments(self.create((fragmentationPattern.name,)), fragmentationPattern)
         except sqlite3.IntegrityError:
@@ -81,11 +81,11 @@ class FragmentationRepository(AbstractRepositoryWithItems):
             self.createItem('precFragments', item.getAll() + [patternId])
 
 
-        """def insertPrecItems(self, precFragment):
+        def insertPrecItems(self, precFragment):
         try:
             self.createItem('precFragments', precFragment.getAll())
         except sqlite3.IntegrityError:
-            raise AlreadyPresentException(precFragment.getName())"""
+            raise AlreadyPresentException(precFragment.getName())
 
 
     def getFragPattern(self, name):
@@ -106,44 +106,62 @@ class FragmentationRepository(AbstractRepositoryWithItems):
                                                        self.getFragments('precFragments', pattern[0]), pattern[0]))
         return listOfPatterns
 
-    """def getPrecFragments(self):
-        return PrecursorFragmentationPattern(self.getFragments(None))"""
+    def getPrecFragments(self):
+        return PrecursorFragmentationPattern(self.getFragments(None))
 
 
-    def updateFragPattern(self, fragPattern):
+    def updatePattern(self, fragPattern):
         self.update(fragPattern.name, fragPattern.id)
-        self.deleteList(fragPattern.id, 'fragmentTypes')
-        self.deleteList(fragPattern.id, 'precFragments')
+        self.deleteAllItems(fragPattern.id, 'precFragments')
         self.insertFragments(fragPattern.id, fragPattern)
 
 
-        """def updatePrecFragment(self, precFragPattern):
+    def updatePrecFragment(self, precFragPattern):
         cur = self._conn.cursor()
         sql = 'UPDATE precFragments SET ' + '=?, '.join(self._itemDict['precFragments']) + '=? WHERE id=?'
         cur.execute(sql, precFragPattern.fragmentTypes.getAll(), precFragPattern.id)
-        self._conn.commit()"""
+        self._conn.commit()
 
 
     def deleteFragPattern(self, id):
-        self.deleteList(id, 'fragmentTypes')
-        self.deleteList(id, 'precFragments')
+        self.deleteAllItems(id)
         self.delete(id)
 
     def deletePrecFragment(self, id):
         cur = self._conn.cursor()
-        cur.execute('DELETE FROM precFragments WHERE id=?', (id,))
+        cur.execute('DELETE FROM precFragments WHERE id=?', (id,))"""
 
 
+    def getItemColumns(self):
+        return super(FragmentationRepository, self).getItemColumns()+['Residue', 'Radicals', 'Enabled']
 
 
-"""if __name__ == '__main__':
-    pattern = FragmentationPattern("CAD_CMCT","CMCT",
-                                   [FragItem("a","","H1O3P1","",0), FragItem("c","","","",0)],
-                                   [ModifiedItem("CMCT", "C14H25N3O","","",0,0.5)],[])
-    Repository = FragmentationRepository("Fragmentation_test3.db")
-    try:
-        Repository.makeTable()
-        Repository.createElement(pattern)
-        pattern2 = Repository.getModPattern("CAD_CMCT")
-    finally:
-        Repository.close()"""
+    def getPattern(self, name):
+        pattern = self.get('name', name)
+        listOfLists = self.getAllItems(pattern[0])
+        return FragmentationPattern(pattern[1], listOfLists[0], listOfLists[1], pattern[0])
+
+    def getAllItems(self, patternId):
+        listOfLists = []
+        for table in self._itemDict.keys():
+            listOfItems = []
+            for item in self.getItems(patternId, table):
+                listOfItems.append((item[1], item[2], item[3], item[4], item[5], item[6]))
+            listOfLists.append(listOfItems)
+        return listOfLists
+
+
+    def getPatternWithObjects(self, name):
+        pattern = self.get('name', name)
+        listOfItemLists = self.getItemsAsObjects(pattern[0])
+        return FragmentationPattern(pattern[1], listOfItemLists[0], listOfItemLists[1], pattern[0])
+
+
+    def getItemsAsObjects(self, patternId):
+        listOfItemLists = []
+        for table in self._itemDict.keys():
+            listOfItems = []
+            for item in super(FragmentationRepository, self).getItems(patternId,table):
+                listOfItems.append(FragItem(item[1], item[2], item[3], item[4], item[5], item[6]))
+            listOfItemLists.append(listOfItems)
+        return listOfItemLists

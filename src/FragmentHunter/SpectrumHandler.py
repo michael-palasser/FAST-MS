@@ -32,8 +32,8 @@ class SpectrumHandler(object):
         Constructor
         :param molecule: RNA/DNA/P (String)
         :param sequence: sequential list of monomers
-        :param fragmentLibrary: list of fragments from LibraryBuilder
-        :param chargedModifications: output of getChargedModifications()-fct (LibraryBuilder): dict
+        :param fragmentLibrary: list of fragments from AbstractLibraryBuilder
+        :param chargedModifications: output of getChargedModifications()-fct (AbstractLibraryBuilder): dict
         '''
         self.molecule = molecule
         self.sequence = sequence

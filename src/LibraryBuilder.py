@@ -5,6 +5,8 @@ Created on 21 Jul 2020
 '''
 import csv
 import re
+from abc import ABC
+
 import numpy as np
 from src.MolecularFormula import MolecularFormula
 from src.FragmentHunter.Fragment import Fragment
@@ -19,7 +21,7 @@ def removeEmptyElements(rawList):
     return newList
 
 
-class LibraryBuilder(object):
+class AbstractLibraryBuilder(ABC):
     '''
     Parent class of all library builders
     '''
@@ -90,7 +92,7 @@ class LibraryBuilder(object):
 
 
 
-class FragmentLibraryBuilder(LibraryBuilder):
+class FragmentLibraryBuilder(AbstractLibraryBuilder):
     '''
     Creates library for top-down fragments
     '''
@@ -419,9 +421,9 @@ class FragmentLibraryBuilder(LibraryBuilder):
 
 
 
-class ESI_LibraryBuilder(LibraryBuilder):
+class ESI_LibraryBuilder(AbstractLibraryBuilder):
     '''
-    LibraryBuilder for intact ion search
+    AbstractLibraryBuilder for intact ion search
     #ToDo: comments
     '''
     def __init__(self,precName, sequence, molecule, modification):
@@ -438,19 +440,20 @@ class ESI_LibraryBuilder(LibraryBuilder):
         return formula
 
 
-    def createLibrary(self,modificationFile):
+    def createLibrary(self,modificationPattern):
         unmodFormula = self.getUnmodifiedFormula()
         library = {"" : (unmodFormula.calculateMonoIsotopic(),0)}
-        for line in modificationFile:
-            if line.startswith('#'):
+        for item in modificationPattern.getItems():
+            """if line.startswith('#'):
                 continue
             lineList = removeEmptyElements(line.rstrip().split('\t'))
             if lineList == []:
                 continue
             if lineList[0] == self.modification:
                 formulaDict = self.stringToFormula(lineList[3], dict(), 1)  # gain
-                formulaDict = self.stringToFormula(lineList[2], formulaDict, -1)  # loss
-                modFormula = unmodFormula.addFormula(formulaDict)
-                library[lineList[1]] = (modFormula.calculateMonoIsotopic(),lineList[4])
+                formulaDict = self.stringToFormula(lineList[2], formulaDict, -1)  # loss"""
+            if item.getEnabeled():
+                modFormula = unmodFormula.addFormula(item.getFormula())
+                library[item.getName()] = (modFormula.calculateMonoIsotopic(),item.getNrMod())
         return library
 

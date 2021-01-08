@@ -120,7 +120,7 @@ class PeriodicTableRepository(AbstractRepositoryWithItems):
         return elements
 
 
-    def updateFragPattern(self, element):
+    def updatePattern(self, element):
         self.update(element.getName(), element.getId())
         self.deleteList(element.getId(), 'isotopes')
         self.insertIsotopes(element.getId(), element)

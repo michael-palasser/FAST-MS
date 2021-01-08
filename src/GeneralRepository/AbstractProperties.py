@@ -35,7 +35,7 @@ class PatternWithItems(AbstractPattern):
         """
 
         :param name:
-        :param items: either list of Item objects for LibraryBuilder or 2D list for GUI
+        :param items: either list of Item objects for AbstractLibraryBuilder or 2D list for GUI
         :param id:
         :param integerVals:
         """
@@ -226,8 +226,8 @@ class AbstractRepositoryWithItems(AbstractRepository, ABC):
         super(AbstractRepositoryWithItems, self).__init__(database, tableName, columns)
         self._itemDict = itemDict
 
-    def getItemColumns(self, *args):
-        pass
+    def getItemColumns(self):
+        return ['Name', 'Gain', 'Loss']
 
     def createPattern(self, pattern):
         """
@@ -256,11 +256,16 @@ class AbstractRepositoryWithItems(AbstractRepository, ABC):
     def getPattern(self, name):
         pass
 
-    def getItems(self, patternId):
-        table = [key for key in self._itemDict.keys()][0]
+
+    def getPatternWithObjects(self, name):
+        pass
+
+    def getItems(self, patternId, table):
+        #table = [key for key in self._itemDict.keys()][0]
         cur = self._conn.cursor()
         cur.execute("SELECT * FROM " + table + " WHERE patternId=?", (patternId,))
         return cur.fetchall()
+
         """listOfItems = list()
         for item in cur.fetchall():
             row = []
@@ -274,11 +279,12 @@ class AbstractRepositoryWithItems(AbstractRepository, ABC):
         return listOfItems"""
 
 
-    def getAllPatterns(self):
+    """def getAllPatterns(self):
         listOfPatterns = list()
         for pattern in self.getAll():
-            listOfPatterns.append(PatternWithItems(pattern[1], self.getItems(pattern[0]), pattern[0]))
-        return listOfPatterns
+            listOfPatterns.append(PatternWithItems(pattern[1], 
+                                    self.getItems(pattern[0],[key for key in self._itemDict.keys()][0]), pattern[0]))
+        return listOfPatterns"""
 
     def getAllPatternNames(self):
         listOfNames = list()
@@ -286,7 +292,7 @@ class AbstractRepositoryWithItems(AbstractRepository, ABC):
             listOfNames.append(pattern[1])
         return listOfNames
 
-    def updateFragPattern(self, modPattern):
+    def updatePattern(self, modPattern):
         self.update(modPattern.getName(), modPattern.getId())
         self.deleteAllItems(modPattern.getId())
         self.insertModifications(modPattern.getId(), modPattern)

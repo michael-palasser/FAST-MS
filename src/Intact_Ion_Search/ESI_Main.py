@@ -9,11 +9,10 @@ import subprocess
 import traceback
 from datetime import datetime
 from src.FragmentHunter.Main import findSequence
-from src.Intact_Ion_Search.Repository.ESI_Repository import ESI_Repository
+from src.Repositories.IntactRepository import ESI_Repository
 from src.LibraryBuilder import ESI_LibraryBuilder
-from src.FragmentAndModifService import IntactIonService
 from src.Intact_Ion_Search.Finder import Finder
-from src.ConfigurationHandler import ConfigHandler
+from src.Repositories.ConfigurationHandler import ConfigHandler
 from src.Intact_Ion_Search.ESI_Analyser import Analyser
 from src.Intact_Ion_Search.ESI_ExcelWriter import ExcelWriter
 from src import path
@@ -63,7 +62,7 @@ def run():
 
     with open(moleculeFile, mode="r") as f:
         libraryBuilder.readMoleculeFile(f)
-    #with open(os.path.join(path,'Parameters','intact_modifications.txt'), mode="r") as f:
+    #with openAgain(os.path.join(path,'Parameters','intact_modifications.txt'), mode="r") as f:
     finder = Finder(libraryBuilder.createLibrary(ESI_Repository().getPatternWithObjects(
         configHandler.get('modification'))),configHandler)
 
@@ -100,7 +99,7 @@ def run():
         excelWriter.closeWorkbook()
 
     try:
-        subprocess.call(['open',output])
+        subprocess.call(['openAgain',output])
     except:
         pass
     return 0

@@ -7,7 +7,7 @@ from src import path
 
 def main():
     inputFile = os.path.join(path, 'Spectral_data','model_input.txt')
-    subprocess.call(['open', inputFile])
+    subprocess.call(['openAgain', inputFile])
     input('Press any key to start')
     # get pattern
     with open(inputFile, 'r') as input_file:
@@ -71,7 +71,7 @@ def main():
                 output_file.write(str(elem) + '\t')
             output_file.write('\n')
 
-    subprocess.call(['open', outputFile])
+    subprocess.call(['openAgain', outputFile])
 
 if __name__ == '__main__':
     main()

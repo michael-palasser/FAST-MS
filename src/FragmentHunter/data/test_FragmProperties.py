@@ -1,7 +1,7 @@
 from unittest import TestCase
 import os
 
-from src.FragmentHunter.Repository.FragmProperties import *
+from src.Repositories.TD_Repositories import *
 
 pattern1 = FragmentationPattern("CAD_CMCT", "CMCT",
                                 [FragItem("a", 1, "", "H1O3P1", "", 0), FragItem("c", 1, "", "", "", 0)],
@@ -71,7 +71,7 @@ class TestFragmentationRepository(TestCase):
         self.createPatternForTest()
         self.repository.getFragPattern("CAD_CMCT")
         self.repository.deleteModPattern(pattern1)
-        #self.Repository.getModPattern("CAD_CMCT")
+        #self.data.getModPattern("CAD_CMCT")
         with self.assertRaises(IndexError):
             self.repository.getFragPattern("CAD_CMCT")
 

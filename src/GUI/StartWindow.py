@@ -10,7 +10,7 @@ from PyQt5.QtCore import QCoreApplication
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import QApplication, QWidget, QMainWindow, QPushButton, QAction
 
-from src.GUI.FragmentsAndModifs import IntactIonEditorController
+from src.GUI.EditorController import *
 from src.GUI.ParameterDialogs import TDStartDialog, TD_configurationDialog, ESI_StartDialog
 from src.FragmentHunter.ModellingTool import main as modellingTool
 from src.FragmentHunter.OccupancyRecalculator import run as occupancyRecalculator
@@ -23,9 +23,10 @@ class Window(QMainWindow):
         super(Window, self).__init__()
         self.setWindowTitle('SAUSAGE')
         mainMenu = self.menuBar()
-        self.tdMenu = mainMenu.addMenu('&FragmentHunter')
+        self.tdMenu = mainMenu.addMenu('&Top-Down Tools')
+        self.tdEditMenu = mainMenu.addMenu('&Top-Down Configurations')
         self.esiMenu = mainMenu.addMenu('&IntactIonSearch')
-        self.parameters = mainMenu.addMenu('&Storage')
+        self.dataEdit = mainMenu.addMenu('&Edit Data')
         self.move(200,200)
         # self.setWindowIcon(QIcon('pic.png'))
         self.home()
@@ -34,26 +35,34 @@ class Window(QMainWindow):
     def addActionToStatusBar(self,menu, name, toolTip, function):
         action = QAction('&'+name, self)
         action.setToolTip(toolTip)
+        action.setWhatsThis(toolTip)
+        action.setStatusTip(toolTip)
         action.triggered.connect(function)
         menu.addAction(action)
 
 
     def home(self):
-        self.addActionToStatusBar(self.tdMenu, 'Analyse spectrum',
+        self.addActionToStatusBar(self.tdMenu, 'Analyse Spectrum',
                                   'Starts analysis of top-down spectrum', self.startFragmentHunter)
-        self.addActionToStatusBar(self.tdMenu, 'Remodelling',
+        self.addActionToStatusBar(self.tdMenu, 'Ion Modelling',
                                   'Models relative abundance of an isotope distribution', modellingTool)
-        self.addActionToStatusBar(self.tdMenu, 'Calculate occupancies',
+        self.addActionToStatusBar(self.tdMenu, 'Calculate Occupancies',
                                   'Calculates occupancies of a given ion list', occupancyRecalculator)
-        self.addActionToStatusBar(self.tdMenu, 'Compare spectra',
+        self.addActionToStatusBar(self.tdMenu, 'Compare Analysis',
                                   'Compares the ion lists of multiple spectra', spectrumComparator)
-        self.addActionToStatusBar(self.tdMenu, 'Edit parameters',
+        self.addActionToStatusBar(self.tdEditMenu, 'Edit Parameters',
                                   'Edit configurations',self.editTopDownConfig)
+        self.addActionToStatusBar(self.tdEditMenu, 'Edit Fragments',
+                                  'Edit fragment patterns',FragmentEditorController)
+        self.addActionToStatusBar(self.tdEditMenu, 'Edit Modifications',
+                                  'Edit modification/ligand patterns',ModificationEditorController)
         self.addActionToStatusBar(self.esiMenu, 'Analyse spectrum',
                                   'Starts analysis of intact spectrum', IntactIonsSearch)
         self.addActionToStatusBar(self.esiMenu, 'Edit Ions',
                                   'Edit Intact Ions', IntactIonEditorController)
-        self.addActionToStatusBar(self.parameters, 'Sequences','Edit stored sequences', self.editSequences)
+        self.addActionToStatusBar(self.dataEdit, 'Elements','Edit element table ', ElementEditorController)
+        self.addActionToStatusBar(self.dataEdit, 'Molecules','Edit Molecular Properties', MoleculeEditorController)
+        self.addActionToStatusBar(self.dataEdit, 'Sequences','Edit stored sequences', SequenceEditorController)
         xPos = self.createButton('Analyse top-down\nspectrum','Starts analysis of top-down spectrum',40,
                                   self.startFragmentHunter)
         xPos = self.createButton('Analyse spectrum\nof intact molecule', 'Starts analysis of normal ESI spectrum', xPos,
@@ -85,11 +94,6 @@ class Window(QMainWindow):
         dialog = TD_configurationDialog(self)
         dialog.exec_()
 
-    """    def editIntactIons(self):
-        IntactIonEditorController()"""
-
-    def editSequences(self):
-        print('notImplemented')
 
 def run():
     app = QApplication(sys.argv)

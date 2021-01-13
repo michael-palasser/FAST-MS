@@ -6,14 +6,14 @@ import re
 from datetime import datetime
 
 from src.FragmentHunter.Main import findSequence
-from src.FragmentHunter.Fragment import Fragment,Ion
+from src.Entities.Fragment import Fragment,Ion
 from src.FragmentHunter.Analyser import Analyser
 from src.FragmentHunter.TDExcelWriter import BasicExcelWriter
 from src import path
-from src.ConfigurationHandler import ConfigHandler
+from src.Repositories.ConfigurationHandler import ConfigHandler
 
 def run():
-    """open everything"""
+    """openAgain everything"""
     with open(path + 'Parameters/sequences.txt', 'r') as sequenceFile:
         sequenceName = input('Enter sequence name: ')
         molecule, sequence = findSequence(sequenceFile, sequenceName)
@@ -28,7 +28,7 @@ def run():
     spectralFile = path + 'Spectral_data/Occupancies_in.csv'
     with open(spectralFile, 'w') as f:
         pass
-    subprocess.call(['open',spectralFile])
+    subprocess.call(['openAgain',spectralFile])
     input('Press any key to start')
     try:
         arr = np.loadtxt(spectralFile, delimiter=',', skiprows=1,
@@ -53,7 +53,7 @@ def run():
 
     """Analysis and Output"""
     analyser = Analyser(ionList, sequence,precModification,
-                        ConfigHandler(os.path.join(path,"src","FragmentHunter","Repository","configurations.json"))
+                        ConfigHandler(os.path.join(path,"src","FragmentHunter","data","configurations.json"))
                             .getAll())
     excelWriter = BasicExcelWriter(os.path.join(path, "Spectral_data","Occupancies_out.xlsx"))
     date = datetime.now().strftime("%d/%m/%Y %H:%M")
@@ -62,7 +62,7 @@ def run():
     excelWriter.writeOccupancies(row,sequence,analyser.calculatePercentages(speciesList))
     excelWriter.closeWorkbook()
     try:
-        subprocess.call(['open', os.path.join(path, "Spectral_data","Occupancies_out.xlsx")])
+        subprocess.call(['openAgain', os.path.join(path, "Spectral_data","Occupancies_out.xlsx")])
     except:
         pass
 

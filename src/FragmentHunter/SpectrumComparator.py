@@ -85,7 +85,7 @@ def run():
             worksheet.write_row(row, 0, deHash(ionHash))
         row+=1
     workbook.close()
-    subprocess.call(['open', output])
+    subprocess.call(['openAgain', output])
     print("********** saved in:", output, "**********\n")
 
 if __name__ == '__main__':

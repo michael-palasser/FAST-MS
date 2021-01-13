@@ -3,12 +3,12 @@ import traceback
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import QDialog, QMessageBox
 from src import path
-from src.ConfigurationHandler import ConfigHandler
+from src.Repositories.ConfigurationHandler import ConfigHandler
 from src.FragmentHunter import Main
 from src.Intact_Ion_Search import ESI_Main
 from os.path import join
 
-fragmentHunterRepPath = join(path, 'src', 'FragmentHunter', 'Repository')
+fragmentHunterRepPath = join(path, 'src', 'FragmentHunter', 'data')
 
 class AbstractDialog(QDialog):
     def __init__(self, dialogName, title, lineSpacing, parent=None):
@@ -194,7 +194,7 @@ class DialogWithTabs(AbstractDialog):
     def __init__(self,dialogName, title, lineSpacing, parent=None):
         super().__init__(dialogName, title, lineSpacing, parent)
         self.verticalLayout = QtWidgets.QVBoxLayout(self)
-        self.verticalLayout.setObjectName("verticalLayout")
+        #self.verticalLayout.setObjectName("verticalLayout")
         self.tabWidget = QtWidgets.QTabWidget(self)
         self.tabWidget.setEnabled(True)
         tabSizePolicy = self.setNewSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Minimum)
@@ -343,7 +343,7 @@ class TD_configurationDialog(DialogWithTabs):
 class ESI_StartDialog(DialogWithTabs, StartDialog):
     def __init__(self, parent=None):
         super().__init__("ESI_startDialog","Intact Ion Search", 30, parent)
-        self.configHandler = ConfigHandler(join(path,"src","Intact_Ion_Search","Repository","configurations.json"))
+        self.configHandler = ConfigHandler(join(path,"src","Intact_Ion_Search","data","configurations.json"))
         self.setupUi(self)
 
     def setupUi(self, startDialog):

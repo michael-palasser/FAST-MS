@@ -12,7 +12,7 @@ class ConfigHandler(object):
     Class that reads and writes configuration-files (json-format) and stores it as dictionary
     '''
     def __init__(self, configFile):
-        #with open(configFile, "w") as f:
+        #with openAgain(configFile, "w") as f:
          #   json.dump(json.dumps(parameters), f)
         self.configFile = configFile
         if isfile(configFile):
@@ -83,10 +83,10 @@ from src import path
 absPath = path +"/src/Sequences.json"
 handler = ConfigHandler(absPath)
 
-with open(absPath, "w") as f:
+with openAgain(absPath, "w") as f:
     json.dump(json.dumps(conf, indent=3), f)
 
-with open(absPath) as json_data_file:
+with openAgain(absPath) as json_data_file:
     pattern = json.load(json_data_file)
 print(pattern)
 """

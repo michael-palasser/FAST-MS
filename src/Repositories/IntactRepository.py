@@ -3,40 +3,14 @@ Created on 29 Dec 2020
 
 @author: michael
 '''
-import sqlite3
-from src.GeneralRepository.AbstractProperties import AbstractRepositoryWithItems, PatternWithItems, AbstractItem
-from src.GeneralRepository.Exceptions import AlreadyPresentException
+from src.Entities.IonEntities import IntactPattern, IntactModification
+from src.Repositories.AbstractRepositories import AbstractRepositoryWithItems2
 from os.path import join
 
-
-
-class IntactPattern(PatternWithItems):
-    def __init__(self,  name, items, id):
-        super(IntactPattern, self).__init__(name, items, id, (3, 4))
-
-
-"""def getItemsAsList(self):
-        _itemDict = dict()
-        #_itemDict = {"Name":[], "Gain":[], "Loss":[], "NrOfMod":[], "enabled":[]}
-        for item in self.__modifications:
-            for key, val in item.items()
-                if item not in
-        return {"Name":[], "Gain", "Loss", "NrOfMod", "enabled"}"""
-
-class IntactModification(AbstractItem):
-    def __init__(self, name, gain, loss, nrMod, enabled):
-        super(IntactModification, self).__init__(name, enabled, gain, loss)
-        self._nrMod = nrMod
-
-    def getNrMod(self):
-        return self._nrMod
-
-
-
-class ESI_Repository(AbstractRepositoryWithItems):
+class ESI_Repository(AbstractRepositoryWithItems2):
     def __init__(self):
-        super(ESI_Repository, self).__init__(join('Intact_Ion_Search','Repository','ESI_data.db'), 'intactPatterns',("name",),
-                            {"intactModItems":('name', 'gain', 'loss', 'nrMod','enabled', 'patternId')})
+        super(ESI_Repository, self).__init__(join('Intact_Ion_Search','data','ESI_data.db'), 'intactPatterns',("name",),
+                            {"intactModItems":('name', 'gain', 'loss', 'nrMod','enabled', 'patternId')}, (3,),(4,))
 
     def makeTables(self):
         self._conn.cursor().execute("""
@@ -69,7 +43,9 @@ class ESI_Repository(AbstractRepositoryWithItems):
 
 
     def getItemColumns(self):
-        return super(ESI_Repository, self).getItemColumns()+['Nr.Mod.','Enabled']
+        columns = super(ESI_Repository, self).getItemColumns()
+        columns.update({'Nr.Mod.':"How often is species modified",'Enabled':"Activate/Deactivate Species"})
+        return columns
 
 
     def getPattern(self, name):
@@ -101,11 +77,11 @@ class ESI_Repository(AbstractRepositoryWithItems):
         :return:
         
         try:
-            self.insertModifications(self.create((modificationPattern.getName(),)), modificationPattern)
+            self.insertItem(self.create((modificationPattern.getName(),)), modificationPattern)
         except sqlite3.IntegrityError:
             raise AlreadyPresentException(modificationPattern.getName())
 
-    def insertModifications(self, patternId, modificationPattern):
+    def insertItem(self, patternId, modificationPattern):
         for item in modificationPattern.getItems():
             self.createItem('intactModItems', item.getAll() + [patternId])"""
 
@@ -129,7 +105,7 @@ class ESI_Repository(AbstractRepositoryWithItems):
     def updatePattern(self, modPattern):
         self.update(modPattern.getName(), modPattern.getId())
         self.deleteList(modPattern.getId(), 'intactModItems')
-        self.insertModifications(modPattern.getId(), modPattern)
+        self.insertItem(modPattern.getId(), modPattern)
 
     def deleteFragPattern(self, id):
         self.deleteList(id, 'intactModItems')

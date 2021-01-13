@@ -9,7 +9,7 @@ from abc import ABC
 
 import numpy as np
 from src.MolecularFormula import MolecularFormula
-from src.FragmentHunter.Fragment import Fragment
+from src.Entities.Fragment import Fragment
 
 eMass = 5.48579909065 * 10**(-4)
 

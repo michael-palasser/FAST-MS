@@ -10,7 +10,7 @@ import traceback
 import sys
 import time
 import re
-from src.ConfigurationHandler import ConfigHandler
+from src.Repositories.ConfigurationHandler import ConfigHandler
 from src.FragmentHunter.Analyser import Analyser
 from src.LibraryBuilder import FragmentLibraryBuilder
 from src.FragmentHunter.SpectrumHandler import SpectrumHandler
@@ -41,8 +41,8 @@ def sortIonsByName(ionList):
 
 #if __name__ == '__main__':
 def run():
-    settings = ConfigHandler(os.path.join(path,"src","FragmentHunter","Repository","settings.json")).getAll()
-    configs = ConfigHandler(os.path.join(path,"src","FragmentHunter","Repository","configurations.json")).getAll()
+    settings = ConfigHandler(os.path.join(path,"src","FragmentHunter","data","settings.json")).getAll()
+    configs = ConfigHandler(os.path.join(path,"src","FragmentHunter","data","configurations.json")).getAll()
     with open(os.path.join(path, 'Parameters','sequences.txt'),'r') as sequenceFile:
             molecule, sequence = findSequence(sequenceFile, settings['sequName'])
             if sequence != None:
@@ -210,7 +210,7 @@ def run():
     finally:
         excelWriter.closeWorkbook()
     try:
-        subprocess.call(['open',output])
+        subprocess.call(['openAgain',output])
     except:
         pass
     return 0

@@ -19,5 +19,17 @@
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
       <jdbc-url>jdbc:sqlite:$PROJECT_DIR$/src/Intact_Ion_Search/Repository/ESI_data.db</jdbc-url>
     </data-source>
+    <data-source source="LOCAL" name="Shared_data" uuid="6f94f958-1f52-444b-be1f-6d3a9b5b2690">
+      <driver-ref>sqlite.xerial</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
+      <jdbc-url>jdbc:sqlite:$PROJECT_DIR$/src/Shared_data.db</jdbc-url>
+    </data-source>
+    <data-source source="LOCAL" name="Shared_data [2]" uuid="c0181545-d67a-49c1-ae2f-056d9ff67789">
+      <driver-ref>sqlite.xerial</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
+      <jdbc-url>jdbc:sqlite:$PROJECT_DIR$/src/Repositories/Shared_data.db</jdbc-url>
+    </data-source>
   </component>
 </project>

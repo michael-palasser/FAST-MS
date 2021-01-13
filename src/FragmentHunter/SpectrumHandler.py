@@ -7,11 +7,11 @@ from os.path import join
 from re import findall
 import numpy as np
 import copy
-from src.FragmentHunter.Fragment import Ion
+from src.Entities.Fragment import Ion
 from src import path
-from src.ConfigurationHandler import ConfigHandler
+from src.Repositories.ConfigurationHandler import ConfigHandler
 
-configs = ConfigHandler(join(path, "src","FragmentHunter","Repository","configurations.json")).getAll()
+configs = ConfigHandler(join(path, "src","FragmentHunter","data","configurations.json")).getAll()
 
 def getErrorLimit(mz):
     return configs['k']/1000 * mz + configs['d']

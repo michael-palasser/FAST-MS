@@ -3,74 +3,16 @@ Created on 29 Dec 2020
 
 @author: michael
 '''
-import sqlite3
+from os.path import join
 
-from src.GeneralRepository.AbstractProperties import AbstractRepositoryWithItems
-from src.GeneralRepository.Exceptions import AlreadyPresentException
-
-
-class Element(object):
-    def __init__(self, name, isotopes, id):
-        """
-
-        :param name:
-        :param isotopes: vorerst 2D list, dann (ToDo) 2D numpy array
-        :param id:
-        """
-        self.__name = name
-        self.__isotopes = isotopes
-        self.__id = id
-
-    def getName(self):
-        return self.__name
-
-    def getIsotopes(self):
-        return self.__isotopes
-
-    def getId(self):
-        return self.__id
-
-class Isotope(object):
-    """
-    wahrsch zu umstaendlich
-    """
-    def __init__(self, pNr, isoNr, mass, relAb, id):
-        """
-
-        :param pNr: proton number
-        :param isoNr: M+isoNr (monoisotopic = M)
-        :param mass:
-        :param relAb:
-        """
-        self.__pNr = pNr
-        self.__isoNr = isoNr
-        self.__mass = mass
-        self.__relAb = relAb
-        self.__id = id
-
-    def getPNr(self):
-        return self.__pNr
-
-    def getNr(self):
-        return self.__isoNr
-
-    def getMass(self):
-        return self.__mass
-
-    def getRelAb(self):
-        return self.__relAb
-
-    def getId(self):
-        return self.__id
-
-    def getAll(self):
-        return [self.__pNr, self.__isoNr, self.__mass, self.__relAb]
+from src.Entities.GeneralEntities import Element, Isotope
+from src.Repositories.AbstractRepositories import AbstractRepositoryWithItems1
 
 
-class PeriodicTableRepository(AbstractRepositoryWithItems):
+class PeriodicTableRepository(AbstractRepositoryWithItems1):
     def __init__(self):
-        super(PeriodicTableRepository, self).__init__('Shared_data.db', 'elements', ('name'),
-                                                      {'isotopes':('pNr', 'isoNr', 'mass', 'relAb')})
+        super(PeriodicTableRepository, self).__init__(join('Repositories', 'Shared_data.db'), 'elements', ('name',),
+                                                      {'isotopes':('pNr', 'mass', 'relAb', 'patternId')}, (0,1,2),())
 
     def makeTables(self):
         self._conn.cursor().execute("""
@@ -80,19 +22,48 @@ class PeriodicTableRepository(AbstractRepositoryWithItems):
         self._conn.cursor().execute("""
             CREATE TABLE IF NOT EXISTS isotopes (
                 "id"	integer PRIMARY KEY UNIQUE,
-                "pNr"	integer NOT NULL ,
-                "isoNr" integer NOT NULL ,
+                "pNr" integer NOT NULL ,
                 "mass" real NOT NULL ,
                 "relAb" real NOT NULL ,
                 "patternId" integer NOT NULL );""")
 
+    def getItemColumns(self):
+        #'isoNr': 'Number of isotope (e.g.: 13C --> isoNr = 1)
+        return {'pNr':'Number of Protons',
+                'mass': 'Mass of the isotope in Da',
+                'relAb': 'Relative abundance of isotope'}
 
-    def createElement(self, element):
-        """
+
+    def getPattern(self, name):
+        pattern = self.get('name', name)
+        return Element(pattern[1], self.getItems(pattern[0], [key for key in self._itemDict.keys()][0]), pattern[0])
+
+    def getItems(self,patternId, table):
+        listOfItems = list()
+        for item in super(PeriodicTableRepository, self).getItems(patternId, [key for key in self._itemDict.keys()][0]):
+            listOfItems.append((item[1], item[2], item[3], item[4], item[5]) )
+        return listOfItems
+
+
+    def getPatternWithObjects(self, name):
+        pattern = self.get('name', name)
+        return Element(pattern[1], self.getItemsAsObjects(pattern[0]),
+                             pattern[0])
+
+    def getItemsAsObjects(self,patternId):
+        listOfItems = list()
+        for item in super(PeriodicTableRepository, self).getItems(patternId, [key for key in self._itemDict.keys()][0]):
+            listOfItems.append(Isotope(item[1], item[2], item[3]) )
+        return listOfItems
+
+
+
+    """def createElement(self, element):
+        \"""
         Function create() creates new pattern which is filled by insertIsotopes
         :param modificationPattern:
         :return:
-        """
+        \"""
         try:
             self.insertIsotopes(self.create((element.getName(),)), element)
         except sqlite3.IntegrityError:
@@ -128,4 +99,4 @@ class PeriodicTableRepository(AbstractRepositoryWithItems):
 
     def deleteElement(self, id):
         self.deleteList(id, 'intactModItems')
-        self.delete(id)
+        self.delete(id)"""

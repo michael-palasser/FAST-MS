@@ -1,0 +1,220 @@
+import os
+import traceback
+
+from src import path
+from src.Services import *
+from src.PeriodicTable import *
+from src.Entities.GeneralEntities import *
+from src.Entities.IonEntities import *
+from src.LibraryBuilder import removeEmptyElements
+from os import listdir
+from os.path import isfile, join
+
+def writeElements():
+    service = PeriodicTableService()
+    try:
+        for key, val in periodicTable.items():
+            print(key)
+            isotopeList = []
+            for iso in val:
+                isotopeList.append([iso[0], iso[2],iso[3]])
+                print((iso[0], iso[2],iso[3]))
+            print(Element(key,isotopeList, None).getName())
+            service.savePattern(Element(key,isotopeList, None))
+    except:
+        traceback.print_exc()
+    finally:
+        service.close()
+
+
+def readMoleculeFile(moleculeFile):
+    '''
+    reads and processes file which contains formulas of monomeres and precursor ions
+    :param moleculeFile: (RNA.txt, DNA.txt, Protein.txt in Parameters - folder)
+    :return: void
+    '''
+    monomers = []
+    mode = 'monomers'
+    for line in moleculeFile:
+        if line.startswith('#precursor ions'):
+            mode = 'precIons'
+        if line.startswith('#') or line == "\n":
+            continue
+        lineList = removeEmptyElements(line.rstrip().split('\t'))
+        if mode == 'monomers':
+            monomers.append([lineList[0],lineList[1]])
+            print("hey",[lineList[0],lineList[1]])
+            #self.monomers[lineList[0]] = self.stringToFormula(lineList[1],dict(),1)
+    return monomers
+    """elif mode == 'precIons':
+        print(lineList[0])
+        self.precursorModifications[lineList[0]] = self.stringToFormula(lineList[1], dict(), 1)"""
+
+
+
+def writeMolecules():
+    service = MoleculeService()
+    try:
+        for molecule in ('RNA', 'Protein', 'DNA'):
+            moleculePath = os.path.join(path, 'Parameters', molecule + '.txt')
+            print(moleculePath)
+            with open(moleculePath) as f:
+                monomers = readMoleculeFile(f)
+            service.savePattern(Makromolecule(molecule,monomers,None))
+    except:
+        traceback.print_exc()
+    finally:
+        service.close()
+
+
+def getSequences(file):
+    '''
+    finds sequence
+    :param file: file with stored sequences
+    :param name: sequence name
+    :return: molecule, list of sequence, respectively None,None if sequence was not found
+    '''
+    sequences = []
+    for line in file:
+        if line.startswith('#'):
+            continue
+        line = line.rstrip()
+        lineList = line.split()
+        sequences.append(Sequence(lineList[0],lineList[2],lineList[1], None))
+    return sequences
+
+
+def writeSequences():
+    service = SequenceService()
+    sequencePath = os.path.join(path, 'Parameters','sequences.txt')
+    try:
+        with open(sequencePath) as f:
+            service.save(getSequences(f))
+    except:
+        traceback.print_exc()
+    finally:
+        service.close()
+
+"""def readFragmentations():
+    for mol in ['protein','RNA']:
+        fragPath = join(path,'Parameters',mol+'-fragmentation')
+        files = [f for f in listdir(fragPath) if isfile(join(fragPath, f))]
+        for file in files:
+            print(file)
+            with open(join(fragPath,file)) as f:
+
+                for line in file:
+                    line = line.rstrip()
+                    if line.startswith('#') or line == "":
+                        continue
+                if (file == "CAD.txt" or file == "ECD.txt")"""
+
+
+def readFragmentations(file):
+    items = []
+    for line in file:
+        line = line.rstrip()
+        if line.startswith('#modifications'):
+            break
+        if line.startswith('#ion') or line == "":
+            print(line)
+            continue
+        oldProperties = removeEmptyElements(line.split())
+        properties = []
+        for i, property in enumerate(oldProperties):
+            if property == "-":
+                property = ""
+                if i == len(oldProperties)-1:
+                    property = 0
+            properties.append(property)
+        if properties[0].startswith('#'):
+            print(properties[4])
+            items.append([properties[0][1:], properties[2], properties[1], properties[3], int(properties[4]), False])
+        else:
+            items.append([properties[0], properties[2], properties[1], properties[3], int(properties[4]), True])
+    for item in items:
+        print(item)
+    return items
+
+
+
+
+
+
+"""def readFragmentationFile(file):  # ToDo: what happens when number before mod?
+    '''
+    reads the fragment-templates and creates dicts
+    :param file: file which contain fragment templates
+    :return: void
+    '''
+    for line in file:
+        line = line.rstrip()
+        if line.startswith('#') or line == "":
+            continue
+        else:
+            if line[0] in ['a', 'b', 'c', 'd']:
+                self.addToFragmentDict(line, self.forwardDict)
+            elif line[0] in ['w', 'x', 'y', 'z']:
+                self.addToFragmentDict(line, self.backwardDict)
+            elif line.startswith('+'):
+                name, formula, residue, zEffect = self.lineToFormula(line)
+                self.modificationDict[name] = (
+                formula, residue, zEffect)  # ToDo: better solution, radicals in nrOfModifications?
+            elif line.startswith('-+'):
+                line = line.rstrip()
+                removeList.append(line[1:])
+            else:
+                print(line)
+                raise Exception("incorrect format in fragmentation File")"""
+
+def writeFragments(name, fragPath,precFrag):
+    service = FragmentIonService()
+    try:
+        with open(fragPath) as f:
+            fragments = readFragmentations(f)
+        print(FragmentationPattern(name, fragments, precFrag, None).getItems2())
+        service.savePattern(FragmentationPattern(name, fragments, precFrag, None))
+    except:
+        traceback.print_exc()
+    finally:
+        service.close()
+
+
+
+#writeElements()
+#writeMolecules()
+#writeSequences()
+with open(os.path.join(path, 'Parameters', 'Protein' + '.txt')) as f:
+    for line in f:
+        if line.startswith('#') or line == "":
+            continue
+        lineList = removeEmptyElements(line.rstrip().split('\t'))
+        print(lineList,",")
+
+"""prcFrags = [['start', 'H1', 'O2P1', '', 0,True] ,
+    ['-H2O', '', 'H2O', '', 0,True] ,
+    ['-G', '', 'C5H5N5O', 'G', 0,True] ,
+    ['-A', '', 'C5H5N5', 'A', 0,True] ,
+    ['-C', '', 'C4H5N3O', 'C', 0,True] ,
+    ['-G-H2O', '', 'C5H5N5OH2O', 'G', 0,True] ,
+    ['-A-H2O', '', 'C5H5N5H2O', 'A', 0,True] ,
+    ['-C-H2O', '', 'C4H5N3OH2O', 'C', 0,False]]
+
+fragPath = join(path, 'Parameters', 'RNA-fragmentation','CAD.txt')
+writeFragments("RNA_CAD",fragPath, prcFrags)"""
+
+"""prcFrags = [
+    ['start', 'H2O', '', '', 0,True] ,
+    ['-H2O', '', 'H2O', '', 0,True] ,
+    ['-NH3', '', 'NH3', '', 0,True]]
+fragPath = join(path, 'Parameters', 'protein-fragmentation','CAD.txt')
+writeFragments("Protein_CAD",fragPath, prcFrags)"""
+
+prcFrags = [
+    ['start', 'H2O', '', '', 0,True] ,
+    ['-H2O', '', 'H2O', '', 0,True] ,
+    ['-NH3', '', 'NH3', '', 0,True],
+    ['+e', '', '', '', 1,True],
+    ['+2e', '', '', '', 2,True]]
+fragPath = join(path, 'Parameters', 'protein-fragmentation','ECD.txt')
+writeFragments("Protein_ECD",fragPath, prcFrags)

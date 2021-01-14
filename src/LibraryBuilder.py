@@ -6,6 +6,7 @@ Created on 21 Jul 2020
 import csv
 import re
 from abc import ABC
+from multiprocessing import Pool
 
 import numpy as np
 from src.MolecularFormula import MolecularFormula
@@ -341,11 +342,24 @@ class FragmentLibraryBuilder(AbstractLibraryBuilder):
         Calls calculateIsotopePattern() function (class MolecularFormula) and subtracts electron mass if fragment contains radicals
         :return: void
         '''
-        for fragment in self.fragmentLibrary:
-            fragment.isotopePattern = fragment.formula.calculateIsotopePattern()
-            if fragment.type in self.radicalDict:
-                fragment.isotopePattern['mass'] -= self.radicalDict[fragment.type] * eMass
-            print(fragment.getName())
+        if len(self.fragmentLibrary)<800:
+            for fragment in self.fragmentLibrary:
+                fragment.isotopePattern = fragment.formula.calculateIsotopePattern()
+                if fragment.type in self.radicalDict:
+                    fragment.isotopePattern['mass'] -= self.radicalDict[fragment.type] * eMass
+                print(fragment.getName())
+        else:
+            p = Pool()
+            updatedFragmentLibrary = p.map(self.calculateParallel, self.fragmentLibrary)
+            self.fragmentLibrary = updatedFragmentLibrary
+
+
+    def calculateParallel(self, fragment):
+        fragment.isotopePattern = fragment.formula.calculateIsotopePattern()
+        if fragment.type in self.radicalDict:
+            fragment.isotopePattern['mass'] -= self.radicalDict[fragment.type] * eMass
+        print(fragment.getName())
+        return fragment
 
 
     def saveIsotopePattern(self, file):

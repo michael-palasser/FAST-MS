@@ -9,7 +9,7 @@ class MoleculeRepository(AbstractRepositoryWithItems1):
         #self.__conn = sqlite3.connect(dbFile)
         super(MoleculeRepository, self).__init__(join('Repositories', 'Shared_data.db'), 'molecules',
                                                  ("name",),
-                                                 {"monomeres": ('name', 'formula')},(),())
+                                                 {"monomeres": ('name', 'formula','patternId')},(),())
 
     def makeTables(self):
         self._conn.cursor().execute("""
@@ -19,7 +19,7 @@ class MoleculeRepository(AbstractRepositoryWithItems1):
         self._conn.cursor().execute("""
             CREATE TABLE IF NOT EXISTS monomeres (
                 "id"	integer PRIMARY KEY UNIQUE ,
-                "name"	text NOT NULL UNIQUE,
+                "name"	text NOT NULL,
                 "formula" text NOT NULL ,
                 "patternId" text NOT NULL );""")
 
@@ -28,13 +28,14 @@ class MoleculeRepository(AbstractRepositoryWithItems1):
                 'Formula':'molecular formula of monomer'}
 
     def getPattern(self, name):
+        print(name)
         pattern = self.get('name', name)
         return Makromolecule(pattern[1], self.getItems(pattern[0], [key for key in self._itemDict.keys()][0]), pattern[0])
 
     def getItems(self,patternId, table):
         listOfItems = list()
         for item in super(MoleculeRepository, self).getItems(patternId, [key for key in self._itemDict.keys()][0]):
-            listOfItems.append((item[1], item[2], item[3], item[4], item[5]) )
+            listOfItems.append((item[1], item[2])) #, item[3], item[4], item[5]) )
         return listOfItems
 
 

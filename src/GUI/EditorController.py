@@ -4,6 +4,7 @@ from functools import partial
 from PyQt5 import QtWidgets, QtCore
 import sys
 
+from src.Entities.GeneralEntities import Isotope
 from src.Services import *
 
 
@@ -91,6 +92,7 @@ class AbstractSimpleEditorController(ABC):
                     newItem = QtWidgets.QTableWidgetItem(str(item))
                     tableWidget.setItem(i, j, newItem)
                 #tableWidget.setItem(i, j, newitem)
+                print(headers, headerKeys)
                 newItem.setToolTip(headers[headerKeys[j]])
         tableWidget.resizeColumnsToContents()
         tableWidget.resizeRowsToContents()
@@ -158,7 +160,7 @@ class AbstractEditorController(AbstractSimpleEditorController, ABC):
     def __init__(self, service, title, name):
         self.service = service
         super(AbstractEditorController, self).__init__(service, self.open('Open '+name), title,
-                   {"New " + name: self.createNew,
+                   {#"New " + name: self.createNew,
                     "Open " + name: self.openAgain,
                     "Delete a  " + name: self.delete,
                     "Save": self.save, "Save As": self.saveNew, "Close": self.close})
@@ -196,8 +198,8 @@ class AbstractEditorController(AbstractSimpleEditorController, ABC):
         return counter
 
 
-    def createNew(self):
-        self.openAgain("Choose a Template")
+    """def createNew(self):
+        self.openAgain("Choose a Template")"""
 
     def openAgain(self, *args):
         title = "Open"
@@ -215,8 +217,9 @@ class AbstractEditorController(AbstractSimpleEditorController, ABC):
         if openedPattern != None:
             self.pattern = openedPattern
         self.widgets["name"].setText(self.pattern.getName())
+        print("sdf", self.service.getHeaders(), "\n",self.pattern.getItems())
         self.table = self.formatTableWidget(self.service.getHeaders(), self.table, self.pattern.getItems(),
-                                            self.service.getBoolVals()[0])
+                                            self.service.getBoolVals())
 
     def open(self, title):
         openDialog = OpenDialog(title, self.service.getAllPatternNames())
@@ -359,7 +362,6 @@ class SequenceEditorController(AbstractSimpleEditorController):
                                        {"Save": self.save, "Close": self.close})
         print(len(self.pattern))
         if len(self.pattern)<5:
-            print("sdf")
             [self.pattern.append(self.service.makeNew()) for i in range(6- len(self.pattern))]
         print(self.pattern)
         self.table = self.createTableWidget(self.centralwidget, self.pattern, 20,
@@ -612,7 +614,7 @@ if __name__ == '__main__':
     #esi.makeTables()
     app = QtWidgets.QApplication(sys.argv)
     #ionEditor = IntactIonEditorController()
-    editor = ElementEditorController()
+    editor = SequenceEditorController()
     #ionEditor.setUpIntactMod()
     #w = QMainWindow()
     #IntactIonEditorController().setUpUi(w, "Edit Intact Ions",

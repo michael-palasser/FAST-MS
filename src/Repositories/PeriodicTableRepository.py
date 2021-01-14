@@ -41,7 +41,7 @@ class PeriodicTableRepository(AbstractRepositoryWithItems1):
     def getItems(self,patternId, table):
         listOfItems = list()
         for item in super(PeriodicTableRepository, self).getItems(patternId, [key for key in self._itemDict.keys()][0]):
-            listOfItems.append((item[1], item[2], item[3], item[4], item[5]) )
+            listOfItems.append((item[1], item[2], item[3]))#, item[4], item[5]) )
         return listOfItems
 
 

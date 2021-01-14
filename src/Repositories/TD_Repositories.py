@@ -1,10 +1,12 @@
+from os.path import join
+
 from src.Entities.IonEntities import FragmentationPattern, FragItem, ModificationPattern, ModifiedItem
 from src.Repositories.AbstractRepositories import AbstractRepositoryWithItems2
 
 class FragmentationRepository(AbstractRepositoryWithItems2):
     def __init__(self):
         #self.__conn = sqlite3.connect(dbFile)
-        super(FragmentationRepository, self).__init__('TD_data.db', 'fragPatterns',("name",),
+        super(FragmentationRepository, self).__init__(join('FragmentHunter','TD_data.db'), 'fragPatterns',("name",),
                     {'fragmentTypes':('name', 'gain', 'loss', 'residue', 'radicals', 'enabled', 'patternId'),
                      'precFragments':('name', 'gain', 'loss', 'residue', 'radicals', 'enabled', 'patternId')},
                                                       ((4,),(4,)), ((5,),(5,)))
@@ -26,15 +28,15 @@ class FragmentationRepository(AbstractRepositoryWithItems2):
                 "enabled" integer NOT NULL,
                 "patternId" integer NOT NULL );""")
         self._conn.cursor().execute("""
-                    CREATE TABLE IF NOT EXISTS precFragments (
-                        "id"	integer PRIMARY KEY UNIQUE,
-                        "name"	text NOT NULL UNIQUE ,
-                        "enabled" integer NOT NULL,
-                        "gain" text NOT NULL ,
-                        "loss" text NOT NULL ,
-                        "residue" text NOT NULL ,
-                        "radicals" integer NOT NULL ,
-                        "patternId" integer NOT NULL );""")
+            CREATE TABLE IF NOT EXISTS precFragments (
+                "id"	integer PRIMARY KEY UNIQUE,
+                "name"	text NOT NULL ,
+                "gain" text NOT NULL ,
+                "loss" text NOT NULL ,
+                "residue" text NOT NULL ,
+                "radicals" integer NOT NULL ,
+                "enabled" integer NOT NULL,
+                "patternId" integer NOT NULL );""")
 
 
     """def createFragPattern(self, fragmentationPattern):
@@ -136,7 +138,8 @@ class FragmentationRepository(AbstractRepositoryWithItems2):
         for table in self._itemDict.keys():
             listOfItems = []
             for item in super(FragmentationRepository, self).getItems(patternId,table):
-                listOfItems.append(FragItem(item[1], item[2], item[3], item[4], item[5], item[6]))
+                listOfItems.append(FragItem(tuple(item[1], item[2], item[3], item[4], item[5], item[6])))
+                #listOfItems.append(FragItem(item[1], item[2], item[3], item[4], item[5], item[6]))
             listOfItemLists.append(listOfItems)
         return listOfItemLists
 

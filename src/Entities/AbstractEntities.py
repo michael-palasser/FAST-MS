@@ -103,6 +103,9 @@ class AbstractItem1(ABC):
         :param sign: +1 or -1 for addition or subtraction of formula to or from formulaDict
         :return: new formula (dict)
         '''
+        print("finally",formulaString)
+        if formulaString == "":
+            return formulaDict
         for item in re.findall('[A-Z][^A-Z]*', formulaString):
             element = item
             number = 1
@@ -128,6 +131,7 @@ class AbstractItem2(AbstractItem1, ABC):
         return (self._enabled == 1)
 
     def getFormula(self):
+        print(self._gain, self._loss)
         formulaDict = self.stringToFormula(self._gain, dict(), 1)
         return self.stringToFormula(self._loss, formulaDict, -1)
 

@@ -41,7 +41,8 @@ class AbstractRepository(ABC):
        # else:
             #sql = 'INSERT INTO ' + self._mainTable + '(' + self._columns[0] + ''')
                                           #VALUES(''' + (len(self._columns) * '?,')[:-1] + ')'
-        print(self._mainTable, args,sql, self._columns)
+        #print(self._mainTable, args,sql, self._columns)
+        print(sql,args)
         try:
             cur.execute(sql, args)
         except sqlite3.OperationalError:
@@ -60,8 +61,12 @@ class AbstractRepository(ABC):
         """
         cur = self._conn.cursor()
         sql = 'SELECT * FROM ' + self._mainTable + ' WHERE ' + property + '=?'
-        cur.execute(sql, (value,))
-        return cur.fetchall()[0]
+        try:
+            cur.execute(sql, (value,))
+            return cur.fetchall()[0]
+        except IndexError:
+            print(sql)
+            raise IndexError("value " + value + " in " + self._mainTable + " not found")
 
 
     def getItemColumns(self):
@@ -85,6 +90,7 @@ class AbstractRepository(ABC):
         """
         cur = self._conn.cursor()
         sql = 'UPDATE ' + self._mainTable + ' SET ' + '=?, '.join(self._columns) + '=? WHERE id=?'
+        print(sql, args)
         cur.execute(sql, args)
         self._conn.commit()
 
@@ -114,13 +120,13 @@ class AbstractRepositoryWithItems1(AbstractRepository, ABC):
         :return:
         """
         #try:
-        self.insertItem(self.create(pattern.getName()), pattern)
+        self.insertItem(self.create(pattern.getName()), pattern.getItems(), 0)
         #except sqlite3.IntegrityError:
          #   raise AlreadyPresentException(pattern.getName())
 
-    def insertItem(self, patternId, pattern):
-        table = [key for key in self._itemDict.keys()][0]
-        for item in pattern.getItems():
+    def insertItem(self, patternId, items, index):
+        table = [key for key in self._itemDict.keys()][index]
+        for item in items:
             #self.checkFormatOfItem(item)
             self.createItem(table, item + [patternId])
 
@@ -176,7 +182,7 @@ class AbstractRepositoryWithItems1(AbstractRepository, ABC):
     def updatePattern(self, modPattern):
         self.update(modPattern.getName(), modPattern.getId())
         self.deleteAllItems(modPattern.getId())
-        self.insertItem(modPattern.getId(), modPattern)
+        self.insertItem(modPattern.getId(), modPattern.getItems(),0)
 
 
     def deleteAllItems(self, patternId):
@@ -204,3 +210,23 @@ class AbstractRepositoryWithItems2(AbstractRepositoryWithItems1, ABC):
         return {'Name':"Enter \"+\"modification or \"-\"loss", 'Gain':"molecular formula to be added",
                 'Loss':"molecular formula to be subtracted"}
 
+    def createPattern(self, pattern):
+        """
+        Function create() creates new pattern which is filled by insertIsotopes
+        :param modificationPattern:
+        :return:
+        """
+        #try:
+        print("save",pattern.getItems2())
+        patternId = self.create(pattern.getName())
+        print(pattern.getItems(),pattern.getItems2())
+        self.insertItem(patternId, pattern.getItems(), 0)
+        self.insertItem(patternId, pattern.getItems2(), 1)
+        #except sqlite3.IntegrityError:
+         #   raise AlreadyPresentException(pattern.getName())
+
+
+    def updatePattern(self, pattern):
+        super(AbstractRepositoryWithItems2, self).updatePattern(pattern)
+        print("update",pattern.getItems2())
+        self.insertItem(pattern.getId(), pattern.getItems2(),1)

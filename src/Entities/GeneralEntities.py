@@ -20,6 +20,7 @@ class Monomere(AbstractItem1):
         return self.stringToFormula(self.__formulaString,dict(),1)
 
 
+
 class Element(PatternWithItems):
     def __init__(self, name, isotopes, id):
         """

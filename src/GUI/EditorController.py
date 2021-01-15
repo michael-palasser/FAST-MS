@@ -98,7 +98,7 @@ class AbstractSimpleEditorController(ABC):
         tableWidget.resizeRowsToContents()
         return tableWidget
 
-    def save(self):
+    def save(self, *args):
         pass
 
 
@@ -203,7 +203,7 @@ class AbstractEditorController(AbstractSimpleEditorController, ABC):
 
     def openAgain(self, *args):
         title = "Open"
-        if args != (False,):
+        if args:
             title = args[0]
         """openDialog = OpenDialog(title, self.service.getAllPatternNames())
         openDialog.show()
@@ -217,7 +217,6 @@ class AbstractEditorController(AbstractSimpleEditorController, ABC):
         if openedPattern != None:
             self.pattern = openedPattern
         self.widgets["name"].setText(self.pattern.getName())
-        print("sdf", self.service.getHeaders(), "\n",self.pattern.getItems())
         self.table = self.formatTableWidget(self.service.getHeaders(), self.table, self.pattern.getItems(),
                                             self.service.getBoolVals())
 
@@ -245,7 +244,8 @@ class AbstractEditorController(AbstractSimpleEditorController, ABC):
 
 
     def saveNew(self):
-        pass
+        self.save(None)
+
 
     """def insertRow(self):
         self.table.insertRow(self.table.rowCount())
@@ -291,6 +291,18 @@ class AbstractEditorControllerWithTabs(AbstractEditorController, ABC):
         #self.table2.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         return tabWidget
 
+    def openAgain(self, *args):
+        title = "Open"
+        if args:
+            title = args[0]
+        openedPattern = self.open(title)
+        if openedPattern != None:
+            self.pattern = openedPattern
+        self.widgets["name"].setText(self.pattern.getName())
+        self.table1 = self.formatTableWidget(self.service.getHeaders()[0], self.table1, self.pattern.getItems(),
+                                            self.service.getBoolVals()[0])
+        self.table2 = self.formatTableWidget(self.service.getHeaders()[1], self.table2, self.pattern.getItems2(),
+                                             self.service.getBoolVals()[1])
 
 
 class IntactIonEditorController(AbstractEditorController):
@@ -304,12 +316,14 @@ class IntactIonEditorController(AbstractEditorController):
         self.formLayout.setWidget(1, QtWidgets.QFormLayout.SpanningRole, self.table)   #ToDo
         self.mainWindow.show()
 
-    def save(self):
-        self.service.savePattern(
-            IntactPattern(self.widgets["name"].text(), self.readTable(self.table), self.pattern.getId()))
+    def save(self, *args):
+        id = self.pattern.getId()
+        if args:
+            id = args[0]
+        self.service.savePattern(IntactPattern(self.widgets["name"].text(), self.readTable(self.table), id))
 
-    def saveNew(self):
-        self.service.savePattern(IntactPattern(self.widgets["name"].text(),self.readTable(self.table), None ))
+    """def saveNew(self):
+        self.service.savePattern(IntactPattern(self.widgets["name"].text(),self.readTable(self.table), None ))"""
 
 
 class MoleculeEditorController(AbstractEditorController):
@@ -325,12 +339,14 @@ class MoleculeEditorController(AbstractEditorController):
         self.formLayout.setWidget(1, QtWidgets.QFormLayout.SpanningRole, self.table)   #ToDo
         self.mainWindow.show()
 
-    def save(self):
-        self.service.savePattern(
-            Makromolecule(self.widgets["name"].text(), self.readTable(self.table), self.pattern.getId()))
+    def save(self, *args):
+        id = self.pattern.getId()
+        if args:
+            id = args[0]
+        self.service.savePattern(Makromolecule(self.widgets["name"].text(), self.readTable(self.table), id))
 
-    def saveNew(self):
-        self.service.savePattern(Makromolecule(self.widgets["name"].text(), self.readTable(self.table), None))
+    """def saveNew(self):
+        self.service.savePattern(Makromolecule(self.widgets["name"].text(), self.readTable(self.table), None))"""
 
 class ElementEditorController(AbstractEditorController):
     def __init__(self):
@@ -347,12 +363,14 @@ class ElementEditorController(AbstractEditorController):
         self.formLayout.setWidget(1, QtWidgets.QFormLayout.SpanningRole, self.table)   #ToDo
         self.mainWindow.show()
 
-    def save(self):
-        self.service.savePattern(
-            Element(self.widgets["name"].text(), self.readTable(self.table), self.pattern.getId()))
+    def save(self, *args):
+        id = self.pattern.getId()
+        if args:
+            id = args[0]
+        self.service.savePattern(Element(self.widgets["name"].text(), self.readTable(self.table), id))
 
-    def saveNew(self):
-        self.service.savePattern(Element(self.widgets["name"].text(), self.readTable(self.table), None))
+    """def saveNew(self):
+        self.service.savePattern(Element(self.widgets["name"].text(), self.readTable(self.table), None))"""
 
 
 class SequenceEditorController(AbstractSimpleEditorController):
@@ -384,19 +402,34 @@ class FragmentEditorController(AbstractEditorControllerWithTabs):
                       "Delete a Fragment-Pattern": self.delete,
                       "Save": self.save, "Save As": self.saveNew, "Close": self.close},
                            {"New Row": self.insertRow}) #"Copy Row":self.copyRow"""
-        yPos = self.createWidgets(["Name: "], {"name": QtWidgets.QLineEdit(self.centralwidget)}, 20, 150,
-                                  [self.pattern.getName()])
+        yPos = self.createWidgets(["Name: ", "gain", "loss"],
+                                  {"name": QtWidgets.QLineEdit(self.centralwidget),
+                                   "gain": QtWidgets.QLineEdit(self.centralwidget),
+                                   "loss": QtWidgets.QLineEdit(self.centralwidget)}, 20, 150,
+                                  [self.pattern.getName(), self.pattern.getInitGain(), self.pattern.getInitLoss()])
+        self.widgets['gain'].setToolTip("This formula will be added to all fragments (e.g. H2O for proteins / "
+                                                "H for RNA")
+        self.widgets['loss'].setToolTip("This formula will be subtracted from all fragments (e.g. PO2 for RNA")
         self.tabWidget = self.makeTabWidget(yPos, "Fragments", "Precursor-Fragments")
         self.mainWindow.show()
 
+    def openAgain(self, *args):
+        super(FragmentEditorController, self).openAgain()
+        self.widgets["gain"].setText(self.pattern.getInitGain())
+        self.widgets["loss"].setText(self.pattern.getInitLoss())
 
-    def save(self):
-        self.service.savePattern(FragmentationPattern(self.widgets["name"].text(), self.readTable(self.table1),
-                                                      self.readTable(self.table2), self.pattern.getId()))
 
-    def saveNew(self):
+
+    def save(self, *args):
+        id = self.pattern.getId()
+        if args:
+            id = args[0]
+        self.service.savePattern(FragmentationPattern(self.widgets["name"].text(), self.widgets["gain"].text(),
+                      self.widgets["loss"].text(), self.readTable(self.table1), self.readTable(self.table2), id))
+
+    """def saveNew(self):
         self.service.savePattern(FragmentationPattern(self.widgets["name"].text(), self.readTable(self.table1),
-                                                      self.readTable(self.table2), None))
+                                                      self.readTable(self.table2), None))"""
 
 
 class ModificationEditorController(AbstractEditorControllerWithTabs):
@@ -414,13 +447,16 @@ class ModificationEditorController(AbstractEditorControllerWithTabs):
         self.mainWindow.show()
 
 
-    def save(self):
-        self.service.savePattern(ModificationPattern(self.widgets["name"].text(), self.readTable(self.table1),
-                                                      self.readTable(self.table2), self.pattern.getId()))
+    def save(self, *args):
+        id = self.pattern.getId()
+        if args:
+            id = args[0]
+        self.service.savePattern(ModificationPattern(self.widgets["name"].text(), self.widgets["modification"].text(),
+                                     self.readTable(self.table1),self.readTable(self.table2), id))
 
-    def saveNew(self):
+    """def saveNew(self):
         self.service.savePattern(ModificationPattern(self.widgets["name"].text(), self.readTable(self.table1),
-                                                      self.readTable(self.table2), None))
+                                                      self.readTable(self.table2), None))"""
 
     """def createNew(self):
         self.openAgain("Choose a Template")

@@ -102,10 +102,10 @@ class ESI_Repository(AbstractRepositoryWithItems2):
             listOfPatterns.append(PatternWithItems(pattern[1], self.getItems(pattern[0]), pattern[0]))
         return listOfPatterns
 
-    def updatePattern(self, modPattern):
-        self.update(modPattern.getName(), modPattern.getId())
-        self.deleteList(modPattern.getId(), 'intactModItems')
-        self.insertItem(modPattern.getId(), modPattern)
+    def updatePattern(self, pattern):
+        self.update(pattern.getName(), pattern.getId())
+        self.deleteList(pattern.getId(), 'intactModItems')
+        self.insertItem(pattern.getId(), pattern)
 
     def deleteFragPattern(self, id):
         self.deleteList(id, 'intactModItems')

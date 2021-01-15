@@ -95,19 +95,6 @@ def writeSequences():
     finally:
         service.close()
 
-"""def readFragmentations():
-    for mol in ['protein','RNA']:
-        fragPath = join(path,'Parameters',mol+'-fragmentation')
-        files = [f for f in listdir(fragPath) if isfile(join(fragPath, f))]
-        for file in files:
-            print(file)
-            with open(join(fragPath,file)) as f:
-
-                for line in file:
-                    line = line.rstrip()
-                    if line.startswith('#') or line == "":
-                        continue
-                if (file == "CAD.txt" or file == "ECD.txt")"""
 
 
 def readFragmentations(file):
@@ -172,8 +159,57 @@ def writeFragments(name, fragPath,precFrag):
     try:
         with open(fragPath) as f:
             fragments = readFragmentations(f)
-        print(FragmentationPattern(name, fragments, precFrag, None).getItems2())
-        service.savePattern(FragmentationPattern(name, fragments, precFrag, None))
+        if "RNA" in name:
+            gain, loss = 'H1', 'O2P1'
+        else:
+            gain, loss = 'H2O', ''
+        print(FragmentationPattern(name, gain, loss, fragments, precFrag, None).getItems2())
+        service.savePattern(FragmentationPattern(name, gain, loss, fragments, precFrag, None))
+    except:
+        traceback.print_exc()
+    finally:
+        service.close()
+
+
+def readModifications():
+    service = ModificationService()
+    try:
+        for mol in ['protein','RNA']:
+            fragPath = join(path,'Parameters',mol+'-fragmentation')
+            files = [f for f in listdir(fragPath) if isfile(join(fragPath, f))]
+            print(files)
+            for file in files:
+                if file == ".DS_Store":
+                    continue
+                flag = 0
+                print("\n" ,file)
+                modifications = []
+                excluded = []
+                with open(join(fragPath,file)) as f:
+                    for line in f:
+                        line = line.rstrip()
+                        if line.startswith('#modif') or line.startswith('#Modif'):
+                            flag = 1
+                            continue
+                        elif line.startswith('#remove'):
+                            flag = 2
+                            continue
+                        if line == "":
+                            continue
+                        elif flag == 1:
+                            properties = removeEmptyElements(line.split())
+                            modifications.append([properties[0], properties[2], properties[1], properties[3], 0,properties[4], True, True])
+                            print("1", [properties[0], properties[2], properties[1], properties[3], 0,properties[4], True, True])
+                        elif flag == 2:
+                            if line.startswith("#"):
+                                continue
+                            excluded.append(removeEmptyElements(line.split())[0][1:])
+                            print("2", removeEmptyElements(line.split())[0][1:])
+                    if len(modifications)>0:
+                        name = file[4:-4]
+                        print(name, name, modifications, excluded, None)
+                        service.savePattern(ModificationPattern(name, name, modifications, excluded, None))
+
     except:
         traceback.print_exc()
     finally:
@@ -181,17 +217,18 @@ def writeFragments(name, fragPath,precFrag):
 
 
 
+
 #writeElements()
 #writeMolecules()
 #writeSequences()
-with open(os.path.join(path, 'Parameters', 'Protein' + '.txt')) as f:
+"""with open(os.path.join(path, 'Parameters', 'Protein' + '.txt')) as f:
     for line in f:
         if line.startswith('#') or line == "":
             continue
         lineList = removeEmptyElements(line.rstrip().split('\t'))
         print(lineList,",")
-
-"""prcFrags = [['start', 'H1', 'O2P1', '', 0,True] ,
+#['start', 'H1', 'O2P1', '', 0,True]
+prcFrags = [
     ['-H2O', '', 'H2O', '', 0,True] ,
     ['-G', '', 'C5H5N5O', 'G', 0,True] ,
     ['-A', '', 'C5H5N5', 'A', 0,True] ,
@@ -201,20 +238,22 @@ with open(os.path.join(path, 'Parameters', 'Protein' + '.txt')) as f:
     ['-C-H2O', '', 'C4H5N3OH2O', 'C', 0,False]]
 
 fragPath = join(path, 'Parameters', 'RNA-fragmentation','CAD.txt')
-writeFragments("RNA_CAD",fragPath, prcFrags)"""
+writeFragments("RNA_CAD",fragPath, prcFrags)
 
-"""prcFrags = [
-    ['start', 'H2O', '', '', 0,True] ,
+#['start', 'H2O', '', '', 0,True]
+prcFrags = [
     ['-H2O', '', 'H2O', '', 0,True] ,
     ['-NH3', '', 'NH3', '', 0,True]]
 fragPath = join(path, 'Parameters', 'protein-fragmentation','CAD.txt')
-writeFragments("Protein_CAD",fragPath, prcFrags)"""
+writeFragments("Protein_CAD",fragPath, prcFrags)
 
+#['start', 'H2O', '', '', 0,True]
 prcFrags = [
-    ['start', 'H2O', '', '', 0,True] ,
     ['-H2O', '', 'H2O', '', 0,True] ,
     ['-NH3', '', 'NH3', '', 0,True],
     ['+e', '', '', '', 1,True],
     ['+2e', '', '', '', 2,True]]
 fragPath = join(path, 'Parameters', 'protein-fragmentation','ECD.txt')
-writeFragments("Protein_ECD",fragPath, prcFrags)
+writeFragments("Protein_ECD",fragPath, prcFrags)"""
+
+readModifications()

@@ -73,7 +73,7 @@ class AbstractServiceForPatterns(AbstractService, ABC):
         elements = args[0]
         for key in self.getFormula(item).keys():
             if key not in elements:
-                raise InvalidInputException(item.getName(), "Element: "+ key + " unknown")
+                raise InvalidInputException(item, "Element: "+ key + " unknown")
         super(AbstractServiceForPatterns, self).checkFormatOfItem(item)
 
     def getFormula(self, item):
@@ -186,26 +186,31 @@ class IntactIonService(AbstractServiceForPatterns):
     def getFormula(self, item):
         return IntactModification(item[0], item[1], item[2], item[3], item[4]).getFormula()
 
+
 class FragmentIonService(AbstractServiceForPatterns):
     def __init__(self):
         super(FragmentIonService, self).__init__(FragmentationRepository())
 
     def makeNew(self):
         #return PatternWithItems("", [{"Name": "", "Gain": "", "Loss": "", "NrOfMod": 0, "enabled": False}], None)
-        return FragmentationPattern("", 10*[["", "", "", "", "", False]],
-                                    [["start", "", "", "", "", True]]+9*[["", "", "", "", "", False]], None)
+        return FragmentationPattern("", "", "", 10*[["", "", "", "", "", False]],
+                                    10*[["", "", "", "", "", False]], None)
 
     def savePattern(self, pattern):
         elementRep = PeriodicTableRepository()
         elements = elementRep.getAllPatternNames()
         for item in pattern.getItems2():
             self.checkFormatOfItem(item, elements)
+        for key in pattern.getFormula().keys():
+            if key not in elements:
+                raise InvalidInputException(pattern.getName(), "Element: "+ key + " unknown")
         elementRep.close()
         super(FragmentIonService, self).savePattern(pattern)
 
     def getFormula(self, item):
         #return FragItem(item[0], item[1], item[2], item[3], item[4], item[5]).getFormula()
         return FragItem(item).getFormula()
+
 
 class ModificationService(AbstractServiceForPatterns):
     def __init__(self):
@@ -219,10 +224,11 @@ class ModificationService(AbstractServiceForPatterns):
     def savePattern(self, pattern):
         elementRep = PeriodicTableRepository()
         elements = elementRep.getAllPatternNames()
-        for item in pattern.getItems2():
-            self.checkFormatOfItem(item, elements)
+        #for item in pattern.getItems2():
+        #    self.checkFormatOfItem(item, elements)
         elementRep.close()
         super(ModificationService, self).savePattern(pattern)
 
     def getFormula(self, item):
-        return ModifiedItem(item[0], item[1], item[2], item[3], item[4], item[5], item[6], item[7]).getFormula()
+        #return ModifiedItem(item[0], item[1], item[2], item[3], item[4], item[5], item[6], item[7]).getFormula()
+        return ModifiedItem(item).getFormula()

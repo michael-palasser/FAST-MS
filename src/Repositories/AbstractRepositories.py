@@ -128,6 +128,7 @@ class AbstractRepositoryWithItems1(AbstractRepository, ABC):
         table = [key for key in self._itemDict.keys()][index]
         for item in items:
             #self.checkFormatOfItem(item)
+            print("here:", item)
             self.createItem(table, item + [patternId])
 
 
@@ -210,23 +211,23 @@ class AbstractRepositoryWithItems2(AbstractRepositoryWithItems1, ABC):
         return {'Name':"Enter \"+\"modification or \"-\"loss", 'Gain':"molecular formula to be added",
                 'Loss':"molecular formula to be subtracted"}
 
-    def createPattern(self, pattern):
-        """
+    """def createPattern(self, pattern):
+        \"""
         Function create() creates new pattern which is filled by insertIsotopes
         :param modificationPattern:
         :return:
-        """
+        \"""
         #try:
         print("save",pattern.getItems2())
         patternId = self.create(pattern.getName())
         print(pattern.getItems(),pattern.getItems2())
         self.insertItem(patternId, pattern.getItems(), 0)
-        self.insertItem(patternId, pattern.getItems2(), 1)
+        self.insertItem(patternId, pattern.getItems2(), 1)"""
         #except sqlite3.IntegrityError:
          #   raise AlreadyPresentException(pattern.getName())
 
 
     def updatePattern(self, pattern):
-        super(AbstractRepositoryWithItems2, self).updatePattern(pattern)
-        print("update",pattern.getItems2())
-        self.insertItem(pattern.getId(), pattern.getItems2(),1)
+        self.deleteAllItems(pattern.getId())
+        self.insertItem(pattern.getId(), pattern.getItems(), 0)
+        self.insertItem(pattern.getId(), pattern.getItems2(), 1)

@@ -6,14 +6,14 @@ Created on 15 Aug 2020
 import sqlite3
 from os.path import join
 
-from src.Entities.GeneralEntities import Sequence
-from src.Repositories.AbstractRepositories import AbstractRepository
+from src.entities.GeneralEntities import Sequence
+from src.repositories.AbstractRepositories import AbstractRepository
 from src.Exceptions import AlreadyPresentException
 
 
 class SequenceRepository(AbstractRepository):
     def __init__(self):
-        super(SequenceRepository, self).__init__(join('Repositories', 'Shared_data.db'), 'sequences', ('name', 'sequence', 'molecule'), (),())
+        super(SequenceRepository, self).__init__(join('shared.db'), 'sequences', ('name', 'sequence', 'molecule'), (),())
 
     def makeTables(self):
         self._conn.cursor().execute("""

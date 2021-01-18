@@ -10,7 +10,7 @@ from multiprocessing import Pool
 
 import numpy as np
 from src.MolecularFormula import MolecularFormula
-from src.Entities.Fragment import Fragment
+from src.entities.Fragment import Fragment
 
 eMass = 5.48579909065 * 10**(-4)
 

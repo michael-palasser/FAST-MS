@@ -5,13 +5,13 @@ Created on 29 Dec 2020
 '''
 from os.path import join
 
-from src.Entities.GeneralEntities import Element, Isotope
-from src.Repositories.AbstractRepositories import AbstractRepositoryWithItems1
+from src.entities.GeneralEntities import Element, Isotope
+from src.repositories.AbstractRepositories import AbstractRepositoryWithItems
 
 
-class PeriodicTableRepository(AbstractRepositoryWithItems1):
+class PeriodicTableRepository(AbstractRepositoryWithItems):
     def __init__(self):
-        super(PeriodicTableRepository, self).__init__(join('Repositories', 'Shared_data.db'), 'elements', ('name',),
+        super(PeriodicTableRepository, self).__init__(join('shared.db'), 'elements', ('name',),
                                                       {'isotopes':('pNr', 'mass', 'relAb', 'patternId')}, (0,1,2),())
 
     def makeTables(self):

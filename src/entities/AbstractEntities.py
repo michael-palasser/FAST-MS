@@ -25,7 +25,7 @@ class PatternWithItems(AbstractPattern):
         """
 
         :param name:
-        :param items: either list of Item objects for AbstractLibraryBuilder or 2D list for GUI
+        :param items: either list of Item objects for AbstractLibraryBuilder or 2D list for views
         :param id:
         :param integerVals:
         """

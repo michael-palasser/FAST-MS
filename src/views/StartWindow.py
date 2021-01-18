@@ -10,12 +10,12 @@ from PyQt5.QtCore import QCoreApplication
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import QApplication, QWidget, QMainWindow, QPushButton, QAction
 
-from src.GUI.EditorController import *
-from src.GUI.ParameterDialogs import TDStartDialog, TD_configurationDialog, ESI_StartDialog
-from src.FragmentHunter.ModellingTool import main as modellingTool
-from src.FragmentHunter.OccupancyRecalculator import run as occupancyRecalculator
-from src.FragmentHunter.SpectrumComparator import run as spectrumComparator
-from src.Intact_Ion_Search.ESI_Main import run as IntactIonsSearch
+from src.views.EditorController import *
+from src.views.ParameterDialogs import TDStartDialog, TD_configurationDialog, ESI_StartDialog
+from src.top_down.ModellingTool import main as modellingTool
+from src.top_down.OccupancyRecalculator import run as occupancyRecalculator
+from src.top_down.SpectrumComparator import run as spectrumComparator
+from src.intact.ESI_Main import run as IntactIonsSearch
 
 
 class Window(QMainWindow):
@@ -26,7 +26,7 @@ class Window(QMainWindow):
         self.tdMenu = mainMenu.addMenu('&Top-Down Tools')
         self.tdEditMenu = mainMenu.addMenu('&Top-Down Configurations')
         self.esiMenu = mainMenu.addMenu('&IntactIonSearch')
-        self.dataEdit = mainMenu.addMenu('&Edit Data')
+        self.dataEdit = mainMenu.addMenu('&Edit data')
         self.move(200,200)
         # self.setWindowIcon(QIcon('pic.png'))
         self.home()

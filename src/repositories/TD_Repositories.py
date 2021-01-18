@@ -1,12 +1,13 @@
+import sqlite3
 from os.path import join
 
-from src.Entities.IonEntities import FragmentationPattern, FragItem, ModificationPattern, ModifiedItem
-from src.Repositories.AbstractRepositories import AbstractRepositoryWithItems2
+from src.entities.IonEntities import FragmentationPattern, FragItem, ModificationPattern, ModifiedItem
+from src.repositories.AbstractRepositories import AbstractRepositoryWith2Items
 
-class FragmentationRepository(AbstractRepositoryWithItems2):
+class FragmentationRepository(AbstractRepositoryWith2Items):
     def __init__(self):
         #self.__conn = sqlite3.connect(dbFile)
-        super(FragmentationRepository, self).__init__(join('FragmentHunter','TD_data.db'), 'fragPatterns',
+        super(FragmentationRepository, self).__init__(join('top_down.db'), 'fragPatterns',
                                                       ("name","gain", "loss"),
                     {'fragmentTypes':('name', 'gain', 'loss', 'residue', 'radicals', 'enabled', 'patternId'),
                      'precFragments':('name', 'gain', 'loss', 'residue', 'radicals', 'enabled', 'patternId')},
@@ -164,12 +165,15 @@ class FragmentationRepository(AbstractRepositoryWithItems2):
 
 
 
-class ModificationRepository(AbstractRepositoryWithItems2):
+class ModificationRepository(AbstractRepositoryWith2Items):
     def __init__(self):
-        super(ModificationRepository, self).__init__('TD_data.db', 'modPatterns',("name","modification"),
+        super(ModificationRepository, self).__init__('top_down.db', 'modPatterns',("name","modification"),
                             {'modItems':('name', 'gain', 'loss', 'residue', 'radicals', 'chargeEffect', 'calcOcc',
                                          'enabled', 'patternId'),
-                             'excluded': ('name')}, ((4, 5),()), ((6,7),()) )
+                             'excluded': ('name', 'patternId')}, ((4, 5),()), ((6,7),()) )
+
+        #self._conn = sqlite3.connect(':memory:')
+        #self._conn = sqlite3.connect('test.db')
 
     def makeTables(self):
         self._conn.cursor().execute("""
@@ -181,18 +185,19 @@ class ModificationRepository(AbstractRepositoryWithItems2):
                             CREATE TABLE IF NOT EXISTS modItems (
                                 "id"	integer PRIMARY KEY,
                                 "name"	text NOT NULL ,
-                                "enabled" integer NOT NULL,
                                 "gain" text NOT NULL ,
                                 "loss" text NOT NULL ,
                                 "residue" text NOT NULL ,
                                 "radicals" integer NOT NULL ,
                                 "chargeEffect" integer NOT NULL ,
-                                 "calcOcc" integer NOT NULL ,
+                                "calcOcc" integer NOT NULL ,
+                                "enabled" integer NOT NULL,
                                 "patternId" integer NOT NULL );""")
         self._conn.cursor().execute("""
-                            CREATE TABLE IF NOT EXISTS exluded (
+                            CREATE TABLE IF NOT EXISTS excluded (
                                 "id"	integer PRIMARY KEY,
-                                "name"	text NOT NULL );""")
+                                "name"	text NOT NULL ,
+                                "patternId" integer NOT NULL);""")
 
     """def createModPattern(self, modificationPattern):
         try:
@@ -253,7 +258,7 @@ class ModificationRepository(AbstractRepositoryWithItems2):
 
 
     def updatePattern(self, pattern):
-        self.update(pattern.getName(), pattern.Modification(), pattern.getId())
+        self.update(pattern.getName(), pattern.getModification(), pattern.getId())
         super(ModificationRepository, self).updatePattern(pattern)
 
 
@@ -280,9 +285,11 @@ class ModificationRepository(AbstractRepositoryWithItems2):
         #for table in self._itemDict.keys():
         listOfItems = []
         for item in self.getItems(patternId, keyList[0]):
-            listOfItems.append((item[1], item[2], item[3], item[4], item[5], item[6], item[7]))
+            listOfItems.append((item[1], item[2], item[3], item[4], item[5], item[6], item[7], item[8]))
         listOfLists.append(listOfItems)
-        listOfLists += [item for item in self.getItems(patternId, keyList[1])]
+        listOfLists.append([(item[1],) for item in self.getItems(patternId, keyList[1])])
+        print("here",[(item[1],) for item in self.getItems(patternId, keyList[1])])
+        print(listOfLists[1])
         return listOfLists
 
 

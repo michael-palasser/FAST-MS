@@ -5,12 +5,12 @@ import os
 import re
 from datetime import datetime
 
-from src.FragmentHunter.Main import findSequence
-from src.Entities.Fragment import Fragment,Ion
-from src.FragmentHunter.Analyser import Analyser
-from src.FragmentHunter.TDExcelWriter import BasicExcelWriter
+from src.top_down.Main import findSequence
+from src.entities.Fragment import Fragment,Ion
+from src.top_down.Analyser import Analyser
+from src.top_down.TDExcelWriter import BasicExcelWriter
 from src import path
-from src.Repositories.ConfigurationHandler import ConfigHandler
+from src.repositories.ConfigurationHandler import ConfigHandler
 
 def run():
     """openAgain everything"""
@@ -53,7 +53,7 @@ def run():
 
     """Analysis and Output"""
     analyser = Analyser(ionList, sequence,precModification,
-                        ConfigHandler(os.path.join(path,"src","FragmentHunter","data","configurations.json"))
+                        ConfigHandler(os.path.join(path,"src","top_down","data","configurations.json"))
                             .getAll())
     excelWriter = BasicExcelWriter(os.path.join(path, "Spectral_data","Occupancies_out.xlsx"))
     date = datetime.now().strftime("%d/%m/%Y %H:%M")

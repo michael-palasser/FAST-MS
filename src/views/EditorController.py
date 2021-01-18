@@ -4,7 +4,8 @@ from functools import partial
 from PyQt5 import QtWidgets, QtCore
 import sys
 
-from src.Entities.GeneralEntities import Isotope
+
+from src.entities.GeneralEntities import Isotope
 from src.Services import *
 
 
@@ -51,6 +52,12 @@ class AbstractSimpleEditorController(ABC):
                 menu.addSeparator()
             action = QtWidgets.QAction(self.mainWindow)
             action.setText(self._translate(self.mainWindow.objectName(),option))
+            if 'Open' in option:
+                action.setShortcut("Ctrl+O")
+            elif option == 'Save':
+                action.setShortcut("Ctrl+S")
+            elif option == 'Close':
+                action.setShortcut("Ctrl+Q")
             action.triggered.connect(function)
             menuActions[option] = action
             menu.addAction(action)
@@ -92,8 +99,10 @@ class AbstractSimpleEditorController(ABC):
                     newItem = QtWidgets.QTableWidgetItem(str(item))
                     tableWidget.setItem(i, j, newItem)
                 #tableWidget.setItem(i, j, newitem)
-                print(headers, headerKeys)
                 newItem.setToolTip(headers[headerKeys[j]])
+        if len(data) < 7:
+            for i in range(7-len(data)):
+                self.insertRow(tableWidget, bools)
         tableWidget.resizeColumnsToContents()
         tableWidget.resizeRowsToContents()
         return tableWidget
@@ -105,7 +114,7 @@ class AbstractSimpleEditorController(ABC):
     def readTable(self, table):
         itemList = []
         for row in range(table.rowCount()):
-            if table.item(row,0).text() == "":
+            if table.item(row,0) == None or table.item(row,0).text() == "":
                 continue
             rowData = []
             for col in range(table.columnCount()):
@@ -118,6 +127,7 @@ class AbstractSimpleEditorController(ABC):
                     rowData.append("")
             itemList.append(rowData)
         return itemList
+
 
     def editRow(self, table, bools, pos):
         it = table.itemAt(pos)
@@ -133,23 +143,39 @@ class AbstractSimpleEditorController(ABC):
         deleteRowAction = menu.addAction("Delete row")
         action = menu.exec_(table.viewport().mapToGlobal(pos))
         if action == insertRowAction:
-            table.insertRow(table.rowCount())
+            """table.insertRow(table.rowCount())
             for i in bools:
                 newitem = QtWidgets.QTableWidgetItem(0)
                 newitem.setCheckState(QtCore.Qt.Checked)
-                table.setItem(table.rowCount() - 1, i, newitem)
+                table.setItem(table.rowCount() - 1, i, newitem)"""
+            self.insertRow(table, bools)
             table.resizeRowsToContents()
         elif action == copyRowAction:
             rowCount = table.rowCount()
-            table.insertRow(rowCount)
+            emptyRow = rowCount
+            for rowNr in range(rowCount):
+                if table.item(rowNr, 0) == None or table.item(rowNr, 0).text() == "":
+                    emptyRow = rowNr
+                    break
+            if emptyRow == rowCount:
+                table.insertRow(rowCount)
             for j in range(columnCount):
                 if not table.item(selectedRowIndex, j) is None:
-                    table.setItem(rowCount, j, QtWidgets.QTableWidgetItem(table.item(selectedRowIndex, j).text()))
+                    table.setItem(emptyRow, j, QtWidgets.QTableWidgetItem(table.item(selectedRowIndex, j).text()))
                     if j in bools:
-                        table.item(rowCount, j).setCheckState(table.item(selectedRowIndex, j).checkState())
+                        table.item(emptyRow, j).setCheckState(table.item(selectedRowIndex, j).checkState())
             table.resizeRowsToContents()
         if action == deleteRowAction:
             table.removeRow(selectedRowIndex)
+
+
+    def insertRow(self, table, bools):
+        table.insertRow(table.rowCount())
+        for i in bools:
+            newitem = QtWidgets.QTableWidgetItem(0)
+            newitem.setCheckState(QtCore.Qt.Unchecked)
+            table.setItem(table.rowCount() - 1, i, newitem)
+
 
     def close(self):
         self.service.close()
@@ -203,7 +229,7 @@ class AbstractEditorController(AbstractSimpleEditorController, ABC):
 
     def openAgain(self, *args):
         title = "Open"
-        if args:
+        if args and args[0]:
             title = args[0]
         """openDialog = OpenDialog(title, self.service.getAllPatternNames())
         openDialog.show()
@@ -234,12 +260,18 @@ class AbstractEditorController(AbstractSimpleEditorController, ABC):
         """title = "Delete Intact Modification"
         if args != (False,):
             title = args[0]"""
-        openDialog = OpenDialog("Delete (cannot be undone!)", self.service.getAllPatternNames())
+        openDialog = OpenDialog("Delete", self.service.getAllPatternNames())
         openDialog.show()
         if openDialog.exec_() and openDialog.accepted:
             if openDialog.comboBox.currentText() != "--New--":
-                print("deleting",openDialog.comboBox.currentText())
-                self.pattern = self.service.delete(openDialog.comboBox.currentText())
+                print('Deleting '+openDialog.comboBox.currentText())
+                choice = QtWidgets.QMessageBox.question(self.mainWindow, 'Deleting ',
+                                                        "Warning: Deleting " +  openDialog.comboBox.currentText() +
+                                                        " cannot be undone!\n\nResume?",
+                                                        QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+                if choice == QtWidgets.QMessageBox.Yes:
+                    print("deleting",openDialog.comboBox.currentText())
+                    self.pattern = self.service.delete(openDialog.comboBox.currentText())
 
 
 
@@ -247,11 +279,6 @@ class AbstractEditorController(AbstractSimpleEditorController, ABC):
         self.save(None)
 
 
-    """def insertRow(self):
-        self.table.insertRow(self.table.rowCount())
-        newitem = QtWidgets.QTableWidgetItem(0)
-        newitem.setCheckState(QtCore.Qt.Checked)
-        self.table.setItem(self.table.rowCount()-1, self.table.columnCount()-1, newitem)"""
 
     """def copyRow(self):
         rowCount = self.table.rowCount()
@@ -293,7 +320,7 @@ class AbstractEditorControllerWithTabs(AbstractEditorController, ABC):
 
     def openAgain(self, *args):
         title = "Open"
-        if args:
+        if args and args[0]:
             title = args[0]
         openedPattern = self.open(title)
         if openedPattern != None:
@@ -351,7 +378,6 @@ class MoleculeEditorController(AbstractEditorController):
 class ElementEditorController(AbstractEditorController):
     def __init__(self):
         super(ElementEditorController, self).__init__(PeriodicTableService(), "Edit Elements", "Element")
-        print(self.service.getAllPatternNames())
         """self.pattern = self.open('Open Element')
         if self.pattern == None:
             self.pattern = self.service.makeNew()"""
@@ -378,10 +404,8 @@ class SequenceEditorController(AbstractSimpleEditorController):
         service = SequenceService()
         super(SequenceEditorController, self).__init__(service, service.getSequences(), "Edit Sequences",
                                        {"Save": self.save, "Close": self.close})
-        print(len(self.pattern))
         if len(self.pattern)<5:
             [self.pattern.append(self.service.makeNew()) for i in range(6- len(self.pattern))]
-        print(self.pattern)
         self.table = self.createTableWidget(self.centralwidget, self.pattern, 20,
                                             self.service.getHeaders(), self.service.getBoolVals())
         self.formLayout.setWidget(1, QtWidgets.QFormLayout.SpanningRole, self.table)   #ToDo
@@ -439,13 +463,16 @@ class ModificationEditorController(AbstractEditorControllerWithTabs):
         yPos = self.createWidgets(["Name: ", "Modification: "],
                                   {"name": QtWidgets.QLineEdit(self.centralwidget),
                                    "modification": QtWidgets.QLineEdit(self.centralwidget)},
-                                  20, 150, [self.pattern.getName()])
+                                  20, 150, [self.pattern.getName(), self.pattern.getModification()])
         self.tabWidget = self.makeTabWidget(yPos, "Modifications", "Excluded Modifications")
         self.tab1.setToolTip("For every fragment, the corresponding modified fragment will be included")
         self.tab2.setToolTip("These modifications will be excluded from ion search")
         self.table2.setColumnWidth(0,200)
         self.mainWindow.show()
 
+    def openAgain(self, *args):
+        super(ModificationEditorController, self).openAgain()
+        self.widgets["modification"].setText(self.pattern.getModification())
 
     def save(self, *args):
         id = self.pattern.getId()
@@ -646,11 +673,11 @@ d = {"Name":["+Na","K", "+CMCT", "+CMCT+Na", "+CMCT+K", "+2CMCT"],
      "enabled": [0,True,True,True,True,False]}
 
 if __name__ == '__main__':
-    #esi = ESI_Repository()
+    #esi = Intact_Repository()
     #esi.makeTables()
     app = QtWidgets.QApplication(sys.argv)
-    #ionEditor = IntactIonEditorController()
-    editor = SequenceEditorController()
+    ionEditor = IntactIonEditorController()
+    #editor = ModificationEditorController()
     #ionEditor.setUpIntactMod()
     #w = QMainWindow()
     #IntactIonEditorController().setUpUi(w, "Edit Intact Ions",

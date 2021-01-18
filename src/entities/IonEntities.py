@@ -1,4 +1,4 @@
-from src.Entities.AbstractEntities import PatternWithItems, AbstractItem2
+from src.entities.AbstractEntities import PatternWithItems, AbstractItem2
 from src.Exceptions import InvalidInputException
 
 
@@ -71,7 +71,6 @@ class ModificationPattern(PatternWithItems):
 class ModifiedItem(FragItem):
     #def __init__(self,name, gain, loss, residue, radicals, zEffect, calcOccupancy, enabled):
     def __init__(self, item):
-        print(item)
         super(ModifiedItem, self).__init__((item[0], item[1],item[2],item[3],item[4],item[7]))
         self._calcOccupancy = item[5]
         self.__zEffect = item[6]

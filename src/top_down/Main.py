@@ -10,12 +10,12 @@ import traceback
 import sys
 import time
 import re
-from src.Repositories.ConfigurationHandler import ConfigHandler
-from src.FragmentHunter.Analyser import Analyser
+from src.repositories.ConfigurationHandler import ConfigHandler
+from src.top_down.Analyser import Analyser
 from src.LibraryBuilder import FragmentLibraryBuilder
-from src.FragmentHunter.SpectrumHandler import SpectrumHandler
-from src.FragmentHunter.IntensityModeller import IntensityModeller
-from src.FragmentHunter.TDExcelWriter import ExcelWriter
+from src.top_down.SpectrumHandler import SpectrumHandler
+from src.top_down.IntensityModeller import IntensityModeller
+from src.top_down.TDExcelWriter import ExcelWriter
 from src import path
 
 
@@ -41,8 +41,8 @@ def sortIonsByName(ionList):
 
 #if __name__ == '__main__':
 def run():
-    settings = ConfigHandler(os.path.join(path,"src","FragmentHunter","data","settings.json")).getAll()
-    configs = ConfigHandler(os.path.join(path,"src","FragmentHunter","data","configurations.json")).getAll()
+    settings = ConfigHandler(os.path.join(path,"src","top_down","data","settings.json")).getAll()
+    configs = ConfigHandler(os.path.join(path,"src","top_down","data","configurations.json")).getAll()
     with open(os.path.join(path, 'Parameters','sequences.txt'),'r') as sequenceFile:
             molecule, sequence = findSequence(sequenceFile, settings['sequName'])
             if sequence != None:

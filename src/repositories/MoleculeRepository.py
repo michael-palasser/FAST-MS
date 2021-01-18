@@ -1,13 +1,13 @@
 from os.path import join
 
-from src.Entities.GeneralEntities import Makromolecule, Monomere
-from src.Repositories.AbstractRepositories import AbstractRepositoryWithItems1
+from src.entities.GeneralEntities import Makromolecule, Monomere
+from src.repositories.AbstractRepositories import AbstractRepositoryWithItems
 
 
-class MoleculeRepository(AbstractRepositoryWithItems1):
+class MoleculeRepository(AbstractRepositoryWithItems):
     def __init__(self):
         #self.__conn = sqlite3.connect(dbFile)
-        super(MoleculeRepository, self).__init__(join('Repositories', 'Shared_data.db'), 'molecules',
+        super(MoleculeRepository, self).__init__(join('shared.db'), 'molecules',
                                                  ("name",),
                                                  {"monomeres": ('name', 'formula','patternId')},(),())
 

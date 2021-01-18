@@ -1,12 +1,12 @@
 from abc import ABC
 
-from src.Entities.GeneralEntities import Makromolecule, Element, Monomere
+from src.entities.GeneralEntities import Makromolecule, Element, Monomere
 from src.Exceptions import InvalidInputException
-from src.Repositories.TD_Repositories import *
-from src.Repositories.MoleculeRepository import MoleculeRepository
-from src.Repositories.PeriodicTableRepository import PeriodicTableRepository
-from src.Repositories.SequenceRepository import SequenceRepository, Sequence
-from src.Repositories.IntactRepository import *
+from src.repositories.TD_Repositories import *
+from src.repositories.MoleculeRepository import MoleculeRepository
+from src.repositories.PeriodicTableRepository import PeriodicTableRepository
+from src.repositories.SequenceRepository import SequenceRepository, Sequence
+from src.repositories.IntactRepository import *
 
 
 class AbstractService(ABC):
@@ -73,7 +73,8 @@ class AbstractServiceForPatterns(AbstractService, ABC):
         elements = args[0]
         for key in self.getFormula(item).keys():
             if key not in elements:
-                raise InvalidInputException(item, "Element: "+ key + " unknown")
+                print(item, ", Element: "+ key + " unknown")
+                raise InvalidInputException(item, ", Element: "+ key + " unknown")
         super(AbstractServiceForPatterns, self).checkFormatOfItem(item)
 
     def getFormula(self, item):
@@ -176,7 +177,7 @@ class SequenceService(AbstractService):
 
 class IntactIonService(AbstractServiceForPatterns):
     def __init__(self):
-        super(IntactIonService, self).__init__(ESI_Repository())
+        super(IntactIonService, self).__init__(Intact_Repository())
 
     def makeNew(self):
         #return PatternWithItems("", [{"Name": "", "Gain": "", "Loss": "", "NrOfMod": 0, "enabled": False}], None)

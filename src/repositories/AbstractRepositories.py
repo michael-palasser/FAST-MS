@@ -12,7 +12,7 @@ from os.path import join
 
 class AbstractRepository(ABC):
     def __init__(self, database, tableName, columns, integerVals, boolVals):
-        self._conn = sqlite3.connect(join(path,"src",database))
+        self._conn = sqlite3.connect(join(path,"src","data",database))
         self._mainTable = tableName
         self._columns = columns
         self._integerVals = integerVals
@@ -107,9 +107,9 @@ class AbstractRepository(ABC):
         self._conn.close()
 
 
-class AbstractRepositoryWithItems1(AbstractRepository, ABC):
+class AbstractRepositoryWithItems(AbstractRepository, ABC):
     def __init__(self,database, tableName, columns, itemDict, integerVals, boolVals):
-        super(AbstractRepositoryWithItems1, self).__init__(database, tableName, columns, integerVals, boolVals)
+        super(AbstractRepositoryWithItems, self).__init__(database, tableName, columns, integerVals, boolVals)
         self._itemDict = itemDict
 
 
@@ -198,13 +198,13 @@ class AbstractRepositoryWithItems1(AbstractRepository, ABC):
         self._conn.commit()
 
     def delete(self, name):
-        #id = super(AbstractRepositoryWithItems2, self).delete(name)
-        self.deleteAllItems(super(AbstractRepositoryWithItems1, self).delete(name))
+        #id = super(AbstractRepositoryWith2Items, self).delete(name)
+        self.deleteAllItems(super(AbstractRepositoryWithItems, self).delete(name))
 
 
-class AbstractRepositoryWithItems2(AbstractRepositoryWithItems1, ABC):
+class AbstractRepositoryWith2Items(AbstractRepositoryWithItems, ABC):
     """def __init__(self,database, tableName, columns, itemDict):
-        super(AbstractRepositoryWithItems2, self).__init__(database, tableName, columns, itemDict)
+        super(AbstractRepositoryWith2Items, self).__init__(database, tableName, columns, itemDict)
         self._itemDict = itemDict"""
 
     def getItemColumns(self):

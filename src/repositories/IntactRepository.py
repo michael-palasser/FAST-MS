@@ -3,14 +3,17 @@ Created on 29 Dec 2020
 
 @author: michael
 '''
-from src.Entities.IonEntities import IntactPattern, IntactModification
-from src.Repositories.AbstractRepositories import AbstractRepositoryWithItems2
+import sqlite3
+
+from src.entities.IonEntities import IntactPattern, IntactModification
+from src.repositories.AbstractRepositories import AbstractRepositoryWithItems
 from os.path import join
 
-class ESI_Repository(AbstractRepositoryWithItems2):
+class Intact_Repository(AbstractRepositoryWithItems):
     def __init__(self):
-        super(ESI_Repository, self).__init__(join('Intact_Ion_Search','data','ESI_data.db'), 'intactPatterns',("name",),
-                            {"intactModItems":('name', 'gain', 'loss', 'nrMod','enabled', 'patternId')}, (3,),(4,))
+        super(Intact_Repository, self).__init__(join('intact.db'), 'intactPatterns', ("name",),
+                                                {"intactModItems":('name', 'gain', 'loss', 'nrMod','enabled', 'patternId')}, (3,), (4,))
+        #self._conn = sqlite3.connect(':memory:')
 
     def makeTables(self):
         self._conn.cursor().execute("""
@@ -29,23 +32,23 @@ class ESI_Repository(AbstractRepositoryWithItems2):
 
     """def getAll(self):
         try:
-            return super(ESI_Repository, self).getAll()
+            return super(Intact_Repository, self).getAll()
         except sqlite3.OperationalError:
             self.makeTable()
             return []"""
 
     """def createPattern(self, pattern):
         try:
-            super(ESI_Repository, self).createPattern(pattern)
+            super(Intact_Repository, self).createPattern(pattern)
         except sqlite3.IntegrityError:
             self.makeTable()
-            super(ESI_Repository, self).createPattern(pattern)"""
+            super(Intact_Repository, self).createPattern(pattern)"""
 
 
     def getItemColumns(self):
-        columns = super(ESI_Repository, self).getItemColumns()
-        columns.update({'Nr.Mod.':"How often is species modified",'Enabled':"Activate/Deactivate Species"})
-        return columns
+        return {'Name':"Enter \"+\"modification or \"-\"loss", 'Gain':"molecular formula to be added",
+                'Loss':"molecular formula to be subtracted", 'Nr.Mod.':"How often is species modified",
+                'Enabled':"Activate/Deactivate Species"}
 
 
     def getPattern(self, name):
@@ -54,7 +57,7 @@ class ESI_Repository(AbstractRepositoryWithItems2):
 
     def getItems(self,patternId, table):
         listOfItems = list()
-        for item in super(ESI_Repository, self).getItems(patternId, [key for key in self._itemDict.keys()][0]):
+        for item in super(Intact_Repository, self).getItems(patternId, [key for key in self._itemDict.keys()][0]):
             listOfItems.append((item[1], item[2], item[3], item[4], item[5]) )
         return listOfItems
 
@@ -66,7 +69,7 @@ class ESI_Repository(AbstractRepositoryWithItems2):
 
     def getItemsAsObjects(self,patternId):
         listOfItems = list()
-        for item in super(ESI_Repository, self).getItems(patternId, [key for key in self._itemDict.keys()][0]):
+        for item in super(Intact_Repository, self).getItems(patternId, [key for key in self._itemDict.keys()][0]):
             listOfItems.append(IntactModification(item[1], item[2], item[3], item[4], item[5]) )
         return listOfItems
 

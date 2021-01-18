@@ -1,7 +1,7 @@
 from unittest import TestCase
 import os
 
-from src.Repositories.TD_Repositories import *
+from src.repositories.TD_Repositories import *
 
 pattern1 = FragmentationPattern("CAD_CMCT", "CMCT",
                                 [FragItem("a", 1, "", "H1O3P1", "", 0), FragItem("c", 1, "", "", "", 0)],

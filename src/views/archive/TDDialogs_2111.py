@@ -1,8 +1,8 @@
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import QDialog
 from src import path
-from src.Repositories.ConfigurationHandler import ConfigHandler
-from src.FragmentHunter.Main import run
+from src.repositories.ConfigurationHandler import ConfigHandler
+from src.top_down.Main import run
 
 
 class AbstractDialog(QDialog):
@@ -95,7 +95,7 @@ class AbstractDialog(QDialog):
 class TDStartDialog(AbstractDialog):
     def __init__(self, parent=None):
         super().__init__("startDialog", parent)
-        self.configHandler = ConfigHandler(path+"src/FragmentHunter/settings.json")
+        self.configHandler = ConfigHandler(path+"src/top_down/settings.json")
         self.setupUi(self)
 
     def setupUi(self, startDialog):
@@ -167,7 +167,7 @@ class TD_configurationDialog(AbstractDialog):
 
     def __init__(self, parent=None):
         super().__init__("configDialog", parent)
-        self.configHandler = ConfigHandler(path+"src/FragmentHunter/configurations.json")
+        self.configHandler = ConfigHandler(path+"src/top_down/configurations.json")
         self.setupUi(self)
 
     def setupUi(self, configDialog):

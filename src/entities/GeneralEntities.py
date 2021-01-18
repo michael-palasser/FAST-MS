@@ -1,6 +1,6 @@
 from re import findall
 
-from src.Entities.AbstractEntities import PatternWithItems, AbstractItem1, AbstractPattern
+from src.entities.AbstractEntities import PatternWithItems, AbstractItem1, AbstractPattern
 
 
 class Makromolecule(PatternWithItems):

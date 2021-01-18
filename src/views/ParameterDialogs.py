@@ -3,12 +3,12 @@ import traceback
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import QDialog, QMessageBox
 from src import path
-from src.Repositories.ConfigurationHandler import ConfigHandler
-from src.FragmentHunter import Main
-from src.Intact_Ion_Search import ESI_Main
+from src.repositories.ConfigurationHandler import ConfigHandler
+from src.top_down import Main
+from src.intact import ESI_Main
 from os.path import join
 
-fragmentHunterRepPath = join(path, 'src', 'FragmentHunter', 'data')
+fragmentHunterRepPath = join(path, 'src', 'top_down', 'data')
 
 class AbstractDialog(QDialog):
     def __init__(self, dialogName, title, lineSpacing, parent=None):
@@ -343,7 +343,7 @@ class TD_configurationDialog(DialogWithTabs):
 class ESI_StartDialog(DialogWithTabs, StartDialog):
     def __init__(self, parent=None):
         super().__init__("ESI_startDialog","Intact Ion Search", 30, parent)
-        self.configHandler = ConfigHandler(join(path,"src","Intact_Ion_Search","data","configurations.json"))
+        self.configHandler = ConfigHandler(join(path,"src","intact","data","configurations.json"))
         self.setupUi(self)
 
     def setupUi(self, startDialog):

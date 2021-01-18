@@ -4,8 +4,8 @@ import traceback
 from src import path
 from src.Services import *
 from src.PeriodicTable import *
-from src.Entities.GeneralEntities import *
-from src.Entities.IonEntities import *
+from src.entities.GeneralEntities import *
+from src.entities.IonEntities import *
 from src.LibraryBuilder import removeEmptyElements
 from os import listdir
 from os.path import isfile, join
@@ -198,30 +198,66 @@ def readModifications():
                             continue
                         elif flag == 1:
                             properties = removeEmptyElements(line.split())
-                            modifications.append([properties[0], properties[2], properties[1], properties[3], 0,properties[4], True, True])
+                            if line.startswith("#"):
+                                modifications.append(
+                                    [properties[0][1:], properties[2], properties[1], properties[3], 0, properties[4], True,
+                                     False])
+                            else:
+                                modifications.append([properties[0], properties[2], properties[1], properties[3], 0,properties[4], True, True])
                             print("1", [properties[0], properties[2], properties[1], properties[3], 0,properties[4], True, True])
                         elif flag == 2:
                             if line.startswith("#"):
                                 continue
-                            excluded.append(removeEmptyElements(line.split())[0][1:])
-                            print("2", removeEmptyElements(line.split())[0][1:])
+                            excluded.append([removeEmptyElements(line.split())[0][1:]])
+                            print("2", [removeEmptyElements(line.split())[0][1:]])
                     if len(modifications)>0:
                         name = file[4:-4]
                         print(name, name, modifications, excluded, None)
-                        service.savePattern(ModificationPattern(name, name, modifications, excluded, None))
-
+                        modif = name
+                        if name == 72:
+                            modif = "DEPC"
+                        elif name == 90:
+                            modif = "DEPC+H2O"
+                        elif name == 62:
+                            modif = "DEPC+H2O-CO"
+                        elif name == 134:
+                            modif = "2DEPC+H2O-CO"
+                        service.savePattern(ModificationPattern(name, modif, modifications, excluded, None))
     except:
         traceback.print_exc()
     finally:
         service.close()
 
 
+def readIntactModifs():
+    with open(join(path,'Parameters','intact_modifications.txt')) as f:
+        modifications = dict()
+        for line in f:
+            if line.startswith('#'):
+                continue
+            line = line.rstrip()
+            lineList = removeEmptyElements(line.split())
+            if len(lineList) < 5:
+                continue
+            if lineList[0] not in modifications.keys():
+                modifications[lineList[0]] = [[lineList[1], lineList[3], lineList[2], lineList[4], True]]
+            else:
+                modifications[lineList[0]].append([lineList[1], lineList[3], lineList[2], lineList[4], True])
+    for key,val in modifications.items():
+        print(key, val)
+    return modifications
+
+def writeIntactModifs():
+    service= IntactIonService()
+    modifications = readIntactModifs()
+    for key,val in modifications.items():
+        service.savePattern(IntactPattern(key, val, None))
 
 
-#writeElements()
-#writeMolecules()
-#writeSequences()
-"""with open(os.path.join(path, 'Parameters', 'Protein' + '.txt')) as f:
+"""writeElements()
+writeMolecules()
+writeSequences()
+with open(os.path.join(path, 'Parameters', 'Protein' + '.txt')) as f:
     for line in f:
         if line.startswith('#') or line == "":
             continue
@@ -254,6 +290,8 @@ prcFrags = [
     ['+e', '', '', '', 1,True],
     ['+2e', '', '', '', 2,True]]
 fragPath = join(path, 'Parameters', 'protein-fragmentation','ECD.txt')
-writeFragments("Protein_ECD",fragPath, prcFrags)"""
+writeFragments("Protein_ECD",fragPath, prcFrags)
 
-readModifications()
+readModifications()"""
+
+writeIntactModifs()

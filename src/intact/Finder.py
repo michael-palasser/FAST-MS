@@ -6,7 +6,7 @@ Created on 1 Oct 2020
 
 import numpy as np
 from scipy.optimize import curve_fit
-from src.Intact_Ion_Search.ESI_Ion import Ion
+from src.intact.ESI_Ion import Ion
 
 protonMass = 1.00727647
 

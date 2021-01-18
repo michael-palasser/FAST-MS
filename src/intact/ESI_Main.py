@@ -8,13 +8,13 @@ import os
 import subprocess
 import traceback
 from datetime import datetime
-from src.FragmentHunter.Main import findSequence
-from src.Repositories.IntactRepository import ESI_Repository
+from src.top_down.Main import findSequence
+from src.repositories.IntactRepository import Intact_Repository
 from src.LibraryBuilder import ESI_LibraryBuilder
-from src.Intact_Ion_Search.Finder import Finder
-from src.Repositories.ConfigurationHandler import ConfigHandler
-from src.Intact_Ion_Search.ESI_Analyser import Analyser
-from src.Intact_Ion_Search.ESI_ExcelWriter import ExcelWriter
+from src.intact.Finder import Finder
+from src.repositories.ConfigurationHandler import ConfigHandler
+from src.intact.ESI_Analyser import Analyser
+from src.intact.ESI_ExcelWriter import ExcelWriter
 from src import path
 
 """def getMode():
@@ -29,7 +29,7 @@ from src import path
 
 #if __name__ == '__main__':
 def run():
-    configHandler = ConfigHandler(os.path.join(path,"src","Intact_Ion_Search","configurations.json"))
+    configHandler = ConfigHandler(os.path.join(path,"src","intact","configurations.json"))
     with open(os.path.join(path, 'Parameters','sequences.txt'),'r') as sequenceFile:
         while True:
             sequenceName = configHandler.get('sequName')
@@ -63,7 +63,7 @@ def run():
     with open(moleculeFile, mode="r") as f:
         libraryBuilder.readMoleculeFile(f)
     #with openAgain(os.path.join(path,'Parameters','intact_modifications.txt'), mode="r") as f:
-    finder = Finder(libraryBuilder.createLibrary(ESI_Repository().getPatternWithObjects(
+    finder = Finder(libraryBuilder.createLibrary(Intact_Repository().getPatternWithObjects(
         configHandler.get('modification'))),configHandler)
 
     """calibrate spectra"""

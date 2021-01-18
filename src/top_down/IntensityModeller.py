@@ -7,7 +7,7 @@ import numpy as np
 from copy import deepcopy
 from scipy.optimize import minimize
 from scipy.optimize import minimize_scalar
-from src.FragmentHunter.SpectrumHandler import getErrorLimit
+from src.top_down.SpectrumHandler import getErrorLimit
 
 class IntensityModeller(object):
     '''

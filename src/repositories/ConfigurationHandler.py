@@ -5,7 +5,9 @@ Created on 31 Aug 2020
 '''
 
 import json
-from os.path import isfile
+from os.path import isfile, join
+from src import path
+
 
 class ConfigHandler(object):
     '''
@@ -20,6 +22,7 @@ class ConfigHandler(object):
                 self.__parameters = json.loads(json.load(f))
         else:
             print('not found')
+            print(configFile)
             self.__parameters = dict()
 
     def get(self,key):
@@ -36,15 +39,31 @@ class ConfigHandler(object):
             return self.__parameters
         print("Configuration file does not exist")
 
-"""
+
+dataPath = join(path, "src", "data")
+
+class ConfigurationHandlerFactory(object):
+    @staticmethod
+    def getTD_SettingHandler():
+        return ConfigHandler(join(dataPath,"settings_top_down.json"))
+
+    @staticmethod
+    def getTD_ConfigHandler():
+        return ConfigHandler(join(dataPath,"configurations_top_down.json"))
+
+    @staticmethod
+    def getIntactHandler():
+        return ConfigHandler(join(dataPath, "configurations_intact.json"))
+
+
 conf = {'sequName' : 'ribA',
     'charge' : 6,
-    'modification' : 'CMCT',
+    'fragments': 'RNA_CAD',
+    'modifications' : 'CMCT',
     'spectralData' : '080819_ribA_PAR_6.txt',
     'noiseLimit' : 1550000.0,
-    'sprayMode' : 'negative',
-    'dissociation' : 'CAD'}
-
+    'sprayMode' : 'negative'}
+"""
 more = {'lowerBound' : 300,
 'minUpperBound' : 1200,
 'upperBoundTolerance' : 50,
@@ -78,15 +97,15 @@ conf =  {"CR_1_2":	('RNA',	'GAAGGGCAACCUUCG'),
         "rre2":	('RNA',	'GCACUAUGGGCGCAGCGUCAAUGACGCUGACGGUACAGGCCAGACAAUUAUUGUCUGGUAUAGUGC'),
         "rre2b":	('RNA',	'GGUCUGGGCGCAGCGUCAAUGACGCUGACGGUACAGGCC'),
         "encFtn":	('P',	'AQSSNSTHEPLEVLKEETVNRHRAIVSVMEELEAVDWYDQRVDASTDPELTAILAHNRDEEKEHAAMTLEWLRRNDAKWAEHLRTYLFTEGPITAANSSSVDKLAAALEHHHHHH')}
-
+"""
 from src import path
-absPath = path +"/src/Sequences.json"
+absPath = path +"/src/data/settings_top_down.json"
 handler = ConfigHandler(absPath)
-
-with openAgain(absPath, "w") as f:
+"""
+with open(absPath, "w") as f:
     json.dump(json.dumps(conf, indent=3), f)
 
-with openAgain(absPath) as json_data_file:
+with open(absPath) as json_data_file:
     pattern = json.load(json_data_file)
 print(pattern)
 """

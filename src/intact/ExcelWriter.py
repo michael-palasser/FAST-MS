@@ -7,7 +7,7 @@ import xlsxwriter
 from xlsxwriter.utility import xl_rowcol_to_cell
 
 
-class ExcelWriter(object):
+class IntactExcelWriter(object):
     '''
 
     '''

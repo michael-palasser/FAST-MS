@@ -95,7 +95,7 @@ class AbstractDialog(QDialog):
 class TDStartDialog(AbstractDialog):
     def __init__(self, parent=None):
         super().__init__("startDialog", parent)
-        self.configHandler = ConfigHandler(path+"src/top_down/settings.json")
+        self.configHandler = ConfigHandler(path+"src/top_down/settings_top_down.json")
         self.setupUi(self)
 
     def setupUi(self, startDialog):
@@ -110,10 +110,10 @@ class TDStartDialog(AbstractDialog):
         self.gridLayout = QtWidgets.QGridLayout(self.layoutWidget)
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
 
-        self.createLabels(self.layoutWidget, ("sequence name", "charge", "modification", "spectral pattern",
+        self.createLabels(self.layoutWidget, ("sequenceList name", "charge", "modification", "spectral pattern",
                                               "noise threshold (x10^6)", "spray mode", "dissociation"))
         self.createWidget(QtWidgets.QLineEdit(self.layoutWidget),0, "sequName",
-                                          "name of sequence")
+                                          "name of sequenceList")
         self.createWidget(QtWidgets.QSpinBox(self.layoutWidget), 1, "charge",
                                         "charge of precursor ion")
         self.widgets['charge'].setValue(2)
@@ -167,7 +167,7 @@ class TD_configurationDialog(AbstractDialog):
 
     def __init__(self, parent=None):
         super().__init__("configDialog", parent)
-        self.configHandler = ConfigHandler(path+"src/top_down/configurations.json")
+        self.configHandler = ConfigHandler(path+"src/top_down/configurations_top_down.json")
         self.setupUi(self)
 
     def setupUi(self, configDialog):

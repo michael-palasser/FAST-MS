@@ -1,7 +1,7 @@
 import sqlite3
 from os.path import join
 
-from src.entities.IonEntities import FragmentationPattern, FragItem, ModificationPattern, ModifiedItem
+from src.entities.IonTemplates import FragmentationPattern, FragItem, ModificationPattern, ModifiedItem
 from src.repositories.AbstractRepositories import AbstractRepositoryWith2Items
 
 class FragmentationRepository(AbstractRepositoryWith2Items):
@@ -43,70 +43,6 @@ class FragmentationRepository(AbstractRepositoryWith2Items):
                 "patternId" integer NOT NULL );""")
 
 
-    """def createFragPattern(self, fragmentationPattern):
-        try:
-            self.insertFragments(self.create((fragmentationPattern.name,)), fragmentationPattern)
-        except sqlite3.IntegrityError:
-            raise AlreadyPresentException(fragmentationPattern.name)
-
-
-    def insertFragments(self, patternId, fragmentationPattern):
-        for item in fragmentationPattern.fragmentTypes:
-            self.createItem('fragmentTypes', item.getAll() + [patternId])
-        for item in fragmentationPattern.precursorFragments:
-            self.createItem('precFragments', item.getAll() + [patternId])
-
-
-        def insertPrecItems(self, precFragment):
-        try:
-            self.createItem('precFragments', precFragment.getAll())
-        except sqlite3.IntegrityError:
-            raise AlreadyPresentException(precFragment.getName())
-
-
-    def getFragPattern(self, name):
-        pattern = self.get('name',name)
-        return FragmentationPattern(pattern[1], self.getFragments('fragmentTypes', pattern[0]),
-                                    self.getFragments('precFragments', pattern[0]), pattern[0])
-
-    def getFragments(self, patternId, table):
-        listOfItems = list()
-        for item in self.getAllItems(table, patternId):
-            listOfItems.append(FragItem(item[1], item[2], item[3], item[4], item[5], item[6], item[0]))
-        return listOfItems
-
-    def getAllPatterns(self):
-        listOfPatterns = list()
-        for pattern in self.getAll():
-            listOfPatterns.append(FragmentationPattern(pattern[1], self.getFragments('fragmentTypes', pattern[0]),
-                                                       self.getFragments('precFragments', pattern[0]), pattern[0]))
-        return listOfPatterns
-
-    def getPrecFragments(self):
-        return PrecursorFragmentationPattern(self.getFragments(None))
-
-
-    def updatePattern(self, fragPattern):
-        self.update(fragPattern.name, fragPattern.id)
-        self.deleteAllItems(fragPattern.id, 'precFragments')
-        self.insertFragments(fragPattern.id, fragPattern)
-
-
-    def updatePrecFragment(self, precFragPattern):
-        cur = self._conn.cursor()
-        sql = 'UPDATE precFragments SET ' + '=?, '.join(self._itemDict['precFragments']) + '=? WHERE id=?'
-        cur.execute(sql, precFragPattern.fragmentTypes.getAll(), precFragPattern.id)
-        self._conn.commit()
-
-
-    def deleteFragPattern(self, id):
-        self.deleteAllItems(id)
-        self.delete(id)
-
-    def deletePrecFragment(self, id):
-        cur = self._conn.cursor()
-        cur.execute('DELETE FROM precFragments WHERE id=?', (id,))"""
-
     def createPattern(self, pattern):
         """
         Function create() creates new pattern which is filled by insertIsotopes
@@ -126,7 +62,7 @@ class FragmentationRepository(AbstractRepositoryWith2Items):
     def getItemColumns(self):
         columns = super(FragmentationRepository, self).getItemColumns()
         columns.update(
-            {'Residue':"If the species is dependent on the occurence of a specific residue within the sequence, enter the residue",
+            {'Residue':"If the species is dependent on the occurence of a specific residue within the sequenceList, enter the residue",
              'Radicals':"Enter the number of radicals", 'Enabled':"Activate/Deactivate Species"})
         return (columns,columns)
 
@@ -265,7 +201,7 @@ class ModificationRepository(AbstractRepositoryWith2Items):
     def getItemColumns(self):
         columns = super(ModificationRepository, self).getItemColumns()
         columns.update(
-            {'Residue':"If the species is dependent on the occurence of a specific residue within the sequence, enter "
+            {'Residue':"If the species is dependent on the occurence of a specific residue within the sequenceList, enter "
             "the residue", 'Radicals':"Enter the number of radicals",
             'z-Effect':"If the modification alters the charge of modified fragment enter an (empiric) number of the extent",
             'calcOcc':'Should the modification be used for occupancy calculation?',

@@ -84,22 +84,28 @@ class ModifiedItem(FragItem):
 
 
 class IntactPattern(PatternWithItems):
-    def __init__(self,  name, items, id):
+    def __init__(self,  name, gain, loss, items, id):
         super(IntactPattern, self).__init__(name, items, id)
+        self.__initGain = gain
+        self.__initLoss = loss
 
-"""def getItemsAsList(self):
-        _itemDict = dict()
-        #_itemDict = {"Name":[], "Gain":[], "Loss":[], "NrOfMod":[], "enabled":[]}
-        for item in self.__modifications:
-            for key, val in item.items()
-                if item not in
-        return {"Name":[], "Gain", "Loss", "NrOfMod", "enabled"}"""
+    def getInitGain(self):
+        return self.__initGain
+
+    def getInitLoss(self):
+        return self.__initLoss
+
+    def getFormula(self):
+        formulaDict = AbstractItem2.stringToFormula(self.__initGain, dict(), 1)
+        return AbstractItem2.stringToFormula(self.__initLoss, formulaDict, -1)
 
 
 class IntactModification(AbstractItem2):
-    def __init__(self, name, gain, loss, nrMod, enabled):
-        super(IntactModification, self).__init__(name, enabled, gain, loss)
-        self._nrMod = nrMod
+    def __init__(self, item):
+        super(IntactModification, self).__init__(name=item[0], enabled=item[4], gain=item[1], loss=item[2])
+        self._nrMod = item[3]
 
     def getNrMod(self):
         return self._nrMod
+
+

@@ -1,0 +1,1 @@
+"{\n   \"sequName\": \"ribA\",\n   \"charge\": 6,\n   \"fragments\": \"RNA_CAD\",\n   \"modifications\": \"CMCT\",\n   \"spectralData\": \"080819_ribA_PAR_6.txt\",\n   \"noiseLimit\": 1550000.0,\n   \"sprayMode\": \"negative\"\n}"

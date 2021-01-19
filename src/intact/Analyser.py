@@ -6,7 +6,7 @@ Created on 2 Oct 2020
 
 import numpy as np
 
-class Analyser(object):
+class IntactAnalyser(object):
     '''
 
     '''

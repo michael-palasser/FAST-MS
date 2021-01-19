@@ -7,10 +7,10 @@ import math
 import os
 
 import numpy as np
-from src.repositories.ConfigurationHandler import ConfigHandler
+from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src import path
 
-noiseLimit = ConfigHandler(os.path.join(path, "src","top_down","data","settings.json")).get('noiseLimit')
+noiseLimit = ConfigurationHandlerFactory.getTD_SettingHandler().get('noiseLimit')
 
 class Fragment(object):
     '''
@@ -21,10 +21,10 @@ class Fragment(object):
         '''
         Constructor
         :param type: typically a, b, c, d, w, x, y or z (String)
-        :param number: number in sequence (int)
+        :param number: number in sequenceList (int)
         :param modification: +modification, +ligands and -loss (String)
         :param formula: Type MolecularFormula
-        :param sequence: list of sequence of fragment
+        :param sequence: list of sequenceList of fragment
         '''
         self.type = type
         self.number = number
@@ -56,7 +56,7 @@ class Fragment(object):
         return 1
 
 
-class Ion(Fragment):
+class FragmentIon(Fragment):
     '''
     charged fragment
     '''
@@ -71,7 +71,7 @@ class Ion(Fragment):
         :param noise: noise level in the m/z area of the ion, calculated by calculateNoise function in SpectrumHandler
         '''
         super().__init__(fragment.type, fragment.number, fragment.modification,
-                         fragment.formula, fragment.sequence)
+                         fragment.formula, fragment.sequenceList)
         self.charge = charge
         self.isotopePattern = isotopePattern
         self.intensity = 0
@@ -104,3 +104,27 @@ class Ion(Fragment):
 
     def getRelAbundance(self):
         return self.intensity / self.charge
+
+
+
+class IntactIon(object):
+    def __init__(self, name, modification, mz,theoMz, charge, intensity, nrOfModifications):
+        '''
+
+        '''
+        self.name = name
+        self.modification = modification
+        self.mz = mz
+        self.theoMz = theoMz
+        self.charge = charge
+        self.intensity = intensity
+        self.nrOfModifications = nrOfModifications
+
+    def calculateError(self):
+        return (self.mz - self.theoMz) / self.theoMz * 10 ** 6
+
+    def getName(self):
+        return self.name + self.modification
+
+    def toList(self):
+        return [self.mz, self.charge, self.intensity, self.getName(), round(self.calculateError(), 2)]

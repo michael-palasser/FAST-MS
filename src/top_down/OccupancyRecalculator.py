@@ -6,16 +6,16 @@ import re
 from datetime import datetime
 
 from src.top_down.Main import findSequence
-from src.entities.Fragment import Fragment,Ion
+from src.entities.Ions import Fragment,FragmentIon
 from src.top_down.Analyser import Analyser
 from src.top_down.TDExcelWriter import BasicExcelWriter
 from src import path
-from src.repositories.ConfigurationHandler import ConfigHandler
+from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 
 def run():
     """openAgain everything"""
     with open(path + 'Parameters/sequences.txt', 'r') as sequenceFile:
-        sequenceName = input('Enter sequence name: ')
+        sequenceName = input('Enter sequenceList name: ')
         molecule, sequence = findSequence(sequenceFile, sequenceName)
     if sequence != None:
         if molecule in ['P', 'peptide', 'protein']:
@@ -47,14 +47,12 @@ def run():
             modification = ion['name'][ion['name'].find('+'):]
         else:
             modification = ""
-        newIon = Ion(Fragment(species, number, modification, dict(), []), ion['z'], np.zeros(1), 0)
+        newIon = FragmentIon(Fragment(species, number, modification, dict(), []), ion['z'], np.zeros(1), 0)
         newIon.intensity = ion['intensity']
         ionList.append(newIon)
 
     """Analysis and Output"""
-    analyser = Analyser(ionList, sequence,precModification,
-                        ConfigHandler(os.path.join(path,"src","top_down","data","configurations.json"))
-                            .getAll())
+    analyser = Analyser(ionList, sequence,precModification, ConfigurationHandlerFactory.getTD_ConfigHandler().getAll())
     excelWriter = BasicExcelWriter(os.path.join(path, "Spectral_data","Occupancies_out.xlsx"))
     date = datetime.now().strftime("%d/%m/%Y %H:%M")
     excelWriter.worksheet1.write(0,0,date)

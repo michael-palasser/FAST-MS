@@ -32,7 +32,7 @@ class Ui_startDialog(object):
         self.labelSequ.setObjectName("labelSequ")
         self.gridLayout.addWidget(self.labelSequ, 0, 0, 1, 1)
         self.sequence = QtWidgets.QLineEdit(self.layoutWidget)
-        self.sequence.setObjectName("sequence")
+        self.sequence.setObjectName("sequenceList")
         self.gridLayout.addWidget(self.sequence, 0, 1, 1, 1)
         self.labelCharge = QtWidgets.QLabel(self.layoutWidget)
         self.labelCharge.setObjectName("labelCharge")
@@ -88,7 +88,7 @@ class Ui_startDialog(object):
     def retranslateUi(self, startDialog):
         _translate = QtCore.QCoreApplication.translate
         startDialog.setWindowTitle(_translate("startDialog", "Dialog"))
-        self.labelSequ.setText(_translate("startDialog", "sequence name"))
+        self.labelSequ.setText(_translate("startDialog", "sequenceList name"))
         self.labelCharge.setText(_translate("startDialog", "charge"))
         self.charge.setWhatsThis(_translate("startDialog", "<html><head/><body><p>charge state of precursor ion</p></body></html>"))
         self.labelMod.setText(_translate("startDialog", "modification"))

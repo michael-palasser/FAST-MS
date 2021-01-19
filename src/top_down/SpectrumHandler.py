@@ -7,11 +7,11 @@ from os.path import join
 from re import findall
 import numpy as np
 import copy
-from src.entities.Fragment import Ion
+from src.entities.Ions import FragmentIon
 from src import path
-from src.repositories.ConfigurationHandler import ConfigHandler
+from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 
-configs = ConfigHandler(join(path, "src","top_down","data","configurations.json")).getAll()
+configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
 
 def getErrorLimit(mz):
     return configs['k']/1000 * mz + configs['d']
@@ -214,7 +214,7 @@ class SpectrumHandler(object):
                 return None
             probableZ = fragment.formula.formulaDict['P'] * self.normalizationFactor
         elif self.molecule == 'protein':
-            probableZ = self.getPeptideScore(fragment.sequence) * self.normalizationFactor
+            probableZ = self.getPeptideScore(fragment.sequenceList) * self.normalizationFactor
         elif self.molecule in ['RNA' ,'DNA'] and self.mode == 1:
             probableZ = fragment.number * self.normalizationFactor
         else:
@@ -292,7 +292,7 @@ class SpectrumHandler(object):
                                 foundPeaks.append((theoPeak['mass'],0,theoPeak['mass'],theoPeak['int'],0,1))"""
                             foundPeaksArr = np.sort(np.array(foundPeaks, dtype=self.peaksArrType),order=['m/z'])
                             if not np.all(foundPeaksArr['int']==0):
-                                self.foundIons.append(Ion(fragment,z,foundPeaksArr, noise))
+                                self.foundIons.append(FragmentIon(fragment, z, foundPeaksArr, noise))
                                 #print(fragment.getName(),z,'\n', theoreticalPeaks[0]['mass'], z, "{:.2e}".format(noise))
                                 #print(fragment.getName(),foundPeaksArr)
                                 for peak in foundPeaksArr:
@@ -308,7 +308,7 @@ class SpectrumHandler(object):
 
     def addToDeletedIons(self, fragment, foundMainPeaks, noise, z):
         foundMainPeaksArr = np.sort(np.array(foundMainPeaks, dtype=self.peaksArrType), order=['m/z'])
-        noiseIon = Ion(fragment, z, foundMainPeaksArr, noise)
+        noiseIon = FragmentIon(fragment, z, foundMainPeaksArr, noise)
         noiseIon.comment = 'noise'
         self.ionsInNoise.append(noiseIon)
 

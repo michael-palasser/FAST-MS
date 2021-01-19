@@ -10,7 +10,7 @@ import traceback
 import sys
 import time
 import re
-from src.repositories.ConfigurationHandler import ConfigHandler
+from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.top_down.Analyser import Analyser
 from src.LibraryBuilder import FragmentLibraryBuilder
 from src.top_down.SpectrumHandler import SpectrumHandler
@@ -22,10 +22,10 @@ from src import path
 
 def findSequence(file, name):
     '''
-    finds sequence
+    finds sequenceList
     :param file: file with stored sequences
-    :param name: sequence name
-    :return: molecule, list of sequence, respectively None,None if sequence was not found
+    :param name: sequenceList name
+    :return: molecule, list of sequenceList, respectively None,None if sequenceList was not found
     '''
     for line in file:
         line = line.rstrip()
@@ -41,8 +41,8 @@ def sortIonsByName(ionList):
 
 #if __name__ == '__main__':
 def run():
-    settings = ConfigHandler(os.path.join(path,"src","top_down","data","settings.json")).getAll()
-    configs = ConfigHandler(os.path.join(path,"src","top_down","data","configurations.json")).getAll()
+    settings = ConfigurationHandlerFactory.getTD_SettingHandler().getAll()
+    configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
     with open(os.path.join(path, 'Parameters','sequences.txt'),'r') as sequenceFile:
             molecule, sequence = findSequence(sequenceFile, settings['sequName'])
             if sequence != None:
@@ -58,8 +58,8 @@ def run():
             maxMod = int(settings['modification'][0])
             modificationType = settings['modification'][1:]
     spectralFile = settings['spectralData']
-    if (spectralFile[-4:] != '.txt') and (spectralFile[-4:] != '.csv'):
-        spectralFile += '.txt'
+    """if (spectralFile[-4:] != '.txt') and (spectralFile[-4:] != '.csv'):
+        spectralFile += '.txt'"""
     spectralFile = os.path.join(path, 'Spectral_data','top-down', spectralFile)
     if not os.path.isfile(spectralFile):
         raise Exception(spectralFile,"not found")

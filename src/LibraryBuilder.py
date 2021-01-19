@@ -10,7 +10,8 @@ from multiprocessing import Pool
 
 import numpy as np
 from src.MolecularFormula import MolecularFormula
-from src.entities.Fragment import Fragment
+from src.entities.Ions import Fragment
+from src.Services import IntactIonService, SequenceService, MoleculeService
 
 eMass = 5.48579909065 * 10**(-4)
 
@@ -26,26 +27,25 @@ class AbstractLibraryBuilder(ABC):
     '''
     Parent class of all library builders
     '''
-    def __init__(self,precName, sequence, molecule, modification):
+    def __init__(self,sequName, modificationName):
         '''
         Constructor
-        :param precName: name of precursor (String)
-        :param sequence: sequence (list)
+        :param sequName: name of precursor (String)
+        :param sequenceList: sequenceList (list)
         :param molecule: RNA / DNA ? P (String)
         :param modification: modification of precursor
         :return: void
         monomeres: dict (keys = monomeres (FASTA), values = formulas)
-        precursorModifications: dict (keys = precursor modifications, values = formulas)
+        modifications: dict (keys = precursor modifications, values = formulas)
         '''
-        self.precName = precName
-        self.sequence = sequence
-        self.molecule = molecule
-        self.modification = modification
-        self.monomers = dict()
-        self.precursorModifications = dict()
+        self.sequence = SequenceService().get(sequName)
+        self.sequenceList = self.sequence.getSequence()
+        #self.molecule = molecule
+        self.monomers = MoleculeService().getItemDict(self.sequence.getMolecule())
+        self.precursorModifications = dict() #Todo
 
 
-    @staticmethod
+    """@staticmethod
     def stringToFormula(formulaString, formulaDict, sign):
         '''
         Converts a String to a formula - dict and adds or subtracts it to or from an original formula
@@ -69,10 +69,10 @@ class AbstractLibraryBuilder(ABC):
                 formulaDict[element] += number * sign
             else:
                 formulaDict[element] = number * sign
-        return formulaDict
+        return formulaDict"""
 
 
-    def readMoleculeFile(self, moleculeFile):
+    """def readMoleculeFile(self, moleculeFile):
         '''
         reads and processes file which contains formulas of monomeres and precursor ions
         :param moleculeFile: (RNA.txt, DNA.txt, Protein.txt in Parameters - folder)
@@ -89,11 +89,11 @@ class AbstractLibraryBuilder(ABC):
                 self.monomers[lineList[0]] = self.stringToFormula(lineList[1],dict(),1)
             elif mode == 'precIons':
                 print(lineList[0])
-                self.precursorModifications[lineList[0]] = self.stringToFormula(lineList[1], dict(), 1)
+                self.modifications[lineList[0]] = self.stringToFormula(lineList[1], dict(), 1)"""
 
 
 
-class FragmentLibraryBuilder(AbstractLibraryBuilder):
+class FragmentLibraryBuilder(object):
     '''
     Creates library for top-down fragments
     '''
@@ -103,7 +103,7 @@ class FragmentLibraryBuilder(AbstractLibraryBuilder):
         '''
         Constructor
         :param precName: name of precursor (String)
-        :param sequence: sequence (list)
+        :param sequence: sequenceList (list)
         :param molecule: RNA / DNA ? P (String)
         :param modification: modification of precursor
         :param maxMod: number of modifications on precursor
@@ -177,9 +177,9 @@ class FragmentLibraryBuilder(AbstractLibraryBuilder):
 
     def buildBasicLadder(self, sequ):
         '''
-        Builds a sequence ladder of a basic fragment type
-        :param sequ: sequence of precursor (list) (either from 5' or 3')
-        :return: the ladder (dict: key=sequence(list), val=formula(MolecularFormula))
+        Builds a sequenceList ladder of a basic fragment type
+        :param sequ: sequenceList of precursor (list) (either from 5' or 3')
+        :return: the ladder (dict: key=sequenceList(list), val=formula(MolecularFormula))
         '''
         basicLadder = list()
         length = 1
@@ -197,7 +197,7 @@ class FragmentLibraryBuilder(AbstractLibraryBuilder):
     @staticmethod
     def checkForResidue(residue, sequence):
         '''
-        Checks if sequence contains a corresponding residue for residue-specific fragments
+        Checks if sequenceList contains a corresponding residue for residue-specific fragments
         :param residue: String
         :param sequence: list
         :return: boolean
@@ -207,13 +207,13 @@ class FragmentLibraryBuilder(AbstractLibraryBuilder):
 
     def checkForProlines(self, type, sequ, basicLadder):
         '''
-        No c- and z-fragments after a proline in sequence. Function checks if last amino acid is proline.
+        No c- and z-fragments after a proline in sequenceList. Function checks if last amino acid is proline.
         :param type: fragment type of fragment
-        :param sequ: sequence of fragment
+        :param sequ: sequenceList of fragment
         :param basicLadder: fragment ladder of a basic fragment type (see function buildBasicLadder)
-        :return: 1 for c- or z-fragments of proteins if last amino acid in sequence is a proline, else: 0
+        :return: 1 for c- or z-fragments of proteins if last amino acid in sequenceList is a proline, else: 0
         '''
-        if self.molecule in ['protein', 'peptide', 'P']:
+        if self.sequence.getMolecule() == 'Protein':
             if type == 'c' and sequ[-1] == 'P':  # ToDo: Hydroxyproline etc.
                 return 1
             elif type == 'z' and basicLadder[len(sequ)][0][-1] == 'P':
@@ -233,7 +233,7 @@ class FragmentLibraryBuilder(AbstractLibraryBuilder):
             #precursor ion handled later
             linkSequ = link[0]
             linkFormula = link[1]
-            if len(linkSequ) == len(self.sequence):
+            if len(linkSequ) == len(self.sequenceList):
                 continue
             for fragmentKey,fragmentVal in fragmentDict.items():
                 if self.checkForProlines(fragmentKey[0],linkSequ, basicLadder):
@@ -276,16 +276,16 @@ class FragmentLibraryBuilder(AbstractLibraryBuilder):
                 tempFormula = basicFormula.subtractFormula(ionVal)
             else:
                 tempFormula = basicFormula.addFormula(ionVal)
-            precursorFragments.append(Fragment(self.precName, 0, ionKey, tempFormula, self.sequence))
+            precursorFragments.append(Fragment(self.sequence.getName(), 0, ionKey, tempFormula, self.sequenceList))
             for nrMod in range(1,self.maxMod+1):
                 for modKey,modVal in self.modificationDict.items():
                     if self.maxMod > 1:
                         modName = modKey[0] + str(nrMod) + modKey[1:] + ionKey
                     else:
                         modName = modKey + ionKey
-                    precursorFragments.append(Fragment(self.precName, 0, modName,
-                                        tempFormula.addFormula(MolecularFormula(modVal[0])
-                                                               .multiplyFormula(nrMod).formulaDict),self.sequence))
+                    precursorFragments.append(Fragment(self.sequence.getName(), 0, modName,
+                                                       tempFormula.addFormula(MolecularFormula(modVal[0])
+                                                               .multiplyFormula(nrMod).formulaDict), self.sequenceList))
         return precursorFragments
     
 
@@ -298,10 +298,10 @@ class FragmentLibraryBuilder(AbstractLibraryBuilder):
             print('These nrOfModifications are excluded:')
             for elem in self.removeList:
                 print(elem)
-        forwardFragments = self.createFragmentLadder(self.buildBasicLadder(self.sequence),self.forwardDict)
-        SimpleLadderBack = self.buildBasicLadder(self.sequence[::-1])
+        forwardFragments = self.createFragmentLadder(self.buildBasicLadder(self.sequenceList), self.forwardDict)
+        SimpleLadderBack = self.buildBasicLadder(self.sequenceList[::-1])
         backwardFragments = self.createFragmentLadder(SimpleLadderBack,self.backwardDict)
-        precursorFragments = self.addPrecursor(SimpleLadderBack[len(self.sequence)-1][1].addFormula(self.precursorModifications['start']))
+        precursorFragments = self.addPrecursor(SimpleLadderBack[len(self.sequenceList) - 1][1].addFormula(self.precursorModifications['start']))
         self.fragmentLibrary = forwardFragments + backwardFragments + precursorFragments
         self.fragmentLibrary.sort(key=lambda obj:(obj.type , obj.number))
         """for fragment in self.fragmentLibrary:
@@ -447,7 +447,7 @@ class ESI_LibraryBuilder(AbstractLibraryBuilder):
 
     def getUnmodifiedFormula(self):
         formula = MolecularFormula(self.precursorModifications['start'])
-        for link in self.sequence:
+        for link in self.sequenceList:
             if link not in self.monomers.keys():
                 raise Exception(link, 'unknown')
             formula = formula.addFormula(self.monomers[link])

@@ -12,10 +12,10 @@ import time
 import re
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.top_down.Analyser import Analyser
-from src.LibraryBuilder import FragmentLibraryBuilder
+from src.top_down.LibraryBuilder import FragmentLibraryBuilder
 from src.top_down.SpectrumHandler import SpectrumHandler
 from src.top_down.IntensityModeller import IntensityModeller
-from src.top_down.TDExcelWriter import ExcelWriter
+from src.top_down.ExcelWriter import ExcelWriter
 from src import path
 
 

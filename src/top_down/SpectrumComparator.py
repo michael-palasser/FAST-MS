@@ -6,10 +6,9 @@ Created on 15 Oct 2020
 import subprocess
 
 import numpy as np
-from os.path import join
 import xlsxwriter
 from datetime import datetime
-from src.LibraryBuilder import removeEmptyElements
+from src.top_down.LibraryBuilder import removeEmptyElements
 from src import path
 
 

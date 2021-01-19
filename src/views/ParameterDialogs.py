@@ -181,7 +181,7 @@ class TDStartDialog(StartDialog):
         self.setupUi(self)
 
     def setupUi(self, startDialog):
-        self.createLabels(("Sequence Name:", "Charge:", "Fragments:", "Modifications:", "Spectral Data:", "Noise Threshold (x10^6):",
+        self.createLabels(("Sequence Name:", "Charge:", "Fragmentation:", "Modifications:", "Spectral Data:", "Noise Threshold (x10^6):",
                            "Spray Mode:", "Output"),startDialog, 30, 160)
         fragPatterns = FragmentIonService().getAllPatternNames()
         modPatterns = ModificationService().getAllPatternNames()

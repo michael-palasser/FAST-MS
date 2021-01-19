@@ -28,7 +28,6 @@ class MoleculeRepository(AbstractRepositoryWithItems):
                 'Formula':'molecular formula of monomer'}
 
     def getPattern(self, name):
-        print(name)
         pattern = self.get('name', name)
         return Makromolecule(pattern[1], self.getItems(pattern[0], [key for key in self._itemDict.keys()][0]), pattern[0])
 

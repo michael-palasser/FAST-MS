@@ -36,7 +36,6 @@ class SequenceRepository(AbstractRepository):
     def getAllSequences(self):
         sequences = []
         for sequenceTuple in self.getAll():
-            print(sequenceTuple)
             sequences.append((sequenceTuple[1], sequenceTuple[2], sequenceTuple[3]))
         return sequences
 

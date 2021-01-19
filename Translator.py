@@ -6,7 +6,7 @@ from src.Services import *
 from src.PeriodicTable import *
 from src.entities.GeneralEntities import *
 from src.entities.IonTemplates import *
-from src.LibraryBuilder import removeEmptyElements
+from src.top_down.LibraryBuilder import removeEmptyElements
 from os import listdir
 from os.path import isfile, join
 
@@ -114,45 +114,18 @@ def readFragmentations(file):
                 if i == len(oldProperties)-1:
                     property = 0
             properties.append(property)
+        name, enabled = properties[0] , True
         if properties[0].startswith('#'):
-            print(properties[4])
-            items.append([properties[0][1:], properties[2], properties[1], properties[3], int(properties[4]), False])
+            name, enabled = properties[0][1:], False
+
+        if name[0] in ['a', 'b', 'c', 'd']:
+            items.append([name, properties[2], properties[1], properties[3], int(properties[4]), 1, enabled])
         else:
-            items.append([properties[0], properties[2], properties[1], properties[3], int(properties[4]), True])
+            items.append([name, properties[2], properties[1], properties[3], int(properties[4]), -1, enabled])
     for item in items:
         print(item)
     return items
 
-
-
-
-
-
-"""def readFragmentationFile(file):  # ToDo: what happens when number before mod?
-    '''
-    reads the fragment-templates and creates dicts
-    :param file: file which contain fragment templates
-    :return: void
-    '''
-    for line in file:
-        line = line.rstrip()
-        if line.startswith('#') or line == "":
-            continue
-        else:
-            if line[0] in ['a', 'b', 'c', 'd']:
-                self.addToFragmentDict(line, self.forwardDict)
-            elif line[0] in ['w', 'x', 'y', 'z']:
-                self.addToFragmentDict(line, self.backwardDict)
-            elif line.startswith('+'):
-                name, formula, residue, zEffect = self.lineToFormula(line)
-                self.modificationDict[name] = (
-                formula, residue, zEffect)  # ToDo: better solution, radicals in nrOfModifications?
-            elif line.startswith('-+'):
-                line = line.rstrip()
-                removeList.append(line[1:])
-            else:
-                print(line)
-                raise Exception("incorrect format in fragmentation File")"""
 
 def writeFragments(name, fragPath,precFrag):
     service = FragmentIonService()
@@ -171,7 +144,7 @@ def writeFragments(name, fragPath,precFrag):
         service.close()
 
 
-def readModifications():
+def writeModifications():
     service = ModificationService()
     try:
         for mol in ['protein','RNA']:
@@ -214,13 +187,13 @@ def readModifications():
                         name = file[4:-4]
                         print(name, name, modifications, excluded, None)
                         modif = name
-                        if name == 72:
+                        if name == '72':
                             modif = "DEPC"
-                        elif name == 90:
+                        elif name == '90':
                             modif = "DEPC+H2O"
-                        elif name == 62:
+                        elif name == '62':
                             modif = "DEPC+H2O-CO"
-                        elif name == 134:
+                        elif name == '134':
                             modif = "2DEPC+H2O-CO"
                         service.savePattern(ModificationPattern(name, modif, modifications, excluded, None))
     except:
@@ -250,13 +223,18 @@ def readIntactModifs():
 def writeIntactModifs():
     service= IntactIonService()
     modifications = readIntactModifs()
-    for key,val in modifications.items():
-        service.savePattern(IntactPattern(key, "H1", "O2P1", val, None))
+    try:
+        for key,val in modifications.items():
+            service.savePattern(IntactPattern(key, "H1", "O2P1", val, None))
+    except:
+        traceback.print_exc()
+    finally:
+        service.close()
 
 
 """writeElements()
 writeMolecules()
-writeSequences()
+writeSequences()"""
 with open(os.path.join(path, 'Parameters', 'Protein' + '.txt')) as f:
     for line in f:
         if line.startswith('#') or line == "":
@@ -290,8 +268,9 @@ prcFrags = [
     ['+e', '', '', '', 1,True],
     ['+2e', '', '', '', 2,True]]
 fragPath = join(path, 'Parameters', 'protein-fragmentation','ECD.txt')
+
 writeFragments("Protein_ECD",fragPath, prcFrags)
 
-readModifications()"""
+writeModifications()
 
-writeIntactModifs()
+#writeIntactModifs()

@@ -1,14 +1,19 @@
 import traceback
+from abc import ABC
 
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import QDialog, QMessageBox
-from src import path
-from src.repositories.ConfigurationHandler import ConfigHandler
-from src.top_down import Main
-from src.intact import ESI_Main
-from os.path import join
+from os.path import join, isfile
 
-fragmentHunterRepPath = join(path, 'src', 'top_down', 'data')
+from src import path
+from src.Exceptions import InvalidInputException
+from src.intact.Main import run
+from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
+#from src.top_down import Main
+#from src.intact import ESI_Main
+from src.Services import FragmentIonService, ModificationService, SequenceService
+
+dataPath = join(path, 'src', 'data')
 
 class AbstractDialog(QDialog):
     def __init__(self, dialogName, title, lineSpacing, parent=None):
@@ -120,7 +125,10 @@ class AbstractDialog(QDialog):
 
 
     def accept(self):
-        self.done(0)
+        pass
+
+    def checkValues(self, configs):
+        pass
 
     def reshape(self, xPos, yPos):
         self.resize(xPos+25, yPos+70)
@@ -130,12 +138,12 @@ class AbstractDialog(QDialog):
 class StartDialog(AbstractDialog):
     def startProgram(self, mainMethod):
         self.makeDictToWrite()
-        try:
-            mainMethod()
-            super(StartDialog, self).accept()
-        except:
-            traceback.print_exc()
-            QMessageBox.warning(self, "Problem occured", traceback.format_exc(), QMessageBox.Ok)
+        #try:
+        mainMethod()
+        #    super(StartDialog, self).accept()
+        #except:
+        #    traceback.print_exc()
+         #   QMessageBox.warning(self, "Problem occured", traceback.format_exc(), QMessageBox.Ok)
 
     def makeDefaultButton(self):
         defaultButton = QtWidgets.QPushButton(self)
@@ -146,48 +154,75 @@ class StartDialog(AbstractDialog):
         defaultButton.setText(self._translate(self.objectName(), "last settings"))
         return defaultButton
 
+    def accept(self):
+        newSettings = self.makeDictToWrite()
+        if (newSettings['spectralData'][-4:] != '.txt') and (newSettings['spectralData'][-4:] != '.csv'):
+            newSettings['spectralData'] += '.txt'
+        try:
+            self.checkValues(newSettings)
+        except InvalidInputException:
+            traceback.print_exc()
+            QMessageBox.warning(self, "Problem occured", traceback.format_exc(), QMessageBox.Ok)
+        return newSettings
+
+    def checkValues(self, configs):
+        print(join(path, 'Spectral_data','intact', configs['spectralData']))
+        if configs['sequName'] not in SequenceService().getAllSequenceNames():
+            raise InvalidInputException(configs['sequName'], "not found")
+        elif not isfile(join(path, 'Spectral_data','intact', configs['spectralData'])):
+            raise InvalidInputException(configs['spectralData'], "not found")
+
 
 class TDStartDialog(StartDialog):
     def __init__(self, parent=None):
+        print(dataPath)
         super().__init__("startDialog","Settings", 30, parent)
-        self.configHandler = ConfigHandler(join(fragmentHunterRepPath, "settings.json"))
+        self.configHandler = ConfigurationHandlerFactory.getTD_SettingHandler()
         self.setupUi(self)
 
     def setupUi(self, startDialog):
-        self.createLabels(("sequence name", "charge", "modification", "spectral pattern", "noise threshold (x10^6)",
-                           "spray mode", "dissociation", "output"),startDialog, 30, 150)
-        widgets = ((QtWidgets.QLineEdit(startDialog), "sequName", "name of sequence"),
-                   (QtWidgets.QSpinBox(startDialog), "charge","charge of precursor ion"),
-                   (QtWidgets.QLineEdit(startDialog), "modification","modification of precursor ion"),
-                   (QtWidgets.QLineEdit(startDialog), "spectralData","name of the file with spectral peaks (txt or csv format)"),
-                   (QtWidgets.QDoubleSpinBox(startDialog), 'noiseLimit', "minimal noise level"),
-                   (self.createComboBox(startDialog,("negative","positive")), "sprayMode", "spray mode"),
-                   (self.createComboBox(startDialog,("CAD", "ECD", "EDD")), "dissociation", "dissociation mode"),
-                   (QtWidgets.QLineEdit(startDialog), "output",
-                        "name of the output Excel file\ndefault: name of spectral pattern file + _out.xlsx"))
-        xPos, yPos = self.createWidgets(widgets,190,200)
+        self.createLabels(("Sequence Name:", "Charge:", "Fragments:", "Modifications:", "Spectral Data:", "Noise Threshold (x10^6):",
+                           "Spray Mode:", "Output"),startDialog, 30, 160)
+        fragPatterns = FragmentIonService().getAllPatternNames()
+        modPatterns = ModificationService().getAllPatternNames()
+        widgets = ((QtWidgets.QLineEdit(startDialog), "sequName", "Name of the sequenceList"),
+               (QtWidgets.QSpinBox(startDialog), "charge","Charge of the precursor ion"),
+               (self.createComboBox(startDialog,(fragPatterns)), "fragments", "Name of the fragmentation - pattern"),
+               (self.createComboBox(startDialog,(modPatterns)), "modifications", "Name of the modification/ligand - pattern"),
+               (QtWidgets.QLineEdit(startDialog), "spectralData","Name of the file with spectral peaks (txt or csv format)"),
+               (QtWidgets.QDoubleSpinBox(startDialog), 'noiseLimit', "Minimal noise level"),
+               (self.createComboBox(startDialog,("negative","positive")), "sprayMode", "Spray Mode"),
+               (QtWidgets.QLineEdit(startDialog), "output",
+                    "Name of the output Excel file\ndefault: name of spectral pattern file + _out.xlsx"))
+        xPos, yPos = self.createWidgets(widgets,200,180)
         #startDialog.resize(412, 307)
         self.buttonBox.setGeometry(QtCore.QRect(210, yPos+20, 164, 32))
         self.widgets['charge'].setValue(2)
         if self.configHandler.getAll() != None:
-            self.widgets["dissociation"].setCurrentText(self.configHandler.get('dissociation'))
+            self.widgets["fragments"].setCurrentText(self.configHandler.get('fragments'))
+            self.widgets["modifications"].setCurrentText(self.configHandler.get('modifications'))
             self.widgets['sprayMode'].setCurrentText(self._translate("startDialog", self.configHandler.get('sprayMode')))
         self.defaultButton = self.makeDefaultButton()
         self.defaultButton.setGeometry(QtCore.QRect(40, yPos + 20, 113, 32))
-
-
-
 
     def backToLast(self):
         super(TDStartDialog, self).backToLast()
         self.setValueOfWidget(self.widgets['noiseLimit'], self.configHandler.get('noiseLimit') / 10**6)
 
     def accept(self):
-        newSettings = self.makeDictToWrite()
+        newSettings = super(TDStartDialog, self).accept() #self.makeDictToWrite()
+        """if (newSettings['spectralData'][-4:] != '.txt') and (newSettings['spectralData'][-4:] != '.csv'):
+            newSettings['spectralData'] += '.txt'
+        self.checkValues(newSettings)"""
         newSettings['noiseLimit']*=10**6
         self.configHandler.write(newSettings)
-        self.startProgram(Main.run)
+        #self.startProgram(Main.run)
 
+    """def checkValues(self, configs):
+        if configs['sequName'] not in SequenceService().getAllSequenceNames():
+            raise InvalidInputException(configs['sequName'], "not found")
+        elif not isfile(join(path, 'Spectral_data','top-down', configs['spectralData'])):
+            raise InvalidInputException(configs['spectralData'], "not found")"""
 
 
 class DialogWithTabs(AbstractDialog):
@@ -218,7 +253,7 @@ class DialogWithTabs(AbstractDialog):
 class TD_configurationDialog(DialogWithTabs):
     def __init__(self, parent=None):
         super().__init__("configDialog", "Configurations", 30, parent)
-        self.configHandler = ConfigHandler(join(fragmentHunterRepPath, "configurations.json"))
+        self.configHandler = ConfigurationHandlerFactory.getTD_ConfigHandler()
         self.interestingIons = list()
         self.tabs = dict()
         self.setupUi(self)
@@ -340,10 +375,10 @@ class TD_configurationDialog(DialogWithTabs):
         super(TD_configurationDialog, self).accept()
 
 
-class ESI_StartDialog(DialogWithTabs, StartDialog):
+class IntactStartDialog(DialogWithTabs, StartDialog):
     def __init__(self, parent=None):
-        super().__init__("ESI_startDialog","Intact Ion Search", 30, parent)
-        self.configHandler = ConfigHandler(join(path,"src","intact","data","configurations.json"))
+        super().__init__("intactStartDialog","Intact FragmentIon Search", 30, parent)
+        self.configHandler = ConfigurationHandlerFactory.getIntactHandler()
         self.setupUi(self)
 
     def setupUi(self, startDialog):
@@ -366,15 +401,15 @@ class ESI_StartDialog(DialogWithTabs, StartDialog):
         self.widgets["d"].setMinimum(-9.99)
         self.backToLast()
 
-        self.createLabels(("sequence name", "modification", "spectral pattern file",
-                           "spray mode", "output"), self.settingTab, 10, 150)
-        settingWidgets = ((QtWidgets.QLineEdit(self.settingTab), "sequName", "name of sequence"),
-                   (QtWidgets.QLineEdit(self.settingTab), "modification","modification of precursor ion"),
+        self.createLabels(("Sequence Name", "Modification", "Spectral File", "Spray Mode", "Output"),
+                          self.settingTab, 10, 150)
+        settingWidgets = ((QtWidgets.QLineEdit(self.settingTab), "sequName", "Name of sequenceList"),
+                   (QtWidgets.QLineEdit(self.settingTab), "modification","Modification of precursor ion"),
                    (QtWidgets.QLineEdit(self.settingTab), "spectralData",
-                        "name of the file with monoisotopic pattern (txt format)"),
-                   (self.createComboBox(self.settingTab,("negative","positive")), "sprayMode", "spray mode"),
+                        "Name of the file with monoisotopic pattern (txt format)"),
+                   (self.createComboBox(self.settingTab,("negative","positive")), "sprayMode", "Spray mode"),
                    (QtWidgets.QLineEdit(self.settingTab), "output",
-                        "name of the output txt file\ndefault: name of spectral pattern file + _out.txt"))
+                        "Name of the output txt file\ndefault: name of spectral pattern file + _out.txt"))
         xPos, yPos = self.createWidgets(settingWidgets,120,160)
         if yMax<yPos:
             yMax=yPos
@@ -388,7 +423,10 @@ class ESI_StartDialog(DialogWithTabs, StartDialog):
         QtCore.QMetaObject.connectSlotsByName(startDialog)
 
     def accept(self):
-        newSettings = self.makeDictToWrite()
-        self.configHandler.write(newSettings)
-        self.startProgram(ESI_Main.run)
+        #newSettings = super(IntactStartDialog, self).accept() #self.makeDictToWrite()
+        """if (newSettings['spectralData'][-4:] != '.txt') and (newSettings['spectralData'][-4:] != '.csv'):
+            newSettings['spectralData'] += '.txt'
+        self.checkValues(newSettings)"""
+        self.configHandler.write(super(IntactStartDialog, self).accept())
+        self.startProgram(run())
 

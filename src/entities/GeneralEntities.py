@@ -8,6 +8,7 @@ class Makromolecule(PatternWithItems):
         super(Makromolecule, self).__init__(name, monomeres, id)
 
 
+
 class Monomere(AbstractItem1):
     def __init__(self, name, formulaString):
         super(Monomere, self).__init__(name)
@@ -71,7 +72,7 @@ class Sequence(AbstractPattern):
     def __init__(self, name, sequenceString, molecule, id):
         """
         :param name: String
-        :param sequence: String
+        :param sequenceList: String
         :param molecule: String (RNA, DNA, P)
         :param pse: String (which periodic table should be applied)
         """

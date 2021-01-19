@@ -5,7 +5,7 @@ from src import path
 from src.Services import *
 from src.PeriodicTable import *
 from src.entities.GeneralEntities import *
-from src.entities.IonEntities import *
+from src.entities.IonTemplates import *
 from src.LibraryBuilder import removeEmptyElements
 from os import listdir
 from os.path import isfile, join
@@ -48,7 +48,7 @@ def readMoleculeFile(moleculeFile):
     return monomers
     """elif mode == 'precIons':
         print(lineList[0])
-        self.precursorModifications[lineList[0]] = self.stringToFormula(lineList[1], dict(), 1)"""
+        self.modifications[lineList[0]] = self.stringToFormula(lineList[1], dict(), 1)"""
 
 
 
@@ -69,10 +69,10 @@ def writeMolecules():
 
 def getSequences(file):
     '''
-    finds sequence
+    finds sequenceList
     :param file: file with stored sequences
-    :param name: sequence name
-    :return: molecule, list of sequence, respectively None,None if sequence was not found
+    :param name: sequenceList name
+    :return: molecule, list of sequenceList, respectively None,None if sequenceList was not found
     '''
     sequences = []
     for line in file:
@@ -251,7 +251,7 @@ def writeIntactModifs():
     service= IntactIonService()
     modifications = readIntactModifs()
     for key,val in modifications.items():
-        service.savePattern(IntactPattern(key, val, None))
+        service.savePattern(IntactPattern(key, "H1", "O2P1", val, None))
 
 
 """writeElements()

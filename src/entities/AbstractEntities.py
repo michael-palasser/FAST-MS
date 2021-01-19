@@ -19,7 +19,6 @@ class AbstractPattern(ABC):
     def setId(self, id):
         self._id = id
 
-
 class PatternWithItems(AbstractPattern):
     def __init__(self, name, items, id):
         """
@@ -34,6 +33,9 @@ class PatternWithItems(AbstractPattern):
 
     def getItems(self):
         return self._items
+
+    def setItems(self, items):
+        self._items = items
 
     """def setItems(self, items):
         formatedItems = list()

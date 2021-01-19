@@ -11,11 +11,11 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import QApplication, QWidget, QMainWindow, QPushButton, QAction
 
 from src.views.EditorController import *
-from src.views.ParameterDialogs import TDStartDialog, TD_configurationDialog, ESI_StartDialog
+from src.views.ParameterDialogs import TDStartDialog, TD_configurationDialog, IntactStartDialog
 from src.top_down.ModellingTool import main as modellingTool
 from src.top_down.OccupancyRecalculator import run as occupancyRecalculator
 from src.top_down.SpectrumComparator import run as spectrumComparator
-from src.intact.ESI_Main import run as IntactIonsSearch
+from src.intact.Main import run as IntactIonsSearch
 
 
 class Window(QMainWindow):
@@ -44,7 +44,7 @@ class Window(QMainWindow):
     def home(self):
         self.addActionToStatusBar(self.tdMenu, 'Analyse Spectrum',
                                   'Starts analysis of top-down spectrum', self.startFragmentHunter)
-        self.addActionToStatusBar(self.tdMenu, 'Ion Modelling',
+        self.addActionToStatusBar(self.tdMenu, 'FragmentIon Modelling',
                                   'Models relative abundance of an isotope distribution', modellingTool)
         self.addActionToStatusBar(self.tdMenu, 'Calculate Occupancies',
                                   'Calculates occupancies of a given ion list', occupancyRecalculator)
@@ -65,7 +65,7 @@ class Window(QMainWindow):
         self.addActionToStatusBar(self.dataEdit, 'Sequences','Edit stored sequences', SequenceEditorController)
         xPos = self.createButton('Analyse top-down\nspectrum','Starts analysis of top-down spectrum',40,
                                   self.startFragmentHunter)
-        xPos = self.createButton('Analyse spectrum\nof intact molecule', 'Starts analysis of normal ESI spectrum', xPos,
+        xPos = self.createButton('Analyse spectrum\nof intact molecule', 'Starts analysis of normal intact spectrum', xPos,
                           self.startIntactIonSearch)
         self.setGeometry(50, 50, xPos+40, 230)
         self.show()
@@ -83,7 +83,7 @@ class Window(QMainWindow):
         dialog.exec_()
 
     def startIntactIonSearch(self):
-        dialog = ESI_StartDialog(self)
+        dialog = IntactStartDialog(self)
         dialog.exec_()
 
     def close_application(self):

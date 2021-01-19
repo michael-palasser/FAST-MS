@@ -71,6 +71,7 @@ class AbstractSimpleEditorController(ABC):
         #tableWidget.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         #tableWidget.customContextMenuRequested['QPoint'].connect(self.h3_table_right_click)
         #tableWidget.move(20,yPos) #70
+        print("before",data, bools)
         tableWidget = self.formatTableWidget(headers, tableWidget, data, bools)
         tableWidget.setHorizontalHeaderLabels(headers)
         tableWidget.resizeColumnsToContents()
@@ -306,6 +307,7 @@ class AbstractEditorControllerWithTabs(AbstractEditorController, ABC):
         tabWidget.addTab(self.tab1, "")
         tabWidget.setTabText(tabWidget.indexOf(self.tab1), self._translate("MainWindow", tabName1))
         self.tab2 = QtWidgets.QWidget()
+        print("2:", self.pattern.getItems2())
         self.table2 = self.createTableWidget(self.tab2, self.pattern.getItems2(), yPos+50, self.service.getHeaders()[1],
                                              self.service.getBoolVals()[1])
         tabWidget.addTab(self.tab2, "")
@@ -314,8 +316,7 @@ class AbstractEditorControllerWithTabs(AbstractEditorController, ABC):
 
 
         self.formLayout.setWidget(yPos+1, QtWidgets.QFormLayout.SpanningRole, tabWidget)   #ToDo
-        #self.table1.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
-        #self.table2.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        self.table1.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         return tabWidget
 
     def openAgain(self, *args):
@@ -425,9 +426,6 @@ class FragmentEditorController(AbstractEditorControllerWithTabs):
         self.service.savePattern(FragmentationPattern(self.widgets["name"].text(), self.widgets["gain"].text(),
                       self.widgets["loss"].text(), self.readTable(self.table1), self.readTable(self.table2), id))
 
-    """def saveNew(self):
-        self.service.savePattern(FragmentationPattern(self.widgets["name"].text(), self.readTable(self.table1),
-                                                      self.readTable(self.table2), None))"""
 
 
 class ModificationEditorController(AbstractEditorControllerWithTabs):

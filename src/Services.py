@@ -7,6 +7,7 @@ from src.repositories.MoleculeRepository import MoleculeRepository
 from src.repositories.PeriodicTableRepository import PeriodicTableRepository
 from src.repositories.SequenceRepository import SequenceRepository, Sequence
 from src.repositories.IntactRepository import *
+from src.entities.IonTemplates import *
 
 
 class AbstractService(ABC):
@@ -34,9 +35,6 @@ class AbstractService(ABC):
             try:
                 if val in self.repository.getIntegers():
                     float(val)
-                """elif val in self._boolVals:
-                    if not (0 <= val <= 1):
-                        raise ValueError"""
             except ValueError:
                 raise InvalidInputException(item[0],"Number required: " +val)
 
@@ -69,7 +67,6 @@ class AbstractServiceForPatterns(AbstractService, ABC):
             self.repository.updatePattern(pattern)
 
     def checkFormatOfItem(self, item, *args):
-        print("e",item)
         elements = args[0]
         for key in self.getFormula(item).keys():
             if key not in elements:
@@ -80,11 +77,17 @@ class AbstractServiceForPatterns(AbstractService, ABC):
     def getFormula(self, item):
         pass
 
-    def getPatternWithObjects(self, name, constructor):
+    def getPatternWithObjects(self, name, *args):
+        '''
+
+        :param name: name of the pattern
+        :param args: constructors
+        :return:
+        '''
         pattern = self.get(name)
         items = []
         for item in pattern.getItems():
-            items.append(constructor(item))
+            items.append(args[0](item))
         pattern.setItems(items)
         return pattern
 
@@ -164,7 +167,6 @@ class SequenceService(AbstractService):
         [self.repository.delete(savedName) for savedName in savedNames if savedName not in newNames]
         moleculeRepository = MoleculeRepository()
         molecules = moleculeRepository.getAllPatternNames()
-        print(molecules)
         for sequence in sequences:
             """if sequenceList.getMolecule() not in molecules:
                 raise InvalidInputException(sequenceList.getName(),sequenceList.getMolecule()+" unknown")
@@ -172,7 +174,6 @@ class SequenceService(AbstractService):
             for link in sequenceList.getSequence():
                 if link not in monomereNames:
                     raise InvalidInputException(sequenceList.getName(),"Problem in Sequence: "+ link + " unknown")"""
-            print(sequence.getMolecule())#, moleculeRepository.getPattern(sequenceList.getMolecule()),moleculeRepository.getPattern(sequenceList.getMolecule()).getItems())
             self.checkFormatOfItem(sequence, molecules,
                             [mon[0] for mon in moleculeRepository.getPattern(sequence.getMolecule()).getItems()])
             if sequence.getName() in savedNames:
@@ -196,12 +197,15 @@ class FragmentIonService(AbstractServiceForPatterns):
 
     def makeNew(self):
         #return PatternWithItems("", [{"Name": "", "Gain": "", "Loss": "", "NrOfMod": 0, "enabled": False}], None)
-        return FragmentationPattern("", "", "", 10*[["", "", "", "", "", False]],
+        return FragmentationPattern("", "", "", 10*[["", "", "", "", "", +1, False]],
                                     10*[["", "", "", "", "", False]], None)
 
     def savePattern(self, pattern):
         elementRep = PeriodicTableRepository()
         elements = elementRep.getAllPatternNames()
+        for item in pattern.getItems():
+            if item[5] not in [1,-1]:
+                raise InvalidInputException(item, "Direction must be 1 or -1 and not "+ item[5])
         for item in pattern.getItems2():
             self.checkFormatOfItem(item, elements)
         for key in pattern.getFormula().keys():
@@ -211,8 +215,15 @@ class FragmentIonService(AbstractServiceForPatterns):
         elementRep.close()
 
     def getFormula(self, item):
-        #return FragItem(item[0], item[1], item[2], item[3], item[4], item[5]).getFormula()
-        return FragItem(item).getFormula()
+        return PrecursorItem(item).getFormula() #Not necessary to differentiate between Precursor- and FragItems
+
+    def getPatternWithObjects(self, name, *args):
+        pattern = super(FragmentIonService, self).getPatternWithObjects(name, FragItem)
+        precItems = [PrecursorItem(("", "", "", "", 0, True))]
+        for item in pattern.getItems2():
+            precItems.append(PrecursorItem(item))
+        pattern.setItems2(precItems)
+        return pattern
 
 
 class ModificationService(AbstractServiceForPatterns):

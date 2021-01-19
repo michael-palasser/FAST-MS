@@ -8,7 +8,7 @@ from datetime import datetime
 from src.top_down.Main import findSequence
 from src.entities.Ions import Fragment,FragmentIon
 from src.top_down.Analyser import Analyser
-from src.top_down.TDExcelWriter import BasicExcelWriter
+from src.top_down.ExcelWriter import BasicExcelWriter
 from src import path
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 

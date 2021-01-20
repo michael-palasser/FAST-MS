@@ -2,8 +2,6 @@ from src.entities.AbstractEntities import PatternWithItems, AbstractItem2
 from src.Exceptions import InvalidInputException
 
 
-
-
 class FragmentationPattern(PatternWithItems):
     def __init__(self, name, gain, loss, fragmentTypes, precursorFragments, id):
         super(FragmentationPattern, self).__init__(name, fragmentTypes,id)

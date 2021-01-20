@@ -27,7 +27,7 @@ class SpectrumHandler(object):
     acidicAA = {'D': 10, 'E': 10,
                 'H': 0.9, 'R': 0.5, 'K': 0.5, }
 
-    def __init__(self, molecule, sequence, fragmentLibrary, chargedModifications, settings):
+    def __init__(self, filePath, sequence, fragmentLibrary, chargedModifications, settings):
         '''
         Constructor
         :param molecule: RNA/DNA/P (String)
@@ -35,62 +35,64 @@ class SpectrumHandler(object):
         :param fragmentLibrary: list of fragments from AbstractLibraryBuilder
         :param chargedModifications: output of getChargedModifications()-fct (AbstractLibraryBuilder): dict
         '''
+
+
         self.molecule = molecule
         self.sequence = sequence
+
         self.fragmentLibrary = fragmentLibrary
         self.chargedModifications = chargedModifications
         self.settings = settings
-        if self.settings['sprayMode'] == 'negative': #ToDo: change in parameterFile
+        if self.settings['sprayMode'] == 'negative':
             self.mode = -1
         elif self.settings['sprayMode'] == 'positive':
             self.mode = 1
-        else:
-            #ToDo Parameter Exception
-            raise Exception("par")
         self.precMz = 0
         self.upperBound=0
         self.spectrum=0
         self.precursor = None
-        self.spectrum = None
         self.normalizationFactor = 1
         self.normalizationFactor = 0
+
+        self.addSpectrum(filePath)
+
         self.foundIons = list()
         self.ionsInNoise = list()
         self.searchedChargeStates = dict()
         self.peaksArrType = np.dtype([('m/z', np.float64), ('int', np.float64),('m/z_theo', np.float64),
                              ('calcInt', np.float64), ('error', np.float32), ('used', np.uint8)])
 
-    def addSpectrumFromCsv(self, file):
-        #spectralList = list()
-        try:
-            self.spectrum = np.loadtxt(file, delimiter=',', skiprows=1, usecols=[0, 2])
-        except IndexError:
-            self.spectrum = np.loadtxt(file, delimiter=';', skiprows=1, usecols=[0, 2])
+    def addSpectrum(self,filePath):
+        with open(filePath, mode='r') as f:
+            if filePath[-4:] == '.csv':
+                self.spectrum = self.addSpectrumFromCsv(f)
+            else:
+                self.spectrum = self.addSpectrumFromTxt(f)
         self.resizeSpectrum()
-        #print(self.spectralFile)
-        #file = np.loadtxt(file, delimiter=',', skiprows=1, usecols=[0, 2])
-        #highMz = np.where(file[:, 0] > self.maxMz)
-        #self.spectralFile = file[0:highMz[0][0], :]
-        #self.spectralFile = np.hstack((filteredFile, np.zeros((filteredFile.shape[0], 1), dtype=filteredFile.dtype)))
 
+    def addSpectrumFromCsv(self, file):
+        try:
+            return np.loadtxt(file, delimiter=',', skiprows=1, usecols=[0, 2])
+        except IndexError:
+            return np.loadtxt(file, delimiter=';', skiprows=1, usecols=[0, 2])
 
-    def addSpectrum(self, file):
+    def addSpectrumFromTxt(self, file):
         spectralList = list()
         for line in file:
             if line.startswith("m/z"):
                 continue
             line = line.rstrip().split()
-            #if float(line[0]) < self.maxMz:
             spectralList.append((float(line[0]),float(line[1])))
-            #print(line[0],line[2])
-        self.spectrum = np.array(spectralList)
-        self.resizeSpectrum()
+        return np.array(spectralList)
 
+    def resizeSpectrum(self):
+        self.precMz = self.getMz(self.findPrecursor().formula.calculateMonoIsotopic(), self.settings['charge'])
+        self.spectrum = self.spectrum[np.where(self.spectrum[:,0]<(self.findUpperBound()+10))]
+        print("\nmax m/z:", self.upperBound)
 
-    @staticmethod
-    def calculateError(value, theoValue):
-        return (value - theoValue) / theoValue * 10 ** 6
-
+    def getMz(self, mass, z):
+        #print(z ,mass/z + self.protonMass*self.mode)
+        return mass/z + self.protonMass*self.mode
 
     def findPrecursor(self):
         precursorMass = 0
@@ -101,47 +103,6 @@ class SpectrumHandler(object):
                 precursor = fragment
         self.precursor = precursor
         return precursor
-
-
-    def getMz(self, mass, z):
-        #print(z ,mass/z + self.protonMass*self.mode)
-        return mass/z + self.protonMass*self.mode
-
-
-
-
-    @staticmethod
-    def returnArrayInWindow(array, point, windowSize):
-        spectralWindowIndex = np.where(abs(array[:, 0] - point) < (windowSize / 2))
-        return array[spectralWindowIndex]
-
-
-    def calculateNoise(self, point, windowSize):
-        noise = self.settings['noiseLimit']
-        #spectralWindowIndex = np.where(abs(self.spectralFile[:, 0] - point) < (windowSize / 2))
-        currentWindow = self.returnArrayInWindow(self.spectrum, point, windowSize)
-        if currentWindow[:,1].size > 10:     #parameter
-            peakInt = currentWindow[:, 1]
-            avPeakInt = np.average(peakInt)
-            #stdDevPeakInt = np.std(peakInt)
-            while True:
-                avPeakInt0 = avPeakInt
-                lowAbundendantPeaks = peakInt[np.where(peakInt < (avPeakInt + 10**6))]#2 * stdDevPeakInt))]
-                avPeakInt = np.average(lowAbundendantPeaks)
-                if len(lowAbundendantPeaks) == 1:
-                    #print(avPeakInt,stdDevPeakInt)
-                    #print('exit 1')
-                    return avPeakInt * 0.67
-                if avPeakInt - avPeakInt0 == 0:
-                    #print('exit 2')
-                    break
-                else:
-                    stdDevPeakInt = np.std(lowAbundendantPeaks)
-            if avPeakInt > noise*0.67:
-                noise = avPeakInt
-            #print(avPeakInt,stdDevPeakInt)
-        return noise*0.6
-
 
     def findUpperBound(self):
         print("\n********** Finding upper bound m/z - Window in spectralFile containing fragments ********** ")
@@ -170,11 +131,40 @@ class SpectrumHandler(object):
         self.upperBound = currentMz
         return currentMz
 
+    def calculateNoise(self, point, windowSize):
+        noise = self.settings['noiseLimit']
+        currentWindow = self.returnArrayInWindow(self.spectrum, point, windowSize)
+        if currentWindow[:,1].size > 10:     #parameter
+            peakInt = currentWindow[:, 1]
+            avPeakInt = np.average(peakInt)
+            #stdDevPeakInt = np.std(peakInt)
+            while True:
+                avPeakInt0 = avPeakInt
+                lowAbundendantPeaks = peakInt[np.where(peakInt < (avPeakInt + 10**6))]#2 * stdDevPeakInt))]
+                avPeakInt = np.average(lowAbundendantPeaks)
+                if len(lowAbundendantPeaks) == 1:
+                    #print(avPeakInt,stdDevPeakInt)
+                    #print('exit 1')
+                    return avPeakInt * 0.67
+                if avPeakInt - avPeakInt0 == 0:
+                    #print('exit 2')
+                    break
+                #else:
+                    #stdDevPeakInt = np.std(lowAbundendantPeaks)
+            if avPeakInt > noise*0.67:
+                noise = avPeakInt
+            #print(avPeakInt,stdDevPeakInt)
+        return noise*0.6
 
-    def resizeSpectrum(self):
-        self.precMz = self.getMz(self.findPrecursor().formula.calculateMonoIsotopic(), self.settings['charge'])
-        self.spectrum = self.spectrum[np.where(self.spectrum[:,0]<(self.findUpperBound()+10))]
-        print("\nmax m/z:", self.upperBound)
+    @staticmethod
+    def returnArrayInWindow(array, point, windowSize):
+        spectralWindowIndex = np.where(abs(array[:, 0] - point) < (windowSize / 2))
+        return array[spectralWindowIndex]
+
+
+    @staticmethod
+    def calculateError(value, theoValue):
+        return (value - theoValue) / theoValue * 10 ** 6
 
     def getNormalizationFactor(self):
         if self.molecule in ['RNA', 'DNA'] and self.mode == -1:

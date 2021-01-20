@@ -247,6 +247,16 @@ class ModificationService(AbstractServiceForPatterns):
         #return ModifiedItem(item[0], item[1], item[2], item[3], item[4], item[5], item[6], item[7]).getFormula()
         return ModifiedItem(item).getFormula()
 
+    def getAllPatternNames(self):
+        return ["-"] + super(ModificationService, self).getAllPatternNames()
+
+    def getPatternWithObjects(self, name, *args):
+        if name == '-':
+            return ModificationPattern("", "", [],[], None)
+        else:
+            return super(ModificationService, self).getPatternWithObjects(name, *args)
+
+
 
 class IntactIonService(AbstractServiceForPatterns):
     def __init__(self):

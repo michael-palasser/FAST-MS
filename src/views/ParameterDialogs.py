@@ -28,6 +28,7 @@ class AbstractDialog(QDialog):
         self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
+        self.newSettings = None
         self.move(300,100)
 
     @staticmethod
@@ -136,10 +137,10 @@ class AbstractDialog(QDialog):
 
 
 class StartDialog(AbstractDialog):
-    def startProgram(self, mainMethod):
+    """def startProgram(self, mainMethod):
         self.makeDictToWrite()
         #try:
-        mainMethod()
+        mainMethod()"""
         #    super(StartDialog, self).accept()
         #except:
         #    traceback.print_exc()
@@ -175,33 +176,43 @@ class StartDialog(AbstractDialog):
 
 class TDStartDialog(StartDialog):
     def __init__(self, parent=None):
-        print(dataPath)
         super().__init__("startDialog","Settings", 30, parent)
         self.configHandler = ConfigurationHandlerFactory.getTD_SettingHandler()
         self.setupUi(self)
 
     def setupUi(self, startDialog):
-        self.createLabels(("Sequence Name:", "Charge:", "Fragmentation:", "Modifications:", "Spectral Data:", "Noise Threshold (x10^6):",
-                           "Spray Mode:", "Output"),startDialog, 30, 160)
+        self.createLabels(("Sequence Name:", "Charge:", "Fragmentation:", "Modifications:", "Nr. of Modifications:",
+                           "Spectral Data:", "Noise Threshold (x10^6):", "Spray Mode:", "Fragment Library:", "Output"),
+                          startDialog, 30, 160)
         fragPatterns = FragmentIonService().getAllPatternNames()
         modPatterns = ModificationService().getAllPatternNames()
         widgets = ((QtWidgets.QLineEdit(startDialog), "sequName", "Name of the sequenceList"),
                (QtWidgets.QSpinBox(startDialog), "charge","Charge of the precursor ion"),
-               (self.createComboBox(startDialog,(fragPatterns)), "fragments", "Name of the fragmentation - pattern"),
+               (self.createComboBox(startDialog,(fragPatterns)), "fragmentation", "Name of the fragmentation - pattern"),
                (self.createComboBox(startDialog,(modPatterns)), "modifications", "Name of the modification/ligand - pattern"),
+               (QtWidgets.QSpinBox(startDialog), "nrMod", "How often is the precursor ion modified?"),
                (QtWidgets.QLineEdit(startDialog), "spectralData","Name of the file with spectral peaks (txt or csv format)"),
                (QtWidgets.QDoubleSpinBox(startDialog), 'noiseLimit', "Minimal noise level"),
                (self.createComboBox(startDialog,("negative","positive")), "sprayMode", "Spray Mode"),
+               (QtWidgets.QLineEdit(startDialog), "fragLib", "Name of csv file in the folder 'Fragment_lists' "
+                     "containing the isotope patterns of the fragments\n"
+                     "If no file is stated, the program will search for the corresponing file or create a new one"),
                (QtWidgets.QLineEdit(startDialog), "output",
                     "Name of the output Excel file\ndefault: name of spectral pattern file + _out.xlsx"))
         xPos, yPos = self.createWidgets(widgets,200,180)
+
+
         #startDialog.resize(412, 307)
         self.buttonBox.setGeometry(QtCore.QRect(210, yPos+20, 164, 32))
         self.widgets['charge'].setValue(2)
         if self.configHandler.getAll() != None:
-            self.widgets["fragments"].setCurrentText(self.configHandler.get('fragments'))
-            self.widgets["modifications"].setCurrentText(self.configHandler.get('modifications'))
-            self.widgets['sprayMode'].setCurrentText(self._translate("startDialog", self.configHandler.get('sprayMode')))
+            try:
+                self.widgets["fragmentation"].setCurrentText(self.configHandler.get('fragmentation'))
+                self.widgets["modifications"].setCurrentText(self.configHandler.get('modifications'))
+                QtWidgets.QSpinBox(startDialog).setValue(self.configHandler.get('nrMod'))
+                self.widgets['sprayMode'].setCurrentText(self._translate("startDialog", self.configHandler.get('sprayMode')))
+            except KeyError:
+                traceback.print_exc()
         self.defaultButton = self.makeDefaultButton()
         self.defaultButton.setGeometry(QtCore.QRect(40, yPos + 20, 113, 32))
 
@@ -211,11 +222,11 @@ class TDStartDialog(StartDialog):
 
     def accept(self):
         newSettings = super(TDStartDialog, self).accept() #self.makeDictToWrite()
-        """if (newSettings['spectralData'][-4:] != '.txt') and (newSettings['spectralData'][-4:] != '.csv'):
-            newSettings['spectralData'] += '.txt'
-        self.checkValues(newSettings)"""
+
+        #self.checkValues(newSettings)
         newSettings['noiseLimit']*=10**6
         self.configHandler.write(newSettings)
+        #self.newSettings = newSettings
         #self.startProgram(Main.run)
 
     """def checkValues(self, configs):

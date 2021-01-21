@@ -324,11 +324,11 @@ class FragmentLibraryBuilder(AbstractLibraryBuilder):
                 name = row[0]
                 counter = 1
             if row[0] != '':  #ToDo: correct? or elif
-                isotopePatternDict[name] = np.array(isotopePattern, dtype=[('mass',np.float64),('int', np.float64)])
+                isotopePatternDict[name] = np.array(isotopePattern, dtype=[('mass',np.float64),('relAb', np.float64)])
                 name = row[0]
                 isotopePattern = list()
             isotopePattern.append((row[1], row[2]))
-        isotopePatternDict[name] = np.array(isotopePattern, dtype=[('mass',np.float64),('int', np.float64)])
+        isotopePatternDict[name] = np.array(isotopePattern, dtype=[('mass',np.float64),('relAb', np.float64)])
         for fragment in self.fragmentLibrary:
             try:
                 fragment.isotopePattern = isotopePatternDict[fragment.getName()]
@@ -380,10 +380,10 @@ class FragmentLibraryBuilder(AbstractLibraryBuilder):
                     #if M_max < isotope[0]:
                         #M_max = isotope[0]
                     #print(isotope[0])
-                    f_writer.writerow({'ion': fragment.getName(), 'mass': np.around(isotope['mass'], 6), 'Intensities': np.around(isotope['int'], 7)})
+                    f_writer.writerow({'ion': fragment.getName(), 'mass': np.around(isotope['mass'], 6), 'Intensities': np.around(isotope['relAb'], 7)})
                     counter += 1
                 else:
-                    f_writer.writerow({'ion': '', 'mass': np.around(isotope['mass'], 6), 'Intensities': np.around(isotope['int'], 7)})
+                    f_writer.writerow({'ion': '', 'mass': np.around(isotope['mass'], 6), 'Intensities': np.around(isotope['relAb'], 7)})
 
 
     def getModificationMasses(self):

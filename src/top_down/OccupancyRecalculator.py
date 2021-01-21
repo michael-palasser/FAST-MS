@@ -28,7 +28,7 @@ def run():
     spectralFile = path + 'Spectral_data/Occupancies_in.csv'
     with open(spectralFile, 'w') as f:
         pass
-    subprocess.call(['openAgain',spectralFile])
+    subprocess.call(['open',spectralFile])
     input('Press any key to start')
     try:
         arr = np.loadtxt(spectralFile, delimiter=',', skiprows=1,
@@ -62,7 +62,7 @@ def run():
     excelWriter.writeOccupancies(row,sequence,analyser.calculatePercentages(speciesList))
     excelWriter.closeWorkbook()
     try:
-        subprocess.call(['openAgain', os.path.join(path, "Spectral_data","Occupancies_out.xlsx")])
+        subprocess.call(['open', os.path.join(path, "Spectral_data","Occupancies_out.xlsx")])
     except:
         pass
 

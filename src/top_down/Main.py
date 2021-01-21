@@ -210,7 +210,7 @@ def run():
     finally:
         excelWriter.closeWorkbook()
     try:
-        subprocess.call(['openAgain',output])
+        subprocess.call(['open',output])
     except:
         pass
     return 0

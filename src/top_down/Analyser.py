@@ -56,9 +56,10 @@ class Analyser(object):
                 if ion.type[0] not in temp:
                     temp[ion.type[0]] = np.zeros((len(self.sequence), 3))
                 if self.modification in ion.modification:
+                    print(ion.getRelAbundance(),self.getNrOfModifications(ion.modification))
                     temp[ion.type[0]][ion.number - 1] += \
                         np.array([ion.getRelAbundance(),
-                                  ion.getRelAbundance()*self.getNrOfModifications(ion.modification),0])
+                                  ion.getRelAbundance()*int(self.getNrOfModifications(ion.modification)),0])
                 else:
                     temp[ion.type[0]][ion.number - 1] += \
                         np.array([ion.getRelAbundance(),0,0])

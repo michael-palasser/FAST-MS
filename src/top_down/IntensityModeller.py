@@ -62,7 +62,7 @@ class IntensityModeller(object):
         outlierList = list()
         ion.error = np.average(ion.isotopePattern['error'][np.where(ion.isotopePattern['error'] != 0)])
         solution, ion.intensity, gValue, outliers = \
-            self.modelDistribution(ion.isotopePattern['int'], ion.isotopePattern['calcInt'], ion.isotopePattern['m/z'])
+            self.modelDistribution(ion.isotopePattern['relAb'], ion.isotopePattern['calcInt'], ion.isotopePattern['m/z'])
         ion.isotopePattern['calcInt'] = ion.isotopePattern['calcInt'] * solution.x
         ion.quality = solution.fun**(0.5) / ion.intensity
         ion.getScore()
@@ -73,7 +73,7 @@ class IntensityModeller(object):
                 outlierList += outliers
                 print("outlier: ",outliers)
                 noOutliers = np.isin(ion.isotopePattern['m/z'],outlierList, invert=True)
-                if np.all(ion.isotopePattern['int'][noOutliers] == 0):
+                if np.all(ion.isotopePattern['relAb][noOutliers] == 0):
                     print("deleted:", ion.getName(), ion.charge, ion.intensity, round(ion.quality, 2))
                     if ion.comment != "noise":
                         ion.comment = "qual."
@@ -84,7 +84,7 @@ class IntensityModeller(object):
                         return ion
                 else:
                     solution, correctedIon.intensity, gValue, outliers = \
-                        self.modelDistribution(correctedIon.isotopePattern['int'][noOutliers],
+                        self.modelDistribution(correctedIon.isotopePattern['relAb][noOutliers],
                                                correctedIon.isotopePattern['calcInt'][noOutliers],
                                                correctedIon.isotopePattern['m/z'][noOutliers])
                     correctedIon.isotopePattern['calcInt'] = correctedIon.isotopePattern['calcInt'] * solution.x
@@ -230,8 +230,8 @@ class IntensityModeller(object):
             spectr_peaks = list()
             for ion in pattern:
                 for peak in self.correctedIons[ion].isotopePattern:  # spectral list
-                    if (peak['m/z'], peak['int']) not in spectr_peaks:
-                        spectr_peaks.append((peak['m/z'], peak['int']))
+                    if (peak['m/z'], peak['relAb']) not in spectr_peaks:
+                        spectr_peaks.append((peak['m/z'], peak['relAb']))
             spectr_peaks = np.array(sorted(spectr_peaks, key=lambda tup: tup[0]))
             while True:
                 equ_matrix, undeletedIons = self.setUpEquMatrix(pattern,spectr_peaks,del_ions)

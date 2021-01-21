@@ -73,7 +73,7 @@ class IntensityModeller(object):
                 outlierList += outliers
                 print("outlier: ",outliers)
                 noOutliers = np.isin(ion.isotopePattern['m/z'],outlierList, invert=True)
-                if np.all(ion.isotopePattern['relAb'][noOutliers] == 0):
+                if np.all(ion.isotopePattern['relAb][noOutliers] == 0):
                     print("deleted:", ion.getName(), ion.charge, ion.intensity, round(ion.quality, 2))
                     if ion.comment != "noise":
                         ion.comment = "qual."
@@ -84,7 +84,7 @@ class IntensityModeller(object):
                         return ion
                 else:
                     solution, correctedIon.intensity, gValue, outliers = \
-                        self.modelDistribution(correctedIon.isotopePattern['relAb'][noOutliers],
+                        self.modelDistribution(correctedIon.isotopePattern['relAb][noOutliers],
                                                correctedIon.isotopePattern['calcInt'][noOutliers],
                                                correctedIon.isotopePattern['m/z'][noOutliers])
                     correctedIon.isotopePattern['calcInt'] = correctedIon.isotopePattern['calcInt'] * solution.x

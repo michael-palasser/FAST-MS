@@ -12,6 +12,7 @@ from PyQt5.QtWidgets import QApplication, QWidget, QMainWindow, QPushButton, QAc
 
 from src.views.EditorController import *
 from src.views.ParameterDialogs import TDStartDialog, TD_configurationDialog, IntactStartDialog
+from src.top_down.Main import TD_MainController
 from src.top_down.ModellingTool import main as modellingTool
 from src.top_down.OccupancyRecalculator import run as occupancyRecalculator
 from src.top_down.SpectrumComparator import run as spectrumComparator
@@ -80,7 +81,9 @@ class Window(QMainWindow):
 
     def startFragmentHunter(self):
         dialog = TDStartDialog(self)
-        dialog.exec_()
+        dialog.show()
+        if dialog.exec_() and dialog.accepted:
+            TD_MainController(self).run()
 
     def startIntactIonSearch(self):
         dialog = IntactStartDialog(self)

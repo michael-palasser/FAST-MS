@@ -336,20 +336,30 @@ class AbstractEditorControllerWithTabs(AbstractEditorController, ABC):
 class MoleculeEditorController(AbstractEditorController):
     def __init__(self):
         super(MoleculeEditorController, self).__init__(MoleculeService(), "Edit Molecular Properties", "Molecule")
-        yPos = self.createWidgets(["Name: ", "Molecule Loss: "],
-                    {"name": QtWidgets.QLineEdit(self.centralwidget), 'loss': QtWidgets.QLineEdit(self.centralwidget)},
-                    20, 150, [self.pattern.getName()])
-        self.widgets['loss'].setToolTip("Enter the molecular formula of the small molecule loss of the condensation reaction")
+        yPos = self.createWidgets(["Name: ", "Gain: ", "Loss: "],
+                    {"name": QtWidgets.QLineEdit(self.centralwidget), 'gain': QtWidgets.QLineEdit(self.centralwidget),
+                     'loss': QtWidgets.QLineEdit(self.centralwidget)},
+                    20, 150, [self.pattern.getName(), self.pattern.getGain(), self.pattern.getLoss()])
+        self.widgets['gain'].setToolTip("Enter the molecular loss of the molecule formula compared to a pure composition"
+                                        "of the corresponding building blocks")
+        self.widgets['loss'].setToolTip("Enter the molecular gain of the molecule formula compared to a pure composition"
+                                        "of the corresponding building blocks")
         self.table = self.createTableWidget(self.centralwidget, self.pattern.getItems(), yPos+50,
                                             self.service.getHeaders(), self.service.getBoolVals())
-        self.formLayout.setWidget(2, QtWidgets.QFormLayout.SpanningRole, self.table)   #ToDo
+        self.formLayout.setWidget(3, QtWidgets.QFormLayout.SpanningRole, self.table)   #ToDo
         self.mainWindow.show()
 
     def save(self, *args):
         id = self.pattern.getId()
-        if args:
+        if args and args[0]:
             id = args[0]
-        self.service.savePattern(Makromolecule(self.widgets["name"].text(), self.readTable(self.table), id))
+        self.service.savePattern(Makromolecule(self.widgets["name"].text(), self.widgets["gain"].text(),
+                                               self.widgets["loss"].text(), self.readTable(self.table), id))
+
+    def openAgain(self, *args):
+        super(MoleculeEditorController, self).openAgain()
+        self.widgets["gain"].setText(self.pattern.getGain())
+        self.widgets["loss"].setText(self.pattern.getLoss())
 
     """def saveNew(self):
         self.service.savePattern(Makromolecule(self.widgets["name"].text(), self.readTable(self.table), None))"""
@@ -370,7 +380,7 @@ class ElementEditorController(AbstractEditorController):
 
     def save(self, *args):
         id = self.pattern.getId()
-        if args:
+        if args and args[0]:
             id = args[0]
         self.service.savePattern(Element(self.widgets["name"].text(), self.readTable(self.table), id))
 
@@ -410,7 +420,7 @@ class FragmentEditorController(AbstractEditorControllerWithTabs):
 
     def save(self, *args):
         id = self.pattern.getId()
-        if args:
+        if args and args[0]:
             id = args[0]
         self.service.savePattern(FragmentationPattern(self.widgets["name"].text(), self.readTable(self.table1),
                                                       self.readTable(self.table2), id))
@@ -437,7 +447,7 @@ class ModificationEditorController(AbstractEditorControllerWithTabs):
 
     def save(self, *args):
         id = self.pattern.getId()
-        if args:
+        if args and args[0]:
             id = args[0]
         self.service.savePattern(ModificationPattern(self.widgets["name"].text(), self.widgets["modification"].text(),
                                      self.readTable(self.table1),self.readTable(self.table2), id))
@@ -462,7 +472,7 @@ class IntactIonEditorController(AbstractEditorController):
 
     def save(self, *args):
         id = self.pattern.getId()
-        if args:
+        if args and args[0]:
             id = args[0]
         self.service.savePattern(IntactPattern(self.widgets["name"].text(), self.widgets["gain"].text(),
                       self.widgets["loss"].text(), self.readTable(self.table), id))

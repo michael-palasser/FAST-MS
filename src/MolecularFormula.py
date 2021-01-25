@@ -316,7 +316,7 @@ class MolecularFormula(object):
         return returnedString
 
 
-    def calculateIsotopePattern(self):
+    def calculateIsotopePattern(self, *args):
         '''
         Calculates isotope patterns based on molecular formulas
         :return: isotope pattern1 (structured numpy array: [(mass,relative Abundance)])
@@ -349,6 +349,9 @@ class MolecularFormula(object):
             isoPeak += 1
             if prop > mostAbundant:
                 mostAbundant = prop
+            if args[0]:
+                if isoPeak == args[0]:
+                    return np.array(isotope_pattern, dtype=[('mass', np.float64), ('relAb', np.float64)])
         return np.array(isotope_pattern, dtype=[('mass',np.float64),('relAb', np.float64)])
 
 

@@ -2,6 +2,7 @@ import os
 import traceback
 
 from src import path
+from src.MolecularFormula import MolecularFormula
 from src.Services import *
 from src.PeriodicTable import *
 from src.entities.GeneralEntities import *
@@ -41,6 +42,7 @@ def readMoleculeFile(moleculeFile):
     '''
     monomers = []
     mode = 'monomers'
+    h2o = {'H':2, 'O':1}
     for line in moleculeFile:
         if line.startswith('#precursor ions'):
             mode = 'precIons'
@@ -48,13 +50,12 @@ def readMoleculeFile(moleculeFile):
             continue
         lineList = removeEmptyElements(line.rstrip().split('\t'))
         if mode == 'monomers':
+            #formula = MolecularFormula(AbstractItem2.stringToFormula(lineList[1], dict(),1)).addFormula(h2o).toString()
+            #print(lineList[1], formula)
             monomers.append([lineList[0],lineList[1], 0])
             print("hey",[lineList[0],lineList[1]])
             #self.monomers[lineList[0]] = self.stringToFormula(lineList[1],dict(),1)
     return monomers
-    """elif mode == 'precIons':
-        print(lineList[0])
-        self.modifications[lineList[0]] = self.stringToFormula(lineList[1], dict(), 1)"""
 
 
 
@@ -66,7 +67,7 @@ def writeMolecules():
             print(moleculePath)
             with open(moleculePath) as f:
                 monomers = readMoleculeFile(f)
-            service.savePattern(Makromolecule(molecule, "H2O", monomers,None))
+            service.savePattern(Makromolecule(molecule, "", "", monomers,None))
     except:
         traceback.print_exc()
     finally:
@@ -238,8 +239,8 @@ def writeIntactModifs():
         service.close()
 
 
-#writeElements()
-#writeMolecules()
+writeElements()
+writeMolecules()
 writeSequences()
 """with open(os.path.join(path, 'Parameters', 'Protein' + '.txt')) as f:
     for line in f:

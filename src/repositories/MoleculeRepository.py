@@ -1,13 +1,13 @@
 from os.path import join
 
-from src.entities.GeneralEntities import Makromolecule, Monomere
+from src.entities.GeneralEntities import Makromolecule, BuildingBlock
 from src.repositories.AbstractRepositories import AbstractRepositoryWithItems
 
 
 class MoleculeRepository(AbstractRepositoryWithItems):
     def __init__(self):
         super(MoleculeRepository, self).__init__(join('shared.db'), 'molecules',
-                                                 ("name", "loss"),
+                                                 ("name", "gain", "loss"),
                                                  {"monomeres": ('name', 'formula', 'acidity','patternId')},(2,),())
 
     def makeTables(self):
@@ -15,18 +15,23 @@ class MoleculeRepository(AbstractRepositoryWithItems):
                     CREATE TABLE IF NOT EXISTS molecules (
                         "id"	integer PRIMARY KEY UNIQUE ,
                         "name"	text NOT NULL UNIQUE ,
+                        "gain"	text NOT NULL,
                         "loss"	text NOT NULL);""")
         self._conn.cursor().execute("""
             CREATE TABLE IF NOT EXISTS monomeres (
                 "id"	integer PRIMARY KEY UNIQUE ,
                 "name"	text NOT NULL,
                 "formula" text NOT NULL ,
-                "acidity" integer NOT NULL ,
+                "acidity" real NOT NULL ,
                 "patternId" text NOT NULL );""")
 
     def createPattern(self, pattern):
-        self.insertItems(self.create(pattern.getName(), pattern.getMoleculeLoss()), pattern.getItems(), 0)
+        self.insertItems(self.create(pattern.getName(), pattern.getGain(), pattern.getLoss()), pattern.getItems(), 0)
 
+    def updatePattern(self, pattern):
+        self.update(pattern.getName(), pattern.getGain(), pattern.getLoss(), pattern.getId())
+        self.deleteAllItems(pattern.getId())
+        self.insertItems(pattern.getId(), pattern.getItems(), 0)
 
     def getItemColumns(self):
         return {'Name':'First Letter must be uppercase, all other letters must be lowercase',
@@ -35,7 +40,7 @@ class MoleculeRepository(AbstractRepositoryWithItems):
 
     def getPattern(self, name):
         pattern = self.get('name', name)
-        return Makromolecule(pattern[1], pattern[2], self.getItems(pattern[0],
+        return Makromolecule(pattern[1], pattern[2], pattern[3], self.getItems(pattern[0],
                                                [key for key in self._itemDict.keys()][0]), pattern[0])
 
     def getItems(self,patternId, table):

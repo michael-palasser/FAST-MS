@@ -4,27 +4,36 @@ from src.entities.AbstractEntities import PatternWithItems, AbstractItem1, Abstr
 
 
 class Makromolecule(PatternWithItems):
-    def __init__(self, name, moleculeLoss, monomeres, id):
+    def __init__(self, name, moleculeGain, moleculeLoss, monomeres, id):
         super(Makromolecule, self).__init__(name, monomeres, id)
-        self.__moleculeLoss = moleculeLoss
+        self.__gain = moleculeGain
+        self.__loss = moleculeLoss
 
-    def getMoleculeLoss(self):
-        return self.__moleculeLoss
+    def getGain(self):
+        return self.__gain
 
-    def getLossFormula(self):
-        return AbstractItem2.stringToFormula(self.__moleculeLoss, dict(), -1)
+    def getLoss(self):
+        return self.__loss
+
+    def getFormula(self):
+        formula = AbstractItem2.stringToFormula(self.__gain, dict(), 1)
+        return AbstractItem2.stringToFormula(self.__loss, formula, -1)
 
     def getMonomerDict(self):
         itemDict = dict()
         for item in self._items:
-            itemDict[item[0]] = Monomere(item[0], item[1], item[2])
+            if isinstance(item, BuildingBlock):
+                itemDict[item.getName()] = item
+            else:
+                itemDict[item[0]] = BuildingBlock(item)
         return itemDict
 
-class Monomere(AbstractItem1):
-    def __init__(self, name, formulaString, acidity):
-        super(Monomere, self).__init__(name)
-        self.__formulaString = formulaString
-        self.__acidity = acidity
+class BuildingBlock(AbstractItem1):
+    #def __init__(self, name, formulaString, acidity):
+    def __init__(self, item):
+        super(BuildingBlock, self).__init__(item[0])
+        self.__formulaString = item[1]
+        self.__acidity = item[2]
 
     def getFormulaString(self):
         return self.__formulaString

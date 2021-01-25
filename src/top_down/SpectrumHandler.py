@@ -7,6 +7,8 @@ from os.path import join
 from re import findall
 import numpy as np
 import copy
+
+from src.data.Constants import E_MASS, P_MASS
 from src.entities.Ions import FragmentIon
 from src import path
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
@@ -42,10 +44,10 @@ class SpectrumHandler(object):
         self.fragmentLibrary = fragmentLibrary
         self.chargedModifications = chargedModifications
         self.__settings = settings
-        if self.__settings['sprayMode'] == 'negative':
-            self.__settings['sprayMode'] = -1
-        elif self.__settings['sprayMode'] == 'positive':
-            self.__settings['sprayMode'] = 1
+        self.__charge = abs(self.__settings['charge'])
+        self.__sprayMode = 1
+        if self.__settings['charge'] < 0:
+            self.__sprayMode = -1
         self.precMz = 0
         self.__upperBound=0
         #self.__spectrum=list()
@@ -91,13 +93,13 @@ class SpectrumHandler(object):
         return np.array(spectralList)
 
     def resizeSpectrum(self):
-        self.precMz = self.getMz(self.precursor.formula.calculateMonoIsotopic(), self.__settings['charge'])
+        self.precMz = self.getMz(self.precursor.formula.calculateMonoIsotopic(), self.__charge, self.precursor.radicals)
         self.__spectrum = self.__spectrum[np.where(self.__spectrum[:, 0] < (self.findUpperBound() + 10))]
         print("\nmax m/z:", self.__upperBound)
 
-    def getMz(self, mass, z):
+    def getMz(self, mass, z, radicals):
         #print(z ,mass/z + self.protonMass*self.mode)
-        return mass/z + self.protonMass*self.__settings['sprayMode']
+        return mass/z + self.protonMass*self.__sprayMode + radicals*(E_MASS + P_MASS)
 
     """def findPrecursor(self):
         precursorMass = 0
@@ -173,17 +175,17 @@ class SpectrumHandler(object):
 
     def getNormalizationFactor(self):
         molecule = self.__sequence.getMolecule()
-        if molecule in ['RNA', 'DNA'] and self.__settings['sprayMode'] == -1:
-            return self.__settings['charge'] / self.precursor.formula.formulaDict['P']
+        if molecule in ['RNA', 'DNA'] and self.__sprayMode == -1:
+            return self.__charge / self.precursor.formula.formulaDict['P']
         elif molecule == 'Protein':
-            return self.__settings['charge'] / self.getPeptideScore(self.__sequence)
-        #elif molecule in ['RNA', 'DNA'] and self.__settings['sprayMode'] == 1:
-        #    return self.__settings['charge'] / len(self.__sequence)
+            return self.__charge / self.getPeptideScore(self.__sequence)
+        #elif molecule in ['RNA', 'DNA'] and self.__sprayMode == 1:
+        #    return self.__charge / len(self.__sequence)
         else:
-            return self.__settings['charge'] / len(self.__sequence)
+            return self.__charge / len(self.__sequence)
 
     def getPeptideScore(self, sequence): #ToDo
-        if self.__settings['sprayMode']== -1:
+        if self.__sprayMode== -1:
                 chargeDict = self.acidicAA
         else:
             chargeDict = self.basicAA
@@ -202,29 +204,29 @@ class SpectrumHandler(object):
                 nrMod = 1
                 if len(findall(r"(\d+)"+mod, fragment.modification)) > 0:
                     nrMod = int(findall(r"(\d+)"+mod, fragment.modification)[0])
-                modCharge += charge * nrMod * self.__settings['sprayMode']
+                modCharge += charge * nrMod * self.__sprayMode
         return modCharge
 
     #ToDo: Test SearchParameters, Proteins!, Parameters
     def getSearchParameters(self, fragment,precModCharge):
         molecule = self.__sequence.getMolecule()
-        if molecule in ['RNA' ,'DNA'] and self.__settings['sprayMode'] == -1:
+        if molecule in ['RNA' ,'DNA'] and self.__sprayMode == -1:
             if fragment.formula.formulaDict['P'] == 0:
                 return None
             probableZ = fragment.formula.formulaDict['P'] * self.normalizationFactor
         elif molecule == 'protein':
             probableZ = self.getPeptideScore(fragment.sequenceList) * self.normalizationFactor
-        elif molecule in ['RNA' ,'DNA'] and self.__settings['sprayMode'] == 1:
+        elif molecule in ['RNA' ,'DNA'] and self.__sprayMode == 1:
             probableZ = fragment.number * self.normalizationFactor
         else:
             probableZ = fragment.number * self.normalizationFactor
         probableZ -= fragment.radicals
         tolerance = configs['zTolerance']
-        lowZ, highZ = 1, self.__settings['charge']
-        zEffect = (precModCharge - self.getModCharge(fragment)) * self.__settings['sprayMode']
+        lowZ, highZ = 1, self.__charge
+        zEffect = (precModCharge - self.getModCharge(fragment)) * self.__sprayMode
         if (probableZ-tolerance + zEffect)> 1:
             lowZ = round(probableZ-tolerance + zEffect)
-        if (probableZ+tolerance + precModCharge)< self.__settings['charge']:
+        if (probableZ+tolerance + precModCharge)< self.__charge:
             highZ = round(probableZ + tolerance + zEffect)
         print(fragment.getName(),lowZ,highZ)
         return range(lowZ,highZ+1)
@@ -249,10 +251,10 @@ class SpectrumHandler(object):
             for z in zRange:
                 print(fragment.getName(),z)
                 theoreticalPeaks = copy.deepcopy(fragment.isotopePattern)
-                if self.__settings['dissociation'] in ['ECD', 'EDD', 'ETD'] and fragment.number == 0:
-                    theoreticalPeaks['mass'] += ((self.protonMass-self.eMass) * (self.__settings['charge'] - z))
+                #if self.__settings['dissociation'] in ['ECD', 'EDD', 'ETD'] and fragment.number == 0:
+                #    theoreticalPeaks['mass'] += ((self.protonMass-self.eMass) * (self.__charge - z))
                     #print("heeeeee\n",fragment.getName(),z, theoreticalPeaks['mass'])
-                theoreticalPeaks['mass'] = self.getMz(theoreticalPeaks['mass'], z)
+                theoreticalPeaks['mass'] = self.getMz(theoreticalPeaks['mass'], z, fragment.radicals)
                 if (configs['lowerBound'] < theoreticalPeaks[0]['mass'] < self.__upperBound):
                     self.searchedChargeStates[fragment.getName()].append(z)
                     #make a guess of the ion abundance based on number in range

@@ -60,7 +60,7 @@ class TD_MainController(object):
                 traceback.print_exc()
                 choice = QtWidgets.QMessageBox.question(self.mainWindow, "Problem with importing list of isotope patterns",
                         "Imported Fragment Library from" + patternReader.getFile() + "incomplete\n"
-                        "Should a new library be created?\nThe program will be stopped otherwise",
+                        "Should a new library be created?\nThe search will be stopped otherwise",
                                                         QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
                 if choice != QtWidgets.QMessageBox.Yes:
                     return
@@ -133,9 +133,9 @@ class TD_MainController(object):
         else:
             output = os.path.join(path, 'Spectral_data','top-down', output + '.xlsx')
         excelWriter = ExcelWriter(output, configs)
-        strMode = 'negative'
+        """strMode = 'negative'
         if settings['sprayMode'] == 1:
-            strMode = 'positive'
+            strMode = 'positive'"""
         try:
             generalParam = [("spectralFile:", spectralFile),
                             ('date:', ""),

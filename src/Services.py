@@ -1,6 +1,6 @@
 from abc import ABC
 
-from src.entities.GeneralEntities import Makromolecule, Element, Monomere
+from src.entities.GeneralEntities import Makromolecule, Element, BuildingBlock
 from src.Exceptions import UnvalidInputException
 from src.repositories.TD_Repositories import *
 from src.repositories.MoleculeRepository import MoleculeRepository
@@ -122,16 +122,16 @@ class MoleculeService(AbstractServiceForPatterns):
         super(MoleculeService, self).__init__(MoleculeRepository())
 
     def makeNew(self):
-        return Makromolecule("", "H2O",10*[["", ""]], None)
+        return Makromolecule("", "", "", 10*[["", "", 0]], None)
 
 
     def getFormula(self, item):
-        return Monomere(item[0], item[1], item[2]).getFormula()
+        return BuildingBlock(item).getFormula()
 
     def savePattern(self, pattern):
         elementRep = PeriodicTableRepository()
         elements = elementRep.getAllPatternNames()
-        for key in pattern.getLossFormula().keys():
+        for key in pattern.getFormula().keys():
             if key not in elements:
                 raise UnvalidInputException(pattern.getName(), "Element: " + key + " unknown")
         for monomere in pattern.getItems():
@@ -147,7 +147,7 @@ class MoleculeService(AbstractServiceForPatterns):
         itemDict = dict()
         items = self.get(name).getItems()
         for item in items:
-            itemDict[item[0]] = Monomere(item[0],item[1], item[2])
+            itemDict[item[0]] = BuildingBlock(item[0],item[1], item[2])
         return itemDict"""
 
 
@@ -159,7 +159,7 @@ class SequenceService(AbstractService):
         return ("", "", "")
 
     def get(self,name):
-        return self.repository.getSequenceList(name)
+        return self.repository.getSequence(name)
 
     def getSequences(self):
         return self.repository.getAllSequences()

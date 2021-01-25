@@ -1,5 +1,4 @@
 import traceback
-from abc import ABC
 
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import QDialog, QMessageBox
@@ -9,8 +8,6 @@ from src import path
 from src.Exceptions import UnvalidInputException
 from src.intact.Main import run
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
-#from src.top_down import Main
-#from src.intact import ESI_Main
 from src.Services import FragmentIonService, ModificationService, SequenceService
 
 dataPath = join(path, 'src', 'data')
@@ -126,7 +123,7 @@ class AbstractDialog(QDialog):
 
 
     def accept(self):
-        pass
+        super(AbstractDialog, self).accept()
 
     def checkValues(self, configs):
         pass
@@ -155,7 +152,7 @@ class StartDialog(AbstractDialog):
         defaultButton.setText(self._translate(self.objectName(), "last settings"))
         return defaultButton
 
-    def accept(self):
+    def getNewSettings(self):
         newSettings = self.makeDictToWrite()
         if (newSettings['spectralData'][-4:] != '.txt') and (newSettings['spectralData'][-4:] != '.csv'):
             newSettings['spectralData'] += '.txt'
@@ -187,10 +184,11 @@ class TDStartDialog(StartDialog):
                           startDialog, 30, 160)
         fragPatterns = FragmentIonService().getAllPatternNames()
         modPatterns = ModificationService().getAllPatternNames()
-        widgets = ((QtWidgets.QLineEdit(startDialog), "sequName", "Name of the sequenceList"),
+        sequences = SequenceService().getAllSequenceNames()
+        widgets = ((self.createComboBox(startDialog,sequences), "sequName", "Name of the sequenceList"),
                (QtWidgets.QSpinBox(startDialog), "charge","Charge of the precursor ion"),
-               (self.createComboBox(startDialog,(fragPatterns)), "fragmentation", "Name of the fragmentation - pattern"),
-               (self.createComboBox(startDialog,(modPatterns)), "modifications", "Name of the modification/ligand - pattern"),
+               (self.createComboBox(startDialog,fragPatterns), "fragmentation", "Name of the fragmentation - pattern"),
+               (self.createComboBox(startDialog,modPatterns), "modifications", "Name of the modification/ligand - pattern"),
                (QtWidgets.QSpinBox(startDialog), "nrMod", "How often is the precursor ion modified?"),
                (QtWidgets.QLineEdit(startDialog), "spectralData","Name of the file with spectral peaks (txt or csv format)"),
                (QtWidgets.QDoubleSpinBox(startDialog), 'noiseLimit', "Minimal noise level"),
@@ -218,12 +216,13 @@ class TDStartDialog(StartDialog):
         self.setValueOfWidget(self.widgets['noiseLimit'], self.configHandler.get('noiseLimit') / 10**6)
 
     def accept(self):
-        newSettings = super(TDStartDialog, self).accept() #self.makeDictToWrite()
+        newSettings = self.getNewSettings() #self.makeDictToWrite()
         #self.checkValues(newSettings)
         newSettings['noiseLimit']*=10**6
         self.configHandler.write(newSettings)
         #self.newSettings = newSettings
         #self.startProgram(Main.run)
+        super(TDStartDialog, self).accept()
 
     """def checkValues(self, configs):
         if configs['sequName'] not in SequenceService().getAllSequenceNames():
@@ -434,12 +433,11 @@ class IntactStartDialog(DialogWithTabs, StartDialog):
 
 
     def accept(self):
-        #newSettings = super(IntactStartDialog, self).accept() #self.makeDictToWrite()
+        newSettings = self.getNewSettings() #self.makeDictToWrite()
         """if (newSettings['spectralData'][-4:] != '.txt') and (newSettings['spectralData'][-4:] != '.csv'):
             newSettings['spectralData'] += '.txt'
         self.checkValues(newSettings)"""
         self.configHandler.write(super(IntactStartDialog, self).accept())
-        self.startProgram(run())
 
 
     def checkValues(self, configs, *args):

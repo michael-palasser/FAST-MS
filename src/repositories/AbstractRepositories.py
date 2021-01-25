@@ -179,10 +179,10 @@ class AbstractRepositoryWithItems(AbstractRepository, ABC):
             listOfNames.append(pattern[1])
         return listOfNames
 
-    def updatePattern(self, modPattern):
-        self.update(modPattern.getName(), modPattern.getId())
-        self.deleteAllItems(modPattern.getId())
-        self.insertItems(modPattern.getId(), modPattern.getItems(), 0)
+    def updatePattern(self, pattern):
+        self.update(pattern.getName(), pattern.getId())
+        self.deleteAllItems(pattern.getId())
+        self.insertItems(pattern.getId(), pattern.getItems(), 0)
 
 
     def deleteAllItems(self, patternId):

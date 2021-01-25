@@ -7,11 +7,12 @@ import re
 from multiprocessing import Pool
 
 from src.MolecularFormula import MolecularFormula
+from src.data.Constants import E_MASS
+from src.entities.GeneralEntities import BuildingBlock
 from src.entities.Ions import Fragment
 from src.entities.IonTemplates import FragItem, ModifiedItem, PrecursorItem
 from src.Services import SequenceService, MoleculeService, FragmentIonService, ModificationService
 
-E_MASS = 5.48579909065 * 10 ** (-4)
 
 
 
@@ -37,7 +38,7 @@ class FragmentLibraryBuilder(object):
         '''
         self.__sequence = SequenceService().get(sequName)
         #self.sequenceList = self.__sequence.getSequenceList()
-        self.__molecule = MoleculeService().getPatternWithObjects(self.__sequence.getMolecule())
+        self.__molecule = MoleculeService().getPatternWithObjects(self.__sequence.getMolecule(), BuildingBlock)
         #self.__monomers = MoleculeService().getItemDict(self.__sequence.getMolecule())
         self.__fragmentation = FragmentIonService().getPatternWithObjects(fragmentation, FragItem)
         self.__modifPattern = ModificationService().getPatternWithObjects(modificationPattern, ModifiedItem)
@@ -60,25 +61,24 @@ class FragmentLibraryBuilder(object):
     def setFragmentLibrary(self, patternReader):
         self.__fragmentLibrary = patternReader.addIsotopePatternFromFile(self.__fragmentLibrary)
 
-    def buildBasicLadder(self, sequ):
+    def buildSimpleLadder(self, sequ):
         '''
         Builds a sequenceList ladder of a basic fragment type
         :param sequ: sequenceList of precursor (list) (either from 5' or 3')
         :return: the ladder (dict: key=sequenceList(list), val=formula(MolecularFormula))
         '''
-        basicLadder = list()
+        simpleLadder = list()
         length = 1
-        loss = self.__molecule.getLossFormula()
-        sumFormula = MolecularFormula(loss)
+        sumFormula = MolecularFormula(dict())
         monomers = self.__molecule.getMonomerDict()
         for link in sequ:
             if link not in monomers.keys():
                 print("problem at", length)
                 raise Exception(link)
-            sumFormula = sumFormula.addFormula(monomers[link].getFormula()).subtractFormula(loss)
-            basicLadder.append((sequ[:length],sumFormula))
+            sumFormula = sumFormula.addFormula(monomers[link].getFormula())
+            simpleLadder.append((sequ[:length],sumFormula))
             length += 1
-        return basicLadder
+        return simpleLadder
 
 
     @staticmethod
@@ -97,7 +97,7 @@ class FragmentLibraryBuilder(object):
         No c- and z-fragments after a proline in sequenceList. Function checks if last amino acid is proline.
         :param type: fragment type of fragment
         :param sequ: sequenceList of fragment
-        :param basicLadder: fragment ladder of a basic fragment type (see function buildBasicLadder)
+        :param basicLadder: fragment ladder of a basic fragment type (see function buildSimpleLadder)
         :return: 1 for c- or z-fragments of proteins if last amino acid in sequenceList is a proline, else: 0
         '''
         if self.__sequence.getMolecule() == 'Protein':
@@ -111,7 +111,7 @@ class FragmentLibraryBuilder(object):
     def createFragmentLadder(self, basicLadder, fragTemplates):
         '''
         Creates a fragment ladder
-        :param basicLadder: fragment ladder of a basic fragment type (see function buildBasicLadder)
+        :param basicLadder: fragment ladder of a basic fragment type (see function buildSimpleLadder)
         :param fragTemplates: corresponding fragment dictionary (self.forwardDict, self.backwardDict)
         :return: ladder (list of Fragments)
         '''
@@ -151,7 +151,7 @@ class FragmentLibraryBuilder(object):
 
 
     #ToDo: adducts
-    def addPrecursor(self, basicFormula):
+    def addPrecursor(self, simpleFormula):
         '''
         Calculates molecular formulas of precursor ions
         :param basicFormula: template to calculate formula of precursor
@@ -160,9 +160,10 @@ class FragmentLibraryBuilder(object):
         precursorFragments = []
         sequence = self.__sequence.getSequenceList()
         sequenceName = self.__sequence.getName()
-        precName = self.__modifPattern.getModification()
+        precName = "+" + self.__modifPattern.getModification()
         if self.__maxMod > 1:
-            precName = str(self.__maxMod) + self.__modifPattern.getModification()
+            precName = "+" +  str(self.__maxMod) + self.__modifPattern.getModification()
+        basicFormula = simpleFormula.addFormula(self.__molecule.getFormula())
         for precTemplate in self.__fragmentation.getItems2():
             if precTemplate.enabled():
                 templateName = precTemplate.getName()
@@ -198,14 +199,14 @@ class FragmentLibraryBuilder(object):
             for elem in self.__modifPattern.getExcluded():
                 print(elem)
         sequence = self.__sequence.getSequenceList()
-        forwardFragments = self.createFragmentLadder(self.buildBasicLadder(sequence), self.__fragmentation.getFragTemplates(1))
-        SimpleLadderBack = self.buildBasicLadder(sequence[::-1])
+        forwardFragments = self.createFragmentLadder(self.buildSimpleLadder(sequence), self.__fragmentation.getFragTemplates(1))
+        SimpleLadderBack = self.buildSimpleLadder(sequence[::-1])
         backwardFragments = self.createFragmentLadder(SimpleLadderBack, self.__fragmentation.getFragTemplates(-1))
-        precursorFragments = self.addPrecursor(SimpleLadderBack[len(sequence) - 1][1].addFormula(self.__fragmentation.getFormula()))
+        precursorFragments = self.addPrecursor(SimpleLadderBack[len(sequence) - 1][1])
         self.__fragmentLibrary = forwardFragments + backwardFragments + precursorFragments
         self.__fragmentLibrary.sort(key=lambda obj:(obj.type , obj.number))
-        """for fragment in self.__fragmentLibrary:
-            print(fragment.getName(), fragment.formula.toString())"""
+        #for fragment in self.__fragmentLibrary:
+            #print(fragment.getName(), fragment.formula.toString())
 
 
     def addNewIsotopePattern(self, flag):
@@ -222,7 +223,7 @@ class FragmentLibraryBuilder(object):
             for fragment in self.__fragmentLibrary:
                 fragment.isotopePattern = fragment.formula.calculateIsotopePattern()
                 #if fragment.type in self.radicalDict:
-                fragment.isotopePattern['mass'] -= fragment.self.radicalDict[fragment.type] * E_MASS
+                #fragment.isotopePattern['mass'] -= fragment.radicals * (E_MASS)
                 print(fragment.getName())
         else:
             p = Pool()
@@ -234,7 +235,7 @@ class FragmentLibraryBuilder(object):
     def calculateParallel(self, fragment):
         fragment.isotopePattern = fragment.formula.calculateIsotopePattern()
         #if fragment.type in self.radicalDict:
-        fragment.isotopePattern['mass'] -= fragment.radicals * E_MASS
+        #fragment.isotopePattern['mass'] -= fragment.radicals * E_MASS
         print(fragment.getName())
         return fragment
 

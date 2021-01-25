@@ -22,11 +22,13 @@ class IsotopePatternReader(object):
         if modifications == "" or nrMod == "0":
             self.__file = os.path.join(path, 'Fragment_lists', '_'.join((sequName, fragmentation) + '.csv'))
         else:
-            self.__file = os.path.join(path, 'Fragment_lists', '_'.join((sequName, fragmentation, nrMod, modifications) +
-                                                                      '.csv'))
+            self.__file = os.path.join(path, 'Fragment_lists', '_'.join((sequName, fragmentation, str(nrMod), modifications +
+                                                                      '.csv')))
         if os.path.isfile(self.__file):
+            print(True)
             return True
         else:
+            print(False)
             return False
 
 
@@ -37,30 +39,44 @@ class IsotopePatternReader(object):
         :return: void
         '''
         isotopePatternDict = dict()
+        #print(self.__file)
         with open(self.__file, mode='r') as f:
-            reader = csv.reader(self.__file)
+            reader = csv.reader(f)
             next(reader, None)
             isotopePattern = list()
             counter = 0
             for row in reader:
+                #print(row)
                 if counter == 0:
                     name = row[0]
                     counter = 1
-                if row[0] != '':
+                elif row[0] != '':
                     isotopePatternDict[name] = np.array(isotopePattern, dtype=[('mass',np.float64),('relAb', np.float64)])
                     name = row[0]
                     isotopePattern = list()
-                isotopePattern.append((row[1], row[2]))
+                try:
+                    isotopePattern.append((row[1], row[2]))
+                except IndexError:
+                    print(row)
+                    raise UnvalidIsotopePatternException(row, " incorrect")
             isotopePatternDict[name] = np.array(isotopePattern, dtype=[('mass',np.float64),('relAb', np.float64)])
         for fragment in fragmentLibrary:
             if fragment.getName() not in isotopePatternDict:
                 raise UnvalidIsotopePatternException(fragment.getName(),"not found in file")
-            elif ((fragment.formula.calculateMonoIsotopic() - isotopePatternDict[name]['mass'][0]) > 10**(-6)):
-                print(fragment.formula.calculateMonoIsotopic(), isotopePatternDict[name]['mass'][0])
-                raise UnvalidIsotopePatternException(fragment.getName(), "monoisotopic not correct" +
-                     str(fragment.formula.calculateMonoIsotopic())+ " != " + str(isotopePatternDict[name]['mass'][0]))
+            self.checkEquality(fragment, isotopePatternDict[fragment.getName()])
             fragment.isotopePattern = isotopePatternDict[fragment.getName()]
         return fragmentLibrary
+
+    def checkEquality(self, fragment, savedPattern):
+        newPattern = fragment.formula.calculateIsotopePattern(2)
+        for i in range(2):
+            if newPattern[i]['mass'] - savedPattern[i]['mass'] > 10 ** (-6):
+                raise UnvalidIsotopePatternException(fragment.getName(), "mass incorrect " +
+                     str(newPattern[i]['mass']) + " != " + str(savedPattern[i]['mass']))
+            if newPattern[i]['relAb'] - savedPattern[i]['relAb'] > 10 ** (-6):
+                raise UnvalidIsotopePatternException(fragment.getName(), "relative Abundance incorrect " +
+                     str(newPattern[i]['relAb']) + " != " + str(savedPattern[i]['relAb']))
+
 
 
     def saveIsotopePattern(self, fragmentLibrary):
@@ -73,7 +89,7 @@ class IsotopePatternReader(object):
         #M_max = 0
         fieldnames = ['ion', 'mass', 'Intensities']
         with open(self.__file, mode="w") as f:
-            f_writer = csv.DictWriter(self.__file, fieldnames=fieldnames)
+            f_writer = csv.DictWriter(f, fieldnames=fieldnames)
             f_writer.writeheader()
             for fragment in fragmentLibrary:
                 counter = 0  # for new rows

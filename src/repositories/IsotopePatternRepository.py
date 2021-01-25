@@ -1,14 +1,18 @@
 import csv
 import os
+import sqlite3
+from os.path import join
 
 import numpy as np
 
 from src import path
+from src.Exceptions import UnvalidIsotopePatternException
 
 
 class IsotopePatternReader(object):
     def __init__(self):
         self.__file = None
+
 
     def getFile(self):
         return self.__file
@@ -49,11 +53,13 @@ class IsotopePatternReader(object):
                 isotopePattern.append((row[1], row[2]))
             isotopePatternDict[name] = np.array(isotopePattern, dtype=[('mass',np.float64),('relAb', np.float64)])
         for fragment in fragmentLibrary:
-            try:
-                fragment.isotopePattern = isotopePatternDict[fragment.getName()]
-            except KeyError:
-                print(fragment.getName(), "not found in file.")
-                raise KeyError
+            if fragment.getName() not in isotopePatternDict:
+                raise UnvalidIsotopePatternException(fragment.getName(),"not found in file")
+            elif ((fragment.formula.calculateMonoIsotopic() - isotopePatternDict[name]['mass'][0]) > 10**(-6)):
+                print(fragment.formula.calculateMonoIsotopic(), isotopePatternDict[name]['mass'][0])
+                raise UnvalidIsotopePatternException(fragment.getName(), "monoisotopic not correct" +
+                     str(fragment.formula.calculateMonoIsotopic())+ " != " + str(isotopePatternDict[name]['mass'][0]))
+            fragment.isotopePattern = isotopePatternDict[fragment.getName()]
         return fragmentLibrary
 
 
@@ -82,3 +88,53 @@ class IsotopePatternReader(object):
                     else:
                         f_writer.writerow({'ion': '', 'mass': np.around(isotope['mass'], 6),
                                            'Intensities': np.around(isotope['relAb'], 7)})
+
+
+'''def __init__(self):
+        self._conn = sqlite3.connect(join(path,"src","data","isoPatterns.db"))
+
+    def makeTable(self):
+        def makeTables(self):
+            self._conn.cursor().execute("""
+                        CREATE TABLE IF NOT EXISTS files (
+                            "id"	integer PRIMARY KEY UNIQUE ,
+                            "sequName"	text NOT NULL,   
+                            "nrMod" integer NOT NULL ,
+                            "fragName"	text NOT NULL,
+                            "modName" text NOT NULL ,);""")
+            self._conn.cursor().execute("""
+                CREATE TABLE IF NOT EXISTS fragments (
+                    "id"	integer PRIMARY KEY UNIQUE ,
+                    "name"	text NOT NULL,
+                    "fileId" text NOT NULL );""")
+            self._conn.cursor().execute("""
+                CREATE TABLE IF NOT EXISTS fragments (
+                    "id"	integer PRIMARY KEY UNIQUE ,
+                    "m/z"	 real NULL,
+                    "relAb"	 real NULL,
+                    "fragmentId" text NOT NULL );""")
+
+    def create(self, sequence, nrMod, fragName, modName, fragmenta):
+        """
+
+        :param args: Values of the newly created item
+        :return:
+        """
+        cur = self._conn.cursor()
+        #if len(self._columns)>1:
+        sql = \''' INSERT INTO files(sequName, nrMod, fragName, modName) 
+                              VALUES(?,?,?,?,?)\'''
+       # else:
+                                          #VALUES(\''' + (len(self._columns) * '?,')[:-1] + ')'
+        #print(self._mainTable, args,sql, self._columns)
+        print(sql,args)
+        try:
+            cur.execute(sql, args)
+        except sqlite3.OperationalError:
+            self.makeTables()
+            cur.execute(sql, args)
+        self._conn.commit()
+        return cur.lastrowid
+
+
+    def getFragment(self):'''

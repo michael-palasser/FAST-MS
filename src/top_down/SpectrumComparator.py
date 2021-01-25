@@ -8,7 +8,7 @@ import subprocess
 import numpy as np
 import xlsxwriter
 from datetime import datetime
-from src.top_down.LibraryBuilder import removeEmptyElements
+#from src.top_down.LibraryBuilder import removeEmptyElements
 from src import path
 
 

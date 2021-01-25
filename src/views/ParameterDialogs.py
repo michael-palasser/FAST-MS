@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import QDialog, QMessageBox
 from os.path import join, isfile
 
 from src import path
-from src.Exceptions import InvalidInputException
+from src.Exceptions import UnvalidInputException
 from src.intact.Main import run
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 #from src.top_down import Main
@@ -161,17 +161,17 @@ class StartDialog(AbstractDialog):
             newSettings['spectralData'] += '.txt'
         try:
             self.checkValues(newSettings)
-        except InvalidInputException:
+        except UnvalidInputException:
             traceback.print_exc()
             QMessageBox.warning(self, "Problem occured", traceback.format_exc(), QMessageBox.Ok)
         return newSettings
 
-    def checkValues(self, configs):
-        print(join(path, 'Spectral_data','intact', configs['spectralData']))
+    def checkValues(self, configs, *args):
         if configs['sequName'] not in SequenceService().getAllSequenceNames():
-            raise InvalidInputException(configs['sequName'], "not found")
-        elif not isfile(join(path, 'Spectral_data','intact', configs['spectralData'])):
-            raise InvalidInputException(configs['spectralData'], "not found")
+            raise UnvalidInputException(configs['sequName'], "not found")
+        spectralDataPath = join(path, 'Spectral_data',args[0], configs['spectralData'])
+        if not isfile(spectralDataPath):
+            raise UnvalidInputException(spectralDataPath, "not found")
 
 
 class TDStartDialog(StartDialog):
@@ -181,8 +181,9 @@ class TDStartDialog(StartDialog):
         self.setupUi(self)
 
     def setupUi(self, startDialog):
+        #ToDo: delete Spraymode
         self.createLabels(("Sequence Name:", "Charge:", "Fragmentation:", "Modifications:", "Nr. of Modifications:",
-                           "Spectral Data:", "Noise Threshold (x10^6):", "Spray Mode:", "Fragment Library:", "Output"),
+                           "Spectral Data:", "Noise Threshold (x10^6):", "Fragment Library:", "Output"),
                           startDialog, 30, 160)
         fragPatterns = FragmentIonService().getAllPatternNames()
         modPatterns = ModificationService().getAllPatternNames()
@@ -193,24 +194,20 @@ class TDStartDialog(StartDialog):
                (QtWidgets.QSpinBox(startDialog), "nrMod", "How often is the precursor ion modified?"),
                (QtWidgets.QLineEdit(startDialog), "spectralData","Name of the file with spectral peaks (txt or csv format)"),
                (QtWidgets.QDoubleSpinBox(startDialog), 'noiseLimit', "Minimal noise level"),
-               (self.createComboBox(startDialog,("negative","positive")), "sprayMode", "Spray Mode"),
                (QtWidgets.QLineEdit(startDialog), "fragLib", "Name of csv file in the folder 'Fragment_lists' "
                      "containing the isotope patterns of the fragments\n"
                      "If no file is stated, the program will search for the corresponing file or create a new one"),
                (QtWidgets.QLineEdit(startDialog), "output",
                     "Name of the output Excel file\ndefault: name of spectral pattern file + _out.xlsx"))
         xPos, yPos = self.createWidgets(widgets,200,180)
-
-
-        #startDialog.resize(412, 307)
+        self.widgets['charge'].setMinimum(-99)
         self.buttonBox.setGeometry(QtCore.QRect(210, yPos+20, 164, 32))
-        self.widgets['charge'].setValue(2)
+        #self.widgets['charge'].setValue(2)
         if self.configHandler.getAll() != None:
             try:
                 self.widgets["fragmentation"].setCurrentText(self.configHandler.get('fragmentation'))
                 self.widgets["modifications"].setCurrentText(self.configHandler.get('modifications'))
-                QtWidgets.QSpinBox(startDialog).setValue(self.configHandler.get('nrMod'))
-                self.widgets['sprayMode'].setCurrentText(self._translate("startDialog", self.configHandler.get('sprayMode')))
+                self.widgets["nrMod"].setValue(self.configHandler.get('nrMod'))
             except KeyError:
                 traceback.print_exc()
         self.defaultButton = self.makeDefaultButton()
@@ -222,7 +219,6 @@ class TDStartDialog(StartDialog):
 
     def accept(self):
         newSettings = super(TDStartDialog, self).accept() #self.makeDictToWrite()
-
         #self.checkValues(newSettings)
         newSettings['noiseLimit']*=10**6
         self.configHandler.write(newSettings)
@@ -231,9 +227,12 @@ class TDStartDialog(StartDialog):
 
     """def checkValues(self, configs):
         if configs['sequName'] not in SequenceService().getAllSequenceNames():
-            raise InvalidInputException(configs['sequName'], "not found")
+            raise UnvalidInputException(configs['sequName'], "not found")
         elif not isfile(join(path, 'Spectral_data','top-down', configs['spectralData'])):
-            raise InvalidInputException(configs['spectralData'], "not found")"""
+            raise UnvalidInputException(configs['spectralData'], "not found")"""
+
+    def checkValues(self, configs, *args):
+        super(TDStartDialog, self).checkValues(configs, 'top-down')
 
 
 class DialogWithTabs(AbstractDialog):
@@ -433,6 +432,7 @@ class IntactStartDialog(DialogWithTabs, StartDialog):
         startDialog.resize(340, yMax+100)
         QtCore.QMetaObject.connectSlotsByName(startDialog)
 
+
     def accept(self):
         #newSettings = super(IntactStartDialog, self).accept() #self.makeDictToWrite()
         """if (newSettings['spectralData'][-4:] != '.txt') and (newSettings['spectralData'][-4:] != '.csv'):
@@ -441,3 +441,6 @@ class IntactStartDialog(DialogWithTabs, StartDialog):
         self.configHandler.write(super(IntactStartDialog, self).accept())
         self.startProgram(run())
 
+
+    def checkValues(self, configs, *args):
+        super(IntactStartDialog, self).checkValues(configs, 'intact')

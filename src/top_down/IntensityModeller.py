@@ -73,7 +73,7 @@ class IntensityModeller(object):
                 outlierList += outliers
                 print("outlier: ",outliers)
                 noOutliers = np.isin(ion.isotopePattern['m/z'],outlierList, invert=True)
-                if np.all(ion.isotopePattern['relAb][noOutliers] == 0):
+                if np.all(ion.isotopePattern['relAb'][noOutliers] == 0):
                     print("deleted:", ion.getName(), ion.charge, ion.intensity, round(ion.quality, 2))
                     if ion.comment != "noise":
                         ion.comment = "qual."
@@ -84,7 +84,7 @@ class IntensityModeller(object):
                         return ion
                 else:
                     solution, correctedIon.intensity, gValue, outliers = \
-                        self.modelDistribution(correctedIon.isotopePattern['relAb][noOutliers],
+                        self.modelDistribution(correctedIon.isotopePattern['relAb'][noOutliers],
                                                correctedIon.isotopePattern['calcInt'][noOutliers],
                                                correctedIon.isotopePattern['m/z'][noOutliers])
                     correctedIon.isotopePattern['calcInt'] = correctedIon.isotopePattern['calcInt'] * solution.x
@@ -124,7 +124,7 @@ class IntensityModeller(object):
                  < getErrorLimit(elem['mono'])) & \
                     (self.monoisotopicList['name'] != elem['name']) &
                     (self.monoisotopicList['charge'] == elem['charge']))
-            if len(self.monoisotopicList[same_mono_index]) > 0:    #direkte elemente von corrected spectrum uebernehmen
+            if len(self.monoisotopicList[same_mono_index]) > 0:    #direkte elemente von corrected __spectrum uebernehmen
                 sameMonoisotopic = [self.correctedIons[(elem['name'][0],elem['charge'][0])]]
                 for elem2 in self.monoisotopicList[same_mono_index]:
                     sameMonoisotopic.append(self.correctedIons[(elem2['name'],elem2['charge'])])
@@ -132,7 +132,7 @@ class IntensityModeller(object):
                 if sameMonoisotopic not in sameMonoisotopics:
                     sameMonoisotopics.append(sameMonoisotopic)
         if len(sameMonoisotopics) > 0:
-            print("Warning: These spectrum share the same monoisotopic peak and charge:")
+            print("Warning: These __spectrum share the same monoisotopic peak and charge:")
         return sameMonoisotopics
 
     def deleteIon(self, ion):

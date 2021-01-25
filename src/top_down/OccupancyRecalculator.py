@@ -5,7 +5,7 @@ import os
 import re
 from datetime import datetime
 
-from src.top_down.Main import findSequence
+#from src.top_down.Main import findSequence
 from src.entities.Ions import Fragment,FragmentIon
 from src.top_down.Analyser import Analyser
 from src.top_down.ExcelWriter import BasicExcelWriter

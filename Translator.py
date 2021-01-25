@@ -6,9 +6,15 @@ from src.Services import *
 from src.PeriodicTable import *
 from src.entities.GeneralEntities import *
 from src.entities.IonTemplates import *
-from src.top_down.LibraryBuilder import removeEmptyElements
 from os import listdir
 from os.path import isfile, join
+
+def removeEmptyElements(rawList):
+    newList = rawList
+    while '' in newList:
+        newList.remove('')
+    return newList
+
 
 def writeElements():
     service = PeriodicTableService()
@@ -42,7 +48,7 @@ def readMoleculeFile(moleculeFile):
             continue
         lineList = removeEmptyElements(line.rstrip().split('\t'))
         if mode == 'monomers':
-            monomers.append([lineList[0],lineList[1]])
+            monomers.append([lineList[0],lineList[1], 0])
             print("hey",[lineList[0],lineList[1]])
             #self.monomers[lineList[0]] = self.stringToFormula(lineList[1],dict(),1)
     return monomers
@@ -60,7 +66,7 @@ def writeMolecules():
             print(moleculePath)
             with open(moleculePath) as f:
                 monomers = readMoleculeFile(f)
-            service.savePattern(Makromolecule(molecule,monomers,None))
+            service.savePattern(Makromolecule(molecule, "H2O", monomers,None))
     except:
         traceback.print_exc()
     finally:
@@ -132,12 +138,12 @@ def writeFragments(name, fragPath,precFrag):
     try:
         with open(fragPath) as f:
             fragments = readFragmentations(f)
-        if "RNA" in name:
+        '''if "RNA" in name:
             gain, loss = 'H1', 'O2P1'
         else:
-            gain, loss = 'H2O', ''
-        print(FragmentationPattern(name, gain, loss, fragments, precFrag, None).getItems2())
-        service.savePattern(FragmentationPattern(name, gain, loss, fragments, precFrag, None))
+            gain, loss = 'H2O', '' '''
+        print(FragmentationPattern(name, fragments, precFrag, None).getItems2())
+        service.savePattern(FragmentationPattern(name, fragments, precFrag, None))
     except:
         traceback.print_exc()
     finally:
@@ -232,10 +238,10 @@ def writeIntactModifs():
         service.close()
 
 
-"""writeElements()
-writeMolecules()
-writeSequences()"""
-with open(os.path.join(path, 'Parameters', 'Protein' + '.txt')) as f:
+#writeElements()
+#writeMolecules()
+writeSequences()
+"""with open(os.path.join(path, 'Parameters', 'Protein' + '.txt')) as f:
     for line in f:
         if line.startswith('#') or line == "":
             continue
@@ -271,6 +277,6 @@ fragPath = join(path, 'Parameters', 'protein-fragmentation','ECD.txt')
 
 writeFragments("Protein_ECD",fragPath, prcFrags)
 
-writeModifications()
+writeModifications()"""
 
 #writeIntactModifs()

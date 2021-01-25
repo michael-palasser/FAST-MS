@@ -1,24 +1,24 @@
 from src.entities.AbstractEntities import PatternWithItems, AbstractItem2
-from src.Exceptions import InvalidInputException
+from src.Exceptions import UnvalidInputException
 
 
 class FragmentationPattern(PatternWithItems):
-    def __init__(self, name, gain, loss, fragmentTypes, precursorFragments, id):
+    def __init__(self, name, fragmentTypes, precursorFragments, id):
         super(FragmentationPattern, self).__init__(name, fragmentTypes,id)
-        self.__initGain = gain
-        self.__initLoss = loss
+        #self.__initGain = gain
+        #self.__initLoss = loss
         self.__items2 = precursorFragments
 
 
-    def getInitGain(self):
+    '''def getInitGain(self):
         return self.__initGain
 
     def getInitLoss(self):
-        return self.__initLoss
+        return self.__initLoss'''
 
-    def getFormula(self):
+    '''def getFormula(self):
         formulaDict = AbstractItem2.stringToFormula(self.__initGain, dict(), 1)
-        return AbstractItem2.stringToFormula(self.__initLoss, formulaDict, -1)
+        return AbstractItem2.stringToFormula(self.__initLoss, formulaDict, -1)'''
 
     def getItems2(self):
         return self.__items2
@@ -53,12 +53,12 @@ class PrecursorItem(AbstractItem2):
     def check(self, elements, monomeres):
         for key in self.getFormula().keys():
             if key not in elements:
-                raise InvalidInputException(self.getName(), "Element: " + key + " unknown")
+                raise UnvalidInputException(self.getName(), "Element: " + key + " unknown")
         # self._residue = residue  unchecked!
         try:
             self._radicals = int(self._radicals)
         except ValueError:
-            raise InvalidInputException(self.getName(), "Number required: " + str(self._radicals))
+            raise UnvalidInputException(self.getName(), "Number required: " + str(self._radicals))
 
 
 class FragItem(PrecursorItem):

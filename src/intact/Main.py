@@ -35,8 +35,8 @@ def run():
         finder.readData(f)
     finder.calibrate()
 
-    """find spectrum"""
-    print("\n********** finding spectrum **********")
+    """find __spectrum"""
+    print("\n********** finding __spectrum **********")
     analyser = IntactAnalyser(finder.findIons(configHandler.get('k'), configHandler.get('d'), 1))
 
     """output"""

@@ -11,17 +11,18 @@ import sys
 import time
 
 from PyQt5 import QtWidgets
+from PyQt5.QtWidgets import QApplication
 
+from src.Exceptions import UnvalidIsotopePatternException
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 #from src.views.ParameterDialogs import TDStartDialog
-from src.repositories.IsotopePatternReader import IsotopePatternReader
+from src.repositories.IsotopePatternRepository import IsotopePatternReader
 from src.top_down.Analyser import Analyser
 from src.top_down.LibraryBuilder import FragmentLibraryBuilder
 from src.top_down.SpectrumHandler import SpectrumHandler
 from src.top_down.IntensityModeller import IntensityModeller
 from src.top_down.ExcelWriter import ExcelWriter
 from src import path
-
 
 
 def sortIonsByName(ionList):
@@ -36,26 +37,26 @@ class TD_MainController(object):
         self.mainWindow = parrent
 
     def run(self):
-        settingHandler = ConfigurationHandlerFactory.getTD_SettingHandler()
-        configHandler = ConfigurationHandlerFactory.getTD_ConfigHandler()
+        settings = ConfigurationHandlerFactory.getTD_SettingHandler().getAll()
+        configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
 
         print("\n********** Creating fragment library **********")
-        libraryBuilder = FragmentLibraryBuilder(settingHandler.get('sequName'), settingHandler.get('fragmentation'),
-                        settingHandler.get('modifications'), settingHandler.get('nrMod'))
+        libraryBuilder = FragmentLibraryBuilder(settings['sequName'], settings['fragmentation'],
+                        settings['modifications'], settings['nrMod'])
         libraryBuilder.createFragmentLibrary()
         print()
 
         """read existing ion-list file or create new one"""
         libraryImported = False
         patternReader = IsotopePatternReader()
-        if (patternReader.findFile([settingHandler[setting] for setting in ['sequName','fragmentation', 'nrMod',
+        if (patternReader.findFile([settings[setting] for setting in ['sequName','fragmentation', 'nrMod',
                                                                             'modifications']])):
             print("\n********** Importing list of isotope patterns from:", patternReader.getFile(), "**********")
             try:
                 libraryBuilder.setFragmentLibrary(patternReader)
                 libraryImported = True
                 print("done")
-            except KeyError:
+            except UnvalidIsotopePatternException:
                 traceback.print_exc()
                 choice = QtWidgets.QMessageBox.question(self.mainWindow, "Problem with importing list of isotope patterns",
                         "Imported Fragment Library from" + patternReader.getFile() + "incomplete\n"
@@ -72,15 +73,13 @@ class TD_MainController(object):
 
         #ToDo
         """Importing spectral pattern"""
-        spectralFile = os.path.join(path, 'Spectral_data','top-down', settingHandler.get('spectralData'))
+        spectralFile = os.path.join(path, 'Spectral_data','top-down', settings['spectralData'])
         print("\n********** Importing spectral pattern from:", spectralFile, "**********")
-        spectrumHandler = SpectrumHandler(molecule, sequence, libraryBuilder.getFragmentLibrary(),
-                                          libraryBuilder.getChargedModifications(), settings)
-        #spectrumHandler.addSpectrum(spectralFile)
-
+        spectrumHandler = SpectrumHandler(spectralFile, libraryBuilder.getSequence(), libraryBuilder.getFragmentLibrary(),
+                libraryBuilder.getPrecursor(), libraryBuilder.getChargedModifications(), settings)
 
         """Finding fragments"""
-        print("\n********** Search for spectrum **********")
+        print("\n********** Search for __spectrum **********")
         start = time.time()
         spectrumHandler.findPeaks()
         print("\ndone\nexecution time: ", round((time.time() - start) / 60, 3), "min\n")
@@ -95,7 +94,7 @@ class TD_MainController(object):
             intensityModeller.processNoiseIons(ion)
         print("\ndone\nexecution time: ", round((time.time() - start) / 60, 3), "min\n")
 
-        """Handle spectrum with same monoisotopic peak and charge"""
+        """Handle __spectrum with same monoisotopic peak and charge"""
         print("\n********** Handling overlaps **********")
         for overlap in intensityModeller.findSameMonoisotopics():
             print('index\t m/z\t\t\tz\tI\t\t\tfragment\t\terror /ppm\tquality')
@@ -124,7 +123,8 @@ class TD_MainController(object):
         intensityModeller.remodelIntensity()
 
         """analysis"""
-        analyser = Analyser(list(intensityModeller.correctedIons.values()),sequence,modificationType, settings)
+        analyser = Analyser(list(intensityModeller.correctedIons.values()), libraryBuilder.getSequence().getSequenceList(),
+                            settings['charge'], libraryBuilder.getModification())
 
         """output"""
         output = settings.get('output')
@@ -140,12 +140,12 @@ class TD_MainController(object):
             generalParam = [("spectralFile:", spectralFile),
                             ('date:', ""),
                             ('noiseLimit:', settings['noiseLimit']),
-                            ('max m/z:',spectrumHandler.upperBound)]
+                            ('max m/z:',spectrumHandler.getUpperBound())]
             #percentages = list()
             excelWriter.writeAnalysis(generalParam,
                                       analyser.getModificationLoss(),
                                       analyser.calculateRelAbundanceOfSpecies(),
-                                      sequence,
+                                      libraryBuilder.getSequence().getSequenceList(),
                                       analyser.calculatePercentages(configs['interestingIons']))
             #analyser.createPlot(__maxMod)
             precursorRegion = intensityModeller.getPrecRegion(settings['sequName'], settings['charge'])
@@ -157,7 +157,7 @@ class TD_MainController(object):
             excelWriter.writePeaks(excelWriter.worksheet4,row+3,0,sortIonsByName(intensityModeller.deletedIons))
             excelWriter.writeIons(excelWriter.worksheet5, sortIonsByName(intensityModeller.remodelledIons),
                                   precursorRegion)
-            excelWriter.writeSumFormulas(libraryBuilder.__fragmentLibrary, spectrumHandler.searchedChargeStates)
+            excelWriter.writeSumFormulas(libraryBuilder.getFragmentLibrary(), spectrumHandler.searchedChargeStates)
             print("********** saved in:", output, "**********\n")
         finally:
             excelWriter.closeWorkbook()
@@ -167,5 +167,8 @@ class TD_MainController(object):
             pass
         return 0
 
-if __name__ == '__main__':
-    run()
+"""if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    gui = Window()
+    TD_MainController(gui).run()
+    sys.exit(app.exec_())"""

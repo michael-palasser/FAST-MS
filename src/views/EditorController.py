@@ -336,14 +336,13 @@ class AbstractEditorControllerWithTabs(AbstractEditorController, ABC):
 class MoleculeEditorController(AbstractEditorController):
     def __init__(self):
         super(MoleculeEditorController, self).__init__(MoleculeService(), "Edit Molecular Properties", "Molecule")
-        """self.pattern = self.open('Open Molecule')
-        if self.pattern == None:
-            self.pattern = self.service.makeNew()"""
-        yPos = self.createWidgets(["Name: "], {"name": QtWidgets.QLineEdit(self.centralwidget)}, 20, 150,
-                                  [self.pattern.getName()])
+        yPos = self.createWidgets(["Name: ", "Molecule Loss: "],
+                    {"name": QtWidgets.QLineEdit(self.centralwidget), 'loss': QtWidgets.QLineEdit(self.centralwidget)},
+                    20, 150, [self.pattern.getName()])
+        self.widgets['loss'].setToolTip("Enter the molecular formula of the small molecule loss of the condensation reaction")
         self.table = self.createTableWidget(self.centralwidget, self.pattern.getItems(), yPos+50,
                                             self.service.getHeaders(), self.service.getBoolVals())
-        self.formLayout.setWidget(1, QtWidgets.QFormLayout.SpanningRole, self.table)   #ToDo
+        self.formLayout.setWidget(2, QtWidgets.QFormLayout.SpanningRole, self.table)   #ToDo
         self.mainWindow.show()
 
     def save(self, *args):
@@ -401,30 +400,20 @@ class SequenceEditorController(AbstractSimpleEditorController):
 class FragmentEditorController(AbstractEditorControllerWithTabs):
     def __init__(self):
         super(FragmentEditorController, self).__init__(FragmentIonService(), "Edit Fragments", "Fragment-Pattern")
-        yPos = self.createWidgets(["Name: ", "Initial Gain", "Initial Loss"],
-                                  {"name": QtWidgets.QLineEdit(self.centralwidget),
-                                   "gain": QtWidgets.QLineEdit(self.centralwidget),
-                                   "loss": QtWidgets.QLineEdit(self.centralwidget)}, 20, 150,
-                                  [self.pattern.getName(), self.pattern.getInitGain(), self.pattern.getInitLoss()])
-        self.widgets['gain'].setToolTip("This formula will be added to all fragments (e.g. H2O for proteins / "
-                                                "H for RNA")
-        self.widgets['loss'].setToolTip("This formula will be subtracted from all fragments (e.g. PO2 for RNA")
+        yPos = self.createWidgets(["Name: "], {"name": QtWidgets.QLineEdit(self.centralwidget)}, 20, 150,
+                                  [self.pattern.getName()])
         self.tabWidget = self.makeTabWidget(yPos, "Fragments", "Precursor-Fragments")
         self.mainWindow.show()
 
-    def openAgain(self, *args):
-        super(FragmentEditorController, self).openAgain()
-        self.widgets["gain"].setText(self.pattern.getInitGain())
-        self.widgets["loss"].setText(self.pattern.getInitLoss())
-
-
+    """def openAgain(self, *args):
+        super(FragmentEditorController, self).openAgain()"""
 
     def save(self, *args):
         id = self.pattern.getId()
         if args:
             id = args[0]
-        self.service.savePattern(FragmentationPattern(self.widgets["name"].text(), self.widgets["gain"].text(),
-                      self.widgets["loss"].text(), self.readTable(self.table1), self.readTable(self.table2), id))
+        self.service.savePattern(FragmentationPattern(self.widgets["name"].text(), self.readTable(self.table1),
+                                                      self.readTable(self.table2), id))
 
 
 

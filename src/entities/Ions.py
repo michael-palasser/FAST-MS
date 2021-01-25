@@ -17,7 +17,7 @@ class Fragment(object):
     uncharged fragment
     '''
 
-    def __init__(self, type, number, modification, formula, sequence):
+    def __init__(self, type, number, modification, formula, sequence, radicals):
         '''
         Constructor
         :param type: typically a, b, c, d, w, x, y or z (String)
@@ -32,6 +32,7 @@ class Fragment(object):
         self.formula = formula
         self.sequence = sequence
         self.isotopePattern = None
+        self.radicals = radicals
 
     def getName(self):
         if self.number == 0:
@@ -71,7 +72,7 @@ class FragmentIon(Fragment):
         :param noise: noise level in the m/z area of the ion, calculated by calculateNoise function in SpectrumHandler
         '''
         super().__init__(fragment.type, fragment.number, fragment.modification,
-                         fragment.formula, fragment.sequenceList)
+                         fragment.formula, fragment.sequence, fragment.radicals,)
         self.charge = charge
         self.isotopePattern = isotopePattern
         self.intensity = 0

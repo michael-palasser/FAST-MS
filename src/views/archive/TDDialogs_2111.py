@@ -143,7 +143,7 @@ class TDStartDialog(AbstractDialog):
         _translate = QtCore.QCoreApplication.translate
         startDialog.setWindowTitle(_translate("startDialog", "Dialog"))
         self.widgets['sprayMode'].setCurrentText(_translate("startDialog", self.configHandler.get('sprayMode')))
-        self.defaultButton.setText(_translate("startDialog", "last settings"))
+        self.defaultButton.setText(_translate("startDialog", "last __settings"))
 
     def accept(self):
         newSettings = dict()
@@ -387,7 +387,7 @@ class TD_configurationDialog(AbstractDialog):
         self.lowerBound.setToolTip(_translate("configDialog", "lower m/z bound (just peaks with higher m/z are examined) "))
         self.minUpperBound.setToolTip(_translate("configDialog", "minimal upper m/z bound"))
         self.upperBoundTolerance.setToolTip(_translate("configDialog", "value is added to calculated upper m/z-bound for final value"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.spectrumTab), _translate("configDialog", "spectrum"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.spectrumTab), _translate("configDialog", "__spectrum"))
         self.errorBox.setTitle(_translate("configDialog", "error threshold: threshold [ppm] = k/1000 * (m/z) +d"))
         self.label_16.setToolTip(_translate("configDialog", "slope"))
         self.label_16.setText(_translate("configDialog", "k"))

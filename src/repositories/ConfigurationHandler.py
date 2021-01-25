@@ -57,12 +57,14 @@ class ConfigurationHandlerFactory(object):
 
 
 conf = {'sequName' : 'ribA',
-    'charge' : 6,
-    'fragments': 'RNA_CAD',
+    'charge' : -6,
+    'fragmentation': 'RNA_CAD',
     'modifications' : 'CMCT',
+    'nrMod': 1,
     'spectralData' : '080819_ribA_PAR_6.txt',
     'noiseLimit' : 1550000.0,
-    'sprayMode' : 'negative'}
+    'fragLib' : '',
+    'output' : ''}
 """
 more = {'lowerBound' : 300,
 'minUpperBound' : 1200,
@@ -99,12 +101,13 @@ conf =  {"CR_1_2":	('RNA',	'GAAGGGCAACCUUCG'),
         "encFtn":	('P',	'AQSSNSTHEPLEVLKEETVNRHRAIVSVMEELEAVDWYDQRVDASTDPELTAILAHNRDEEKEHAAMTLEWLRRNDAKWAEHLRTYLFTEGPITAANSSSVDKLAAALEHHHHHH')}
 """
 from src import path
-absPath = path +"/src/data/settings_top_down.json"
-handler = ConfigHandler(absPath)
-"""
-with open(absPath, "w") as f:
-    json.dump(json.dumps(conf, indent=3), f)
+if __name__ == '__main__':
+    absPath = path +"/src/data/settings_top_down.json"
+    handler = ConfigHandler(absPath)
 
+    with open(absPath, "w") as f:
+        json.dump(json.dumps(conf, indent=3), f)
+"""
 with open(absPath) as json_data_file:
     pattern = json.load(json_data_file)
 print(pattern)

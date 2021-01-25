@@ -70,9 +70,9 @@ class IntactRepository(AbstractRepositoryWithItems):
         """
         # try:
         patternId = self.create(pattern.getName(), pattern.getInitGain(), pattern.getInitLoss())
-        self.insertItem(patternId, pattern.getItems(), 0)
+        self.insertItems(patternId, pattern.getItems(), 0)
 
     def updatePattern(self, pattern):
         self.update(pattern.getName(), pattern.getInitGain(), pattern.getInitLoss(), pattern.getId())
         self.deleteAllItems(pattern.getId())
-        self.insertItem(pattern.getId(), pattern.getItems(),0)
+        self.insertItems(pattern.getId(), pattern.getItems(), 0)

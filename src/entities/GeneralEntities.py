@@ -1,18 +1,30 @@
 from re import findall
 
-from src.entities.AbstractEntities import PatternWithItems, AbstractItem1, AbstractPattern
+from src.entities.AbstractEntities import PatternWithItems, AbstractItem1, AbstractPattern, AbstractItem2
 
 
 class Makromolecule(PatternWithItems):
-    def __init__(self, name, monomeres, id):
+    def __init__(self, name, moleculeLoss, monomeres, id):
         super(Makromolecule, self).__init__(name, monomeres, id)
+        self.__moleculeLoss = moleculeLoss
 
+    def getMoleculeLoss(self):
+        return self.__moleculeLoss
 
+    def getLossFormula(self):
+        return AbstractItem2.stringToFormula(self.__moleculeLoss, dict(), -1)
+
+    def getMonomerDict(self):
+        itemDict = dict()
+        for item in self._items:
+            itemDict[item[0]] = Monomere(item[0], item[1], item[2])
+        return itemDict
 
 class Monomere(AbstractItem1):
-    def __init__(self, name, formulaString):
+    def __init__(self, name, formulaString, acidity):
         super(Monomere, self).__init__(name)
         self.__formulaString = formulaString
+        self.__acidity = acidity
 
     def getFormulaString(self):
         return self.__formulaString
@@ -20,6 +32,8 @@ class Monomere(AbstractItem1):
     def getFormula(self):
         return self.stringToFormula(self.__formulaString,dict(),1)
 
+    def getAcidity(self):
+        return self.__acidity
 
 
 class Element(PatternWithItems):
@@ -87,5 +101,5 @@ class Sequence(AbstractPattern):
     def getMolecule(self):
         return self.__molecule
 
-    def getSequence(self):
+    def getSequenceList(self):
         return findall('[A-Z][^A-Z]*', self.__sequenceString)

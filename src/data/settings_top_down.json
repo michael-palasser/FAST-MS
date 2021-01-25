@@ -1,1 +1,1 @@
-"{\n   \"sequName\": \"ribA\",\n   \"charge\": 6,\n   \"fragments\": \"RNA_CAD\",\n   \"modifications\": \"CMCT\",\n   \"spectralData\": \"080819_ribA_PAR_6.txt\",\n   \"noiseLimit\": 1550000.0,\n   \"sprayMode\": \"negative\"\n}"
+"{\n   \"sequName\": \"ribA\",\n   \"charge\": -7,\n   \"fragmentation\": \"RNA_CAD\",\n   \"modifications\": \"CMCT\",\n   \"nrMod\": 1,\n   \"spectralData\": \"2611_1p5NEO_1_7g.txt\",\n   \"noiseLimit\": 1550000.0,\n   \"fragLib\": \"\",\n   \"output\": \"dsf\"\n}"

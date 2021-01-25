@@ -44,12 +44,12 @@ class Window(QMainWindow):
     def home(self):
         self.addActionToStatusBar(self.tdMenu, 'Analyse Spectrum',
                                   'Starts analysis of top-down spectrum', self.startFragmentHunter)
-        self.addActionToStatusBar(self.tdMenu, 'FragmentIon Modelling',
-                                  'Models relative abundance of an isotope distribution', modellingTool)
-        self.addActionToStatusBar(self.tdMenu, 'Calculate Occupancies',
-                                  'Calculates occupancies of a given ion list', occupancyRecalculator)
-        self.addActionToStatusBar(self.tdMenu, 'Compare Analysis',
-                                  'Compares the ion lists of multiple spectra', spectrumComparator)
+        """self.addActionToStatusBar(self.tdMenu, 'FragmentIon Modelling',
+                                  'Models relative abundance of an isotope distribution', modellingTool)"""
+        """self.addActionToStatusBar(self.tdMenu, 'Calculate Occupancies',
+                                  'Calculates occupancies of a given ion list', occupancyRecalculator)"""
+        """self.addActionToStatusBar(self.tdMenu, 'Compare Analysis',
+                                  'Compares the ion lists of multiple spectra', spectrumComparator)"""
         self.addActionToStatusBar(self.tdEditMenu, 'Edit Parameters',
                                   'Edit configurations',self.editTopDownConfig)
         self.addActionToStatusBar(self.tdEditMenu, 'Edit Fragments',

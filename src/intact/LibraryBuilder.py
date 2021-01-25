@@ -20,7 +20,7 @@ class IntactLibraryBuilder(object):
         :param modificationName: Name of the Modification
         '''
         self.sequence = SequenceService().get(sequName)
-        self.sequenceList = self.sequence.getSequence()
+        self.sequenceList = self.sequence.getSequenceList()
         self.monomers = MoleculeService().getItemDict(self.sequence.getMolecule())
         self.modifications = IntactIonService().getPatternWithObjects(modificationName, IntactModification)
 

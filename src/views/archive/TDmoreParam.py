@@ -215,7 +215,7 @@ class Ui_configDialog(object):
         self.lowerBound.setStatusTip(_translate("configDialog", "lower m/z bound (just peaks with higher m/z are examined) "))
         self.minUpperBound.setStatusTip(_translate("configDialog", "minimal upper m/z bound"))
         self.upperBoundTolerance.setStatusTip(_translate("configDialog", "value is added to calculated upper m/z-bound for final value"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("configDialog", "spectrum"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("configDialog", "__spectrum"))
         self.errorBox.setTitle(_translate("configDialog", "error threshold: threshold [ppm] = k * (m/z) +d"))
         self.label_16.setStatusTip(_translate("configDialog", "slope"))
         self.label_16.setText(_translate("configDialog", "k (/ 1000)"))

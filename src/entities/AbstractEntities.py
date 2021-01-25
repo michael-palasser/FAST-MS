@@ -1,7 +1,7 @@
 import re
 from abc import ABC
 
-from src.Exceptions import InvalidInputException
+from src.Exceptions import UnvalidInputException
 
 
 class AbstractPattern(ABC):
@@ -155,9 +155,9 @@ class AbstractItem2(AbstractItem1, ABC):
         def check(self, elements, monomeres):
             for key in self.getFormula().keys():
                 if key not in elements:
-                    raise InvalidInputException(self.getName(), "Element: " + key + " unknown")
+                    raise UnvalidInputException(self.getName(), "Element: " + key + " unknown")
             # self._residue = residue  unchecked!
             try:
                 self._radicals = int(self._radicals)
             except ValueError:
-                raise InvalidInputException(self.getName(), "Number required: " + str(self._radicals))"""
+                raise UnvalidInputException(self.getName(), "Number required: " + str(self._radicals))"""

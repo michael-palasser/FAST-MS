@@ -8,7 +8,7 @@ class FragmentationRepository(AbstractRepositoryWith2Items):
     def __init__(self):
         #self.__conn = sqlite3.connect(dbFile)
         super(FragmentationRepository, self).__init__(join('top_down.db'), 'fragPatterns',
-                                                      ("name","gain", "loss"),
+                                                      ("name",),
                     {'fragmentTypes':('name', 'gain', 'loss', 'residue', 'radicals', 'direct', 'enabled', 'patternId'),
                      'precFragments':('name', 'gain', 'loss', 'residue', 'radicals', 'enabled', 'patternId')},
                                                       ((4,5),(4,)), ((6,),(5,)))
@@ -18,9 +18,7 @@ class FragmentationRepository(AbstractRepositoryWith2Items):
         self._conn.cursor().execute("""
             CREATE TABLE IF NOT EXISTS fragPatterns (
                 "id"	integer PRIMARY KEY UNIQUE ,
-                "name"	text NOT NULL UNIQUE,
-                "gain" text NOT NULL ,
-                "loss" text NOT NULL );""")
+                "name"	text NOT NULL UNIQUE);""")
         self._conn.cursor().execute("""
             CREATE TABLE IF NOT EXISTS fragmentTypes (
                 "id"	integer PRIMARY KEY UNIQUE,
@@ -51,12 +49,12 @@ class FragmentationRepository(AbstractRepositoryWith2Items):
         :return:
         """
         # try:
-        patternId = self.create(pattern.getName(), pattern.getInitGain(), pattern.getInitLoss())
-        self.insertItem(patternId, pattern.getItems(), 0)
-        self.insertItem(patternId, pattern.getItems2(), 1)
+        patternId = self.create(pattern.getName())
+        self.insertItems(patternId, pattern.getItems(), 0)
+        self.insertItems(patternId, pattern.getItems2(), 1)
 
     def updatePattern(self, pattern):
-        self.update(pattern.getName(), pattern.getInitGain(), pattern.getInitLoss(), pattern.getId())
+        self.update(pattern.getName(), pattern.getId())
         super(FragmentationRepository, self).updatePattern(pattern)
 
 
@@ -78,7 +76,7 @@ class FragmentationRepository(AbstractRepositoryWith2Items):
     def getPattern(self, name):
         pattern = self.get('name', name)
         listOfLists = self.getAllItems(pattern[0])
-        return FragmentationPattern(pattern[1], pattern[2], pattern[3], listOfLists[0], listOfLists[1], pattern[0])
+        return FragmentationPattern(pattern[1], listOfLists[0], listOfLists[1], pattern[0])
 
     def getAllItems(self, patternId):
         keyList = [key for key in self._itemDict.keys()]
@@ -92,23 +90,6 @@ class FragmentationRepository(AbstractRepositoryWith2Items):
             listOfItems.append((item[1], item[2], item[3], item[4], item[5], item[6]))
         listOfLists.append(listOfItems)
         return listOfLists
-
-
-    """def getPatternWithObjects(self, name):
-        pattern = self.get('name', name)
-        listOfItemLists = self.getItemsAsObjects(pattern[0])
-        return FragmentationPattern(pattern[1], pattern[2], pattern[3], listOfItemLists[0], listOfItemLists[1], pattern[0])
-
-
-    def getItemsAsObjects(self, patternId):
-        listOfItemLists = []
-        for table in self._itemDict.keys():
-            listOfItems = []
-            for item in super(FragmentationRepository, self).getItems(patternId,table):
-                listOfItems.append(FragItem(item))
-                #listOfItems.append(FragItem(item[1], item[2], item[3], item[4], item[5], item[6]))
-            listOfItemLists.append(listOfItems)
-        return listOfItemLists"""
 
 
 
@@ -146,51 +127,6 @@ class ModificationRepository(AbstractRepositoryWith2Items):
                                 "name"	text NOT NULL ,
                                 "patternId" integer NOT NULL);""")
 
-    """def createModPattern(self, modificationPattern):
-        try:
-            self.insertModificationItems(self.create(modificationPattern.name, modificationPattern.modification),
-                                         modificationPattern)
-        except sqlite3.IntegrityError:
-            raise AlreadyPresentException(modificationPattern.name)
-
-
-    def insertModificationItems(self, patternId, modificationPattern):
-        for item in modificationPattern.listOfMod:
-            self.createItem('modItems',item.getAll() + [1, patternId])
-        for item in modificationPattern.listOfContaminants:
-            self.createItem('modItems',item.getAll() + [0, patternId])
-
-
-    def getModPattern(self, name):
-        pattern = self.get('name',name)
-        return ModificationPattern(pattern[1], pattern[2], self.getModItems(pattern[0], 1),
-                                   self.getModItems(pattern[0], 0), pattern[0])
-
-    def getModItems(self, patternId, included):
-        cur = self._conn.cursor()
-        cur.execute("SELECT * FROM modItems WHERE patternId=? AND included=?", (patternId, included))
-        listOfItems = list()
-        for item in cur.fetchall():
-            listOfItems.append(ModifiedItem(item[1], item[2], item[3], item[4], item[5], item[6], item[7], item[0]))
-        return listOfItems
-
-    def getAllModPatterns(self):
-        listOfPatterns = list()
-        for pattern in self.getAll():
-            listOfPatterns.append(ModificationPattern(pattern[1], pattern[2], self.getModItems(pattern[0], 1),
-                                   self.getModItems(pattern[0], 0), pattern[0]))
-        return listOfPatterns
-
-
-    def updateModPattern(self, pattern):
-        self.update(pattern.name, pattern.modification, pattern.id)
-        self.deleteList(pattern.id, 'modItems')
-        self.insertModificationItems(pattern.id, pattern)
-
-
-    def deleteModPattern(self, id):
-        self.deleteList(id, 'modItems')
-        self.delete(id)"""
 
     def createPattern(self, pattern):
         """
@@ -200,8 +136,8 @@ class ModificationRepository(AbstractRepositoryWith2Items):
         """
         # try:
         patternId = self.create(pattern.getName(), pattern.getModification())
-        self.insertItem(patternId, pattern.getItems(), 0)
-        self.insertItem(patternId, pattern.getItems2(), 1)
+        self.insertItems(patternId, pattern.getItems(), 0)
+        self.insertItems(patternId, pattern.getItems2(), 1)
 
 
     def updatePattern(self, pattern):

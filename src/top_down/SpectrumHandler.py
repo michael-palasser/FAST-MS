@@ -18,16 +18,17 @@ def getErrorLimit(mz):
 
 class SpectrumHandler(object):
     '''
-    Reads spectra, calculates noise and finds peaks in spectrum
+    Reads spectra, calculates noise and finds peaks in __spectrum
     '''
     protonMass = 1.00727647
     eMass = 5.48579909065 * 10 ** (-4)
+    #ToDo:
     basicAA = {'H': 3, 'R': 10, 'K': 10,
                'D': 0.5, 'E': 0.5}
     acidicAA = {'D': 10, 'E': 10,
                 'H': 0.9, 'R': 0.5, 'K': 0.5, }
 
-    def __init__(self, filePath, sequence, fragmentLibrary, chargedModifications, settings):
+    def __init__(self, filePath, sequence, fragmentLibrary, precursor, chargedModifications, settings):
         '''
         Constructor
         :param molecule: RNA/DNA/P (String)
@@ -35,24 +36,23 @@ class SpectrumHandler(object):
         :param fragmentLibrary: list of fragments from AbstractLibraryBuilder
         :param chargedModifications: output of getChargedModifications()-fct (AbstractLibraryBuilder): dict
         '''
-
-
-        self.molecule = molecule
-        self.sequence = sequence
+        #self.molecule = molecule
+        self.__sequence = sequence
 
         self.fragmentLibrary = fragmentLibrary
         self.chargedModifications = chargedModifications
-        self.settings = settings
-        if self.settings['sprayMode'] == 'negative':
-            self.mode = -1
-        elif self.settings['sprayMode'] == 'positive':
-            self.mode = 1
+        self.__settings = settings
+        if self.__settings['sprayMode'] == 'negative':
+            self.__settings['sprayMode'] = -1
+        elif self.__settings['sprayMode'] == 'positive':
+            self.__settings['sprayMode'] = 1
         self.precMz = 0
-        self.upperBound=0
-        self.spectrum=0
-        self.precursor = None
-        self.normalizationFactor = 1
-        self.normalizationFactor = 0
+        self.__upperBound=0
+        #self.__spectrum=list()
+        self.precursor = precursor
+        #self.normalizationFactor = 1
+        #self.normalizationFactor = 0
+        self.normalizationFactor = None
 
         self.addSpectrum(filePath)
 
@@ -62,12 +62,16 @@ class SpectrumHandler(object):
         self.peaksArrType = np.dtype([('m/z', np.float64), ('relAb', np.float64),('m/z_theo', np.float64),
                              ('calcInt', np.float64), ('error', np.float32), ('used', np.uint8)])
 
+    def getUpperBound(self):
+        return self.__upperBound
+
+
     def addSpectrum(self,filePath):
         with open(filePath, mode='r') as f:
             if filePath[-4:] == '.csv':
-                self.spectrum = self.addSpectrumFromCsv(f)
+                self.__spectrum = self.addSpectrumFromCsv(f)
             else:
-                self.spectrum = self.addSpectrumFromTxt(f)
+                self.__spectrum = self.addSpectrumFromTxt(f)
         self.resizeSpectrum()
 
     def addSpectrumFromCsv(self, file):
@@ -82,19 +86,20 @@ class SpectrumHandler(object):
             if line.startswith("m/z"):
                 continue
             line = line.rstrip().split()
-            spectralList.append((float(line[0]),float(line[1])))
+            if len(line)>1:
+                spectralList.append((float(line[0]),float(line[1])))
         return np.array(spectralList)
 
     def resizeSpectrum(self):
-        self.precMz = self.getMz(self.findPrecursor().formula.calculateMonoIsotopic(), self.settings['charge'])
-        self.spectrum = self.spectrum[np.where(self.spectrum[:,0]<(self.findUpperBound()+10))]
-        print("\nmax m/z:", self.upperBound)
+        self.precMz = self.getMz(self.precursor.formula.calculateMonoIsotopic(), self.__settings['charge'])
+        self.__spectrum = self.__spectrum[np.where(self.__spectrum[:, 0] < (self.findUpperBound() + 10))]
+        print("\nmax m/z:", self.__upperBound)
 
     def getMz(self, mass, z):
         #print(z ,mass/z + self.protonMass*self.mode)
-        return mass/z + self.protonMass*self.mode
+        return mass/z + self.protonMass*self.__settings['sprayMode']
 
-    def findPrecursor(self):
+    """def findPrecursor(self):
         precursorMass = 0
         for fragment in self.fragmentLibrary:
             fragmentMass = fragment.formula.calculateMonoIsotopic()
@@ -102,7 +107,7 @@ class SpectrumHandler(object):
                 precursorMass = fragmentMass
                 precursor = fragment
         self.precursor = precursor
-        return precursor
+        return precursor"""
 
     def findUpperBound(self):
         print("\n********** Finding upper bound m/z - Window in spectralFile containing fragments ********** ")
@@ -112,7 +117,7 @@ class SpectrumHandler(object):
         peaksHigherThanNoise = list()
         while currentMz < 2500:
             noise = self.calculateNoise(currentMz,windowSize)
-            currentWindow = self.returnArrayInWindow(self.spectrum, currentMz, windowSize)
+            currentWindow = self.returnArrayInWindow(self.__spectrum, currentMz, windowSize)
             peaksHigherThanNoise.append((currentMz, currentWindow[np.where(currentWindow > (noise * 5))].size))
             currentMz += 1
         peaksHigherThanNoise = np.array(peaksHigherThanNoise)
@@ -128,12 +133,12 @@ class SpectrumHandler(object):
                 currentMz += 2* configs['upperBoundTolerance']
                 break
             currentMz += windowSize / 2
-        self.upperBound = currentMz
+        self.__upperBound = currentMz
         return currentMz
 
     def calculateNoise(self, point, windowSize):
-        noise = self.settings['noiseLimit']
-        currentWindow = self.returnArrayInWindow(self.spectrum, point, windowSize)
+        noise = self.__settings['noiseLimit']
+        currentWindow = self.returnArrayInWindow(self.__spectrum, point, windowSize)
         if currentWindow[:,1].size > 10:     #parameter
             peakInt = currentWindow[:, 1]
             avPeakInt = np.average(peakInt)
@@ -167,15 +172,18 @@ class SpectrumHandler(object):
         return (value - theoValue) / theoValue * 10 ** 6
 
     def getNormalizationFactor(self):
-        if self.molecule in ['RNA', 'DNA'] and self.mode == -1:
-            return self.settings['charge'] / self.precursor.formula.formulaDict['P']
-        elif self.molecule == 'protein':
-            return self.settings['charge'] / self.getPeptideScore(self.sequence)
-        elif self.molecule in ['RNA', 'DNA'] and self.mode == 1:
-            return self.settings['charge'] / len(self.sequence)
+        molecule = self.__sequence.getMolecule()
+        if molecule in ['RNA', 'DNA'] and self.__settings['sprayMode'] == -1:
+            return self.__settings['charge'] / self.precursor.formula.formulaDict['P']
+        elif molecule == 'Protein':
+            return self.__settings['charge'] / self.getPeptideScore(self.__sequence)
+        #elif molecule in ['RNA', 'DNA'] and self.__settings['sprayMode'] == 1:
+        #    return self.__settings['charge'] / len(self.__sequence)
+        else:
+            return self.__settings['charge'] / len(self.__sequence)
 
-    def getPeptideScore(self, sequence):
-        if self.mode== -1:
+    def getPeptideScore(self, sequence): #ToDo
+        if self.__settings['sprayMode']== -1:
                 chargeDict = self.acidicAA
         else:
             chargeDict = self.basicAA
@@ -194,27 +202,29 @@ class SpectrumHandler(object):
                 nrMod = 1
                 if len(findall(r"(\d+)"+mod, fragment.modification)) > 0:
                     nrMod = int(findall(r"(\d+)"+mod, fragment.modification)[0])
-                modCharge += charge * nrMod
+                modCharge += charge * nrMod * self.__settings['sprayMode']
         return modCharge
 
     #ToDo: Test SearchParameters, Proteins!, Parameters
     def getSearchParameters(self, fragment,precModCharge):
-        if self.molecule in ['RNA' ,'DNA'] and self.mode == -1:
+        molecule = self.__sequence.getMolecule()
+        if molecule in ['RNA' ,'DNA'] and self.__settings['sprayMode'] == -1:
             if fragment.formula.formulaDict['P'] == 0:
                 return None
             probableZ = fragment.formula.formulaDict['P'] * self.normalizationFactor
-        elif self.molecule == 'protein':
+        elif molecule == 'protein':
             probableZ = self.getPeptideScore(fragment.sequenceList) * self.normalizationFactor
-        elif self.molecule in ['RNA' ,'DNA'] and self.mode == 1:
+        elif molecule in ['RNA' ,'DNA'] and self.__settings['sprayMode'] == 1:
             probableZ = fragment.number * self.normalizationFactor
         else:
-            raise Exception('Unknown molecule:',self.molecule)
+            probableZ = fragment.number * self.normalizationFactor
+        probableZ -= fragment.radicals
         tolerance = configs['zTolerance']
-        lowZ, highZ = 1, self.settings['charge']
-        zEffect = (precModCharge - self.getModCharge(fragment)) * self.mode
+        lowZ, highZ = 1, self.__settings['charge']
+        zEffect = (precModCharge - self.getModCharge(fragment)) * self.__settings['sprayMode']
         if (probableZ-tolerance + zEffect)> 1:
             lowZ = round(probableZ-tolerance + zEffect)
-        if (probableZ+tolerance + precModCharge)< self.settings['charge']:
+        if (probableZ+tolerance + precModCharge)< self.__settings['charge']:
             highZ = round(probableZ + tolerance + zEffect)
         print(fragment.getName(),lowZ,highZ)
         return range(lowZ,highZ+1)
@@ -239,20 +249,20 @@ class SpectrumHandler(object):
             for z in zRange:
                 print(fragment.getName(),z)
                 theoreticalPeaks = copy.deepcopy(fragment.isotopePattern)
-                if self.settings['dissociation'] in ['ECD','EDD','ETD'] and fragment.number == 0:
-                    theoreticalPeaks['mass'] += ((self.protonMass-self.eMass) * (self.settings['charge'] - z))
+                if self.__settings['dissociation'] in ['ECD', 'EDD', 'ETD'] and fragment.number == 0:
+                    theoreticalPeaks['mass'] += ((self.protonMass-self.eMass) * (self.__settings['charge'] - z))
                     #print("heeeeee\n",fragment.getName(),z, theoreticalPeaks['mass'])
                 theoreticalPeaks['mass'] = self.getMz(theoreticalPeaks['mass'], z)
-                if (configs['lowerBound'] < theoreticalPeaks[0]['mass'] < self.upperBound):
+                if (configs['lowerBound'] < theoreticalPeaks[0]['mass'] < self.__upperBound):
                     self.searchedChargeStates[fragment.getName()].append(z)
                     #make a guess of the ion abundance based on number in range
                     sumInt = 0
                     sumIntTheo = 0
                     foundMainPeaks = list()
                     for i in range(peakQuantitiy):
-                        searchMask = np.where(abs(self.calculateError(self.spectrum[:, 0], theoreticalPeaks[i]['mass']))
-                                              < getErrorLimit(self.spectrum[:, 0]))
-                        spectralPeak = self.getCorrectPeak(self.spectrum[searchMask],theoreticalPeaks[i])
+                        searchMask = np.where(abs(self.calculateError(self.__spectrum[:, 0], theoreticalPeaks[i]['mass']))
+                                              < getErrorLimit(self.__spectrum[:, 0]))
+                        spectralPeak = self.getCorrectPeak(self.__spectrum[searchMask], theoreticalPeaks[i])
                         sumInt += spectralPeak[1]
                         """if fragment.getName() == 'c16':
                             print('c16:',theoreticalPeaks[i]['mass'])"""
@@ -274,9 +284,9 @@ class SpectrumHandler(object):
                             foundPeaks = list()
                             #find other isotope Peaks
                             for theoPeak in theoreticalPeaks[notInNoise]:
-                                searchMask = np.where(abs(self.calculateError(self.spectrum[:, 0], theoPeak['mass']))
-                                                      < (getErrorLimit(self.spectrum[:, 0]) + configs['errorTolerance']))
-                                foundPeaks.append(self.getCorrectPeak(self.spectrum[searchMask], theoPeak))
+                                searchMask = np.where(abs(self.calculateError(self.__spectrum[:, 0], theoPeak['mass']))
+                                                      < (getErrorLimit(self.__spectrum[:, 0]) + configs['errorTolerance']))
+                                foundPeaks.append(self.getCorrectPeak(self.__spectrum[searchMask], theoPeak))
 
                             """for theoPeak in theoreticalPeaks[inNoise]:
                                 foundPeaks.append((theoPeak['mass'],0,theoPeak['mass'],theoPeak['relAb'],0,1))"""

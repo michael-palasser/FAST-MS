@@ -13,7 +13,7 @@ class Analyser(object):
     def __init__(self, listOfIons, sequence, precCharge, modification):
         self.listOfIons = sorted(listOfIons, key=lambda obj:(obj.type , obj.number))
         self.sequence = sequence
-        self.precCharge = precCharge
+        self.precCharge = abs(precCharge)
         self.modification = modification
         self.percentageDict = dict()
 
@@ -40,7 +40,9 @@ class Analyser(object):
         modifiedSum = 0
         totalSum = 0
         for ion in self.listOfIons:
-            if (ion.charge == self.precCharge) and (ion.number==0):
+            print(ion.getRelAbundance())
+            if (ion.number==0): #(ion.charge == self.precCharge) and
+                print(ion.charge, self.precCharge, ion.number, "\n", self.modification, ion.modification)
                 if self.modification in ion.modification:
                     modifiedSum += ion.getRelAbundance()
                 totalSum += ion.getRelAbundance()

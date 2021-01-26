@@ -80,9 +80,6 @@ class AbstractSimpleEditorController(ABC):
         return tableWidget
 
     def formatTableWidget(self, headers, tableWidget, data, bools):
-        #tableWidget = QtWidgets.QTableWidget(self.centralwidget)
-        #tableWidget.setGeometry(QtCore.QRect(20, 70, 420, 200))
-        #headers = self.service.getHeaders()
         headerKeys = list(headers.keys())
         tableWidget.setRowCount(len(data))
         tableWidget.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)

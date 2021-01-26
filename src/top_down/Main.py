@@ -121,8 +121,8 @@ class TD_MainController(object):
         """remodelling overlaps"""
         print("\n********** Re-modelling overlaps **********")
         intensityModeller.remodelIntensity()
-
         """analysis"""
+        print("sdfjl",libraryBuilder.getModification())
         analyser = Analyser(list(intensityModeller.correctedIons.values()), libraryBuilder.getSequence().getSequenceList(),
                             settings['charge'], libraryBuilder.getModification())
 
@@ -148,7 +148,7 @@ class TD_MainController(object):
                                       libraryBuilder.getSequence().getSequenceList(),
                                       analyser.calculatePercentages(configs['interestingIons']))
             #analyser.createPlot(__maxMod)
-            precursorRegion = intensityModeller.getPrecRegion(settings['sequName'], settings['charge'])
+            precursorRegion = intensityModeller.getPrecRegion(settings['sequName'], abs(settings['charge']))
             excelWriter.writeIons(excelWriter.worksheet2, intensityModeller.correctedIons.values(),
                                   precursorRegion)
             excelWriter.writePeaks(excelWriter.worksheet3,0,0,intensityModeller.correctedIons.values())
@@ -162,7 +162,7 @@ class TD_MainController(object):
         finally:
             excelWriter.closeWorkbook()
         try:
-            subprocess.call(['openAgain',output])
+            subprocess.call(['open',output])
         except:
             pass
         return 0

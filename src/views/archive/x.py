@@ -1,3 +1,6 @@
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QCheckBox
+
 from src.MolecularFormula import MolecularFormula
 from multiprocessing import Pool
 from time import time
@@ -52,7 +55,7 @@ def job(num):
     print("normal:", time3)"""
 
 
-def checkName(name):
+'''def checkName(name):
     print(name, name[0])
     #"ABC".islower()
     if (name[0].islower() or (len(name) > 1 and any(x.isupper() for x in name[1:]))):
@@ -64,3 +67,101 @@ checkName("HeH")
 checkName("he")
 checkName("H")
 print([["start",""]]+5*[["",""]])
+
+
+'''
+
+
+from PyQt5 import QtWidgets, QtGui
+
+"""class MyWidget(QtWidgets.QWidget):
+
+    def __init__(self,data, parent=None):
+        super().__init__(parent=parent)
+
+        self.tableModel = QtGui.QStandardItemModel(self)
+        self.tableModel.itemChanged.connect(self.itemChanged)
+
+        item = QtGui.QStandardItem("Click me")
+        item.setCheckable(True)
+        for row in data:
+            self.tableModel.appendRow((item,row))
+
+        self.mainLayout = QtWidgets.QVBoxLayout()
+        self.setLayout(self.mainLayout)
+
+        self.tableView = QtWidgets.QTableView()
+        self.tableView.setModel(self.tableModel)
+        self.mainLayout.addWidget(self.tableView)
+
+    def itemChanged(self, item):
+        print("Item {!r} checkState: {}".format(item.text(), item.checkState()))
+
+
+def main():
+    app = QtWidgets.QApplication([])
+
+    win = MyWidget([[1,2,3],[4,5,6]])
+    win.show()
+    win.raise_()
+    app.exec_()
+
+if __name__ == "__main__":
+    main()"""
+from PyQt5 import QtWidgets, QtGui
+
+class MyWidget(QtWidgets.QWidget):
+
+    def __init__(self, data, parent=None):
+        super().__init__(parent=parent)
+        self._data = data
+
+        self.tableModel = QtGui.QStandardItemModel(self)
+        self.tableModel.itemChanged.connect(self.itemChanged)
+
+
+        for row in data:
+            qItemRow = []
+            for item in row:
+                qItemRow.append(QtGui.QStandardItem(str(item)))
+            item = QtGui.QStandardItem("delete")
+            item.setCheckable(True)
+            qItemRow.append(item)
+            self.tableModel.appendRow(qItemRow)
+
+        self.mainLayout = QtWidgets.QVBoxLayout()
+        self.setLayout(self.mainLayout)
+
+        self.tableView = QtWidgets.QTableView()
+        self.tableView.setModel(self.tableModel)
+        self.mainLayout.addWidget(self.tableView)
+
+    def itemChanged(self, item):
+        print("Item {!r} checkState: {}".format(item.text(), item.checkState()))
+
+    """def data(self, index, role):
+        if role == Qt.DisplayRole:
+            # See below for the nested-list data structure.
+            # .row() indexes into the outer list,
+            # .column() indexes into the sub-list
+            return self._data[index.row()][index.column()]
+
+    def rowCount(self, index):
+        # The length of the outer list.
+        return len(self._data)
+
+    def columnCount(self, index):
+        # The following takes the first sub-list, and returns
+        # the length (only works if all rows are an equal length)
+        return len(self._data[0])"""
+
+def main():
+    app = QtWidgets.QApplication([])
+
+    win = MyWidget([[1,2,3,0],[4,5,6,6]])
+    win.show()
+    win.raise_()
+    app.exec_()
+
+if __name__ == "__main__":
+    main()

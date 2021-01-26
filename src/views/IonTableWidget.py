@@ -15,6 +15,7 @@ class IonTableWidget(QTableWidget):
         self.setHorizontalHeaderLabels(self.getHeaders())
         self.resizeColumnsToContents()
         self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.setSortingEnabled(True)
         # self.customContextMenuRequested['QPoint'].connect(partial(self.editRow, self, bools))
 
     def getHeaders(self):
@@ -24,10 +25,14 @@ class IonTableWidget(QTableWidget):
         self.setRowCount(len(data))
         for i, row in enumerate(data):
             for j, item in enumerate(row):
-                newItem = QtWidgets.QTableWidgetItem(str(item))
                 if j == 3:
+                    newItem = QtWidgets.QTableWidgetItem(str(item))
                     newItem.setTextAlignment(QtCore.Qt.AlignLeft)
                 else:
+                    newItem = QtWidgets.QTableWidgetItem(str(item))
+
+                    newItem = QtWidgets.QTableWidgetItem()
+                    newItem.setData(QtCore.Qt.DisplayRole, item)
                     newItem.setTextAlignment(QtCore.Qt.AlignRight)
                 newItem.setFlags(QtCore.Qt.ItemIsEnabled)
                 self.setItem(i, j, newItem)
@@ -51,20 +56,17 @@ class TickIonTableWidget(IonTableWidget):
         for i, row in enumerate(data):
             newItem = QtWidgets.QTableWidgetItem()
             newItem.setCheckState(QtCore.Qt.Unchecked)  # QtCore.Qt.Unchecked
-            print(i, len(row))
             self.setItem(i, len(row), newItem)
         self.resizeColumnsToContents()
         self.resizeRowsToContents()
 
 
-    def getData(self):
-        toDelete = []
+    def getDumpList(self):
+        dumpList = []
         for row in range(self.rowCount()):
-            print(self.item(row, self.columnCount()-1))
             if self.item(row, self.columnCount()-1).checkState():
-                toDelete.append(self.hashRow(row))
-                print(row)
-        return toDelete
+                dumpList.append(self.hashRow(row))
+        return dumpList
 
     def hashRow(self, row):
         return (self.item(row, 3).text(), int(self.item(row, 1).text()))

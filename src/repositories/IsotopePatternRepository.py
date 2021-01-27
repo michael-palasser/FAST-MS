@@ -25,10 +25,8 @@ class IsotopePatternReader(object):
             self.__file = os.path.join(path, 'Fragment_lists', '_'.join((sequName, fragmentation, str(nrMod), modifications +
                                                                       '.csv')))
         if os.path.isfile(self.__file):
-            print(True)
             return True
         else:
-            print(False)
             return False
 
 

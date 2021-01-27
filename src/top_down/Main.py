@@ -23,6 +23,7 @@ from src.top_down.SpectrumHandler import SpectrumHandler
 from src.top_down.IntensityModeller import IntensityModeller
 from src.top_down.ExcelWriter import ExcelWriter
 from src import path
+from src.views.CheckIonView import CheckMonoisotopicOverlapView, CheckOverlapsView, CheckOverlapsView, FinalIonView
 
 
 def sortIonsByName(ionList):
@@ -44,7 +45,6 @@ class TD_MainController(object):
         libraryBuilder = FragmentLibraryBuilder(settings['sequName'], settings['fragmentation'],
                         settings['modifications'], settings['nrMod'])
         libraryBuilder.createFragmentLibrary()
-        print()
 
         """read existing ion-list file or create new one"""
         libraryImported = False
@@ -79,7 +79,7 @@ class TD_MainController(object):
                 libraryBuilder.getPrecursor(), libraryBuilder.getChargedModifications(), settings)
 
         """Finding fragments"""
-        print("\n********** Search for __spectrum **********")
+        print("\n********** Search for spectrum **********")
         start = time.time()
         spectrumHandler.findPeaks()
         print("\ndone\nexecution time: ", round((time.time() - start) / 60, 3), "min\n")
@@ -90,41 +90,52 @@ class TD_MainController(object):
         for ion in spectrumHandler.foundIons:
             intensityModeller.processIons(ion)
         for ion in spectrumHandler.ionsInNoise:
-            print("hey",ion.getName())
             intensityModeller.processNoiseIons(ion)
         print("\ndone\nexecution time: ", round((time.time() - start) / 60, 3), "min\n")
 
-        """Handle __spectrum with same monoisotopic peak and charge"""
+        """Handle spectrum with same monoisotopic peak and charge"""
         print("\n********** Handling overlaps **********")
-        for overlap in intensityModeller.findSameMonoisotopics():
-            print('index\t m/z\t\t\tz\tI\t\t\tfragment\t\terror /ppm\tquality')
-            for i in range(len(overlap)):
-                print(i+1, end=':\t\t')
-                print(overlap[i].toString())
-            while True:
-                try:
-                    indexKeptIon = int(input("Enter the index of the fragment you want to keep:"))
-                    if indexKeptIon <= len(overlap):
-                        intensityModeller.correctedIons[intensityModeller.getHash(overlap[indexKeptIon - 1])].comment = "mono."
-                        del overlap[indexKeptIon - 1]
-                        for deletedIon in overlap:
-                            intensityModeller.deleteIon(deletedIon)
-                        break
-                    else:
-                        print('Index not found')
-                except:
-                    #print(intensityModeller.getHash(overlap[indexKeptIon - 1]))
-                    print('Enter Index')
-            print("\n")
-
+        sameMonoisotopics = intensityModeller.findSameMonoisotopics()
+        if len(sameMonoisotopics) > 0:
+            view = CheckMonoisotopicOverlapView(sameMonoisotopics)
+            view.exec_()
+            if view.accepted:
+                intensityModeller.deleteSameMonoisotopics(view.getDumplist())
+            else:
+                return
 
         """remodelling overlaps"""
         print("\n********** Re-modelling overlaps **********")
-        intensityModeller.remodelIntensity()
+        counter = 0
+        while True:
+            complexPatterns = intensityModeller.findOverlaps()
+            if len(complexPatterns) > 0:
+                view = CheckOverlapsView(complexPatterns)
+                view.exec_()
+                if view.accepted:
+                    intensityModeller.remodelComplexPatterns(complexPatterns, view.getDumplist())
+                else:
+                    return
+            if counter > 0:
+                break
+            #print('1')
+            view = FinalIonView(list(intensityModeller.correctedIons.values()))
+            #print('2')
+            view.exec_()
+            #print('3')
+            if view.accepted:
+                print('4')
+                if len(view.getDumplist())>0:
+                    intensityModeller.deleteIons(view.getDumplist())
+                    counter +=1
+                else:
+                    break
+            else:
+                return
+
         """analysis"""
-        print("sdfjl",libraryBuilder.getModification())
         analyser = Analyser(list(intensityModeller.correctedIons.values()), libraryBuilder.getSequence().getSequenceList(),
-                            settings['charge'], libraryBuilder.getModification())
+                        settings['charge'], libraryBuilder.getModification())
 
         """output"""
         output = settings.get('output')
@@ -133,9 +144,7 @@ class TD_MainController(object):
         else:
             output = os.path.join(path, 'Spectral_data','top-down', output + '.xlsx')
         excelWriter = ExcelWriter(output, configs)
-        """strMode = 'negative'
-        if settings['sprayMode'] == 1:
-            strMode = 'positive'"""
+
         try:
             generalParam = [("spectralFile:", spectralFile),
                             ('date:', ""),

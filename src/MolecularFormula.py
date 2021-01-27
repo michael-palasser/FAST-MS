@@ -349,7 +349,7 @@ class MolecularFormula(object):
             isoPeak += 1
             if prop > mostAbundant:
                 mostAbundant = prop
-            if args[0]:
+            if args and args[0]:
                 if isoPeak == args[0]:
                     return np.array(isotope_pattern, dtype=[('mass', np.float64), ('relAb', np.float64)])
         return np.array(isotope_pattern, dtype=[('mass',np.float64),('relAb', np.float64)])

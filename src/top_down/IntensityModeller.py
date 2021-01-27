@@ -21,7 +21,6 @@ class IntensityModeller(object):
         self.deletedIons = list()
         self.remodelledIons = list()
         self.monoisotopicList = list()
-        self.usedPeaks = dict()
 
     @staticmethod
     def calculateError(value, theoValue):
@@ -124,23 +123,28 @@ class IntensityModeller(object):
                  < getErrorLimit(elem['mono'])) & \
                     (self.monoisotopicList['name'] != elem['name']) &
                     (self.monoisotopicList['charge'] == elem['charge']))
-            if len(self.monoisotopicList[same_mono_index]) > 0:    #direkte elemente von corrected __spectrum uebernehmen
+            if len(self.monoisotopicList[same_mono_index]) > 0:    #direkte elemente von corrected spectrum uebernehmen
                 sameMonoisotopic = [self.correctedIons[(elem['name'][0],elem['charge'][0])]]
                 for elem2 in self.monoisotopicList[same_mono_index]:
                     sameMonoisotopic.append(self.correctedIons[(elem2['name'],elem2['charge'])])
                 sameMonoisotopic.sort(key=lambda obj:abs(obj.error))
                 if sameMonoisotopic not in sameMonoisotopics:
+                    self.commentIonsInPatterns(([self.getHash(ion) for ion in sameMonoisotopic],))
                     sameMonoisotopics.append(sameMonoisotopic)
-        if len(sameMonoisotopics) > 0:
-            print("Warning: These __spectrum share the same monoisotopic peak and charge:")
         return sameMonoisotopics
 
-    def deleteIon(self, ion):
-        self.correctedIons[self.getHash(ion)].comment = "mono."
-        self.deletedIons.append(ion)
-        del self.correctedIons[self.getHash(ion)]
+    def deleteSameMonoisotopics(self, ions):
+        for ion in ions:
+            self.deleteIon(self.getHash(ion), ",mono.")
+
+    def deleteIon(self, ionHash, comment):
+        self.correctedIons[ionHash].comment += comment
+        print('deleting',ionHash)
+        self.deletedIons.append(self.correctedIons[ionHash])
+        del self.correctedIons[ionHash]
 
     def findOverlaps(self):
+        self.usedPeaks = dict()
         overlappingPeaks = list()
         for ion in self.correctedIons.values():
             for peak in ion.isotopePattern:
@@ -151,7 +155,8 @@ class IntensityModeller(object):
                     self.usedPeaks[peak['m/z']] = [self.getHash(ion)]
         overlappingPeaks.sort()
         revisedIons = list()
-        patterns = list()
+        simplePatterns = []
+        complexPatterns = []
         for peak1 in overlappingPeaks:
             for firstIon in self.usedPeaks[peak1]:
                 if firstIon in revisedIons:
@@ -164,9 +169,15 @@ class IntensityModeller(object):
                         if pattern[index] in self.usedPeaks[peak2]:
                             [pattern.append(ion) for ion in self.usedPeaks[peak2] if ion not in pattern]
                     index += 1
-                patterns.append(pattern)
-        self.commentIonsInPatterns(patterns)
-        return patterns
+                print(pattern)
+                if len(pattern) > self.configs['manualDeletion']:
+                    self.commentIonsInPatterns((pattern,))
+                    complexPatterns.append([self.correctedIons[ionTup] for ionTup in pattern])
+                else:
+                    simplePatterns.append(pattern)
+        self.commentIonsInPatterns(simplePatterns)
+        self.remodelIntensity(simplePatterns, [])
+        return complexPatterns
 
 
     def commentIonsInPatterns(self, patterns):
@@ -213,12 +224,25 @@ class IntensityModeller(object):
             sum_square += square ** 2
         return sum_square
 
+    def remodelComplexPatterns(self, overlapPatterns, manDel):
+        hashedManDel = []
+        for ion in manDel:
+            ionHash = self.getHash(ion)
+            hashedManDel.append(ionHash)
+        hashedPatterns = []
+        for pattern in overlapPatterns:
+            hashedPatterns.append([self.getHash(ion) for ion in pattern])
+        self.remodelIntensity(hashedPatterns, hashedManDel)
+        self.deleteIons(manDel)
 
-    def remodelIntensity(self):
-        for pattern in self.findOverlaps():
+    def deleteIons(self, ions):
+        [self.deleteIon(self.getHash(ion), ",man.del.") for ion in ions]
+
+    def remodelIntensity(self, overlapPatterns, manDel):
+        for pattern in overlapPatterns:
             print(pattern)
-            del_ions = list()
-            if len(pattern) > self.configs['manualDeletion']:
+            del_ions = []
+            """if len(pattern) > self.configs['manualDeletion']:
                 indexToDelete = self.getIndexToDelete(pattern)
                 count = 0
                 for ion in pattern:
@@ -226,7 +250,7 @@ class IntensityModeller(object):
                     if count in indexToDelete:
                         print("Deleting ", ion)
                         self.correctedIons[ion].comment += ",man.del."
-                        del_ions.append(ion)
+                        del_ions.append(ion)"""
             spectr_peaks = list()
             for ion in pattern:
                 for peak in self.correctedIons[ion].isotopePattern:  # spectral list
@@ -234,7 +258,7 @@ class IntensityModeller(object):
                         spectr_peaks.append((peak['m/z'], peak['relAb']))
             spectr_peaks = np.array(sorted(spectr_peaks, key=lambda tup: tup[0]))
             while True:
-                equ_matrix, undeletedIons = self.setUpEquMatrix(pattern,spectr_peaks,del_ions)
+                equ_matrix, undeletedIons = self.setUpEquMatrix(pattern,spectr_peaks,del_ions+manDel)
                 #print(equ_matrix)
                 solution = minimize(self.fun_sum_square,np.ones(len(undeletedIons)),equ_matrix)
                 del_so_far = len(del_ions)
@@ -270,8 +294,10 @@ class IntensityModeller(object):
                     break
             for ion in del_ions:
                 self.deletedIons.append(self.correctedIons[ion])
+                print('deleting ',ion)
                 del self.correctedIons[ion]
             print('')
+
 
 
 

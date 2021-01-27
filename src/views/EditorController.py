@@ -259,7 +259,7 @@ class AbstractEditorController(AbstractSimpleEditorController, ABC):
         if args != (False,):
             title = args[0]"""
         openDialog = OpenDialog("Delete", self.service.getAllPatternNames())
-        openDialog.show()
+        #openDialog.show()
         if openDialog.exec_() and openDialog.accepted:
             if openDialog.comboBox.currentText() != "--New--":
                 print('Deleting '+openDialog.comboBox.currentText())

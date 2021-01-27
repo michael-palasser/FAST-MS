@@ -40,9 +40,7 @@ class Analyser(object):
         modifiedSum = 0
         totalSum = 0
         for ion in self.listOfIons:
-            print(ion.getRelAbundance())
             if (ion.number==0): #(ion.charge == self.precCharge) and
-                print(ion.charge, self.precCharge, ion.number, "\n", self.modification, ion.modification)
                 if self.modification in ion.modification:
                     modifiedSum += ion.getRelAbundance()
                 totalSum += ion.getRelAbundance()
@@ -58,7 +56,6 @@ class Analyser(object):
                 if ion.type[0] not in temp:
                     temp[ion.type[0]] = np.zeros((len(self.sequence), 3))
                 if self.modification in ion.modification:
-                    print(ion.getRelAbundance(),self.getNrOfModifications(ion.modification))
                     temp[ion.type[0]][ion.number - 1] += \
                         np.array([ion.getRelAbundance(),
                                   ion.getRelAbundance()*int(self.getNrOfModifications(ion.modification)),0])

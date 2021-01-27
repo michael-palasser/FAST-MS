@@ -89,8 +89,8 @@ class FragmentIon(Fragment):
                str(round(self.error, 2)) + "\t\t" + str(round(self.quality, 2)) #+ "\t" + self.comment
 
     def getMonoisotopic(self):
-        return np.min(self.isotopePattern['m/z_theo']) * (
-                    1 + self.error * 10 ** (-6))  # np.min(self.isotopePattern['m/z'])
+        #return 500.
+        return np.min(self.isotopePattern['m/z_theo']) * (1 + self.error * 10 ** (-6))  # np.min(self.isotopePattern['m/z'])
 
     def getScore(self):
         if self.quality > 1.5:
@@ -106,6 +106,13 @@ class FragmentIon(Fragment):
     def getRelAbundance(self):
         return self.intensity / self.charge
 
+    def getValues(self):
+        """print((self.getMonoisotopic(), self.charge, self.intensity, self.getName(), self.error,
+                round(self.getSignalToNoise(),2), self.quality))"""
+        #return (500.555, self.charge, self.intensity, self.getName(), self.error,
+        #        round(self.getSignalToNoise(),2), self.quality)
+        return [round(self.getMonoisotopic(),5), self.charge, round(self.intensity), self.getName(), round(self.error,2),
+                round(self.getSignalToNoise(),1), round(self.quality,2)]
 
 
 class IntactIon(object):

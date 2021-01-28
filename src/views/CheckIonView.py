@@ -1,9 +1,22 @@
-import sys
-from abc import ABC
-
 from PyQt5 import QtWidgets, QtCore
+from PyQt5.QtGui import QMovie
+from PyQt5.QtWidgets import QLabel
 
 from src.views.IonTableWidget import IonTableWidget, TickIonTableWidget, FinalIonTable
+
+
+class LoadingWidget(QtWidgets.QWidget):
+    def __init__(self):
+        super(LoadingWidget, self).__init__()
+        self.loading_lbl = QLabel(self)
+        loading_movie = QMovie("loading.gif")  # some gif in here
+        self.loading_lbl.setMovie(loading_movie)
+        loading_movie.start()
+
+        self.setGeometry(50, 50, 100, 100)
+        self.setMinimumSize(10, 10)
+        self.show()
+
 
 
 class AbstractIonView(QtWidgets.QDialog):
@@ -11,7 +24,6 @@ class AbstractIonView(QtWidgets.QDialog):
         #self._dialog = QtWidgets.QDialog(parrent)
         super(AbstractIonView, self).__init__()
         self.setUpUi(title)
-
         self._patterns = patterns
         #self.headers = ('m/z', 'z', 'I', 'fragment', 'error /ppm', 'S/N', 'qual.', 'del.?')
         self._widths = widths
@@ -19,6 +31,17 @@ class AbstractIonView(QtWidgets.QDialog):
         label = QtWidgets.QLabel(self)
         label.setGeometry(QtCore.QRect(20, 20, 400, 16))
         label.setText(self._translate(self.objectName(), message))
+
+        """self.loading_lbl = QLabel(self)
+        #self.loading_lbl.setStyleSheet('border: 1px solid red')  # just for illustration
+        #self.loading_lbl.setAlignment(QtCore.Qt.AlignCenter)
+        #self..addWidget(self.loading_lbl)
+        loading_movie = QMovie("loading.gif")
+        self.loading_lbl.setMovie(loading_movie)
+        loading_movie.start()
+        self.show()"""
+        #widget = LoadingWidget()
+        #widget.exec_()
         yPos = 60
         yPos = self.makeTables(yPos)
         width = sum(self._widths)
@@ -33,9 +56,10 @@ class AbstractIonView(QtWidgets.QDialog):
         self._dumpList = []
 
         self.scrollArea.setWidget(self.contents)
-        self.scrollArea.resize(width+80, finall_y-10)
+        self.scrollArea.resize(width+90, finall_y-10)
         finall_y = self.makeButtonBox(width, finall_y+90)
-        self.resize(width + 120, finall_y + 20)
+        self.resize(width + 130, finall_y + 20)
+        self.canceled = False
         self.show()
 
     def makeTables(self, yPos):
@@ -50,7 +74,7 @@ class AbstractIonView(QtWidgets.QDialog):
         self.formlayout = QtWidgets.QFormLayout()
         self.contents.setLayout(self.formlayout)
         self.scrollArea.setGeometry(QtCore.QRect(20, 60, 361, 161))
-        self.scrollArea.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        #self.scrollArea.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.scrollArea.setWidgetResizable(True)
 
     def makeButtonBox(self, width, yPos):
@@ -68,6 +92,7 @@ class AbstractIonView(QtWidgets.QDialog):
         choice = QtWidgets.QMessageBox.question(self, 'Closing ',
             "Unsaved Results!\nDo you really want to cancel?", QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
         if choice == QtWidgets.QMessageBox.Yes:
+            self.canceled = True
             super(AbstractIonView, self).reject()
 
     def getDumplist(self):
@@ -77,7 +102,7 @@ class AbstractIonView(QtWidgets.QDialog):
 class CheckOverlapsView(AbstractIonView):
     def __init__(self, patterns):
         super(CheckOverlapsView, self).__init__(patterns, "Check Overlapping Ions",
-           "Complex overlapping patterns - Select ions for deletion:", [100, 30, 100, 120, 70, 60, 60,40])
+           "Complex overlapping patterns - Select ions for deletion:", [100, 30, 120, 140, 70, 60, 60,40])
 
     def makeTables(self, yPos):
         for i, pattern in enumerate(self._patterns):
@@ -104,7 +129,7 @@ class CheckMonoisotopicOverlapView(AbstractIonView):
         self.comboBoxes = []
         self.optionDict = dict()
         super(CheckMonoisotopicOverlapView, self).__init__(patterns, "Check Heavily Overlapping Ions",
-           "These ions have the same mass - select the ion you want to keep", [100, 30, 100, 120, 70, 60, 60])
+           "These ions have the same mass - select the ion you want to keep", [100, 30, 120, 140, 70, 60, 60])
 
     def makeTables(self, yPos):
         for i, pattern in enumerate(self._patterns):
@@ -153,8 +178,14 @@ class CheckMonoisotopicOverlapView(AbstractIonView):
 
 class FinalIonView(AbstractIonView):
     def __init__(self, ions):
+        """lbl = QLabel()
+        movie = QMovie("loading.gif")
+        lbl.setMovie(movie)
+        lbl.show()
+        movie.start()"""
         super(FinalIonView, self).__init__((ions,), "Results", "Observed Ions:",
-                                                               [100, 30, 100, 120, 70, 60, 60, 130, 40])
+                                                               [100, 30, 120, 140, 70, 60, 60, 160, 40])
+        #movie.stop()
 
     def makeTables(self, yPos):
         ions = self._patterns[0]

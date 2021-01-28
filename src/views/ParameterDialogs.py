@@ -166,7 +166,10 @@ class StartDialog(AbstractDialog):
     def checkValues(self, configs, *args):
         if configs['sequName'] not in SequenceService().getAllSequenceNames():
             raise UnvalidInputException(configs['sequName'], "not found")
-        spectralDataPath = join(path, 'Spectral_data',args[0], configs['spectralData'])
+        self.checkSpectralDataFile(args[0], configs['spectralData'])
+
+    def checkSpectralDataFile(self, mode, fileName):
+        spectralDataPath = join(path, 'Spectral_data',mode, fileName)
         if not isfile(spectralDataPath):
             raise UnvalidInputException(spectralDataPath, "not found")
 
@@ -178,19 +181,19 @@ class TDStartDialog(StartDialog):
         self.setupUi(self)
 
     def setupUi(self, startDialog):
-        #ToDo: delete Spraymode
         self.createLabels(("Sequence Name:", "Charge:", "Fragmentation:", "Modifications:", "Nr. of Modifications:",
                            "Spectral Data:", "Noise Threshold (x10^6):", "Fragment Library:", "Output"),
                           startDialog, 30, 160)
         fragPatterns = FragmentIonService().getAllPatternNames()
         modPatterns = ModificationService().getAllPatternNames()
         sequences = SequenceService().getAllSequenceNames()
-        widgets = ((self.createComboBox(startDialog,sequences), "sequName", "Name of the sequenceList"),
+        widgets = ((self.createComboBox(startDialog,sequences), "sequName", "Name of the sequence"),
                (QtWidgets.QSpinBox(startDialog), "charge","Charge of the precursor ion"),
                (self.createComboBox(startDialog,fragPatterns), "fragmentation", "Name of the fragmentation - pattern"),
                (self.createComboBox(startDialog,modPatterns), "modifications", "Name of the modification/ligand - pattern"),
                (QtWidgets.QSpinBox(startDialog), "nrMod", "How often is the precursor ion modified?"),
-               (QtWidgets.QLineEdit(startDialog), "spectralData","Name of the file with spectral peaks (txt or csv format)"),
+               (QtWidgets.QLineEdit(startDialog), "spectralData","Name of the file with spectral peaks (txt or csv format)\n"
+                                     "If no file is stated, the program will just calculate the fragment library"),
                (QtWidgets.QDoubleSpinBox(startDialog), 'noiseLimit', "Minimal noise level"),
                (QtWidgets.QLineEdit(startDialog), "fragLib", "Name of csv file in the folder 'Fragment_lists' "
                      "containing the isotope patterns of the fragments\n"
@@ -224,15 +227,17 @@ class TDStartDialog(StartDialog):
         #self.startProgram(Main.run)
         super(TDStartDialog, self).accept()
 
-    """def checkValues(self, configs):
-        if configs['sequName'] not in SequenceService().getAllSequenceNames():
-            raise UnvalidInputException(configs['sequName'], "not found")
-        elif not isfile(join(path, 'Spectral_data','top-down', configs['spectralData'])):
-            raise UnvalidInputException(configs['spectralData'], "not found")"""
 
     def checkValues(self, configs, *args):
         super(TDStartDialog, self).checkValues(configs, 'top-down')
 
+    def checkSpectralDataFile(self, mode, fileName):
+        if fileName == '':
+            print('Just calculating fragment library')
+            return
+        spectralDataPath = join(path, 'Spectral_data',mode, fileName)
+        if not isfile(spectralDataPath):
+            raise UnvalidInputException(spectralDataPath, "not found")
 
 class DialogWithTabs(AbstractDialog):
     def __init__(self,dialogName, title, lineSpacing, parent=None):
@@ -442,3 +447,5 @@ class IntactStartDialog(DialogWithTabs, StartDialog):
 
     def checkValues(self, configs, *args):
         super(IntactStartDialog, self).checkValues(configs, 'intact')
+
+

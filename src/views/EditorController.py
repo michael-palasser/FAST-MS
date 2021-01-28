@@ -5,7 +5,6 @@ from PyQt5 import QtWidgets, QtCore
 import sys
 
 
-from src.entities.GeneralEntities import Isotope
 from src.Services import *
 
 

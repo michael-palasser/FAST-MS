@@ -1,4 +1,7 @@
+import time
+
 from PyQt5 import QtWidgets, QtCore
+from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QTableWidget
 from math import log10
 from src.top_down.IntensityModeller import IntensityModeller
@@ -8,15 +11,21 @@ class IonTableWidget(QTableWidget):
     def __init__(self, parrent, data, yPos):
         super(IonTableWidget, self).__init__(parrent)
         #self.headers = ['m/z', 'z', 'I', 'fragment', 'error /ppm', 'S/N', 'qual.']
-        self.data = data
+        self._data = data
         self.setColumnCount(len(self.getHeaders()))
         self.move(20, yPos)  # 70
         self.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
 
         self.setRowCount(len(data))
+        self._smallFnt = QFont()
+        self._smallFnt.setPointSize(10)
+        self._format = ['{:10.5f}','{:2d}', '{:12d}', '','{:4.2f}', '{:6.1f}', '{:4.2f}', '']
+        start = time.time()
         for i, ion in enumerate(data):
             self.fill(i, ion)
+
+        #print(time.time()-start)
         self.setHorizontalHeaderLabels(self.getHeaders())
         self.resizeColumnsToContents()
         self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
@@ -30,15 +39,26 @@ class IonTableWidget(QTableWidget):
         return ion.getValues()
 
     def fill(self, row, ion):
-        print(self.getValue(ion))
+        #print(self.getValue(ion))
         for j, item in enumerate(self.getValue(ion)):
             if j == 3 or j==7:
                 newItem = QtWidgets.QTableWidgetItem(str(item))
                 newItem.setTextAlignment(QtCore.Qt.AlignLeft)
+                if j==7:
+                    newItem.setFont(self._smallFnt)
             else:
                 newItem = QtWidgets.QTableWidgetItem()
-                if j == 0:
-                    newItem.setData(QtCore.Qt.DisplayRole, '{:.5f}'.format(item))
+                newItem.setTextAlignment(QtCore.Qt.AlignRight)
+                if j == 2:
+                    formatString = self._format[2]
+                    if item >= 10 ** 13:
+                        lg10 = str(int(log10(item) + 1))
+                        formatString = '{:' + lg10 + 'd}'
+                    newItem.setData(QtCore.Qt.DisplayRole, formatString.format(item))
+                else:
+                    newItem.setData(QtCore.Qt.DisplayRole, self._format[j].format(item))
+                '''if j == 0:
+                    newItem.setData(QtCore.Qt.DisplayRole, '{:10.5f}'.format(item))
                 elif j == 1:
                     newItem.setData(QtCore.Qt.DisplayRole, '{:2d}'.format(item))
                 elif j==2:
@@ -49,10 +69,17 @@ class IonTableWidget(QTableWidget):
                     else:
                         newItem.setData(QtCore.Qt.DisplayRole, '{:12d}'.format(item))
                 elif j == 5:
-                    newItem.setData(QtCore.Qt.DisplayRole, '{:5.1f}'.format(item))
+                    newItem.setData(QtCore.Qt.DisplayRole, '{:6.1f}'.format(item))
                 else:
-                    newItem.setData(QtCore.Qt.DisplayRole, '{:2.2f}'.format(item))
-                newItem.setTextAlignment(QtCore.Qt.AlignRight)
+                    newItem.setData(QtCore.Qt.DisplayRole, '{:4.2f}'.format(item))
+                newItem.setTextAlignment(QtCore.Qt.AlignRight)'''
+            """if j == 3 or j == 7:
+                newItem = QtWidgets.QTableWidgetItem(item)
+                newItem.setTextAlignment(QtCore.Qt.AlignLeft)
+            else:
+                newItem = QtWidgets.QTableWidgetItem()
+                newItem.setData(QtCore.Qt.DisplayRole, item)
+                newItem.setTextAlignment(QtCore.Qt.AlignRight)"""
             newItem.setFlags(QtCore.Qt.ItemIsEnabled)
             self.setItem(row, j, newItem)
             """if args[0]:
@@ -76,7 +103,7 @@ class TickIonTableWidget(IonTableWidget):
         super(TickIonTableWidget, self).fill(row, ion)
         checkItem = QtWidgets.QTableWidgetItem()
         checkItem.setCheckState(QtCore.Qt.Unchecked)  # QtCore.Qt.Unchecked
-        self.setItem(row, len(self.getHeaders()), checkItem)
+        self.setItem(row, len(self.getHeaders())-1, checkItem)
         #print(ion)
         self.checkBoxes.append((checkItem, ion))
         #self.resizeColumnsToContents()
@@ -91,8 +118,7 @@ class TickIonTableWidget(IonTableWidget):
                 dumpList.append(row[1])
         return dumpList
 
-    """def hashRow(self, row):
-        return (self.item(row, 3).text(), int(self.item(row, 1).text()))"""
+
 
 class FinalIonTable(TickIonTableWidget):
     def getHeaders(self):

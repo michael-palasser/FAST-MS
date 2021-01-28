@@ -107,10 +107,17 @@ class FragmentIon(Fragment):
         return self.intensity / self.charge
 
     def getValues(self):
-        """print((self.getMonoisotopic(), self.charge, self.intensity, self.getName(), self.error,
-                round(self.getSignalToNoise(),2), self.quality))"""
-        #return (500.555, self.charge, self.intensity, self.getName(), self.error,
-        #        round(self.getSignalToNoise(),2), self.quality)
+        """formatInt = '{:12d}'
+        if self.intensity >= 10 ** 13:
+            lg10 = str(int(math.log10(self.intensity) + 1))
+            formatInt = '{:' + lg10 + 'd}'
+        return ['{:4.5f}'.format(round(self.getMonoisotopic(),5)),
+                '{:2d}'.format(self.charge),
+                formatInt.format(round(self.intensity)),
+                self.getName(),
+                '{:3.2f}'.format(round(self.error,2)),
+                '{:6.1f}'.format(round(self.getSignalToNoise(),1)),
+                '{:3.2f}'.format(round(self.quality,2))]"""
         return [round(self.getMonoisotopic(),5), self.charge, round(self.intensity), self.getName(), round(self.error,2),
                 round(self.getSignalToNoise(),1), round(self.quality,2)]
 

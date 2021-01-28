@@ -11,7 +11,6 @@ import sys
 import time
 
 from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QApplication
 
 from src.Exceptions import UnvalidIsotopePatternException
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
@@ -23,7 +22,7 @@ from src.top_down.SpectrumHandler import SpectrumHandler
 from src.top_down.IntensityModeller import IntensityModeller
 from src.top_down.ExcelWriter import ExcelWriter
 from src import path
-from src.views.CheckIonView import CheckMonoisotopicOverlapView, CheckOverlapsView, CheckOverlapsView, FinalIonView
+from src.views.CheckIonView import CheckMonoisotopicOverlapView, CheckOverlapsView, FinalIonView
 
 
 def sortIonsByName(ionList):
@@ -68,11 +67,13 @@ class TD_MainController(object):
         if libraryImported == False:
             print("\n********** Writing new list of isotope patterns to:", patternReader.getFile(), "**********\n")
             start = time.time()
-            patternReader.saveIsotopePattern(libraryBuilder.addNewIsotopePattern(0))
+            patternReader.saveIsotopePattern(libraryBuilder.addNewIsotopePattern())
             print("\ndone\nexecution time: ", round((time.time() - start) / 60, 2), "min\n")
 
         #ToDo
         """Importing spectral pattern"""
+        if settings['spectralData'] == '':
+            return
         spectralFile = os.path.join(path, 'Spectral_data','top-down', settings['spectralData'])
         print("\n********** Importing spectral pattern from:", spectralFile, "**********")
         spectrumHandler = SpectrumHandler(spectralFile, libraryBuilder.getSequence(), libraryBuilder.getFragmentLibrary(),
@@ -99,7 +100,7 @@ class TD_MainController(object):
         if len(sameMonoisotopics) > 0:
             view = CheckMonoisotopicOverlapView(sameMonoisotopics)
             view.exec_()
-            if view.accepted:
+            if view and not view.canceled:
                 intensityModeller.deleteSameMonoisotopics(view.getDumplist())
             else:
                 return
@@ -112,19 +113,15 @@ class TD_MainController(object):
             if len(complexPatterns) > 0:
                 view = CheckOverlapsView(complexPatterns)
                 view.exec_()
-                if view.accepted:
+                if view and not view.canceled:
                     intensityModeller.remodelComplexPatterns(complexPatterns, view.getDumplist())
                 else:
                     return
             if counter > 0:
                 break
-            #print('1')
             view = FinalIonView(list(intensityModeller.correctedIons.values()))
-            #print('2')
             view.exec_()
-            #print('3')
-            if view.accepted:
-                print('4')
+            if view and not view.canceled:
                 if len(view.getDumplist())>0:
                     intensityModeller.deleteIons(view.getDumplist())
                     counter +=1

@@ -1,39 +1,33 @@
-from PyQt5.QtWidgets import QMainWindow, QDialog, QDialogButtonBox, QVBoxLayout
+from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtGui import QMovie
+import sys
 
+class Ui_MainWindow(object):
+    def setupUi(self, MainWindow):
+        MainWindow.setObjectName("MainWindow")
+        MainWindow.resize(250, 250)
+        self.centralwidget = QtWidgets.QWidget(MainWindow)
+        self.centralwidget.setObjectName("centralwidget")
 
-class CustomDialog(QDialog):
+        # create label
+        self.label = QtWidgets.QLabel(self.centralwidget)
+        self.label.setGeometry(QtCore.QRect(25, 25, 200, 200))
+        self.label.setMinimumSize(QtCore.QSize(200, 200))
+        self.label.setMaximumSize(QtCore.QSize(200, 200))
+        self.label.setObjectName("label")
 
-    def __init__(self, *args, **kwargs):
-        super(CustomDialog, self).__init__(*args, **kwargs)
+        # add label to main window
+        MainWindow.setCentralWidget(self.centralwidget)
 
-        self.setWindowTitle("HELLO!")
+        # set qmovie as label
+        self.movie = QMovie("loading.gif")
+        self.label.setMovie(self.movie)
+        self.movie.start()
 
-        QBtn = QDialogButtonBox.Ok | QDialogButtonBox.Cancel
-
-        self.buttonBox = QDialogButtonBox(QBtn)
-        self.buttonBox.accepted.connect(self.accept)
-        self.buttonBox.rejected.connect(self.reject)
-
-        self.layout = QVBoxLayout()
-        self.layout.addWidget(self.buttonBox)
-        self.setLayout(self.layout)
-
-
-class MainWindow(QMainWindow):
-    def __init__(self):
-        super(MainWindow, self).__init__()
-    # def __init__ etc.
-    # ... not shown for clarity
-
-    def onMyToolBarButtonClick(self, s):
-        print("click", s)
-
-        dlg = CustomDialog(self)
-        if dlg.exec_():
-            print("Success!")
-        else:
-            print("Cancel!")
-
-
-mainWindow = MainWindow()
-MainWindow.onMyToolBarButtonClick()
+if __name__ == "__main__":
+    app = QtWidgets.QApplication(sys.argv)
+    window = QtWidgets.QMainWindow()
+    ui = Ui_MainWindow()
+    ui.setupUi(window)
+    window.show()
+    sys.exit(app.exec_())

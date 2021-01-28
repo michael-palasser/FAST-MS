@@ -8,8 +8,13 @@ import subprocess
 import numpy as np
 import xlsxwriter
 from datetime import datetime
-#from src.top_down.LibraryBuilder import removeEmptyElements
 from src import path
+
+def removeEmptyElements(rawList):
+    newList = rawList
+    while '' in newList:
+        newList.remove('')
+    return newList
 
 
 def getHash(name, z):   #ToDo: DRY
@@ -84,7 +89,7 @@ def run():
             worksheet.write_row(row, 0, deHash(ionHash))
         row+=1
     workbook.close()
-    subprocess.call(['openAgain', output])
+    subprocess.call(['open', output])
     print("********** saved in:", output, "**********\n")
 
 if __name__ == '__main__':

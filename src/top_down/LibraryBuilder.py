@@ -209,7 +209,7 @@ class FragmentLibraryBuilder(object):
             #print(fragment.getName(), fragment.formula.toString())
 
 
-    def addNewIsotopePattern(self, flag):
+    def addNewIsotopePattern(self):
         '''
         Calls calculateIsotopePattern() function (class MolecularFormula) and subtracts electron mass if fragment contains radicals
         :return: void
@@ -219,7 +219,10 @@ class FragmentLibraryBuilder(object):
             factor = 0.5
         if len(self.__sequence.getSequenceList()*factor<25):"""
         #if len(self.__fragmentLibrary)<800:
-        if flag == 0:
+        criticalLength = 30
+        if self.__sequence.getMolecule() == 'Protein':
+            criticalLength = 60
+        if len(self.__sequence.getSequenceList())<criticalLength: #flag == 0:
             for fragment in self.__fragmentLibrary:
                 fragment.isotopePattern = fragment.formula.calculateIsotopePattern()
                 #if fragment.type in self.radicalDict:

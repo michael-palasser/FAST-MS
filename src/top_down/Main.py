@@ -76,8 +76,9 @@ class TD_MainController(object):
             return
         spectralFile = os.path.join(path, 'Spectral_data','top-down', settings['spectralData'])
         print("\n********** Importing spectral pattern from:", spectralFile, "**********")
-        spectrumHandler = SpectrumHandler(spectralFile, libraryBuilder.getSequence(), libraryBuilder.getFragmentLibrary(),
-                libraryBuilder.getPrecursor(), libraryBuilder.getChargedModifications(), settings)
+        spectrumHandler = SpectrumHandler(spectralFile, libraryBuilder.getSequence(),
+                  libraryBuilder.getFragmentLibrary(), libraryBuilder.getPrecursor(),
+                  libraryBuilder.getChargedModifications(), libraryBuilder.getFragItemDict(), settings)
 
         """Finding fragments"""
         print("\n********** Search for spectrum **********")
@@ -172,6 +173,7 @@ class TD_MainController(object):
         except:
             pass
         return 0
+
 
 """if __name__ == '__main__':
     app = QApplication(sys.argv)

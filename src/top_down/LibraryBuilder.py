@@ -264,3 +264,9 @@ class FragmentLibraryBuilder(object):
             if modification.getCalcOccupancy() == True:
                 importantModifications.append(modification.getName())
         return importantModifications
+
+    def getFragItemDict(self):
+        fragItemDict = dict()
+        for fragTemplate in self.__fragmentation:
+            fragItemDict[fragTemplate.getName()] = fragTemplate
+        return fragItemDict

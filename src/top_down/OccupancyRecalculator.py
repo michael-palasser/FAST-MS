@@ -13,9 +13,18 @@ from src.top_down.Analyser import Analyser
 from src.top_down.ExcelWriter import BasicExcelWriter
 from src import path
 
-def run(mainWindow):
-    """open everything"""
 
+def readCsv(file):
+    try:
+        arr = np.loadtxt(file, delimiter=',', skiprows=1,
+                         dtype=[('m/z', np.float64), ('z', np.uint8), ('intensity', np.float64), ('name', 'U32')])
+    except ValueError:
+        arr = np.loadtxt(file, delimiter='\t', skiprows=1,
+                         dtype=[('m/z', np.float64), ('z', np.uint8), ('intensity', np.float64), ('name', 'U32')])
+    return arr
+
+
+def run(mainWindow):
     service = SequenceService()
     dlg = SimpleStartDialog(mainWindow, service.getAllSequenceNames())
     dlg.exec_()
@@ -33,12 +42,7 @@ def run(mainWindow):
             'Paste the ions (format: m/z, z, Int., fragment-name) in the csv-file and press "Ok"',
                                                         QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
         if start == QtWidgets.QMessageBox.Ok:
-            try:
-                arr = np.loadtxt(spectralFile, delimiter=',', skiprows=1,
-                                 dtype=[('m/z', np.float64), ('z', np.uint8), ('intensity', np.float64), ('name', 'U32')])
-            except ValueError:
-                arr = np.loadtxt(spectralFile, delimiter='\t', skiprows=1,
-                                 dtype=[('m/z', np.float64), ('z', np.uint8), ('intensity', np.float64), ('name', 'U32')])
+            arr = readCsv(spectralFile)
             ionList = list()
             speciesList = list()
             for ion in arr:

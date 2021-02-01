@@ -1,7 +1,7 @@
 import traceback
 
 from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtWidgets import QDialog, QMessageBox
+from PyQt5.QtWidgets import QDialog, QMessageBox, QFileDialog
 from os.path import join, isfile
 
 from src import path
@@ -9,6 +9,7 @@ from src.Exceptions import UnvalidInputException
 from src.intact.Main import run
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.Services import FragmentIonService, ModificationService, SequenceService
+from src.views.StartDialogs import OpenFileWidget
 
 dataPath = join(path, 'src', 'data')
 
@@ -66,6 +67,8 @@ class AbstractDialog(QDialog):
                 widget.setGeometry(QtCore.QRect(xPos, yPos, lineWidth, 21))
             elif isinstance(widget, QtWidgets.QComboBox):
                 widget.setGeometry(QtCore.QRect(xPos - 3, yPos, lineWidth + 6, 26))
+            elif isinstance(widget, OpenFileWidget):
+                widget.setGeometry(QtCore.QRect(xPos, yPos-5, lineWidth + 20, 36))
             else:
                 raise Exception('Unknown type of widget')
             widget.setObjectName(widgetTuple[1])
@@ -88,7 +91,7 @@ class AbstractDialog(QDialog):
     def getValueOfWidget(widget):
         if isinstance(widget, QtWidgets.QSpinBox) or isinstance(widget, QtWidgets.QDoubleSpinBox):
             return widget.value()
-        elif isinstance(widget, QtWidgets.QLineEdit):
+        elif isinstance(widget, QtWidgets.QLineEdit) or isinstance(widget, OpenFileWidget):
             return widget.text()
         elif isinstance(widget, QtWidgets.QComboBox):
             return widget.currentText()
@@ -99,7 +102,7 @@ class AbstractDialog(QDialog):
     def setValueOfWidget(widget, value):
         if isinstance(widget, QtWidgets.QSpinBox) or isinstance(widget, QtWidgets.QDoubleSpinBox):
             widget.setValue(value)
-        elif isinstance(widget, QtWidgets.QLineEdit):
+        elif isinstance(widget, QtWidgets.QLineEdit) or isinstance(widget, OpenFileWidget):
             widget.setText(value)
         elif isinstance(widget, QtWidgets.QComboBox):
             widget.setCurrentText(value)
@@ -169,9 +172,9 @@ class StartDialog(AbstractDialog):
         self.checkSpectralDataFile(args[0], configs['spectralData'])
 
     def checkSpectralDataFile(self, mode, fileName):
-        spectralDataPath = join(path, 'Spectral_data',mode, fileName)
-        if not isfile(spectralDataPath):
-            raise UnvalidInputException(spectralDataPath, "not found")
+        #spectralDataPath = join(path, 'Spectral_data',mode, fileName)
+        if not isfile(fileName):
+            raise UnvalidInputException(fileName, "not found")
 
 
 class TDStartDialog(StartDialog):
@@ -187,12 +190,15 @@ class TDStartDialog(StartDialog):
         fragPatterns = FragmentIonService().getAllPatternNames()
         modPatterns = ModificationService().getAllPatternNames()
         sequences = SequenceService().getAllSequenceNames()
+        linewidth = 180
         widgets = ((self.createComboBox(startDialog,sequences), "sequName", "Name of the sequence"),
                (QtWidgets.QSpinBox(startDialog), "charge","Charge of the precursor ion"),
                (self.createComboBox(startDialog,fragPatterns), "fragmentation", "Name of the fragmentation - pattern"),
                (self.createComboBox(startDialog,modPatterns), "modifications", "Name of the modification/ligand - pattern"),
                (QtWidgets.QSpinBox(startDialog), "nrMod", "How often is the precursor ion modified?"),
-               (QtWidgets.QLineEdit(startDialog), "spectralData","Name of the file with spectral peaks (txt or csv format)\n"
+               (OpenFileWidget(self,linewidth, 0, 1, join(path, 'Spectral_data','top-down'),  "Open File",
+                               "Plain Text Files (*txt);;Comma Separated Files (*csv);;All Files (*)"),
+                "spectralData","Name of the file with spectral peaks (txt or csv format)\n"
                                      "If no file is stated, the program will just calculate the fragment library"),
                (QtWidgets.QDoubleSpinBox(startDialog), 'noiseLimit', "Minimal noise level"),
                (QtWidgets.QLineEdit(startDialog), "fragLib", "Name of csv file in the folder 'Fragment_lists' "
@@ -200,7 +206,7 @@ class TDStartDialog(StartDialog):
                      "If no file is stated, the program will search for the corresponing file or create a new one"),
                (QtWidgets.QLineEdit(startDialog), "output",
                     "Name of the output Excel file\ndefault: name of spectral pattern file + _out.xlsx"))
-        xPos, yPos = self.createWidgets(widgets,200,180)
+        xPos, yPos = self.createWidgets(widgets,200,linewidth)
         self.widgets['charge'].setMinimum(-99)
         self.buttonBox.setGeometry(QtCore.QRect(210, yPos+20, 164, 32))
         #self.widgets['charge'].setValue(2)
@@ -414,17 +420,18 @@ class IntactStartDialog(DialogWithTabs, StartDialog):
         self.widgets['maxMz'].setMaximum(9999)
         self.widgets["d"].setMinimum(-9.99)
         self.backToLast()
-
+        linewidth = 160
         self.createLabels(("Sequence Name", "Modification", "Spectral File", "Spray Mode", "Output"),
                           self.settingTab, 10, 150)
         settingWidgets = ((QtWidgets.QLineEdit(self.settingTab), "sequName", "Name of sequenceList"),
                    (QtWidgets.QLineEdit(self.settingTab), "modification","Modification of precursor ion"),
-                   (QtWidgets.QLineEdit(self.settingTab), "spectralData",
+                   (OpenFileWidget(self.settingTab,linewidth, 0, 1, join(path, 'Spectral_data','intact'),  "Open File",
+                               "Plain Text Files (*txt);;All Files (*)"), "spectralData",
                         "Name of the file with monoisotopic pattern (txt format)"),
                    (self.createComboBox(self.settingTab,("negative","positive")), "sprayMode", "Spray mode"),
                    (QtWidgets.QLineEdit(self.settingTab), "output",
                         "Name of the output txt file\ndefault: name of spectral pattern file + _out.txt"))
-        xPos, yPos = self.createWidgets(settingWidgets,120,160)
+        xPos, yPos = self.createWidgets(settingWidgets,120,linewidth)
         if yMax<yPos:
             yMax=yPos
 

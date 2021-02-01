@@ -30,7 +30,7 @@ class SpectrumHandler(object):
     acidicAA = {'D': 10, 'E': 10,
                 'H': 0.9, 'R': 0.5, 'K': 0.5, }
 
-    def __init__(self, filePath, sequence, fragmentLibrary, precursor, chargedModifications, settings):
+    def __init__(self, filePath, sequence, molecule, fragmentLibrary, precursor, chargedModifications, fragmentation, settings):
         '''
         Constructor
         :param molecule: RNA/DNA/P (String)
@@ -38,17 +38,17 @@ class SpectrumHandler(object):
         :param fragmentLibrary: list of fragments from AbstractLibraryBuilder
         :param chargedModifications: output of getChargedModifications()-fct (AbstractLibraryBuilder): dict
         '''
-        #self.molecule = molecule
         self.__sequence = sequence
-
-        self.fragmentLibrary = fragmentLibrary
-        self.chargedModifications = chargedModifications
+        self.__molecule = molecule
+        self.__fragmentLibrary = fragmentLibrary
+        self.__chargedModifications = chargedModifications
+        self.__fragTemplates = fragmentation
         self.__settings = settings
         self.__charge = abs(self.__settings['charge'])
         self.__sprayMode = 1
         if self.__settings['charge'] < 0:
             self.__sprayMode = -1
-        self.precMz = 0
+        #self.precMz = 0
         self.__upperBound=0
         #self.__spectrum=list()
         self.precursor = precursor
@@ -57,7 +57,6 @@ class SpectrumHandler(object):
         self.normalizationFactor = None
 
         self.addSpectrum(filePath)
-
         self.foundIons = list()
         self.ionsInNoise = list()
         self.searchedChargeStates = dict()
@@ -93,7 +92,7 @@ class SpectrumHandler(object):
         return np.array(spectralList)
 
     def resizeSpectrum(self):
-        self.precMz = self.getMz(self.precursor.formula.calculateMonoIsotopic(), self.__charge, self.precursor.radicals)
+        #self.precMz = self.getMz(self.precursor.formula.calculateMonoIsotopic(), self.__charge, self.precursor.radicals)
         self.__spectrum = self.__spectrum[np.where(self.__spectrum[:, 0] < (self.findUpperBound() + 10))]
         print("\nmax m/z:", self.__upperBound)
 
@@ -101,15 +100,6 @@ class SpectrumHandler(object):
         #print(z ,mass/z + self.protonMass*self.mode)
         return mass/z + self.protonMass*self.__sprayMode + radicals*(E_MASS + P_MASS)
 
-    """def findPrecursor(self):
-        precursorMass = 0
-        for fragment in self.fragmentLibrary:
-            fragmentMass = fragment.formula.calculateMonoIsotopic()
-            if fragmentMass > precursorMass:
-                precursorMass = fragmentMass
-                precursor = fragment
-        self.precursor = precursor
-        return precursor"""
 
     def findUpperBound(self):
         print("\n********** Finding upper bound m/z - Window in spectralFile containing fragments ********** ")
@@ -174,7 +164,7 @@ class SpectrumHandler(object):
         return (value - theoValue) / theoValue * 10 ** 6
 
     def getNormalizationFactor(self):
-        molecule = self.__sequence.getMolecule()
+        molecule = self.__molecule.getName()
         if molecule in ['RNA', 'DNA'] and self.__sprayMode == -1:
             return self.__charge / self.precursor.formula.formulaDict['P']
         elif molecule == 'Protein':
@@ -184,13 +174,15 @@ class SpectrumHandler(object):
         else:
             return self.__charge / len(self.__sequence)
 
-    def getPeptideScore(self, sequence): #ToDo
+    def getPeptideScore(self, fragment): #ToDo
         if self.__sprayMode== -1:
                 chargeDict = self.acidicAA
         else:
             chargeDict = self.basicAA
         score = 0
-        for aa in sequence:
+        """if self.__fragTemplates[fragment.type].getDirection() == 1 and self.__sprayMode== 1:
+            score ="""
+        for aa in fragment.sequenceList:
             if aa in chargeDict:
                 score += chargeDict[aa]
             else:
@@ -199,7 +191,7 @@ class SpectrumHandler(object):
 
     def getModCharge(self, fragment):
         modCharge = 0
-        for mod, charge in self.chargedModifications.items():
+        for mod, charge in self.__chargedModifications.items():
             if mod in fragment.modification:
                 nrMod = 1
                 if len(findall(r"(\d+)"+mod, fragment.modification)) > 0:
@@ -209,13 +201,13 @@ class SpectrumHandler(object):
 
     #ToDo: Test SearchParameters, Proteins!, Parameters
     def getSearchParameters(self, fragment,precModCharge):
-        molecule = self.__sequence.getMolecule()
+        molecule = self.__molecule.getName()
         if molecule in ['RNA' ,'DNA'] and self.__sprayMode == -1:
             if fragment.formula.formulaDict['P'] == 0:
                 return None
             probableZ = fragment.formula.formulaDict['P'] * self.normalizationFactor
-        elif molecule == 'protein':
-            probableZ = self.getPeptideScore(fragment.sequenceList) * self.normalizationFactor
+        elif molecule == 'Protein':
+            probableZ = self.getPeptideScore(fragment) * self.normalizationFactor
         elif molecule in ['RNA' ,'DNA'] and self.__sprayMode == 1:
             probableZ = fragment.number * self.normalizationFactor
         else:
@@ -241,7 +233,7 @@ class SpectrumHandler(object):
         np.set_printoptions(suppress=True)
         precModCharge = self.getModCharge(self.precursor)
         self.normalizationFactor = self.getNormalizationFactor()
-        for fragment in self.fragmentLibrary:
+        for fragment in self.__fragmentLibrary:
             self.searchedChargeStates[fragment.getName()] = []
             fragment.isotopePattern = np.sort(fragment.isotopePattern, order='relAb')[::-1]
             zRange = self.getSearchParameters(fragment,precModCharge)

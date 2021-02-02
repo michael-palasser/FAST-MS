@@ -63,6 +63,9 @@ class SpectrumHandler(object):
         self.peaksArrType = np.dtype([('m/z', np.float64), ('relAb', np.float64),('m/z_theo', np.float64),
                              ('calcInt', np.float64), ('error', np.float32), ('used', np.uint8)])
 
+    def getSpectrum(self):
+        return self.__spectrum
+
     def getUpperBound(self):
         return self.__upperBound
 

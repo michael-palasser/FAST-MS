@@ -47,40 +47,39 @@ modelled = \
 
         super().setOpts(**opts)"""
 
-class MainWindow(QtWidgets.QMainWindow):
+class SpectrumView(QtWidgets.QMainWindow):
 
-    def __init__(self, peaks, ions):
-        super(MainWindow, self).__init__()
-        """self.menubar = QtWidgets.QMenuBar(self.mainWindow)
-        self.mainWindow.setMenuBar(self.menubar)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 340, 22))
-
-        action = QtWidgets.QAction(self.mainWindow)
-        action.setText(self._translate(self.mainWindow.objectName(), 'Change Peak Width'))
-        action.triggered.connect(function)"""
+    def __init__(self, peaks, ions, minRange, maxRange, maxY):
+        super(SpectrumView, self).__init__()
         self.peaks = peaks
         self.ions = ions
         self.int = int
         self._translate = QtCore.QCoreApplication.translate
-        self.width = 500
+        self.width = 700
         self.hight = 400
         self.resize(self.width,self.hight)
-        width = 0.01
+        width = 0.02
 
         styles = {"black": "#f00", "font-size": "18px"}
 
         self.graphWidget = pg.PlotWidget()
 
         self.setCentralWidget(self.graphWidget)
-        self.graphWidget.setLabel('left', 'Rel.Ab.in AMU', **styles)
+        #self.vb = pg.GraphicsLayout().addViewBox(self.graphWidget)
+        #self.vb.setLimits(yMin=0)
+        self.graphWidget.setLabel('left', 'Rel.Ab.in au', **styles)
         self.graphWidget.setLabel("bottom", "m/z", **styles)
         self.graphWidget.setBackground('w')
-        self.graphWidget.setXRange(min(mz) - 1, max(mz) + 1, padding=0)
-        self.graphWidget.setYRange(0, max(Int1) + 10 ** 5, padding=0)
+        self.graphWidget.setXRange(minRange - 1, maxRange+1, padding=0)
+        self.graphWidget.setYRange(0, maxY*1.1, padding=0)
+        baseLine = pg.InfiniteLine(pos=0,angle=0,pen='k',movable=False)
+        self.graphWidget.addItem(baseLine)
 
         self.plot(width) #ToDo: Correct Width (linear fct)
         self.makeWidthWidgets(width)
+
         self.show()
+        print('finished')
 
     def makeWidthWidgets(self, width):
         self.spinBox = QtWidgets.QDoubleSpinBox(self.centralWidget())
@@ -97,18 +96,38 @@ class MainWindow(QtWidgets.QMainWindow):
     def plot(self, width):
         self.peakBars = pg.BarGraphItem(x=self.peaks[:,0], height=self.peaks[:,1], width=width, brush='k')
         self.graphWidget.addItem(self.peakBars)
-        colours = ['b','r','g', 'c', 'm','o', 'p', 'v']
-        self.legend = pg.LegendItem(offset=(0., .5))
+        colours = ['b','r','g', 'c', 'm', 'y']
+        markers = ['o','t', 's', 'p','h', 'star', '+', 'd', 'x', 't1','t2', 't3']
+        self.legend = pg.LegendItem(offset=(0., .5), labelTextSize='12pt')
         self.legend.setParentItem(self.graphWidget.graphicsItem())
         #self.legend.addItem(self.aps_model, '')
-        for i, ion in enumerate(self.ions.keys()):
-            scatter = pg.ScatterPlotItem(x=self.ions[ion][:,0], y=self.ions[ion][:,1], symbol='o',
-                                         pen =pg.mkPen(color=colours[i], width=2),
-                                         brush=(50,50,200,50), size=8, pxMode=True) #Todo resize
+        noise = []
+        markerIndex = 0
+        colourIndex = 0
+        for ion in self.ions:
+            if colourIndex == len(colours):
+                colourIndex = 0
+                markerIndex += 1
+                if markerIndex == len(markers):
+                    markerIndex = 0
+            scatter = pg.ScatterPlotItem(x=ion.isotopePattern['m/z'], y=ion.isotopePattern['calcInt'],
+                                         symbol=markers[markerIndex],
+                                         pen =pg.mkPen(color=colours[colourIndex], width=2),
+                                         brush=(50,50,200,50), size=10, pxMode=True) #Todo resize"""
+            maxMz = np.sort(ion.isotopePattern, order='calcInt')[::-1]['m/z'][0]
+            print((maxMz, ion.noise))
+            noise.append((maxMz, ion.noise))
+            """scatter = pg.ScatterPlotItem(x=self.ions[ion][:,0], y=self.ions[ion][:,1], symbol=markers[markerIndex],
+                                         pen =pg.mkPen(color=colours[colourIndex], width=2),
+                                         brush=(50,50,200,50), size=10, pxMode=True) #Todo resize"""
             self.graphWidget.addItem(scatter)
-            self.legend.addItem(scatter, ion)
+            self.legend.addItem(scatter, ion.getName() + ', ' + str(ion.charge))
+            colourIndex += 1
             #self.graphWidget.plot(ion[:,0], ion[:,1], symbol='o', symbolSize=30, symbolBrush=('b'))
-
+        noise = np.array(noise)
+        noiseLine = self.graphWidget.plot(noise[:,0],noise[:,1], pen='r')
+        #self.graphWidget.addItem(noiseLine)
+        self.legend.addItem(noiseLine, 'noise')
 
     def changeWidth(self):
         """width, ok = QInputDialog.getDouble(self, "Change Peak Width", "Enter Peak Width in Da: ")
@@ -127,7 +146,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
-    main = MainWindow(peaks, modelled)
+    main = SpectrumView(peaks, modelled)
     sys.exit(app.exec_())
 
 

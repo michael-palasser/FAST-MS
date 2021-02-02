@@ -61,6 +61,9 @@ class FragmentLibraryBuilder(object):
     def setFragmentLibrary(self, patternReader):
         self.__fragmentLibrary = patternReader.addIsotopePatternFromFile(self.__fragmentLibrary)
 
+    def getMolecule(self):
+        return self.__molecule
+
     def buildSimpleLadder(self, sequ):
         '''
         Builds a sequenceList ladder of a basic fragment type
@@ -267,6 +270,6 @@ class FragmentLibraryBuilder(object):
 
     def getFragItemDict(self):
         fragItemDict = dict()
-        for fragTemplate in self.__fragmentation:
+        for fragTemplate in self.__fragmentation.getItems():
             fragItemDict[fragTemplate.getName()] = fragTemplate
         return fragItemDict

@@ -160,7 +160,7 @@ class StartDialog(AbstractDialog):
         if (newSettings['spectralData'][-4:] != '.txt') and (newSettings['spectralData'][-4:] != '.csv'):
             newSettings['spectralData'] += '.txt'
         try:
-            self.checkValues(newSettings)
+            newSettings = self.checkValues(newSettings)
         except UnvalidInputException:
             traceback.print_exc()
             QMessageBox.warning(self, "Problem occured", traceback.format_exc(), QMessageBox.Ok)
@@ -169,12 +169,20 @@ class StartDialog(AbstractDialog):
     def checkValues(self, configs, *args):
         if configs['sequName'] not in SequenceService().getAllSequenceNames():
             raise UnvalidInputException(configs['sequName'], "not found")
-        self.checkSpectralDataFile(args[0], configs['spectralData'])
+        if self.checkSpectralDataFile(args[0], configs['spectralData']):
+            configs['spectralData'] = join(path, 'Spectral_data', args[0], configs['spectralData'])
+        return configs
+
 
     def checkSpectralDataFile(self, mode, fileName):
         #spectralDataPath = join(path, 'Spectral_data',mode, fileName)
         if not isfile(fileName):
-            raise UnvalidInputException(fileName, "not found")
+            spectralDataPath = join(path, 'Spectral_data', mode, fileName)
+            if isfile(spectralDataPath):
+                return True
+            else:
+                raise UnvalidInputException(spectralDataPath, "not found")
+        return False
 
 
 class TDStartDialog(StartDialog):
@@ -235,15 +243,15 @@ class TDStartDialog(StartDialog):
 
 
     def checkValues(self, configs, *args):
-        super(TDStartDialog, self).checkValues(configs, 'top-down')
+        return super(TDStartDialog, self).checkValues(configs, 'top-down')
 
     def checkSpectralDataFile(self, mode, fileName):
         if fileName == '':
             print('Just calculating fragment library')
-            return
-        spectralDataPath = join(path, 'Spectral_data',mode, fileName)
-        if not isfile(spectralDataPath):
-            raise UnvalidInputException(spectralDataPath, "not found")
+            return False
+        else:
+            super(TDStartDialog, self).checkSpectralDataFile(mode, fileName)
+
 
 class DialogWithTabs(AbstractDialog):
     def __init__(self,dialogName, title, lineSpacing, parent=None):
@@ -453,6 +461,6 @@ class IntactStartDialog(DialogWithTabs, StartDialog):
 
 
     def checkValues(self, configs, *args):
-        super(IntactStartDialog, self).checkValues(configs, 'intact')
+        return super(IntactStartDialog, self).checkValues(configs, 'intact')
 
 

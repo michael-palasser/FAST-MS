@@ -118,7 +118,9 @@ class FragmentIon(Fragment):
                 '{:3.2f}'.format(round(self.error,2)),
                 '{:6.1f}'.format(round(self.getSignalToNoise(),1)),
                 '{:3.2f}'.format(round(self.quality,2))]"""
-        return [round(self.getMonoisotopic(),5), self.charge, round(self.intensity), self.getName(), round(self.error,2),
+        """return [round(self.getMonoisotopic(),5), self.charge, round(self.intensity), self.getName(), round(self.error,2),
+                round(self.getSignalToNoise(),1), round(self.quality,2)]"""
+        return [500, self.charge, round(self.intensity), self.getName(), round(self.error,2),
                 round(self.getSignalToNoise(),1), round(self.quality,2)]
 
 

@@ -1,22 +1,58 @@
 import time
+from functools import partial
 
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QTableWidget
 from math import log10
-from src.top_down.IntensityModeller import IntensityModeller
+
+
+class TableModel(QtCore.QAbstractTableModel):
+    def __init__(self, data, parent=None):
+        super(TableModel, self).__init__(parent)
+        self._data = data
+        self._formats = ['{:10.5f}','{:2d}', '{:12d}', '','{:4.2f}', '{:6.1f}', '{:4.2f}', '']
+
+
+    def rowCount(self, parent=None):
+        return len(self._data)
+
+    def columnCount(self, parent=None):
+        return len(self._data[0]) if self.rowCount() else 0
+
+    def data(self, index, role=QtCore.Qt.DisplayRole):
+        if role == QtCore.Qt.DisplayRole:
+            i = index.row()
+            j = index.column()
+
+            if j == 2:
+                currentData = self._data[i][j]
+                formatString = self._format[2]
+                if currentData >= 10 ** 13:
+                    lg10 = str(int(log10(currentData) + 1))
+                    formatString = '{:' + lg10 + 'd}'
+                return formatString.format(currentData)
+            else:
+                return self._format[j].format(self._data[i][j])
+
+            """if 0 <= row < self.rowCount():
+                column = index.column()
+                if 0 <= column < self.columnCount():
+                    return self._data[row][column]"""
+
+
 
 
 class IonTableWidget(QTableWidget):
     def __init__(self, parrent, data, yPos):
         super(IonTableWidget, self).__init__(parrent)
+        print('starting')
         #self.headers = ['m/z', 'z', 'I', 'fragment', 'error /ppm', 'S/N', 'qual.']
         self._data = data
         self.setColumnCount(len(self.getHeaders()))
         self.move(20, yPos)  # 70
         self.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-
         self.setRowCount(len(data))
         self._smallFnt = QFont()
         self._smallFnt.setPointSize(10)
@@ -25,11 +61,15 @@ class IonTableWidget(QTableWidget):
         for i, ion in enumerate(data):
             self.fill(i, ion)
 
-        #print(time.time()-start)
+        print(time.time()-start)
         self.setHorizontalHeaderLabels(self.getHeaders())
         self.resizeColumnsToContents()
         self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.setSortingEnabled(True)
+
+        self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+
+        print('done')
         # self.customContextMenuRequested['QPoint'].connect(partial(self.editRow, self, bools))
 
     def getHeaders(self):
@@ -89,6 +129,9 @@ class IonTableWidget(QTableWidget):
                 args[0][newItem] = ion"""
         #self.resizeColumnsToContents()
         self.resizeRowsToContents()
+
+
+
 
 class TickIonTableWidget(IonTableWidget):
     def __init__(self, parrent, data, yPos):

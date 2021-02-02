@@ -76,7 +76,7 @@ class TD_MainController(object):
             return
         spectralFile = os.path.join(path, 'Spectral_data','top-down', settings['spectralData'])
         print("\n********** Importing spectral pattern from:", spectralFile, "**********")
-        spectrumHandler = SpectrumHandler(spectralFile, libraryBuilder.getSequence(),
+        spectrumHandler = SpectrumHandler(spectralFile, libraryBuilder.getSequence(), libraryBuilder.getMolecule(),
                   libraryBuilder.getFragmentLibrary(), libraryBuilder.getPrecursor(),
                   libraryBuilder.getChargedModifications(), libraryBuilder.getFragItemDict(), settings)
 
@@ -99,7 +99,7 @@ class TD_MainController(object):
         print("\n********** Handling overlaps **********")
         sameMonoisotopics = intensityModeller.findSameMonoisotopics()
         if len(sameMonoisotopics) > 0:
-            view = CheckMonoisotopicOverlapView(sameMonoisotopics)
+            view = CheckMonoisotopicOverlapView(sameMonoisotopics, spectrumHandler.getSpectrum())
             view.exec_()
             if view and not view.canceled:
                 intensityModeller.deleteSameMonoisotopics(view.getDumplist())
@@ -112,7 +112,7 @@ class TD_MainController(object):
         while True:
             complexPatterns = intensityModeller.findOverlaps()
             if len(complexPatterns) > 0:
-                view = CheckOverlapsView(complexPatterns)
+                view = CheckOverlapsView(complexPatterns, spectrumHandler.getSpectrum())
                 view.exec_()
                 if view and not view.canceled:
                     intensityModeller.remodelComplexPatterns(complexPatterns, view.getDumplist())
@@ -120,7 +120,7 @@ class TD_MainController(object):
                     return
             if counter > 0:
                 break
-            view = FinalIonView(list(intensityModeller.correctedIons.values()))
+            view = FinalIonView(list(intensityModeller.correctedIons.values()), spectrumHandler.getSpectrum())
             view.exec_()
             if view and not view.canceled:
                 if len(view.getDumplist())>0:

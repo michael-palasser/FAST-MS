@@ -1,8 +1,12 @@
+from functools import partial
+
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtGui import QMovie
-from PyQt5.QtWidgets import QLabel
+from PyQt5.QtWidgets import QLabel, QMainWindow
+import numpy as np
 
 from src.views.IonTableWidget import IonTableWidget, TickIonTableWidget, FinalIonTable
+from src.views.SpectrumView import SpectrumView
 
 
 class LoadingWidget(QtWidgets.QWidget):
@@ -20,14 +24,17 @@ class LoadingWidget(QtWidgets.QWidget):
 
 
 class AbstractIonView(QtWidgets.QDialog):
-    def __init__(self,  patterns, title, message, widths):
+    def __init__(self,  patterns, title, message, widths, spectrum):
         #self._dialog = QtWidgets.QDialog(parrent)
         super(AbstractIonView, self).__init__()
         self.setUpUi(title)
-        self._patterns = patterns
+        self._patterns = []
+        for pattern in patterns:
+            self._patterns.append({self.hash(ion): ion for ion in pattern})
         #self.headers = ('m/z', 'z', 'I', 'fragment', 'error /ppm', 'S/N', 'qual.', 'del.?')
         self._widths = widths
         self._tables = []
+        self._spectrum = spectrum
         label = QtWidgets.QLabel(self)
         label.setGeometry(QtCore.QRect(20, 20, 400, 16))
         label.setText(self._translate(self.objectName(), message))
@@ -65,6 +72,14 @@ class AbstractIonView(QtWidgets.QDialog):
     def makeTables(self, yPos):
         return yPos
 
+    def connectTable(self, table):
+        table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        table.customContextMenuRequested['QPoint'].connect(partial(self.showOptions, table))
+
+    @staticmethod
+    def hash(ion):
+        return (ion.getName(),ion.charge)
+
     def setUpUi(self, title):
         self.setObjectName("dialog")
         self._translate = QtCore.QCoreApplication.translate
@@ -98,20 +113,77 @@ class AbstractIonView(QtWidgets.QDialog):
     def getDumplist(self):
         return self._dumpList
 
+    def showOptions(self, table, pos):
+        global view
+        """it = table.itemAt(pos)
+        if it is None:
+            return
+        selectedRowIndex = it.row()
+        columnCount = table.columnCount()
+        item_range = QtWidgets.QTableWidgetSelectionRange(0, selectedRowIndex, columnCount - 1, selectedRowIndex)
+        table.setRangeSelected(item_range, True)"""
+        menu = QtWidgets.QMenu()
+        showAction = menu.addAction("Show in Spectrum")
+        action = menu.exec_(table.viewport().mapToGlobal(pos))
+        if action == showAction:
+            """index = None
+            for i, t in enumerate(self._tables):
+                if t == table:
+                    index = i
+            minLimit = 4000
+            maxLimit = 0
+            for ion in self._patterns[index].values():
+                minMz = np.min(ion.isotopePattern['m/z'])
+                maxMz = np.max(ion.isotopePattern['m/z'])
+                if minLimit > minMz:
+                    minLimit = minMz
+                if maxLimit < maxMz:
+                    maxLimit = maxMz"""
+            ions = self.getIons(table)
+            minLimit, maxLimit, YLimit = self.getLimits(ions)
+            peaks = self._spectrum[np.where((self._spectrum[:,0]>(minLimit-5)) & (self._spectrum[:,0]<(maxLimit+5)))]
+            view = SpectrumView(peaks, ions, minLimit, maxLimit, YLimit)
+
+    def getIons(self, *args):
+        index = None
+        for i, t in enumerate(self._tables):
+            if t == args[0]:
+                index = i
+        return self._patterns[index].values()
+
+    @staticmethod
+    def getLimits(ions):
+        minLimit = 4000
+        maxLimit = 0
+        YLimit = 0
+        for ion in ions:
+            minMz = np.min(ion.isotopePattern['m/z'])
+            maxMz = np.max(ion.isotopePattern['m/z'])
+            maxY = np.max(ion.isotopePattern['relAb'])
+            if minLimit > minMz:
+                minLimit = minMz
+            if maxLimit < maxMz:
+                maxLimit = maxMz
+            if YLimit < maxY:
+                YLimit = maxY
+        return minLimit, maxLimit, YLimit
+
+
 
 class CheckOverlapsView(AbstractIonView):
-    def __init__(self, patterns):
+    def __init__(self, patterns, spectrum):
         super(CheckOverlapsView, self).__init__(patterns, "Check Overlapping Ions",
-           "Complex overlapping patterns - Select ions for deletion:", [100, 30, 120, 140, 70, 60, 60,40])
+           "Complex overlapping patterns - Select ions for deletion:", [100, 30, 120, 140, 70, 60, 60,40], spectrum)
 
     def makeTables(self, yPos):
         for i, pattern in enumerate(self._patterns):
-            table = TickIonTableWidget(self.contents, pattern, yPos) #self.createTableWidget(self, pattern, yPos)
+            table = TickIonTableWidget(self.contents, pattern.values(), yPos) #self.createTableWidget(self, pattern, yPos)
             for i,width in enumerate(self._widths):
                 table.setColumnWidth(i,width)
             #self.formLayout.setWidget(i+1, QtWidgets.QFormLayout.SpanningRole, table)  # ToDo
+            self.connectTable(table)
             self._tables.append(table)
-            yPos += len(pattern)*20+50
+            yPos += len(pattern.values())*20+50
             self.formlayout.addWidget(table)
             spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
             self.formlayout.addItem(spacerItem)
@@ -125,20 +197,21 @@ class CheckOverlapsView(AbstractIonView):
 
 
 class CheckMonoisotopicOverlapView(AbstractIonView):
-    def __init__(self, patterns):
+    def __init__(self, patterns, spectrum):
         self.comboBoxes = []
         self.optionDict = dict()
         super(CheckMonoisotopicOverlapView, self).__init__(patterns, "Check Heavily Overlapping Ions",
-           "These ions have the same mass - select the ion you want to keep", [100, 30, 120, 140, 70, 60, 60])
+           "These ions have the same mass - select the ion you want to keep", [100, 30, 120, 140, 70, 60, 60], spectrum)
 
     def makeTables(self, yPos):
         for i, pattern in enumerate(self._patterns):
-            self.makeComboBox(pattern,yPos)
-            table = IonTableWidget(self.contents, pattern, yPos + 40)
+            self.makeComboBox(pattern.values(),yPos)
+            table = IonTableWidget(self.contents, pattern.values(), yPos + 40)
             for i,width in enumerate(self._widths):
                 table.setColumnWidth(i,width)
+            self.connectTable(table)
             self._tables.append(table)
-            yPos += len(pattern)*20+50+50
+            yPos += len(pattern.values())*20+50+50
             self.formlayout.addWidget(table)
             spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
             self.formlayout.addItem(spacerItem)
@@ -168,7 +241,7 @@ class CheckMonoisotopicOverlapView(AbstractIonView):
         for box in self.comboBoxes:
             ionsToKeep.append(self.optionDict[box.currentText()])
         for pattern in self._patterns:
-            for ion in pattern:
+            for ion in pattern.values():
                 if ion not in ionsToKeep:
                     self._dumpList.append(ion)
         print(self._dumpList)
@@ -177,25 +250,69 @@ class CheckMonoisotopicOverlapView(AbstractIonView):
 
 
 class FinalIonView(AbstractIonView):
-    def __init__(self, ions):
+    def __init__(self, ions, spectrum):
         """lbl = QLabel()
         movie = QMovie("loading.gif")
         lbl.setMovie(movie)
         lbl.show()
         movie.start()"""
         super(FinalIonView, self).__init__((ions,), "Results", "Observed Ions:",
-                                                               [100, 30, 120, 140, 70, 60, 60, 160, 40])
+                                                               [100, 30, 120, 140, 70, 60, 60, 160, 40], spectrum)
         #movie.stop()
 
     def makeTables(self, yPos):
-        ions = self._patterns[0]
-        self.__table = FinalIonTable(self.contents, ions, yPos)  # self.createTableWidget(self, pattern, yPos)
+        self._ions = self._patterns[0]
+        self.__table = FinalIonTable(self.contents, self._ions.values(), yPos)  # self.createTableWidget(self, pattern, yPos)
         for i, width in enumerate(self._widths):
             self.__table.setColumnWidth(i, width)
         # self.formLayout.setWidget(i+1, QtWidgets.QFormLayout.SpanningRole, table)  # ToDo
-        yPos += len(ions) * 20 + 50
+        self.connectTable(self.__table)
+        yPos += len(self._ions.values()) * 20 + 50
         self.formlayout.addWidget(self.__table)
         return yPos
+
+
+    def showOptions(self, table, pos):
+        global view
+        menu = QtWidgets.QMenu()
+        showAction = menu.addAction("Show in Spectrum")
+        action = menu.exec_(table.viewport().mapToGlobal(pos))
+
+        it = table.itemAt(pos)
+        if it is None:
+            return
+        selectedRowIndex = it.row()
+        columnCount = table.columnCount()
+        item_range = QtWidgets.QTableWidgetSelectionRange(0, selectedRowIndex, columnCount - 1, selectedRowIndex)
+        table.setRangeSelected(item_range, True)
+        selectedHash = (table.item(selectedRowIndex, 3).text(), int(table.item(selectedRowIndex, 1).text()))
+        print(selectedHash)
+        if action == showAction:
+            ions = self.getIons(self._ions[selectedHash])
+            print(ions)
+            minLimit, maxLimit, maxY = self.getLimits(ions)
+            peaks = self._spectrum[np.where((self._spectrum[:,0]>(minLimit-5)) & (self._spectrum[:,0]<(maxLimit+5)))]
+            view = SpectrumView(peaks, ions, np.min(self._ions[selectedHash].isotopePattern['m/z']),
+                                np.max(self._ions[selectedHash].isotopePattern['m/z']),
+                                np.max(self._ions[selectedHash].isotopePattern['relAb']))
+
+
+    def getIons(self, ion):
+        monoisotopicDict = {ion.isotopePattern['m/z'][0]:key for key,ion in self._ions.items()}
+        monoisotopics = np.array(sorted(list(monoisotopicDict.keys())))
+        distance = 50
+        median = ion.isotopePattern['m/z'][0]
+
+        while True:
+            monoisotopics = monoisotopics[np.where(abs(monoisotopics-median)<distance )]
+            if len(monoisotopics)< 20:
+                print(median,[monoisotopicDict[mono] for mono in monoisotopics])
+                return [self._ions[monoisotopicDict[mono]] for mono in monoisotopics]
+            elif len(monoisotopics)<30:
+                distance /=1.5
+            else:
+                distance /=2
+        #for hash, ion in self._patterns[0].items():
 
     def accept(self):
         self._dumpList += self.__table.getDumpList()

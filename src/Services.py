@@ -2,6 +2,7 @@ from abc import ABC
 
 from src.entities.GeneralEntities import Makromolecule, Element, BuildingBlock
 from src.Exceptions import UnvalidInputException
+import numpy as np
 from src.repositories.TD_Repositories import *
 from src.repositories.MoleculeRepository import MoleculeRepository
 from src.repositories.PeriodicTableRepository import PeriodicTableRepository
@@ -116,6 +117,15 @@ class PeriodicTableService(AbstractServiceForPatterns):
             except ValueError:
                 raise UnvalidInputException(item[0], "Number required: " + val)
 
+    def getElements(self, elements):
+        """elementDict = dict()
+        for elem in elements:
+            isotopeTable = np.array(sorted(self.repository.getPattern(elem), key=lambda tup: tup[1], reverse=True)
+                                    , dtype=[('index', np.float64), ('nr', np.float64), ('nrIso', np.float64),
+                                             ('relAb', np.float64), ('mass', np.float64), ('M+', np.float64)])
+            self.repository.getPattern(elem)
+            elementDict[elem] = """
+        return {elem:self.repository.getPattern(elem).getItems() for elem in elements}
 
 class MoleculeService(AbstractServiceForPatterns):
     def __init__(self):

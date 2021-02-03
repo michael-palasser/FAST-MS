@@ -60,21 +60,20 @@ class Isotope(object):
     """
     wahrsch zu umstaendlich
     """
-    def __init__(self, pNr, mass, relAb):
+    def __init__(self, nucNr, mass, relAb):
         """
 
-        :param pNr: proton number
-        :param isoNr: M+isoNr (monoisotopic = M)
+        :param nucNr: number of nucleons
         :param mass:
         :param relAb:
         """
-        self.__pNr = pNr
+        self.__nucNr = nucNr
         #self.__isoNr = isoNr
         self.__mass = mass
         self.__relAb = relAb
 
     def getPNr(self):
-        return self.__pNr
+        return self.__nucNr
 
     """def getNr(self):
         return self.__isoNr"""

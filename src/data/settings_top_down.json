@@ -1,1 +1,1 @@
-"{\n   \"sequName\": \"neoRibo\",\n   \"charge\": -7,\n   \"fragmentation\": \"RNA_CAD\",\n   \"modifications\": \"NMIA\",\n   \"nrMod\": 1,\n   \"spectralData\": \"1409_neoRibo_NMIA_7.txt\",\n   \"noiseLimit\": 2000000.0,\n   \"fragLib\": \"\",\n   \"output\": \"asd\"\n}"
+"{\n   \"sequName\": \"rre2\",\n   \"charge\": 0,\n   \"fragmentation\": \"RNA_CAD\",\n   \"modifications\": \"CMCT\",\n   \"nrMod\": 1,\n   \"spectralData\": \"\",\n   \"noiseLimit\": 0.0,\n   \"fragLib\": \"\",\n   \"output\": \"\"\n}"

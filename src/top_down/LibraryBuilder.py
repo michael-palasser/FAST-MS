@@ -130,24 +130,24 @@ class FragmentLibraryBuilder(object):
                 templateRadicals = template.getRadicals()
                 if self.checkForProlines(templateName[0],linkSequ, basicLadder):
                     continue
-                sumFormula = linkFormula.addFormula(template.getFormula())
+                formula = linkFormula.addFormula(template.getFormula())
                 if self.checkForResidue(template.getResidue(), linkSequ):
-                    if (not sumFormula.checkForNegativeValues()) and template.enabled():
-                        ladder.append(Fragment(templateName[0], len(linkSequ), templateName[1:], sumFormula, linkSequ,
+                    if (not formula.checkForNegativeValues()) and template.enabled():
+                        ladder.append(Fragment(templateName[0], len(linkSequ), templateName[1:], formula, linkSequ,
                                                templateRadicals))
                         for nrMod in range(1, self.__maxMod + 1):
                             for modif in self.__modifPattern.getItems():
                                 if modif.enabled():
                                     modifName = modif.getName()
-                                    sumFormula = linkFormula.addFormula(template.getFormula(),
+                                    formula = linkFormula.addFormula(template.getFormula(),
                                                     MolecularFormula(modif.getFormula()).multiplyFormula(nrMod).formulaDict)
-                                    if self.checkForResidue(modif.getResidue(), linkSequ) and not sumFormula.checkForNegativeValues()\
+                                    if self.checkForResidue(modif.getResidue(), linkSequ) and not formula.checkForNegativeValues()\
                                             and ((modifName+templateName[1:]) not in self.__modifPattern.getExcluded()):
                                             #Constructor: type, number, modification, loss, formula
                                             if self.__maxMod > 1:
                                                 modifName = modifName[0]+str(nrMod)+modifName[1:]
                                             newFragment = Fragment(templateName[0],len(linkSequ),modifName+templateName[1:],
-                                                           sumFormula, linkSequ, templateRadicals+modif.getRadicals())
+                                                           formula, linkSequ, templateRadicals+modif.getRadicals())
                                             ladder.append(newFragment)
         return ladder
 
@@ -227,6 +227,7 @@ class FragmentLibraryBuilder(object):
             criticalLength = 60
         if len(self.__sequence.getSequenceList())<criticalLength: #flag == 0:
             for fragment in self.__fragmentLibrary:
+                print(fragment.getName(), fragment.formula.formulaDict)
                 fragment.isotopePattern = fragment.formula.calculateIsotopePattern()
                 #if fragment.type in self.radicalDict:
                 #fragment.isotopePattern['mass'] -= fragment.radicals * (E_MASS)

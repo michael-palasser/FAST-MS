@@ -28,6 +28,7 @@ class AbstractDialog(QDialog):
         self.buttonBox.rejected.connect(self.reject)
         self.newSettings = None
         self.move(300,100)
+        self.ok = False
 
     @staticmethod
     def setNewSizePolicy(horizontal, vertical):
@@ -126,6 +127,7 @@ class AbstractDialog(QDialog):
 
 
     def accept(self):
+        self.ok = True
         super(AbstractDialog, self).accept()
 
     def checkValues(self, configs):
@@ -157,7 +159,7 @@ class StartDialog(AbstractDialog):
 
     def getNewSettings(self):
         newSettings = self.makeDictToWrite()
-        if (newSettings['spectralData'][-4:] != '.txt') and (newSettings['spectralData'][-4:] != '.csv'):
+        if (newSettings['spectralData'][-4:] != '.txt') and (newSettings['spectralData'][-4:] != '.csv') and (newSettings['spectralData']!=""):
             newSettings['spectralData'] += '.txt'
         try:
             newSettings = self.checkValues(newSettings)

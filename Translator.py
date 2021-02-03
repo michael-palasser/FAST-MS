@@ -276,8 +276,8 @@ prcFrags = [
     ['+2e', '', '', '', 2,True]]
 fragPath = join(path, 'Parameters', 'protein-fragmentation','ECD.txt')
 
-writeFragments("Protein_ECD",fragPath, prcFrags)
+#writeFragments("Protein_ECD",fragPath, prcFrags)
 
-writeModifications()"""
+#writeModifications()"""
 
 #writeIntactModifs()

@@ -82,12 +82,13 @@ class Window(QMainWindow):
     def startFragmentHunter(self):
         dialog = TDStartDialog(self)
         dialog.show()
-        if dialog.exec_() and dialog.accepted:
+        if dialog.exec_() and dialog.ok:
             TD_MainController(self).run()
 
     def startIntactIonSearch(self):
         dialog = IntactStartDialog(self)
-        dialog.exec_()
+        if dialog.exec_() and dialog.ok:
+            IntactIonsSearch()
 
     def close_application(self):
         print('exit')

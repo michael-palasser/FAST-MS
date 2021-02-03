@@ -1,6 +1,7 @@
 import csv
 import os
 import sqlite3
+import time
 from os.path import join
 
 import numpy as np
@@ -43,13 +44,14 @@ class IsotopePatternReader(object):
             next(reader, None)
             isotopePattern = list()
             counter = 0
-            for row in reader:
+            i=0
+            for i,row in enumerate(reader):
                 #print(row)
                 if counter == 0:
                     name = row[0]
                     counter = 1
                 elif row[0] != '':
-                    isotopePatternDict[name] = np.array(isotopePattern, dtype=[('mass',np.float64),('relAb', np.float64)])
+                    isotopePatternDict[name] = np.array(isotopePattern, dtype=[('m/z',np.float64),('calcInt', np.float64)])
                     name = row[0]
                     isotopePattern = list()
                 try:
@@ -57,7 +59,9 @@ class IsotopePatternReader(object):
                 except IndexError:
                     print(row)
                     raise UnvalidIsotopePatternException(row, " incorrect")
-            isotopePatternDict[name] = np.array(isotopePattern, dtype=[('mass',np.float64),('relAb', np.float64)])
+            if i < 1:
+                raise UnvalidIsotopePatternException("", "no data in file")
+            isotopePatternDict[name] = np.array(isotopePattern, dtype=[('m/z',np.float64),('calcInt', np.float64)])
         for fragment in fragmentLibrary:
             if fragment.getName() not in isotopePatternDict:
                 raise UnvalidIsotopePatternException(fragment.getName(),"not found in file")
@@ -66,15 +70,15 @@ class IsotopePatternReader(object):
         return fragmentLibrary
 
     def checkEquality(self, fragment, savedPattern):
-        newPattern = fragment.formula.calculateIsotopePattern(2)
+        newPattern = fragment.formula.calculateTestIsotopePattern(2)
         for i in range(2):
-            if newPattern[i]['mass'] - savedPattern[i]['mass'] > 10 ** (-6):
+            if newPattern[i]['m/z'] - savedPattern[i]['m/z'] > 10 ** (-6):
                 raise UnvalidIsotopePatternException(fragment.getName(), "mass incorrect " +
-                     str(newPattern[i]['mass']) + " != " + str(savedPattern[i]['mass']))
-            if newPattern[i]['relAb'] - savedPattern[i]['relAb'] > 10 ** (-6):
-                raise UnvalidIsotopePatternException(fragment.getName(), "relative Abundance incorrect " +
-                     str(newPattern[i]['relAb']) + " != " + str(savedPattern[i]['relAb']))
-
+                     str(newPattern[i]['m/z']) + " != " + str(savedPattern[i]['m/z']))
+            if newPattern[i]['calcInt'] - savedPattern[i]['calcInt'] > 10 ** (-6):
+                print(newPattern)
+                raise UnvalidIsotopePatternException(fragment.getName(), '('+str(i)+") relative Abundance incorrect " +
+                     str(newPattern[i]['calcInt']) + " != " + str(savedPattern[i]['calcInt']))
 
 
     def saveIsotopePattern(self, fragmentLibrary):
@@ -96,12 +100,12 @@ class IsotopePatternReader(object):
                         #if M_max < isotope[0]:
                             #M_max = isotope[0]
                         #print(isotope[0])
-                        f_writer.writerow({'ion': fragment.getName(), 'mass': np.around(isotope['mass'], 6),
-                                           'Intensities': np.around(isotope['relAb'], 7)})
+                        f_writer.writerow({'ion': fragment.getName(), 'mass': np.around(isotope['m/z'], 6),
+                                           'Intensities': np.around(isotope['calcInt'], 7)})
                         counter += 1
                     else:
-                        f_writer.writerow({'ion': '', 'mass': np.around(isotope['mass'], 6),
-                                           'Intensities': np.around(isotope['relAb'], 7)})
+                        f_writer.writerow({'ion': '', 'mass': np.around(isotope['m/z'], 6),
+                                           'Intensities': np.around(isotope['calcInt'], 7)})
 
 
 '''def __init__(self):
@@ -125,7 +129,7 @@ class IsotopePatternReader(object):
                 CREATE TABLE IF NOT EXISTS fragments (
                     "id"	integer PRIMARY KEY UNIQUE ,
                     "m/z"	 real NULL,
-                    "relAb"	 real NULL,
+                    "calcInt"	 real NULL,
                     "fragmentId" text NOT NULL );""")
 
     def create(self, sequence, nrMod, fragName, modName, fragmenta):

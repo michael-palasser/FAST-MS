@@ -67,7 +67,6 @@ class IonTableWidget(QTableWidget):
         self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.setSortingEnabled(True)
 
-        self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
 
         print('done')
         # self.customContextMenuRequested['QPoint'].connect(partial(self.editRow, self, bools))

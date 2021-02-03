@@ -9,6 +9,7 @@ import os
 import numpy as np
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src import path
+import pandas as pd
 
 noiseLimit = ConfigurationHandlerFactory.getTD_SettingHandler().get('noiseLimit')
 
@@ -119,9 +120,13 @@ class FragmentIon(Fragment):
                 '{:6.1f}'.format(round(self.getSignalToNoise(),1)),
                 '{:3.2f}'.format(round(self.quality,2))]"""
         """return [round(self.getMonoisotopic(),5), self.charge, round(self.intensity), self.getName(), round(self.error,2),
-                round(self.getSignalToNoise(),1), round(self.quality,2)]"""
+                round(self.getSignalToNoise(),1), round(self.quality,2)]#"""
         return [500, self.charge, round(self.intensity), self.getName(), round(self.error,2),
                 round(self.getSignalToNoise(),1), round(self.quality,2)]
+
+    def getValueDict(self):
+        return {'mz':500,'z':self.charge,'int':round(self.intensity),'name':self.getName(),'error':round(self.error, 2),
+                'snr':round(self.getSignalToNoise(), 1),'qual':round(self.quality, 2),'com':self.comment}
 
 
 class IntactIon(object):

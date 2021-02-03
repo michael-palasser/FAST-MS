@@ -10,11 +10,11 @@ class Analyser(object):
     '''
     classdocs
     '''
-    def __init__(self, listOfIons, sequence,modificationType, settings):
+    def __init__(self, listOfIons, sequence, precCharge, modification):
         self.listOfIons = sorted(listOfIons, key=lambda obj:(obj.type , obj.number))
         self.sequence = sequence
-        self.modification = modificationType
-        self.settings = settings
+        self.precCharge = abs(precCharge)
+        self.modification = modification
         self.percentageDict = dict()
 
 
@@ -35,13 +35,13 @@ class Analyser(object):
         return relAbundanceOfSpecies
 
     def getModificationLoss(self):
-        if self.settings['modification'] == "":
+        if self.modification == "":
             return None
         modifiedSum = 0
         totalSum = 0
         for ion in self.listOfIons:
-            if (ion.charge == self.settings['charge']) and (ion.number==0):
-                if self.settings['modification'] in ion.modification:
+            if (ion.number==0): #(ion.charge == self.precCharge) and
+                if self.modification in ion.modification:
                     modifiedSum += ion.getRelAbundance()
                 totalSum += ion.getRelAbundance()
         return 1 - modifiedSum / totalSum
@@ -58,7 +58,7 @@ class Analyser(object):
                 if self.modification in ion.modification:
                     temp[ion.type[0]][ion.number - 1] += \
                         np.array([ion.getRelAbundance(),
-                                  ion.getRelAbundance()*self.getNrOfModifications(ion.modification),0])
+                                  ion.getRelAbundance()*int(self.getNrOfModifications(ion.modification)),0])
                 else:
                     temp[ion.type[0]][ion.number - 1] += \
                         np.array([ion.getRelAbundance(),0,0])
@@ -81,7 +81,7 @@ class Analyser(object):
                 nrOfModif += (10 * modificationString[modificationString.find(self.modification) - 2])
         return nrOfModif
 
-    #ToDo: Other spectrum, ausslassen wenn -
+    #ToDo: Other __spectrum, ausslassen wenn -
     def createPlot(self,nr_mod):
         forwLadderX = list()
         forwLadderY = list()

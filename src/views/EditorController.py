@@ -5,7 +5,6 @@ from PyQt5 import QtWidgets, QtCore
 import sys
 
 
-from src.entities.GeneralEntities import Isotope
 from src.Services import *
 
 
@@ -71,6 +70,7 @@ class AbstractSimpleEditorController(ABC):
         #tableWidget.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         #tableWidget.customContextMenuRequested['QPoint'].connect(self.h3_table_right_click)
         #tableWidget.move(20,yPos) #70
+        print("before",data, bools)
         tableWidget = self.formatTableWidget(headers, tableWidget, data, bools)
         tableWidget.setHorizontalHeaderLabels(headers)
         tableWidget.resizeColumnsToContents()
@@ -79,9 +79,6 @@ class AbstractSimpleEditorController(ABC):
         return tableWidget
 
     def formatTableWidget(self, headers, tableWidget, data, bools):
-        #tableWidget = QtWidgets.QTableWidget(self.centralwidget)
-        #tableWidget.setGeometry(QtCore.QRect(20, 70, 420, 200))
-        #headers = self.service.getHeaders()
         headerKeys = list(headers.keys())
         tableWidget.setRowCount(len(data))
         tableWidget.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
@@ -261,7 +258,7 @@ class AbstractEditorController(AbstractSimpleEditorController, ABC):
         if args != (False,):
             title = args[0]"""
         openDialog = OpenDialog("Delete", self.service.getAllPatternNames())
-        openDialog.show()
+        #openDialog.show()
         if openDialog.exec_() and openDialog.accepted:
             if openDialog.comboBox.currentText() != "--New--":
                 print('Deleting '+openDialog.comboBox.currentText())
@@ -306,6 +303,7 @@ class AbstractEditorControllerWithTabs(AbstractEditorController, ABC):
         tabWidget.addTab(self.tab1, "")
         tabWidget.setTabText(tabWidget.indexOf(self.tab1), self._translate("MainWindow", tabName1))
         self.tab2 = QtWidgets.QWidget()
+        print("2:", self.pattern.getItems2())
         self.table2 = self.createTableWidget(self.tab2, self.pattern.getItems2(), yPos+50, self.service.getHeaders()[1],
                                              self.service.getBoolVals()[1])
         tabWidget.addTab(self.tab2, "")
@@ -314,8 +312,7 @@ class AbstractEditorControllerWithTabs(AbstractEditorController, ABC):
 
 
         self.formLayout.setWidget(yPos+1, QtWidgets.QFormLayout.SpanningRole, tabWidget)   #ToDo
-        #self.table1.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
-        #self.table2.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        self.table1.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         return tabWidget
 
     def openAgain(self, *args):
@@ -332,45 +329,33 @@ class AbstractEditorControllerWithTabs(AbstractEditorController, ABC):
                                              self.service.getBoolVals()[1])
 
 
-class IntactIonEditorController(AbstractEditorController):
-    def __init__(self):
-        super(IntactIonEditorController, self).__init__(IntactIonService(),
-                                                        "Edit Intact Ions", "Modification")
-        yPos = self.createWidgets(["Name: "], {"name":QtWidgets.QLineEdit(self.centralwidget)}, 20, 150,
-                                  [self.pattern.getName()])
-        self.table = self.createTableWidget(self.centralwidget, self.pattern.getItems(), yPos, self.service.getHeaders(),
-                                            self.service.getBoolVals())
-        self.formLayout.setWidget(1, QtWidgets.QFormLayout.SpanningRole, self.table)   #ToDo
-        self.mainWindow.show()
-
-    def save(self, *args):
-        id = self.pattern.getId()
-        if args:
-            id = args[0]
-        self.service.savePattern(IntactPattern(self.widgets["name"].text(), self.readTable(self.table), id))
-
-    """def saveNew(self):
-        self.service.savePattern(IntactPattern(self.widgets["name"].text(),self.readTable(self.table), None ))"""
-
-
 class MoleculeEditorController(AbstractEditorController):
     def __init__(self):
         super(MoleculeEditorController, self).__init__(MoleculeService(), "Edit Molecular Properties", "Molecule")
-        """self.pattern = self.open('Open Molecule')
-        if self.pattern == None:
-            self.pattern = self.service.makeNew()"""
-        yPos = self.createWidgets(["Name: "], {"name": QtWidgets.QLineEdit(self.centralwidget)}, 20, 150,
-                                  [self.pattern.getName()])
+        yPos = self.createWidgets(["Name: ", "Gain: ", "Loss: "],
+                    {"name": QtWidgets.QLineEdit(self.centralwidget), 'gain': QtWidgets.QLineEdit(self.centralwidget),
+                     'loss': QtWidgets.QLineEdit(self.centralwidget)},
+                    20, 150, [self.pattern.getName(), self.pattern.getGain(), self.pattern.getLoss()])
+        self.widgets['gain'].setToolTip("Enter the molecular loss of the molecule formula compared to a pure composition"
+                                        "of the corresponding building blocks")
+        self.widgets['loss'].setToolTip("Enter the molecular gain of the molecule formula compared to a pure composition"
+                                        "of the corresponding building blocks")
         self.table = self.createTableWidget(self.centralwidget, self.pattern.getItems(), yPos+50,
                                             self.service.getHeaders(), self.service.getBoolVals())
-        self.formLayout.setWidget(1, QtWidgets.QFormLayout.SpanningRole, self.table)   #ToDo
+        self.formLayout.setWidget(3, QtWidgets.QFormLayout.SpanningRole, self.table)   #ToDo
         self.mainWindow.show()
 
     def save(self, *args):
         id = self.pattern.getId()
-        if args:
+        if args and args[0]:
             id = args[0]
-        self.service.savePattern(Makromolecule(self.widgets["name"].text(), self.readTable(self.table), id))
+        self.service.savePattern(Makromolecule(self.widgets["name"].text(), self.widgets["gain"].text(),
+                                               self.widgets["loss"].text(), self.readTable(self.table), id))
+
+    def openAgain(self, *args):
+        super(MoleculeEditorController, self).openAgain()
+        self.widgets["gain"].setText(self.pattern.getGain())
+        self.widgets["loss"].setText(self.pattern.getLoss())
 
     """def saveNew(self):
         self.service.savePattern(Makromolecule(self.widgets["name"].text(), self.readTable(self.table), None))"""
@@ -391,7 +376,7 @@ class ElementEditorController(AbstractEditorController):
 
     def save(self, *args):
         id = self.pattern.getId()
-        if args:
+        if args and args[0]:
             id = args[0]
         self.service.savePattern(Element(self.widgets["name"].text(), self.readTable(self.table), id))
 
@@ -421,39 +406,21 @@ class SequenceEditorController(AbstractSimpleEditorController):
 class FragmentEditorController(AbstractEditorControllerWithTabs):
     def __init__(self):
         super(FragmentEditorController, self).__init__(FragmentIonService(), "Edit Fragments", "Fragment-Pattern")
-        """self.createMenuBar({"New Fragment-Pattern": self.createNew,
-                      "Open Fragment-Pattern": self.openAgain,
-                      "Delete a Fragment-Pattern": self.delete,
-                      "Save": self.save, "Save As": self.saveNew, "Close": self.close},
-                           {"New Row": self.insertRow}) #"Copy Row":self.copyRow"""
-        yPos = self.createWidgets(["Name: ", "gain", "loss"],
-                                  {"name": QtWidgets.QLineEdit(self.centralwidget),
-                                   "gain": QtWidgets.QLineEdit(self.centralwidget),
-                                   "loss": QtWidgets.QLineEdit(self.centralwidget)}, 20, 150,
-                                  [self.pattern.getName(), self.pattern.getInitGain(), self.pattern.getInitLoss()])
-        self.widgets['gain'].setToolTip("This formula will be added to all fragments (e.g. H2O for proteins / "
-                                                "H for RNA")
-        self.widgets['loss'].setToolTip("This formula will be subtracted from all fragments (e.g. PO2 for RNA")
+        yPos = self.createWidgets(["Name: "], {"name": QtWidgets.QLineEdit(self.centralwidget)}, 20, 150,
+                                  [self.pattern.getName()])
         self.tabWidget = self.makeTabWidget(yPos, "Fragments", "Precursor-Fragments")
         self.mainWindow.show()
 
-    def openAgain(self, *args):
-        super(FragmentEditorController, self).openAgain()
-        self.widgets["gain"].setText(self.pattern.getInitGain())
-        self.widgets["loss"].setText(self.pattern.getInitLoss())
-
-
+    """def openAgain(self, *args):
+        super(FragmentEditorController, self).openAgain()"""
 
     def save(self, *args):
         id = self.pattern.getId()
-        if args:
+        if args and args[0]:
             id = args[0]
-        self.service.savePattern(FragmentationPattern(self.widgets["name"].text(), self.widgets["gain"].text(),
-                      self.widgets["loss"].text(), self.readTable(self.table1), self.readTable(self.table2), id))
-
-    """def saveNew(self):
         self.service.savePattern(FragmentationPattern(self.widgets["name"].text(), self.readTable(self.table1),
-                                                      self.readTable(self.table2), None))"""
+                                                      self.readTable(self.table2), id))
+
 
 
 class ModificationEditorController(AbstractEditorControllerWithTabs):
@@ -476,142 +443,36 @@ class ModificationEditorController(AbstractEditorControllerWithTabs):
 
     def save(self, *args):
         id = self.pattern.getId()
-        if args:
+        if args and args[0]:
             id = args[0]
         self.service.savePattern(ModificationPattern(self.widgets["name"].text(), self.widgets["modification"].text(),
                                      self.readTable(self.table1),self.readTable(self.table2), id))
 
-    """def saveNew(self):
-        self.service.savePattern(ModificationPattern(self.widgets["name"].text(), self.readTable(self.table1),
-                                                      self.readTable(self.table2), None))"""
 
-    """def createNew(self):
-        self.openAgain("Choose a Template")
+class IntactIonEditorController(AbstractEditorController):
+    def __init__(self):
+        super(IntactIonEditorController, self).__init__(IntactIonService(),
+                                                        "Edit Intact Ions", "Modification")
+        yPos = self.createWidgets(["Name: ", "Initial Gain", "Initial Loss"],
+                                  {"name": QtWidgets.QLineEdit(self.centralwidget),
+                                   "gain": QtWidgets.QLineEdit(self.centralwidget),
+                                   "loss": QtWidgets.QLineEdit(self.centralwidget)}, 20, 150,
+                                  [self.pattern.getName(), self.pattern.getInitGain(), self.pattern.getInitLoss()])
+        self.widgets['gain'].setToolTip("This formula will be added to all fragments (e.g. H2O for proteins / "
+                                                "H for RNA")
+        self.widgets['loss'].setToolTip("This formula will be subtracted from all fragments (e.g. PO2 for RNA")
+        self.table = self.createTableWidget(self.centralwidget, self.pattern.getItems(), yPos, self.service.getHeaders(),
+                                            self.service.getBoolVals())
+        self.formLayout.setWidget(3, QtWidgets.QFormLayout.SpanningRole, self.table)   #ToDo
+        self.mainWindow.show()
 
-    def openAgain(self, *args):
-        title = "Open Intact Modification"
-        if args != (False,):
-            title = args[0]
-        openDialog = OpenDialog(title, self.service.getAllPatternNames())
-        openDialog.show()
-        if openDialog.exec_() and openDialog.accepted:
-            if openDialog.comboBox.currentText() != "--New--":
-                print("openAgain",openDialog.comboBox.currentText())
-                self.pattern = self.service.get(openDialog.comboBox.currentText())
-            else:
-                self.pattern = self.service.makeNew()
-            self.widgets["name"].setText(self.pattern.getName())
-            self.table = self.formatTableWidget(self.service.getHeaders(), self.table, self.pattern.getItems())
+    def save(self, *args):
+        id = self.pattern.getId()
+        if args and args[0]:
+            id = args[0]
+        self.service.savePattern(IntactPattern(self.widgets["name"].text(), self.widgets["gain"].text(),
+                      self.widgets["loss"].text(), self.readTable(self.table), id))
 
-
-
-    def delete(self):
-        #title = "Delete Intact Modification"
-        #if args != (False,):
-        #    title = args[0]
-        openDialog = OpenDialog("Delete Intact Modification", self.service.getAllPatternNames())
-        openDialog.show()
-        if openDialog.exec_() and openDialog.accepted:
-            if openDialog.comboBox.currentText() != "--New--":
-                print("deleting",openDialog.comboBox.currentText())
-                self.pattern = self.service.delete(openDialog.comboBox.currentText())
-            else:
-                return
-
-    def save(self):
-        self.service.savePattern(IntactPattern(self.widgets["name"].text(),self.readTable(self.table), self.pattern.getId() ))
-
-
-    def readTable(self, table):
-        itemList = []
-        headers = self.service.getHeaders()
-        for row in range(table.rowCount()):
-            if table.item(row,0).text() == "":
-                continue
-            rowData = []
-            for col in range(table.columnCount()):
-                widgetItem = table.item(row, col)
-                #if widgetItem and widgetItem.text():
-                if headers[col] == 'Enabled':
-                    rowData.append(int(widgetItem.checkState()/2))
-                elif widgetItem and widgetItem.text():
-                    #ToDo
-                    rowData.append(widgetItem.text())
-                #elif headers[col] == 'Enabled':
-                    #rowData.append(widgetItem.checkState())
-                else:
-                    rowData.append("")
-            itemList.append(rowData)
-        return itemList
-
-
-
-    def saveNew(self):
-        self.service.savePattern(IntactPattern(self.widgets["name"].text(),self.readTable(self.table), None ))
-
-
-    def close(self):
-        self.service.close()
-        self.mainWindow.close()
-
-    def insertRow(self):
-        self.table.insertRow(self.table.rowCount())
-        newitem = QtWidgets.QTableWidgetItem(0)
-        newitem.setCheckState(QtCore.Qt.Checked)
-        self.table.setItem(self.table.rowCount()-1, self.table.columnCount()-1, newitem)
-
-    
-
-    def editRow(self, table, pos):
-        it = table.itemAt(pos)
-        if it is None:
-            return
-        selectedRowIndex = it.row()
-        columnCount = table.columnCount()
-        item_range = QtWidgets.QTableWidgetSelectionRange(0, selectedRowIndex, columnCount - 1, selectedRowIndex)
-        table.setRangeSelected(item_range, True)
-        menu = QtWidgets.QMenu()
-        deleteColumnAction = menu.addAction("Delete row")
-        copyColumnAction = menu.addAction("Copy and insert row")
-        action = menu.exec_(table.viewport().mapToGlobal(pos))
-        if action == deleteColumnAction:
-            table.removeRow(selectedRowIndex)
-        elif action == copyColumnAction:
-            rowCount = table.rowCount()
-            table.insertRow(rowCount)
-            for j in range(columnCount):
-                if not table.item(selectedRowIndex, j) is None:
-                    table.setItem(rowCount, j, QtWidgets.QTableWidgetItem(table.item(selectedRowIndex, j).text()))
-            table.item(rowCount, columnCount-1).setCheckState(QtCore.Qt.Checked)"""
-
-
-
-"""class RowSelecter(QDialog):
-    def __init__(self, max, title):
-        super(RowSelecter, self).__init__()
-        self.setObjectName("dialog")
-        self.resize(208, 100)
-        self.buttonBox = QtWidgets.QDialogButtonBox(self)
-        self.buttonBox.setGeometry(QtCore.QRect(25, 60, 164, 32))
-        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
-        self.label = QtWidgets.QLabel(self)
-        self.label.setGeometry(QtCore.QRect(20, 20, 121, 16))
-        self.spinBox = QtWidgets.QSpinBox(self)
-        self.spinBox.setGeometry(QtCore.QRect(140, 18, 48, 24))
-        self.spinBox.setMinimum(1)
-        self.spinBox.setMaximum(max)
-
-        self.retranslateUi(title)
-        QtCore.QMetaObject.connectSlotsByName(self)
-
-        self.buttonBox.accepted.connect(self.accept)
-        self.buttonBox.rejected.connect(self.reject)
-        self.show()
-
-    def retranslateUi(self, title):
-        _translate = QtCore.QCoreApplication.translate
-        self.setWindowTitle(_translate("dialog", title))
-        self.label.setText(_translate("dialog", "Enter Row Index:"))"""
 
 
 class OpenDialog(QtWidgets.QDialog):
@@ -673,7 +534,7 @@ d = {"Name":["+Na","K", "+CMCT", "+CMCT+Na", "+CMCT+K", "+2CMCT"],
      "enabled": [0,True,True,True,True,False]}
 
 if __name__ == '__main__':
-    #esi = Intact_Repository()
+    #esi = IntactRepository()
     #esi.makeTables()
     app = QtWidgets.QApplication(sys.argv)
     ionEditor = IntactIonEditorController()

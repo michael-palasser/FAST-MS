@@ -120,15 +120,14 @@ class AbstractRepositoryWithItems(AbstractRepository, ABC):
         :return:
         """
         #try:
-        self.insertItem(self.create(pattern.getName()), pattern.getItems(), 0)
+        self.insertItems(self.create(pattern.getName()), pattern.getItems(), 0)
         #except sqlite3.IntegrityError:
          #   raise AlreadyPresentException(pattern.getName())
 
-    def insertItem(self, patternId, items, index):
+    def insertItems(self, patternId, items, index):
         table = [key for key in self._itemDict.keys()][index]
         for item in items:
             #self.checkFormatOfItem(item)
-            print("here:", item)
             self.createItem(table, item + [patternId])
 
 
@@ -180,10 +179,10 @@ class AbstractRepositoryWithItems(AbstractRepository, ABC):
             listOfNames.append(pattern[1])
         return listOfNames
 
-    def updatePattern(self, modPattern):
-        self.update(modPattern.getName(), modPattern.getId())
-        self.deleteAllItems(modPattern.getId())
-        self.insertItem(modPattern.getId(), modPattern.getItems(),0)
+    def updatePattern(self, pattern):
+        self.update(pattern.getName(), pattern.getId())
+        self.deleteAllItems(pattern.getId())
+        self.insertItems(pattern.getId(), pattern.getItems(), 0)
 
 
     def deleteAllItems(self, patternId):
@@ -221,13 +220,13 @@ class AbstractRepositoryWith2Items(AbstractRepositoryWithItems, ABC):
         print("save",pattern.getItems2())
         patternId = self.create(pattern.getName())
         print(pattern.getItems(),pattern.getItems2())
-        self.insertItem(patternId, pattern.getItems(), 0)
-        self.insertItem(patternId, pattern.getItems2(), 1)"""
+        self.insertItems(patternId, pattern.getItems(), 0)
+        self.insertItems(patternId, pattern.getItems2(), 1)"""
         #except sqlite3.IntegrityError:
          #   raise AlreadyPresentException(pattern.getName())
 
 
     def updatePattern(self, pattern):
         self.deleteAllItems(pattern.getId())
-        self.insertItem(pattern.getId(), pattern.getItems(), 0)
-        self.insertItem(pattern.getId(), pattern.getItems2(), 1)
+        self.insertItems(pattern.getId(), pattern.getItems(), 0)
+        self.insertItems(pattern.getId(), pattern.getItems2(), 1)

@@ -2,13 +2,20 @@ import os
 import traceback
 
 from src import path
+from src.MolecularFormula import MolecularFormula
 from src.Services import *
 from src.PeriodicTable import *
 from src.entities.GeneralEntities import *
-from src.entities.IonEntities import *
-from src.LibraryBuilder import removeEmptyElements
+from src.entities.IonTemplates import *
 from os import listdir
 from os.path import isfile, join
+
+def removeEmptyElements(rawList):
+    newList = rawList
+    while '' in newList:
+        newList.remove('')
+    return newList
+
 
 def writeElements():
     service = PeriodicTableService()
@@ -35,6 +42,7 @@ def readMoleculeFile(moleculeFile):
     '''
     monomers = []
     mode = 'monomers'
+    h2o = {'H':2, 'O':1}
     for line in moleculeFile:
         if line.startswith('#precursor ions'):
             mode = 'precIons'
@@ -42,13 +50,12 @@ def readMoleculeFile(moleculeFile):
             continue
         lineList = removeEmptyElements(line.rstrip().split('\t'))
         if mode == 'monomers':
-            monomers.append([lineList[0],lineList[1]])
+            #formula = MolecularFormula(AbstractItem2.stringToFormula(lineList[1], dict(),1)).addFormula(h2o).toString()
+            #print(lineList[1], formula)
+            monomers.append([lineList[0],lineList[1], 0])
             print("hey",[lineList[0],lineList[1]])
             #self.monomers[lineList[0]] = self.stringToFormula(lineList[1],dict(),1)
     return monomers
-    """elif mode == 'precIons':
-        print(lineList[0])
-        self.precursorModifications[lineList[0]] = self.stringToFormula(lineList[1], dict(), 1)"""
 
 
 
@@ -60,7 +67,7 @@ def writeMolecules():
             print(moleculePath)
             with open(moleculePath) as f:
                 monomers = readMoleculeFile(f)
-            service.savePattern(Makromolecule(molecule,monomers,None))
+            service.savePattern(Makromolecule(molecule, "", "", monomers,None))
     except:
         traceback.print_exc()
     finally:
@@ -69,10 +76,10 @@ def writeMolecules():
 
 def getSequences(file):
     '''
-    finds sequence
+    finds sequenceList
     :param file: file with stored sequences
-    :param name: sequence name
-    :return: molecule, list of sequence, respectively None,None if sequence was not found
+    :param name: sequenceList name
+    :return: molecule, list of sequenceList, respectively None,None if sequenceList was not found
     '''
     sequences = []
     for line in file:
@@ -114,64 +121,37 @@ def readFragmentations(file):
                 if i == len(oldProperties)-1:
                     property = 0
             properties.append(property)
+        name, enabled = properties[0] , True
         if properties[0].startswith('#'):
-            print(properties[4])
-            items.append([properties[0][1:], properties[2], properties[1], properties[3], int(properties[4]), False])
+            name, enabled = properties[0][1:], False
+
+        if name[0] in ['a', 'b', 'c', 'd']:
+            items.append([name, properties[2], properties[1], properties[3], int(properties[4]), 1, enabled])
         else:
-            items.append([properties[0], properties[2], properties[1], properties[3], int(properties[4]), True])
+            items.append([name, properties[2], properties[1], properties[3], int(properties[4]), -1, enabled])
     for item in items:
         print(item)
     return items
 
-
-
-
-
-
-"""def readFragmentationFile(file):  # ToDo: what happens when number before mod?
-    '''
-    reads the fragment-templates and creates dicts
-    :param file: file which contain fragment templates
-    :return: void
-    '''
-    for line in file:
-        line = line.rstrip()
-        if line.startswith('#') or line == "":
-            continue
-        else:
-            if line[0] in ['a', 'b', 'c', 'd']:
-                self.addToFragmentDict(line, self.forwardDict)
-            elif line[0] in ['w', 'x', 'y', 'z']:
-                self.addToFragmentDict(line, self.backwardDict)
-            elif line.startswith('+'):
-                name, formula, residue, zEffect = self.lineToFormula(line)
-                self.modificationDict[name] = (
-                formula, residue, zEffect)  # ToDo: better solution, radicals in nrOfModifications?
-            elif line.startswith('-+'):
-                line = line.rstrip()
-                removeList.append(line[1:])
-            else:
-                print(line)
-                raise Exception("incorrect format in fragmentation File")"""
 
 def writeFragments(name, fragPath,precFrag):
     service = FragmentIonService()
     try:
         with open(fragPath) as f:
             fragments = readFragmentations(f)
-        if "RNA" in name:
+        '''if "RNA" in name:
             gain, loss = 'H1', 'O2P1'
         else:
-            gain, loss = 'H2O', ''
-        print(FragmentationPattern(name, gain, loss, fragments, precFrag, None).getItems2())
-        service.savePattern(FragmentationPattern(name, gain, loss, fragments, precFrag, None))
+            gain, loss = 'H2O', '' '''
+        print(FragmentationPattern(name, fragments, precFrag, None).getItems2())
+        service.savePattern(FragmentationPattern(name, fragments, precFrag, None))
     except:
         traceback.print_exc()
     finally:
         service.close()
 
 
-def readModifications():
+def writeModifications():
     service = ModificationService()
     try:
         for mol in ['protein','RNA']:
@@ -214,13 +194,13 @@ def readModifications():
                         name = file[4:-4]
                         print(name, name, modifications, excluded, None)
                         modif = name
-                        if name == 72:
+                        if name == '72':
                             modif = "DEPC"
-                        elif name == 90:
+                        elif name == '90':
                             modif = "DEPC+H2O"
-                        elif name == 62:
+                        elif name == '62':
                             modif = "DEPC+H2O-CO"
-                        elif name == 134:
+                        elif name == '134':
                             modif = "2DEPC+H2O-CO"
                         service.savePattern(ModificationPattern(name, modif, modifications, excluded, None))
     except:
@@ -250,14 +230,19 @@ def readIntactModifs():
 def writeIntactModifs():
     service= IntactIonService()
     modifications = readIntactModifs()
-    for key,val in modifications.items():
-        service.savePattern(IntactPattern(key, val, None))
+    try:
+        for key,val in modifications.items():
+            service.savePattern(IntactPattern(key, "H1", "O2P1", val, None))
+    except:
+        traceback.print_exc()
+    finally:
+        service.close()
 
 
-"""writeElements()
+writeElements()
 writeMolecules()
 writeSequences()
-with open(os.path.join(path, 'Parameters', 'Protein' + '.txt')) as f:
+"""with open(os.path.join(path, 'Parameters', 'Protein' + '.txt')) as f:
     for line in f:
         if line.startswith('#') or line == "":
             continue
@@ -290,8 +275,9 @@ prcFrags = [
     ['+e', '', '', '', 1,True],
     ['+2e', '', '', '', 2,True]]
 fragPath = join(path, 'Parameters', 'protein-fragmentation','ECD.txt')
-writeFragments("Protein_ECD",fragPath, prcFrags)
 
-readModifications()"""
+#writeFragments("Protein_ECD",fragPath, prcFrags)
 
-writeIntactModifs()
+#writeModifications()"""
+
+#writeIntactModifs()

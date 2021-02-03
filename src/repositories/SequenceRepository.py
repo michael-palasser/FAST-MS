@@ -13,14 +13,14 @@ from src.Exceptions import AlreadyPresentException
 
 class SequenceRepository(AbstractRepository):
     def __init__(self):
-        super(SequenceRepository, self).__init__(join('shared.db'), 'sequences', ('name', 'sequence', 'molecule'), (),())
+        super(SequenceRepository, self).__init__(join('shared.db'), 'sequences', ('name', 'sequenceList', 'molecule'), (),())
 
     def makeTables(self):
         self._conn.cursor().execute("""
             CREATE TABLE IF NOT EXISTS sequences (
                 "id"	integer PRIMARY KEY UNIQUE ,
                 "name"	text NOT NULL UNIQUE,
-                "sequence" text NOT NULL ,
+                "sequenceList" text NOT NULL ,
                 "molecule" text NOT NULL );""")
 
     def createSequence(self, sequence):
@@ -36,7 +36,6 @@ class SequenceRepository(AbstractRepository):
     def getAllSequences(self):
         sequences = []
         for sequenceTuple in self.getAll():
-            print(sequenceTuple)
             sequences.append((sequenceTuple[1], sequenceTuple[2], sequenceTuple[3]))
         return sequences
 
@@ -48,8 +47,8 @@ class SequenceRepository(AbstractRepository):
 
 
     def getItemColumns(self):
-        return {"Name": "Enter the name for the sequence",
-                "Sequence":"Enter the sequence (no Spaces allowed)", "Molecule":"Enter the type of Molecule"}
+        return {"Name": "Enter the name for the sequenceList",
+                "Sequence":"Enter the sequenceList (no Spaces allowed)", "Molecule":"Enter the type of Molecule"}
 
     def getAllSequencesAsObjects(self):
         sequences = []
@@ -59,7 +58,7 @@ class SequenceRepository(AbstractRepository):
 
 
     def updateSequence(self, sequence):
-        #self.update(sequence.getName(), sequence.getSequenceString(), sequence.getMolecule(), sequence.getId())
+        #self.update(sequenceList.getName(), sequenceList.getSequenceString(), sequenceList.getMolecule(), sequenceList.getId())
         cur = self._conn.cursor()
         sql = 'UPDATE sequences SET ' + '=?, '.join(self._columns) + '=? WHERE name=?'
         cur.execute(sql, (sequence.getName(), sequence.getSequenceString(), sequence.getMolecule(), sequence.getName()))

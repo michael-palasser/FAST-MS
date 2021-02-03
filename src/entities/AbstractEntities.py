@@ -1,6 +1,8 @@
 import re
 from abc import ABC
 
+from src.Exceptions import UnvalidInputException
+
 
 class AbstractPattern(ABC):
     def __init__(self, name, id):
@@ -19,7 +21,6 @@ class AbstractPattern(ABC):
     def setId(self, id):
         self._id = id
 
-
 class PatternWithItems(AbstractPattern):
     def __init__(self, name, items, id):
         """
@@ -34,6 +35,9 @@ class PatternWithItems(AbstractPattern):
 
     def getItems(self):
         return self._items
+
+    def setItems(self, items):
+        self._items = items
 
     """def setItems(self, items):
         formatedItems = list()
@@ -103,7 +107,6 @@ class AbstractItem1(ABC):
         :param sign: +1 or -1 for addition or subtraction of formula to or from formulaDict
         :return: new formula (dict)
         '''
-        print("finally",formulaString)
         if formulaString == "":
             return formulaDict
         for item in re.findall('[A-Z][^A-Z]*', formulaString):
@@ -131,10 +134,30 @@ class AbstractItem2(AbstractItem1, ABC):
         return (self._enabled == 1)
 
     def getFormula(self):
-        print(self._gain, self._loss)
         formulaDict = self.stringToFormula(self._gain, dict(), 1)
         return self.stringToFormula(self._loss, formulaDict, -1)
 
 
 
+"""class PrecursorItem(AbstractItem2):
+    #def __init__(self, name, gain, loss, residue, radicals, enabled):
+    def __init__(self, item):
+        super(PrecursorItem, self).__init__(name=item[0], gain=item[1], loss=item[2], enabled=item[5])
+        self._residue = item[3]
+        self._radicals = item[4]
 
+        def getResidue(self):
+            return self._residue
+
+        def getRadicals(self):
+            return self._radicals
+
+        def check(self, elements, monomeres):
+            for key in self.getFormula().keys():
+                if key not in elements:
+                    raise UnvalidInputException(self.getName(), "Element: " + key + " unknown")
+            # self._residue = residue  unchecked!
+            try:
+                self._radicals = int(self._radicals)
+            except ValueError:
+                raise UnvalidInputException(self.getName(), "Number required: " + str(self._radicals))"""

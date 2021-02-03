@@ -7,7 +7,7 @@ import xlsxwriter
 from xlsxwriter.utility import xl_rowcol_to_cell
 
 
-class ExcelWriter(object):
+class IntactExcelWriter(object):
     '''
 
     '''
@@ -29,7 +29,7 @@ class ExcelWriter(object):
         self.row += 2
 
     def writeIons(self, listOfIons):
-        self.worksheet1.write(self.row,0,'observed spectrum:')
+        self.worksheet1.write(self.row,0,'observed __spectrum:')
         row = self.row+1
         self.worksheet1.write_row(row,0,['m/z','z','int','name','error'])
         for ion in listOfIons:

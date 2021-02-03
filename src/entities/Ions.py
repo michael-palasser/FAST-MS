@@ -7,24 +7,24 @@ import math
 import os
 
 import numpy as np
-from src.repositories.ConfigurationHandler import ConfigHandler
+from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src import path
 
-noiseLimit = ConfigHandler(os.path.join(path, "src","top_down","data","settings.json")).get('noiseLimit')
+noiseLimit = ConfigurationHandlerFactory.getTD_SettingHandler().get('noiseLimit')
 
 class Fragment(object):
     '''
     uncharged fragment
     '''
 
-    def __init__(self, type, number, modification, formula, sequence):
+    def __init__(self, type, number, modification, formula, sequence, radicals):
         '''
         Constructor
         :param type: typically a, b, c, d, w, x, y or z (String)
-        :param number: number in sequence (int)
+        :param number: number in sequenceList (int)
         :param modification: +modification, +ligands and -loss (String)
         :param formula: Type MolecularFormula
-        :param sequence: list of sequence of fragment
+        :param sequence: list of sequenceList of fragment
         '''
         self.type = type
         self.number = number
@@ -32,6 +32,7 @@ class Fragment(object):
         self.formula = formula
         self.sequence = sequence
         self.isotopePattern = None
+        self.radicals = radicals
 
     def getName(self):
         if self.number == 0:
@@ -46,7 +47,7 @@ class Fragment(object):
         Defines number of peaks to be searched for in first step of findPeaks function in SpectrumHandler
         :return: number of peaks
         '''
-        abundances = self.isotopePattern['int'] / self.isotopePattern[0]['int']
+        abundances = self.isotopePattern['relAb'] / self.isotopePattern[0]['relAb']
         if len(abundances) < 3:
             return 1
         elif abundances[2] > 0.6:
@@ -56,7 +57,7 @@ class Fragment(object):
         return 1
 
 
-class Ion(Fragment):
+class FragmentIon(Fragment):
     '''
     charged fragment
     '''
@@ -71,7 +72,7 @@ class Ion(Fragment):
         :param noise: noise level in the m/z area of the ion, calculated by calculateNoise function in SpectrumHandler
         '''
         super().__init__(fragment.type, fragment.number, fragment.modification,
-                         fragment.formula, fragment.sequence)
+                         fragment.formula, fragment.sequence, fragment.radicals,)
         self.charge = charge
         self.isotopePattern = isotopePattern
         self.intensity = 0
@@ -88,8 +89,8 @@ class Ion(Fragment):
                str(round(self.error, 2)) + "\t\t" + str(round(self.quality, 2)) #+ "\t" + self.comment
 
     def getMonoisotopic(self):
-        return np.min(self.isotopePattern['m/z_theo']) * (
-                    1 + self.error * 10 ** (-6))  # np.min(self.isotopePattern['m/z'])
+        #return 500.
+        return np.min(self.isotopePattern['m/z_theo']) * (1 + self.error * 10 ** (-6))  # np.min(self.isotopePattern['m/z'])
 
     def getScore(self):
         if self.quality > 1.5:
@@ -104,3 +105,43 @@ class Ion(Fragment):
 
     def getRelAbundance(self):
         return self.intensity / self.charge
+
+    def getValues(self):
+        """formatInt = '{:12d}'
+        if self.intensity >= 10 ** 13:
+            lg10 = str(int(math.log10(self.intensity) + 1))
+            formatInt = '{:' + lg10 + 'd}'
+        return ['{:4.5f}'.format(round(self.getMonoisotopic(),5)),
+                '{:2d}'.format(self.charge),
+                formatInt.format(round(self.intensity)),
+                self.getName(),
+                '{:3.2f}'.format(round(self.error,2)),
+                '{:6.1f}'.format(round(self.getSignalToNoise(),1)),
+                '{:3.2f}'.format(round(self.quality,2))]"""
+        """return [round(self.getMonoisotopic(),5), self.charge, round(self.intensity), self.getName(), round(self.error,2),
+                round(self.getSignalToNoise(),1), round(self.quality,2)]"""
+        return [500, self.charge, round(self.intensity), self.getName(), round(self.error,2),
+                round(self.getSignalToNoise(),1), round(self.quality,2)]
+
+
+class IntactIon(object):
+    def __init__(self, name, modification, mz,theoMz, charge, intensity, nrOfModifications):
+        '''
+
+        '''
+        self.name = name
+        self.modification = modification
+        self.mz = mz
+        self.theoMz = theoMz
+        self.charge = charge
+        self.intensity = intensity
+        self.nrOfModifications = nrOfModifications
+
+    def calculateError(self):
+        return (self.mz - self.theoMz) / self.theoMz * 10 ** 6
+
+    def getName(self):
+        return self.name + self.modification
+
+    def toList(self):
+        return [self.mz, self.charge, self.intensity, self.getName(), round(self.calculateError(), 2)]

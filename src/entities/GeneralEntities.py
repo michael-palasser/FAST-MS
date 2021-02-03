@@ -1,17 +1,39 @@
 from re import findall
 
-from src.entities.AbstractEntities import PatternWithItems, AbstractItem1, AbstractPattern
+from src.entities.AbstractEntities import PatternWithItems, AbstractItem1, AbstractPattern, AbstractItem2
 
 
 class Makromolecule(PatternWithItems):
-    def __init__(self, name, monomeres, id):
+    def __init__(self, name, moleculeGain, moleculeLoss, monomeres, id):
         super(Makromolecule, self).__init__(name, monomeres, id)
+        self.__gain = moleculeGain
+        self.__loss = moleculeLoss
 
+    def getGain(self):
+        return self.__gain
 
-class Monomere(AbstractItem1):
-    def __init__(self, name, formulaString):
-        super(Monomere, self).__init__(name)
-        self.__formulaString = formulaString
+    def getLoss(self):
+        return self.__loss
+
+    def getFormula(self):
+        formula = AbstractItem2.stringToFormula(self.__gain, dict(), 1)
+        return AbstractItem2.stringToFormula(self.__loss, formula, -1)
+
+    def getMonomerDict(self):
+        itemDict = dict()
+        for item in self._items:
+            if isinstance(item, BuildingBlock):
+                itemDict[item.getName()] = item
+            else:
+                itemDict[item[0]] = BuildingBlock(item)
+        return itemDict
+
+class BuildingBlock(AbstractItem1):
+    #def __init__(self, name, formulaString, acidity):
+    def __init__(self, item):
+        super(BuildingBlock, self).__init__(item[0])
+        self.__formulaString = item[1]
+        self.__acidity = item[2]
 
     def getFormulaString(self):
         return self.__formulaString
@@ -19,6 +41,8 @@ class Monomere(AbstractItem1):
     def getFormula(self):
         return self.stringToFormula(self.__formulaString,dict(),1)
 
+    def getAcidity(self):
+        return self.__acidity
 
 
 class Element(PatternWithItems):
@@ -36,21 +60,20 @@ class Isotope(object):
     """
     wahrsch zu umstaendlich
     """
-    def __init__(self, pNr, mass, relAb):
+    def __init__(self, nucNr, mass, relAb):
         """
 
-        :param pNr: proton number
-        :param isoNr: M+isoNr (monoisotopic = M)
+        :param nucNr: number of nucleons
         :param mass:
         :param relAb:
         """
-        self.__pNr = pNr
+        self.__nucNr = nucNr
         #self.__isoNr = isoNr
         self.__mass = mass
         self.__relAb = relAb
 
     def getPNr(self):
-        return self.__pNr
+        return self.__nucNr
 
     """def getNr(self):
         return self.__isoNr"""
@@ -71,7 +94,7 @@ class Sequence(AbstractPattern):
     def __init__(self, name, sequenceString, molecule, id):
         """
         :param name: String
-        :param sequence: String
+        :param sequenceList: String
         :param molecule: String (RNA, DNA, P)
         :param pse: String (which periodic table should be applied)
         """
@@ -86,5 +109,5 @@ class Sequence(AbstractPattern):
     def getMolecule(self):
         return self.__molecule
 
-    def getSequence(self):
+    def getSequenceList(self):
         return findall('[A-Z][^A-Z]*', self.__sequenceString)

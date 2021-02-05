@@ -187,6 +187,7 @@ def setIsotopeTable(isotopeTable):
 
 
 
+
 def calculateFineStructure(isotopePeak, isotopeTable):
     '''
     Calculates isotopic fine structure of isotope peak for molecules with a general elemental composition
@@ -194,7 +195,7 @@ def calculateFineStructure(isotopePeak, isotopeTable):
     :param isotopeTable: 2D numpy array
     :return: fine structure [(mass,percentage)]
     '''
-    fineStructure = List()
+    fineStructure = [(0.,0.)]
     for iFirst in list(range(isotopePeak + 1))[::-1]:
         isotopeTable[1]['nrIso'] = iFirst
         if iFirst == isotopePeak:
@@ -203,6 +204,7 @@ def calculateFineStructure(isotopePeak, isotopeTable):
         else:
             fineStructure = loopThroughIsotopes(isotopePeak, isotopeTable, fineStructure, 3)
     return fineStructure[1:]
+
 
 
 

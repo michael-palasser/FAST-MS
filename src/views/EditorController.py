@@ -63,14 +63,13 @@ class AbstractSimpleEditorController(ABC):
             pos -= 1
         return menu, menuActions
 
-    def createTableWidget(self, parrent, data, yPos, headers, bools):
-        tableWidget = QtWidgets.QTableWidget(parrent)
+    def createTableWidget(self, parent, data, yPos, headers, bools):
+        tableWidget = QtWidgets.QTableWidget(parent)
         #headers = self.service.getHeaders()
         tableWidget.setColumnCount(len(headers.keys()))
         #tableWidget.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         #tableWidget.customContextMenuRequested['QPoint'].connect(self.h3_table_right_click)
         #tableWidget.move(20,yPos) #70
-        print("before",data, bools)
         tableWidget = self.formatTableWidget(headers, tableWidget, data, bools)
         tableWidget.setHorizontalHeaderLabels(headers)
         tableWidget.resizeColumnsToContents()

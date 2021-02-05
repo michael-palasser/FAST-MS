@@ -35,7 +35,7 @@ class IonTableModel(QtCore.QAbstractTableModel):
                 #item = self._data.values[index.row()][col]
                 item = self._data[index.row()][col]
                 formatString = self._format[col]
-                if col == 3 or col == 7:
+                if col == 3 or col == 8:
                     return item
                 if col == 2 :
                     if item >= 10 ** 13:
@@ -43,6 +43,17 @@ class IonTableModel(QtCore.QAbstractTableModel):
                         formatString = '{:' + lg10 + 'd}'
                     return formatString.format(item)
                 return formatString.format(item)
+        if role == Qt.TextAlignmentRole:
+            if index.column() == 3 or index.column() == 8:
+                return Qt.AlignLeft
+            else:
+                return Qt.AlignRight
+        if role == Qt.FontRole:
+            if index.column() == 8:
+                font = QtGui.QFont()
+                font.setPointSize(10)
+                return font
+
 
     def rowCount(self, index):
         #return len(self._data.values)
@@ -66,7 +77,6 @@ class IonTableModel(QtCore.QAbstractTableModel):
     def sort(self, Ncol, order):
         """Sort table by given column number."""
         self.layoutAboutToBeChanged.emit()
-        print(Ncol)
         #self._data = self._data.sort_values(self._headers[Ncol], ascending=order == Qt.AscendingOrder)
         if order == Qt.AscendingOrder:
             self._data.sort(key= lambda tup:tup[Ncol])
@@ -74,12 +84,11 @@ class IonTableModel(QtCore.QAbstractTableModel):
             self._data.sort(key= lambda tup:tup[Ncol], reverse=True)
         self.layoutChanged.emit()
 
-
-
     def addData(self, newRow):
         self._data.append(newRow)
 
     def removeData(self, indexToRemove):
+        #self.removeRow(indexToRemove)
         del self._data[indexToRemove]
 
 
@@ -123,11 +132,13 @@ class PeakTableModel(QtCore.QAbstractTableModel):
                 return ('m/z','z','intensity','fragment','error /ppm', 'used')[section]
 
 
-class MainWindow(QtWidgets.QMainWindow):
-    def __init__(self, ions, deletedIons, spectrum):
+class ResultsWindow(QtWidgets.QMainWindow):
+    def __init__(self, ions, deletedIons, spectrum, main):
         super().__init__()
-        #self._ions = ions
-        #self._deletedIons = deletedIons
+        self._ions = ions
+        self._deletedIons = deletedIons
+        self._spectrum = spectrum
+        self._main = main
         #self._spectrum = spectrum
         #{self.hash(ion): ion for ion in ions}
         """valList, indizes = [], []
@@ -139,19 +150,93 @@ class MainWindow(QtWidgets.QMainWindow):
         #self.table = self.makeTable(shownData)
         """self.table = self.makeTable(self._ions)
         self.delTable = self.makeTable(self._deletedIons)"""
-        self.tables = [self.makeTable(ions), self.makeTable(deletedIons)]
-        self.setCentralWidget(self.tables[0])
+        self.setUpUi()
+        self.createMenuBar()
+        #self.tables = [self.makeTable(ions), self.makeTable(deletedIons)]
+        self.tables = []
+        for table, name in zip((self._ions, self._deletedIons), ('Observed Ions', 'Deleted Ions')):
+            self.makeTabWidget(table, name)
 
-    def makeTable(self, data):
+        self.formlayout.addWidget(self.tabWidget)
+        #self.setCentralWidget(self.tables[0])
+
+    def setUpUi(self):
+        self.setObjectName("Results")
+        self._translate = QtCore.QCoreApplication.translate
+        self.setWindowTitle(self._translate(self.objectName(), self.objectName()))
+        self.centralwidget = QtWidgets.QWidget(self)
+        self.formlayout = QtWidgets.QVBoxLayout(self.centralwidget)
+        self.tabWidget = QtWidgets.QTabWidget(self.centralwidget)
+        #self.formlayout.addWidget(self.tabWidget)
+        self.setCentralWidget(self.centralwidget)
+
+        self.resize(1000, 800)
+
+        #self.formLayout = QtWidgets.QFormLayout(self.centralwidget)
+        #self.mainWindow.setStatusBar(QtWidgets.QStatusBar(self.mainWindow))
+
+
+    def createMenuBar(self):
+        self.menubar = QtWidgets.QMenuBar(self.mainWindow)
+        self.mainWindow.setMenuBar(self.menubar)
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 340, 22))
+        self.createMenu("File", {'Save':'fun', 'Close':'fun'}, ['',''], ["Ctrl+S","Ctrl+Q"])
+        self.createMenu("Edit", {'Copy Table':'fun', 'Re-model':'fun'},
+                        ['', 'Repeat overlap modelling involving user inputs'], ["Ctrl+C",""])
+        self.createMenu("Show", {'Occupancy-Plot':'fun', 'Charge-Plot':'fun'},
+                        ['Show occupancies as a function of sequence pos.',
+                         'Show av. charge as a function of sequence pos.'], ["",""])
+        self.menubar.addAction(self.fileMenu.menuAction())
+
+
+    def createMenu(self, name, options, tooltips, shortcuts):
+        menu = QtWidgets.QMenu(self.menubar)
+        menu.setTitle(self._translate(self.mainWindow.objectName(), name))
+        #menuActions = dict()
+        pos = len(options)
+        for i, option in enumerate(options.keys()):
+            action = QtWidgets.QAction(self)
+            action.setText(self._translate(self.objectName(),option))
+            if tooltips[i] != "":
+                action.setToolTip(tooltips[i])
+            if shortcuts[i] != "":
+                action.setShortcut(shortcuts[i])
+            action.triggered.connect(options[option])
+            #menuActions[option] = action
+            menu.addAction(action)
+            pos -= 1
+        self.menubar.addAction(menu.menuAction())
+        return menu#, menuActions
+
+    def makeTabWidget(self, data, name):
+        tab = QtWidgets.QWidget()
+        self.tabWidget.addTab(tab, "")
+        self.tabWidget.setTabText(self.tabWidget.indexOf(tab), self._translate(self.objectName(), name))
+        scrollArea = QtWidgets.QScrollArea(tab)
+        scrollArea.setGeometry(QtCore.QRect(10, 10, 950, 700))
+        scrollArea.setWidgetResizable(True)
+        #scrollArea.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        #scrollArea.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        table = self.makeTable(scrollArea, data)
+        scrollArea.setWidget(table)
+        self.tables.append(table)
+
+        self.tabWidget.setEnabled(True)
+
+
+
+    def makeTable(self, parent, data):
         model = IonTableModel([ion.getMoreValues() for ion in data.values()])
         self.proxyModel = QSortFilterProxyModel()
         self.proxyModel.setSourceModel(model)
-        table = QtWidgets.QTableView()
+        table = QtWidgets.QTableView(parent)
         table.setModel(model)
         table.setSortingEnabled(True)
         #table.setModel(self.proxyModel)
         self.connectTable(table)
         table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         return table
 
 
@@ -163,14 +248,13 @@ class MainWindow(QtWidgets.QMainWindow):
         return (ion.getName(),ion.charge)
 
     def showOptions(self, table, pos):
-        global view
         menu = QtWidgets.QMenu()
         showAction = menu.addAction("Show in Spectrum")
         peakAction = menu.addAction("Show Peaks")
         actionStrings = ["Delete", "Restore"]
         mode = 0
         other = 1
-        if table != self.table:
+        if table != self.tables[0]:
             mode = 1
             other = 0
         delAction = menu.addAction(actionStrings[mode])
@@ -181,39 +265,32 @@ class MainWindow(QtWidgets.QMainWindow):
         selectedRow = it.row()
         selectedHash = table.model().getHashOfRow(selectedRow)
         if action == showAction:
+            global spectrumView
             ions = self.getIons(self._ions[selectedHash])
-            print(ions)
             minLimit, maxLimit, maxY = self.getLimits(ions)
             peaks = self._spectrum[np.where((self._spectrum[:,0]>(minLimit-5)) & (self._spectrum[:,0]<(maxLimit+5)))]
-            view = SpectrumView(peaks, ions, np.min(self._ions[selectedHash].isotopePattern['m/z']),
+            spectrumView = SpectrumView(peaks, ions, np.min(self._ions[selectedHash].isotopePattern['m/z']),
                                 np.max(self._ions[selectedHash].isotopePattern['m/z']),
                                 np.max(self._ions[selectedHash].isotopePattern['relAb']))
         elif action == peakAction:
+            global peakview
             pass
-            #self.peakView = PeakView(self._ions[selectedHash].getPeaks())
-            """print(ions)
-            minLimit, maxLimit, maxY = self.getLimits(ions)
-            peaks = self._spectrum[np.where((self._spectrum[:,0]>(minLimit-5)) & (self._spectrum[:,0]<(maxLimit+5)))]
-            view = SpectrumView(peaks, ions, np.min(self._ions[selectedHash].isotopePattern['m/z']),
-                                np.max(self._ions[selectedHash].isotopePattern['m/z']),
-                                np.max(self._ions[selectedHash].isotopePattern['relAb']))"""
+            #peakview = PeakView(self._ions[selectedHash].getPeaks())
         elif action == delAction:
+            ionLists = [self._ions, self._deletedIons]
+            comments = ['man.del.','man.undel.']
+            ionToDelete = ionLists[mode][selectedHash]
             #actionString = actionString[:-1]+'ing '
             choice = QtWidgets.QMessageBox.question(self, "",
-                                        actionStrings[mode][:-1]+'ing '+self._ions[selectedHash].getName()+"?",
+                                        actionStrings[mode][:-1]+'ing '+ionLists[mode][selectedHash].getName()+"?",
                                         QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
             if choice == QtWidgets.QMessageBox.Yes:
-                ionLists = [self._ions, self._deletedIons]
-                comments = ['man.del.','man.undel.']
-                ionToDelete = ionLists[mode][selectedHash]
                 ionToDelete.comment += comments[mode]
                 ionLists[other][selectedHash] = ionToDelete
                 del ionLists[mode][selectedHash]
-
-                #self.table.model().removeRow(selectedRow)
                 table.model().removeData(selectedRow)
-                table.model().addData(ion.getMoreValues())
-                print('deleted',selectedRow, selectedHash)
+                self.tables[other].model().addData(ionToDelete.getMoreValues())
+                print(actionStrings[mode]+"d",selectedRow, selectedHash)
 
 
 
@@ -234,21 +311,31 @@ class PeakView(QtWidgets.QWidget):
 
 
 
-pattern = [FragmentIon(Fragment('a', 3, "", '', [], 0), 1, [], 0),
+"""pattern = [FragmentIon(Fragment('a', 3, "", '', [], 0), 1, [], 0),
                     FragmentIon(Fragment('a', 5, "-G", '', [], 0), 1, [], 0),
                     FragmentIon(Fragment('b', 5, "", '', [], 0), 1, [], 0),
-                    FragmentIon(Fragment('b', 5, "-G", '', [], 0), 1, [], 0)]
+                    FragmentIon(Fragment('b', 5, "-G", '', [], 0), 1, [], 0)]"""
+def fill(pattern, flag):
+    for i, ion in enumerate(pattern):
+        ion.intensity = 3 * 10 ** 6 * (i + 1) + i * 100
+        ion.error = i + 0.01
+        ion.quality = 0.5 - i / 100
+        ion.noise = 10 ** 6 * 2
+        if flag == 1:
+            ion.comment = 'del.'
+    return pattern
 
-for i, ion in enumerate(pattern):
-    ion.intensity = 3 * 10 ** 6 * (i + 1) + i * 100
-    ion.error = i + 0.01
-    ion.quality = 0.5 - i / 100
-    ion.noise = 10 ** 6 * 2
-    print(ion.getValues())
+ions, delIons = [],[]
+for name in ['a','c', 'w','y']:
+    for nr in range(1,20):
+        ions.append(FragmentIon(Fragment(name, nr, "", '', [], 0), 1, [], 0))
+        delIons.append(FragmentIon(Fragment(name, nr, "-G", '', [], 0), 1, [], 0))
+ions = fill(ions,0)
 
+delIons = fill(delIons,1)
 
 app=QtWidgets.QApplication(sys.argv)
-window=MainWindow({(ion.getName(),ion.charge): ion for ion in pattern},
-                  {(ion.getName(),ion.charge): ion for ion in pattern}, [])
+window=ResultsWindow({(ion.getName(),ion.charge): ion for ion in ions},
+                  {(ion.getName(),ion.charge): ion for ion in delIons}, [],[])
 window.show()
 app.exec_()

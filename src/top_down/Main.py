@@ -33,26 +33,26 @@ def sortIonsByName(ionList):
 
 #if __name__ == '__main__':
 class TD_MainController(object):
-    def __init__(self, parrent):
-        self.mainWindow = parrent
+    def __init__(self, parent):
+        self.mainWindow = parent
+        self.settings = ConfigurationHandlerFactory.getTD_SettingHandler().getAll()
+        self.configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
 
     def run(self):
-        settings = ConfigurationHandlerFactory.getTD_SettingHandler().getAll()
-        configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
 
         print("\n********** Creating fragment library **********")
-        libraryBuilder = FragmentLibraryBuilder(settings['sequName'], settings['fragmentation'],
-                        settings['modifications'], settings['nrMod'])
-        libraryBuilder.createFragmentLibrary()
+        self.libraryBuilder = FragmentLibraryBuilder(self.settings['sequName'], self.settings['fragmentation'],
+                        self.settings['modifications'], self.settings['nrMod'])
+        self.libraryBuilder.createFragmentLibrary()
 
         """read existing ion-list file or create new one"""
         libraryImported = False
         patternReader = IsotopePatternReader()
-        if (patternReader.findFile([settings[setting] for setting in ['sequName','fragmentation', 'nrMod',
+        if (patternReader.findFile([self.settings[setting] for setting in ['sequName','fragmentation', 'nrMod',
                                                                             'modifications']])):
             print("\n********** Importing list of isotope patterns from:", patternReader.getFile(), "**********")
             try:
-                libraryBuilder.setFragmentLibrary(patternReader)
+                self.libraryBuilder.setFragmentLibrary(patternReader)
                 libraryImported = True
                 print("done")
             except UnvalidIsotopePatternException:
@@ -67,42 +67,42 @@ class TD_MainController(object):
         if libraryImported == False:
             print("\n********** Writing new list of isotope patterns to:", patternReader.getFile(), "**********\n")
             start = time.time()
-            patternReader.saveIsotopePattern(libraryBuilder.addNewIsotopePattern())
+            patternReader.saveIsotopePattern(self.libraryBuilder.addNewIsotopePattern())
             print("\ndone\nexecution time: ", round((time.time() - start) / 60, 2), "min\n")
 
         #ToDo
         """Importing spectral pattern"""
-        if settings['spectralData'] == '':
+        if self.settings['spectralData'] == '':
             return
-        spectralFile = os.path.join(path, 'Spectral_data','top-down', settings['spectralData'])
-        print("\n********** Importing spectral pattern from:", spectralFile, "**********")
-        spectrumHandler = SpectrumHandler(spectralFile, libraryBuilder.getSequence(), libraryBuilder.getMolecule(),
-                  libraryBuilder.getFragmentLibrary(), libraryBuilder.getPrecursor(),
-                  libraryBuilder.getChargedModifications(), libraryBuilder.getFragItemDict(), settings)
+        #spectralFile = os.path.join(path, 'Spectral_data','top-down', self.settings['spectralData'])
+        print("\n********** Importing spectral pattern from:", self.settings['spectralData'], "**********")
+        self.spectrumHandler = SpectrumHandler(self.settings['spectralData'], self.libraryBuilder.getSequence(), self.libraryBuilder.getMolecule(),
+                  self.libraryBuilder.getFragmentLibrary(), self.libraryBuilder.getPrecursor(),
+                  self.libraryBuilder.getChargedModifications(), self.libraryBuilder.getFragItemDict(), self.settings)
 
         """Finding fragments"""
         print("\n********** Search for spectrum **********")
         start = time.time()
-        spectrumHandler.findPeaks()
+        self.spectrumHandler.findPeaks()
         print("\ndone\nexecution time: ", round((time.time() - start) / 60, 3), "min\n")
 
-        intensityModeller = IntensityModeller(configs)
+        self.intensityModeller = IntensityModeller(self.configs)
         start = time.time()
         print("\n********** Calculating relative abundances **********")
-        for ion in spectrumHandler.foundIons:
-            intensityModeller.processIons(ion)
-        for ion in spectrumHandler.ionsInNoise:
-            intensityModeller.processNoiseIons(ion)
+        for ion in self.spectrumHandler.foundIons:
+            self.intensityModeller.processIons(ion)
+        for ion in self.spectrumHandler.ionsInNoise:
+            self.intensityModeller.processNoiseIons(ion)
         print("\ndone\nexecution time: ", round((time.time() - start) / 60, 3), "min\n")
 
         """Handle spectrum with same monoisotopic peak and charge"""
         print("\n********** Handling overlaps **********")
-        sameMonoisotopics = intensityModeller.findSameMonoisotopics()
+        sameMonoisotopics = self.intensityModeller.findSameMonoisotopics()
         if len(sameMonoisotopics) > 0:
-            view = CheckMonoisotopicOverlapView(sameMonoisotopics, spectrumHandler.getSpectrum())
+            view = CheckMonoisotopicOverlapView(sameMonoisotopics, self.spectrumHandler.getSpectrum())
             view.exec_()
             if view and not view.canceled:
-                intensityModeller.deleteSameMonoisotopics(view.getDumplist())
+                self.intensityModeller.deleteSameMonoisotopics(view.getDumplist())
             else:
                 return
 
@@ -110,21 +110,21 @@ class TD_MainController(object):
         print("\n********** Re-modelling overlaps **********")
         counter = 0
         while True:
-            complexPatterns = intensityModeller.findOverlaps()
+            complexPatterns = self.intensityModeller.findOverlaps()
             if len(complexPatterns) > 0:
-                view = CheckOverlapsView(complexPatterns, spectrumHandler.getSpectrum())
+                view = CheckOverlapsView(complexPatterns, self.spectrumHandler.getSpectrum())
                 view.exec_()
                 if view and not view.canceled:
-                    intensityModeller.remodelComplexPatterns(complexPatterns, view.getDumplist())
+                    self.intensityModeller.remodelComplexPatterns(complexPatterns, view.getDumplist())
                 else:
                     return
             if counter > 0:
                 break
-            view = FinalIonView(list(intensityModeller.correctedIons.values()), spectrumHandler.getSpectrum())
+            view = FinalIonView(list(self.intensityModeller.correctedIons.values()), self.spectrumHandler.getSpectrum())
             view.exec_()
             if view and not view.canceled:
                 if len(view.getDumplist())>0:
-                    intensityModeller.deleteIons(view.getDumplist())
+                    self.intensityModeller.deleteIons(view.getDumplist())
                     counter +=1
                 else:
                     break
@@ -132,39 +132,40 @@ class TD_MainController(object):
                 return
 
         """analysis"""
-        analyser = Analyser(list(intensityModeller.correctedIons.values()), libraryBuilder.getSequence().getSequenceList(),
-                        settings['charge'], libraryBuilder.getModification())
+        self.analyser = Analyser(list(self.intensityModeller.correctedIons.values()), self.libraryBuilder.getSequence().getSequenceList(),
+                        self.settings['charge'], self.libraryBuilder.getModification())
 
+    def toExcel(self): #ToDo
         """output"""
-        output = settings.get('output')
+        output = self.settings.get('output')
         if output == '':
-            output = spectralFile[0:-4] + '_out' + '.xlsx'
+            output = self.settings['spectralData'][0:-4] + '_out' + '.xlsx'
         else:
             output = os.path.join(path, 'Spectral_data','top-down', output + '.xlsx')
-        excelWriter = ExcelWriter(output, configs)
+        excelWriter = ExcelWriter(output, self.configs)
 
         try:
-            generalParam = [("spectralFile:", spectralFile),
+            generalParam = [("spectralFile:", self.settings['spectralData']),
                             ('date:', ""),
-                            ('noiseLimit:', settings['noiseLimit']),
-                            ('max m/z:',spectrumHandler.getUpperBound())]
+                            ('noiseLimit:', self.settings['noiseLimit']),
+                            ('max m/z:',self.spectrumHandler.getUpperBound())]
             #percentages = list()
             excelWriter.writeAnalysis(generalParam,
-                                      analyser.getModificationLoss(),
-                                      analyser.calculateRelAbundanceOfSpecies(),
-                                      libraryBuilder.getSequence().getSequenceList(),
-                                      analyser.calculatePercentages(configs['interestingIons']))
-            #analyser.createPlot(__maxMod)
-            precursorRegion = intensityModeller.getPrecRegion(settings['sequName'], abs(settings['charge']))
-            excelWriter.writeIons(excelWriter.worksheet2, intensityModeller.correctedIons.values(),
+                                      self.analyser.getModificationLoss(),
+                                      self.analyser.calculateRelAbundanceOfSpecies(),
+                                      self.libraryBuilder.getSequence().getSequenceList(),
+                                      self.analyser.calculatePercentages(self.configs['interestingIons']))
+            #self.analyser.createPlot(__maxMod)
+            precursorRegion = self.intensityModeller.getPrecRegion(self.settings['sequName'], abs(self.settings['charge']))
+            excelWriter.writeIons(excelWriter.worksheet2, self.intensityModeller.correctedIons.values(),
                                   precursorRegion)
-            excelWriter.writePeaks(excelWriter.worksheet3,0,0,intensityModeller.correctedIons.values())
-            row = excelWriter.writeIons(excelWriter.worksheet4, sortIonsByName(intensityModeller.deletedIons),
+            excelWriter.writePeaks(excelWriter.worksheet3,0,0,self.intensityModeller.correctedIons.values())
+            row = excelWriter.writeIons(excelWriter.worksheet4, sortIonsByName(self.intensityModeller.deletedIons),
                                   precursorRegion)
-            excelWriter.writePeaks(excelWriter.worksheet4,row+3,0,sortIonsByName(intensityModeller.deletedIons))
-            excelWriter.writeIons(excelWriter.worksheet5, sortIonsByName(intensityModeller.remodelledIons),
+            excelWriter.writePeaks(excelWriter.worksheet4,row+3,0,sortIonsByName(self.intensityModeller.deletedIons))
+            excelWriter.writeIons(excelWriter.worksheet5, sortIonsByName(self.intensityModeller.remodelledIons),
                                   precursorRegion)
-            excelWriter.writeSumFormulas(libraryBuilder.getFragmentLibrary(), spectrumHandler.searchedChargeStates)
+            excelWriter.writeSumFormulas(self.libraryBuilder.getFragmentLibrary(), self.spectrumHandler.searchedChargeStates)
             print("********** saved in:", output, "**********\n")
         finally:
             excelWriter.closeWorkbook()

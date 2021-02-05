@@ -227,7 +227,6 @@ class FragmentLibraryBuilder(object):
             criticalLength = 60
         if len(self.__sequence.getSequenceList())<criticalLength: #flag == 0:
             for fragment in self.__fragmentLibrary:
-                print(fragment.getName(), fragment.formula.formulaDict)
                 fragment.isotopePattern = fragment.formula.calculateIsotopePattern()
                 #if fragment.type in self.radicalDict:
                 #fragment.isotopePattern['mass'] -= fragment.radicals * (E_MASS)

@@ -1,1 +1,1 @@
-"{\n   \"sequName\": \"rre2\",\n   \"charge\": 0,\n   \"fragmentation\": \"RNA_CAD\",\n   \"modifications\": \"CMCT\",\n   \"nrMod\": 1,\n   \"spectralData\": \"\",\n   \"noiseLimit\": 0.0,\n   \"fragLib\": \"\",\n   \"output\": \"\"\n}"
+"{\n   \"sequName\": \"neoRibo\",\n   \"charge\": -7,\n   \"fragmentation\": \"RNA_CAD\",\n   \"modifications\": \"CMCT\",\n   \"nrMod\": 1,\n   \"spectralData\": \"/Users/eva-maria/Data_exchange_folder/SAUSAGE_beta1/Spectral_data/top-down/2611_1p5NEO_1_7g.txt\",\n   \"noiseLimit\": 2000000.0,\n   \"fragLib\": \"\",\n   \"output\": \"\"\n}"

@@ -14,7 +14,7 @@ from src.views.StartDialogs import OpenFileWidget
 dataPath = join(path, 'src', 'data')
 
 class AbstractDialog(QDialog):
-    def __init__(self, dialogName, title, lineSpacing, parent=None):
+    def __init__(self, dialogName, title, lineSpacing, parent):
         super().__init__(parent)
         self.setObjectName(dialogName)
         self.lineSpacing = lineSpacing
@@ -28,7 +28,7 @@ class AbstractDialog(QDialog):
         self.buttonBox.rejected.connect(self.reject)
         self.newSettings = None
         self.move(300,100)
-        self.ok = False
+        self.canceled = False
 
     @staticmethod
     def setNewSizePolicy(horizontal, vertical):
@@ -86,8 +86,6 @@ class AbstractDialog(QDialog):
             comboBox.setItemText(i, self._translate(self.objectName(), option))
         return comboBox
 
-
-
     @staticmethod
     def getValueOfWidget(widget):
         if isinstance(widget, QtWidgets.QSpinBox) or isinstance(widget, QtWidgets.QDoubleSpinBox):
@@ -117,7 +115,8 @@ class AbstractDialog(QDialog):
                 self.setValueOfWidget(item, self.configHandler.get(name))
 
     def reject(self):
-        self.done(0)
+        self.canceled = True
+        super(AbstractDialog, self).reject()
 
     def makeDictToWrite(self):
         newSettings = dict()
@@ -128,6 +127,7 @@ class AbstractDialog(QDialog):
 
     def accept(self):
         self.ok = True
+        print(self.newSettings)
         super(AbstractDialog, self).accept()
 
     def checkValues(self, configs):
@@ -188,7 +188,7 @@ class StartDialog(AbstractDialog):
 
 
 class TDStartDialog(StartDialog):
-    def __init__(self, parent=None):
+    def __init__(self, parent):
         super().__init__("startDialog","Settings", 30, parent)
         self.configHandler = ConfigurationHandlerFactory.getTD_SettingHandler()
         self.setupUi(self)
@@ -200,14 +200,14 @@ class TDStartDialog(StartDialog):
         fragPatterns = FragmentIonService().getAllPatternNames()
         modPatterns = ModificationService().getAllPatternNames()
         sequences = SequenceService().getAllSequenceNames()
-        linewidth = 180
+        linewidth = 200
         widgets = ((self.createComboBox(startDialog,sequences), "sequName", "Name of the sequence"),
                (QtWidgets.QSpinBox(startDialog), "charge","Charge of the precursor ion"),
                (self.createComboBox(startDialog,fragPatterns), "fragmentation", "Name of the fragmentation - pattern"),
                (self.createComboBox(startDialog,modPatterns), "modifications", "Name of the modification/ligand - pattern"),
                (QtWidgets.QSpinBox(startDialog), "nrMod", "How often is the precursor ion modified?"),
-               (OpenFileWidget(self,linewidth, 0, 1, join(path, 'Spectral_data','top-down'),  "Open File",
-                               "Plain Text Files (*txt);;Comma Separated Files (*csv);;All Files (*)"),
+               (OpenFileWidget(self,linewidth, 0, 2, join(path, 'Spectral_data','top-down'),  "Open File",
+                               "Plain Text Files (*txt);;Comma Separated Values (*csv);;All Files (*)"),
                 "spectralData","Name of the file with spectral peaks (txt or csv format)\n"
                                      "If no file is stated, the program will just calculate the fragment library"),
                (QtWidgets.QDoubleSpinBox(startDialog), 'noiseLimit', "Minimal noise level"),
@@ -235,10 +235,11 @@ class TDStartDialog(StartDialog):
         self.setValueOfWidget(self.widgets['noiseLimit'], self.configHandler.get('noiseLimit') / 10**6)
 
     def accept(self):
-        newSettings = self.getNewSettings() #self.makeDictToWrite()
+        self.newSettings = self.getNewSettings() #self.makeDictToWrite()
         #self.checkValues(newSettings)
-        newSettings['noiseLimit']*=10**6
-        self.configHandler.write(newSettings)
+        self.newSettings['noiseLimit']*=10**6
+        self.configHandler.write(self.newSettings)
+        print(self.newSettings)
         #self.newSettings = newSettings
         #self.startProgram(Main.run)
         super(TDStartDialog, self).accept()

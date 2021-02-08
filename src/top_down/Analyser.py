@@ -10,13 +10,15 @@ class Analyser(object):
     '''
     classdocs
     '''
-    def __init__(self, listOfIons, sequence, precCharge, modification):
-        self.listOfIons = sorted(listOfIons, key=lambda obj:(obj.type , obj.number))
+    def __init__(self, sequence, precCharge, modification):
+        self.listOfIons = None #sorted(listOfIons, key=lambda obj:(obj.type , obj.number))
         self.sequence = sequence
         self.precCharge = abs(precCharge)
         self.modification = modification
         self.percentageDict = dict()
 
+    def setListOfIons(self, listOfIons):
+        self.listOfIons = listOfIons
 
     def calculateRelAbundanceOfSpecies(self):
         relAbundanceOfSpecies = dict()

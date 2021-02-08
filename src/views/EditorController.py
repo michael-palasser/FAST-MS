@@ -6,6 +6,7 @@ import sys
 
 
 from src.Services import *
+from src.views.SimpleDialogs import OpenDialog
 
 
 class AbstractSimpleEditorController(ABC):
@@ -474,56 +475,7 @@ class IntactIonEditorController(AbstractEditorController):
 
 
 
-class OpenDialog(QtWidgets.QDialog):
-    def __init__(self, title, options):
-        super(OpenDialog, self).__init__()
-        self._translate = QtCore.QCoreApplication.translate
-        self.setObjectName("dialog")
-        self.setWindowTitle(self._translate("dialog", title))
-        widgetWidth = 160
-        maxWidth, yPos = self.createLabels(["Enter Name:"])
-        self.comboBox = self.makeComboBox(["--New--"]+options,widgetWidth, maxWidth, 20)
-        dialogWidth = 20+maxWidth+widgetWidth
-        yPos = self.makeButtonBox(dialogWidth,yPos+20)
-        self.resize(dialogWidth, yPos)
-        #QtCore.QMetaObject.connectSlotsByName(self)
-        self.show()
 
-
-    def makeComboBox(self,options,widgetWidth, xPos, yPos):
-        comboBox = QtWidgets.QComboBox(self)
-        comboBox.setGeometry(QtCore.QRect(xPos, yPos-3, widgetWidth, 26))
-        for i,name in enumerate(options):
-            comboBox.addItem("")
-            comboBox.setItemText(i, self._translate(self.objectName(), name))
-        return comboBox
-
-    def createLabels(self, labels):
-        """
-
-        :param labels: list of Strings
-        :param widgets: dict of {name:widget}
-        :return:
-        """
-        maxWidth = 0
-        yPos = 20
-        for labelName in labels:
-            label = QtWidgets.QLabel(self)
-            width = len(labelName)*10
-            label.setGeometry(QtCore.QRect(20, yPos, width, 16))
-            label.setText(self._translate(self.objectName(), labelName))
-            if width>maxWidth:
-                maxWidth = width
-            yPos += 30
-        return maxWidth, yPos
-
-    def makeButtonBox(self, dialogSize, yPos):
-        self.buttonBox = QtWidgets.QDialogButtonBox(self)
-        self.buttonBox.setGeometry(QtCore.QRect(int((dialogSize-164)/2), yPos, 164, 32))
-        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
-        self.buttonBox.accepted.connect(self.accept)
-        self.buttonBox.rejected.connect(self.reject)
-        return yPos+40
 
 
 d = {"Name":["+Na","K", "+CMCT", "+CMCT+Na", "+CMCT+K", "+2CMCT"],

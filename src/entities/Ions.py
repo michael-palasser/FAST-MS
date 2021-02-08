@@ -48,7 +48,7 @@ class Fragment(object):
         Defines number of peaks to be searched for in first step of findPeaks function in SpectrumHandler
         :return: number of peaks
         '''
-        abundances = self.isotopePattern['relAb'] / self.isotopePattern[0]['relAb']
+        abundances = self.isotopePattern['calcInt'] / self.isotopePattern[0]['calcInt']
         if len(abundances) < 3:
             return 1
         elif abundances[2] > 0.6:

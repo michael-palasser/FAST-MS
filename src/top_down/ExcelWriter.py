@@ -127,17 +127,18 @@ class ExcelWriter(BasicExcelWriter):
         self.worksheet4 = self.workbook.add_worksheet('deleted ions')
         self.worksheet5 = self.workbook.add_worksheet('ions before remodelling')
         self.worksheet6 = self.workbook.add_worksheet('molecular formulas')
+        self.worksheet7 = self.workbook.add_worksheet('configurations')
         self.format2digit = self.workbook.add_format({'num_format': '0.00'})
         self.format5digit = self.workbook.add_format({'num_format': '0.00000'})
 
 
     def writeGeneralParameters(self, row, generalParam):
-        for line in generalParam:
-            self.worksheet1.write(row,0, line[0])
-            self.worksheet1.write(row,1, line[1])
-            row +=1
         date = datetime.now().strftime("%d/%m/%Y %H:%M")
-        self.worksheet1.write(1,1,date)
+        self.worksheet1.write_row(row, ("Time:",date))
+        row=1
+        for tup in generalParam:
+            self.worksheet1.writeRow(row, tup)
+            row +=1
         return row+2
 
 
@@ -228,3 +229,15 @@ class ExcelWriter(BasicExcelWriter):
             else:
                 itemString += ", " + str(item)
         return itemString
+
+
+    def writeConfigurations(self, settings):
+        self.worksheet7.write(0, 0, "Configurations:")
+        row = 1
+        for key,val in settings.items():
+            self.worksheet7.writeRow(row, (key,val))
+            row += 1
+        for key,val in self.configs.items():
+            self.worksheet7.writeRow(row, (key,val))
+            row += 1
+        return row + 2

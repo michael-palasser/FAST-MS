@@ -2,7 +2,10 @@ import sys
 from functools import partial
 from math import log10
 import numpy as np
-
+try:
+    from Tkinter import Tk
+except ImportError:
+    from tkinter import Tk
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt, QSortFilterProxyModel
 import pandas as pd
@@ -12,18 +15,55 @@ from PyQt5.QtWidgets import QAbstractItemView
 from src.entities.Ions import FragmentIon, Fragment
 from src.views.SpectrumView import SpectrumView
 
-
-class IonTableModel(QtCore.QAbstractTableModel):
-    def __init__(self, data):
-        super(IonTableModel, self).__init__()
+class AbstractTableModel(QtCore.QAbstractTableModel):
+    def __init__(self, data, format, headers):
+        super(AbstractTableModel, self).__init__()
         self._data = data
-        #self._format = ['{:10.5f}','{:2d}', '{:12d}', '','{:4.2f}', '{:6.1f}', '{:4.2f}', '']
-        self._format = ['{:10.5f}','{:2d}', '{:12d}', '','{:4.2f}', '{:6.1f}', '{:4.2f}', '{:4.2f}', '']
-        """for i, header in enumerate(('m/z','z','intensity','fragment','error /ppm', 'S/N','quality',
-                                                        'formula','score', 'comment')):
-            self.setHeaderData(i, Qt.Horizontal, header)"""
-        self._headers = ('m/z','z','intensity','fragment','error /ppm', 'S/N','quality', 'score', 'comment')
-        self.setHeaderData(0, QtCore.Qt.Horizontal, "Test")
+        self._format = format
+        self._headers = headers
+
+    def data(self, index, role):
+        if index.isValid():
+            if role == Qt.DisplayRole:
+                col = index.column()
+                item = self._data[index.row()][col]
+                formatString = self._format[col]
+                return formatString.format(item)
+
+    def getData(self):
+        return self._data
+
+    def getHeaders(self):
+        return self._headers
+
+    def rowCount(self, index):
+        #return len(self._data.values)
+        return len(self._data)
+
+    def columnCount(self, index):
+        #return self._data.columns.size
+        return len(self._data[0])
+
+    def headerData(self, section, orientation, role):
+        if role == QtCore.Qt.DisplayRole:
+            if orientation == QtCore.Qt.Horizontal:
+                return self._headers[section]
+
+    def sort(self, Ncol, order):
+        """Sort table by given column number."""
+        self.layoutAboutToBeChanged.emit()
+        #self._data = self._data.sort_values(self._headers[Ncol], ascending=order == Qt.AscendingOrder)
+        if order == Qt.AscendingOrder:
+            self._data.sort(key= lambda tup:tup[Ncol])
+        else:
+            self._data.sort(key= lambda tup:tup[Ncol], reverse=True)
+        self.layoutChanged.emit()
+
+
+class IonTableModel(AbstractTableModel):
+    def __init__(self, data):
+        super(IonTableModel, self).__init__(data, ('{:10.5f}','{:2d}', '{:12d}', '','{:4.2f}', '{:6.1f}', '{:4.2f}',
+               '{:4.2f}', ''), ('m/z','z','intensity','fragment','error /ppm', 'S/N','quality', 'score', 'comment'))
 
     """def flags(self, index):
         return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable"""
@@ -32,7 +72,6 @@ class IonTableModel(QtCore.QAbstractTableModel):
         if index.isValid():
             if role == Qt.DisplayRole:
                 col = index.column()
-                #item = self._data.values[index.row()][col]
                 item = self._data[index.row()][col]
                 formatString = self._format[col]
                 if col == 3 or col == 8:
@@ -54,35 +93,8 @@ class IonTableModel(QtCore.QAbstractTableModel):
                 font.setPointSize(10)
                 return font
 
-
-    def rowCount(self, index):
-        #return len(self._data.values)
-        return len(self._data)
-
-    def columnCount(self, index):
-        #return self._data.columns.size
-        return len(self._data[0])
-
-    def headerData(self, section, orientation, role):
-        if role == QtCore.Qt.DisplayRole:
-            if orientation == QtCore.Qt.Horizontal:
-                return self._headers[section]
-
     def getHashOfRow(self, rowIndex):
-        #nameIndex = self.index(rowIndex, 3)
-        #chargeIndex = self.index(rowIndex, 1)
-        #return self._data.index[rowIndex]
         return (self._data[rowIndex][3],self._data[rowIndex][1])
-
-    def sort(self, Ncol, order):
-        """Sort table by given column number."""
-        self.layoutAboutToBeChanged.emit()
-        #self._data = self._data.sort_values(self._headers[Ncol], ascending=order == Qt.AscendingOrder)
-        if order == Qt.AscendingOrder:
-            self._data.sort(key= lambda tup:tup[Ncol])
-        else:
-            self._data.sort(key= lambda tup:tup[Ncol], reverse=True)
-        self.layoutChanged.emit()
 
     def addData(self, newRow):
         self._data.append(newRow)
@@ -92,18 +104,16 @@ class IonTableModel(QtCore.QAbstractTableModel):
         del self._data[indexToRemove]
 
 
-
-
-class PeakTableModel(QtCore.QAbstractTableModel):
+class PeakTableModel(AbstractTableModel):
     def __init__(self, data):
-        super(PeakTableModel, self).__init__()
+        super(PeakTableModel, self).__init__(data,('{:10.5f}','{:2d}', '{:11d}', '','{:4.2f}', '{:6.1f}', '{:4.2f}', ''),
+                         (('m/z','z','intensity','fragment','error /ppm', 'used')))
         self._data = data
         #self._format = ['{:10.5f}','{:2d}', '{:12d}', '','{:4.2f}', '{:6.1f}', '{:4.2f}', '']
         self._format = ['{:10.5f}','{:2d}', '{:11d}', '','{:4.2f}', '{:6.1f}', '{:4.2f}', '']
-        self.setHeaderData(0, QtCore.Qt.Horizontal, "Test")
 
-    def flags(self, index):
-        return QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
+    """def flags(self, index):
+        return QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable"""
 
     def data(self, index, role):
         if index.isValid():
@@ -120,7 +130,7 @@ class PeakTableModel(QtCore.QAbstractTableModel):
                     return formatString.format(item)
                 return formatString.format(item)
 
-    def rowCount(self, index):
+    """def rowCount(self, index):
         return len(self._data.values)
 
     def columnCount(self, index):
@@ -129,7 +139,7 @@ class PeakTableModel(QtCore.QAbstractTableModel):
     def headerData(self, section, orientation, role):
         if role == QtCore.Qt.DisplayRole:
             if orientation == QtCore.Qt.Horizontal:
-                return ('m/z','z','intensity','fragment','error /ppm', 'used')[section]
+                return ('m/z','z','intensity','fragment','error /ppm', 'used')[section]"""
 
 
 class ResultsWindow(QtWidgets.QMainWindow):
@@ -152,7 +162,7 @@ class ResultsWindow(QtWidgets.QMainWindow):
         self.delTable = self.makeTable(self._deletedIons)"""
         self.setUpUi()
         self.createMenuBar()
-        #self.tables = [self.makeTable(ions), self.makeTable(deletedIons)]
+        #self.tables = [self.makeTable(ions), self.makeTable(_deletedIons)]
         self.tables = []
         for table, name in zip((self._ions, self._deletedIons), ('Observed Ions', 'Deleted Ions')):
             self.makeTabWidget(table, name)
@@ -170,28 +180,30 @@ class ResultsWindow(QtWidgets.QMainWindow):
         #self.formlayout.addWidget(self.tabWidget)
         self.setCentralWidget(self.centralwidget)
 
-        self.resize(1000, 800)
+        self.resize(1000, 900)
 
         #self.formLayout = QtWidgets.QFormLayout(self.centralwidget)
         #self.mainWindow.setStatusBar(QtWidgets.QStatusBar(self.mainWindow))
 
 
     def createMenuBar(self):
-        self.menubar = QtWidgets.QMenuBar(self.mainWindow)
-        self.mainWindow.setMenuBar(self.menubar)
+        self.menubar = QtWidgets.QMenuBar(self)
+        self.setMenuBar(self.menubar)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 340, 22))
-        self.createMenu("File", {'Save':'fun', 'Close':'fun'}, ['',''], ["Ctrl+S","Ctrl+Q"])
-        self.createMenu("Edit", {'Copy Table':'fun', 'Re-model':'fun'},
+        self.createMenu("File", {'Save':self.dumb, 'Export to xlsx':self.dumb, 'Export to txt':self.dumb,
+                                 'Close':self.dumb}, ['','','',''], ["Ctrl+S",'','',"Ctrl+Q"])
+        self.createMenu("Edit", {'Copy Table':self.dumb, 'Re-model':self.dumb},
                         ['', 'Repeat overlap modelling involving user inputs'], ["Ctrl+C",""])
-        self.createMenu("Show", {'Occupancy-Plot':'fun', 'Charge-Plot':'fun'},
+        self.createMenu("Show", {'Occupancy-Plot':self.dumb, 'Charge-Plot':self.dumb},
                         ['Show occupancies as a function of sequence pos.',
                          'Show av. charge as a function of sequence pos.'], ["",""])
-        self.menubar.addAction(self.fileMenu.menuAction())
 
+    def dumb(self):
+        print('not yet implemented')
 
     def createMenu(self, name, options, tooltips, shortcuts):
         menu = QtWidgets.QMenu(self.menubar)
-        menu.setTitle(self._translate(self.mainWindow.objectName(), name))
+        menu.setTitle(self._translate(self.objectName(), name))
         #menuActions = dict()
         pos = len(options)
         for i, option in enumerate(options.keys()):
@@ -213,7 +225,7 @@ class ResultsWindow(QtWidgets.QMainWindow):
         self.tabWidget.addTab(tab, "")
         self.tabWidget.setTabText(self.tabWidget.indexOf(tab), self._translate(self.objectName(), name))
         scrollArea = QtWidgets.QScrollArea(tab)
-        scrollArea.setGeometry(QtCore.QRect(10, 10, 950, 700))
+        scrollArea.setGeometry(QtCore.QRect(10, 10, 950, 800))
         scrollArea.setWidgetResizable(True)
         #scrollArea.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         #scrollArea.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
@@ -224,17 +236,16 @@ class ResultsWindow(QtWidgets.QMainWindow):
         self.tabWidget.setEnabled(True)
 
 
-
     def makeTable(self, parent, data):
         model = IonTableModel([ion.getMoreValues() for ion in data.values()])
-        self.proxyModel = QSortFilterProxyModel()
-        self.proxyModel.setSourceModel(model)
+        #self.proxyModel = QSortFilterProxyModel()
+        #self.proxyModel.setSourceModel(model)
         table = QtWidgets.QTableView(parent)
         table.setModel(model)
         table.setSortingEnabled(True)
         #table.setModel(self.proxyModel)
         self.connectTable(table)
-        table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        #table.setSelectionBehavior(QAbstractItemView.SelectRows)
         table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         return table
@@ -251,6 +262,7 @@ class ResultsWindow(QtWidgets.QMainWindow):
         menu = QtWidgets.QMenu()
         showAction = menu.addAction("Show in Spectrum")
         peakAction = menu.addAction("Show Peaks")
+        copyAction = menu.addAction("Copy Table")
         actionStrings = ["Delete", "Restore"]
         mode = 0
         other = 1
@@ -276,6 +288,9 @@ class ResultsWindow(QtWidgets.QMainWindow):
             global peakview
             pass
             #peakview = PeakView(self._ions[selectedHash].getPeaks())
+        elif action == copyAction:
+            df=pd.DataFrame(data=table.model().getData(), columns=table.model().getHeaders())
+            df.to_clipboard(index=False,header=True)
         elif action == delAction:
             ionLists = [self._ions, self._deletedIons]
             comments = ['man.del.','man.undel.']
@@ -297,7 +312,6 @@ class ResultsWindow(QtWidgets.QMainWindow):
 class PeakView(QtWidgets.QWidget):
     def __init__(self, peaks):
         super().__init__()
-        self._peaks = peaks
         model =PeakTableModel(peaks)
         self.proxyModel = QSortFilterProxyModel()
         self.proxyModel.setSourceModel(model)
@@ -305,37 +319,49 @@ class PeakView(QtWidgets.QWidget):
         self.table.setSortingEnabled(True)
         self.table.setModel(self.proxyModel)
         self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.table.customContextMenuRequested['QPoint'].connect(partial(self.showOptions, self.table))
         self.show()
 
+    def showOptions(self, table, pos):
+        menu = QtWidgets.QMenu()
+        copyAction = menu.addAction("Copy Table")
+        action = menu.exec_(table.viewport().mapToGlobal(pos))
+        if action == copyAction:
+            df=pd.DataFrame(data=self._peaks, columns=table.model().getHeaders())
+            df.to_clipboard(index=False,header=True)
 
 
 
 
-"""pattern = [FragmentIon(Fragment('a', 3, "", '', [], 0), 1, [], 0),
-                    FragmentIon(Fragment('a', 5, "-G", '', [], 0), 1, [], 0),
-                    FragmentIon(Fragment('b', 5, "", '', [], 0), 1, [], 0),
-                    FragmentIon(Fragment('b', 5, "-G", '', [], 0), 1, [], 0)]"""
-def fill(pattern, flag):
-    for i, ion in enumerate(pattern):
-        ion.intensity = 3 * 10 ** 6 * (i + 1) + i * 100
-        ion.error = i + 0.01
-        ion.quality = 0.5 - i / 100
-        ion.noise = 10 ** 6 * 2
-        if flag == 1:
-            ion.comment = 'del.'
-    return pattern
 
-ions, delIons = [],[]
-for name in ['a','c', 'w','y']:
-    for nr in range(1,20):
-        ions.append(FragmentIon(Fragment(name, nr, "", '', [], 0), 1, [], 0))
-        delIons.append(FragmentIon(Fragment(name, nr, "-G", '', [], 0), 1, [], 0))
-ions = fill(ions,0)
+if __name__ == '__main__':
 
-delIons = fill(delIons,1)
+    """pattern = [FragmentIon(Fragment('a', 3, "", '', [], 0), 1, [], 0),
+                        FragmentIon(Fragment('a', 5, "-G", '', [], 0), 1, [], 0),
+                        FragmentIon(Fragment('b', 5, "", '', [], 0), 1, [], 0),
+                        FragmentIon(Fragment('b', 5, "-G", '', [], 0), 1, [], 0)]"""
+    def fill(pattern, flag):
+        for i, ion in enumerate(pattern):
+            ion.intensity = 3 * 10 ** 6 * (i + 1) + i * 100
+            ion.error = i + 0.01
+            ion.quality = 0.5 - i / 100
+            ion.noise = 10 ** 6 * 2
+            if flag == 1:
+                ion.comment = 'del.'
+        return pattern
 
-app=QtWidgets.QApplication(sys.argv)
-window=ResultsWindow({(ion.getName(),ion.charge): ion for ion in ions},
-                  {(ion.getName(),ion.charge): ion for ion in delIons}, [],[])
-window.show()
-app.exec_()
+    ions, delIons = [],[]
+    for name in ['a','c', 'w','y']:
+        for nr in range(1,20):
+            ions.append(FragmentIon(Fragment(name, nr, "", '', [], 0), 1, [], 0))
+            delIons.append(FragmentIon(Fragment(name, nr, "-G", '', [], 0), 1, [], 0))
+    ions = fill(ions,0)
+
+    delIons = fill(delIons,1)
+
+    app=QtWidgets.QApplication(sys.argv)
+    window=ResultsWindow({(ion.getName(),ion.charge): ion for ion in ions},
+                      {(ion.getName(),ion.charge): ion for ion in delIons}, [],[])
+    window.show()
+    app.exec_()

@@ -11,12 +11,12 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import QApplication, QWidget, QMainWindow, QPushButton, QAction
 
 from src.views.EditorController import *
-from src.views.ParameterDialogs import TDStartDialog, TD_configurationDialog, IntactStartDialog
-from src.top_down.Main import TD_MainController
+from src.views.ParameterDialogs import TD_configurationDialog, IntactStartDialog
 from src.top_down.ModellingTool import main as modellingTool
 from src.top_down.OccupancyRecalculator import run as occupancyRecalculator
 from src.top_down.SpectrumComparator import run as spectrumComparator
 from src.intact.Main import run as IntactIonsSearch
+from src.top_down.TD_searchController import TD_MainController
 
 
 class Window(QMainWindow):
@@ -44,7 +44,7 @@ class Window(QMainWindow):
 
     def home(self):
         self.addActionToStatusBar(self.tdMenu, 'Analyse Spectrum',
-                                  'Starts analysis of top-down spectrum', self.startFragmentHunter)
+                                  'Starts analysis of top-down spectrum', TD_MainController)
         self.addActionToStatusBar(self.tdMenu, 'FragmentIon Modelling',
                                   'Models relative abundance of an isotope distribution', modellingTool)
         self.addActionToStatusBar(self.tdMenu, 'Calculate Occupancies',
@@ -65,7 +65,7 @@ class Window(QMainWindow):
         self.addActionToStatusBar(self.dataEdit, 'Molecules','Edit Molecular Properties', MoleculeEditorController)
         self.addActionToStatusBar(self.dataEdit, 'Sequences','Edit stored sequences', SequenceEditorController)
         xPos = self.createButton('Analyse top-down\nspectrum','Starts analysis of top-down spectrum',40,
-                                  self.startFragmentHunter)
+                                  TD_MainController)
         xPos = self.createButton('Analyse spectrum\nof intact molecule', 'Starts analysis of normal intact spectrum', xPos,
                           self.startIntactIonSearch)
         self.setGeometry(50, 50, xPos+40, 230)
@@ -79,11 +79,11 @@ class Window(QMainWindow):
         btn.setGeometry(QtCore.QRect(xPos, 40, width, 150))
         return xPos+width+40
 
-    def startFragmentHunter(self):
+    """def startFragmentHunter(self):
         dialog = TDStartDialog(self)
         dialog.show()
         if dialog.exec_() and dialog.ok:
-            TD_MainController(self).run()
+            TD_MainController(self).start()"""
 
     def startIntactIonSearch(self):
         dialog = IntactStartDialog(self)

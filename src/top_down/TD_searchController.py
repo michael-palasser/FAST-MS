@@ -40,7 +40,7 @@ def sortIonsByName(ionList):
 
 #if __name__ == '__main__':
 class TD_MainController(object):
-    def __init__(self):
+    def __init__(self, mainWindow):
         dialog = TDStartDialog(None)
         dialog.exec_()
         if dialog.canceled:
@@ -48,8 +48,7 @@ class TD_MainController(object):
         self.settings = dialog.newSettings
         self.configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
         if self.search() == 0:
-            print('lsdfkjkl')
-            self.setUpUi()
+            self.setUpUi(mainWindow)
 
 
     def search(self):
@@ -113,6 +112,7 @@ class TD_MainController(object):
         sameMonoisotopics = self.intensityModeller.findSameMonoisotopics()
         if len(sameMonoisotopics) > 0:
             view = CheckMonoisotopicOverlapView(sameMonoisotopics, self.spectrumHandler.getSpectrum())
+            print("User Input requested")
             view.exec_()
             if view and not view.canceled:
                 self.intensityModeller.deleteSameMonoisotopics(view.getDumplist())
@@ -124,6 +124,7 @@ class TD_MainController(object):
         complexPatterns = self.intensityModeller.findOverlaps()
         if len(complexPatterns) > 0:
             view = CheckOverlapsView(complexPatterns, self.spectrumHandler.getSpectrum())
+            print("User Input requested")
             view.exec_()
             if view and not view.canceled:
                 self.intensityModeller.remodelComplexPatterns(complexPatterns, view.getDumplist())
@@ -131,27 +132,27 @@ class TD_MainController(object):
                 return 1
         self._analyser = Analyser(self.libraryBuilder.getSequence().getSequenceList(),
                                  self.settings['charge'], self.libraryBuilder.getModification())
-        print(0)
+        print("done")
         return 0
 
-    def setUpUi(self):
+    def setUpUi(self, parent):
         self.saved = False
-        self.mainWindow = QtWidgets.QMainWindow()
+        self.mainWindow = QtWidgets.QMainWindow(parent)
         self.mainWindow.setObjectName("Results")
         self._translate = QtCore.QCoreApplication.translate
         self.mainWindow.setWindowTitle(self._translate(self.mainWindow.objectName(), self.mainWindow.objectName()))
         self.centralwidget = QtWidgets.QWidget(self.mainWindow)
-        self.formlayout = QtWidgets.QVBoxLayout(self.centralwidget)
-        self.tabWidget = QtWidgets.QTabWidget(self.centralwidget)
-        # self.formlayout.addWidget(self.tabWidget)
+        self.verticalLayout = QtWidgets.QVBoxLayout(self.centralwidget)
+        # self.verticalLayout.addWidget(self.tabWidget)
         self.mainWindow.setCentralWidget(self.centralwidget)
+        self.tabWidget = QtWidgets.QTabWidget(self.centralwidget)
         self.createMenuBar()
         self.tables = []
         for table, name in zip((self.intensityModeller.getObservedIons(), self.intensityModeller.getDeletedIons()),
                                ('Observed Ions', 'Deleted Ions')):
             self.makeTabWidget(table, name)
-        self.formlayout.addWidget(self.tabWidget)
-        self.mainWindow.resize(1000, 900)
+        self.verticalLayout.addWidget(self.tabWidget)
+        self.mainWindow.resize(1200, 900)
         self.mainWindow.show()
 
     def createMenuBar(self):
@@ -191,14 +192,14 @@ class TD_MainController(object):
         for table, name in zip((self.intensityModeller.getObservedIons(), self.intensityModeller.getDeletedIons()),
                                ('Observed Ions', 'Deleted Ions')):
             self.makeTabWidget(table, name)
-        self.formlayout.addWidget(self.tabWidget)
+        self.verticalLayout.addWidget(self.tabWidget)
 
     def makeTabWidget(self, data, name):
         tab = QtWidgets.QWidget()
         self.tabWidget.addTab(tab, "")
         self.tabWidget.setTabText(self.tabWidget.indexOf(tab), self._translate(self.mainWindow.objectName(), name))
         scrollArea = QtWidgets.QScrollArea(tab)
-        scrollArea.setGeometry(QtCore.QRect(10, 10, 950, 800))
+        scrollArea.setGeometry(QtCore.QRect(10, 10, 1150, 800))
         scrollArea.setWidgetResizable(True)
         #scrollArea.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         #scrollArea.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
@@ -231,7 +232,8 @@ class TD_MainController(object):
         menu = QtWidgets.QMenu()
         showAction = menu.addAction("Show in Spectrum")
         peakAction = menu.addAction("Show Peaks")
-        copyAction = menu.addAction("Copy Table")
+        copyRowAction = menu.addAction("Copy Row")
+        copyTableAction = menu.addAction("Copy Table")
         actionStrings = ["Delete", "Restore"]
         mode = 0
         other = 1
@@ -247,16 +249,19 @@ class TD_MainController(object):
         selectedHash = table.model().getHashOfRow(selectedRow)
         selectedIon = self.intensityModeller.getIon(selectedHash)
         if action == showAction:
-            global spectrumView
-            ajacentIons = self.intensityModeller.getAdjacentIons(selectedHash)
-            minLimit, maxLimit, maxY = self.intensityModeller.getLimits(ajacentIons)
-            peaks = self.spectrumHandler.getSpectrum(minLimit-5, maxLimit+5)
-            spectrumView = SpectrumView(peaks, ajacentIons, np.min(selectedIon.isotopePattern['m/z']),
+            #global spectrumView
+            ajacentIons, minLimit, maxLimit  = self.intensityModeller.getAdjacentIons(selectedHash)
+            #minWindow, maxWindow, maxY = self.intensityModeller.getLimits(ajacentIons)
+            peaks = self.spectrumHandler.getSpectrum(minLimit-1, maxLimit+1)
+            spectrumView = SpectrumView(self.mainWindow, peaks, ajacentIons, np.min(selectedIon.isotopePattern['m/z']),
                                 np.max(selectedIon.isotopePattern['m/z']), np.max(selectedIon.isotopePattern['relAb']))
         elif action == peakAction:
             global peakview
             peakview = PeakView(selectedIon.getPeaks())
-        elif action == copyAction:
+        elif action == copyRowAction:
+            df=pd.DataFrame(data=[table.model().getRow(selectedRow)], columns=table.model().getHeaders())
+            df.to_clipboard(index=False,header=True)
+        elif action == copyTableAction:
             df=pd.DataFrame(data=table.model().getData(), columns=table.model().getHeaders())
             df.to_clipboard(index=False,header=True)
         elif action == delAction:
@@ -272,19 +277,16 @@ class TD_MainController(object):
 
     def repeatModellingOverlaps(self):
         self.intensityModeller.findOverlaps(20)
-        self.formlayout.removeWidget(self.tabWidget)
+        self.verticalLayout.removeWidget(self.tabWidget)
+        self.tabWidget = QtWidgets.QTabWidget(self.centralwidget)
         self.fillUi()
 
 
     def dumb(self):
         print('not yet implemented')
 
-        """analysis"""
-        """self.analyser = Analyser(list(self.intensityModeller._correctedIons.values()), self.libraryBuilder.getSequence().getSequenceList(),
-                        self.settings['charge'], self.libraryBuilder.getModification())"""
-
     def export(self):
-        dlg = ExportDialog()
+        dlg = ExportDialog(self.mainWindow)
         dlg.exec_()
         if dlg and not dlg.canceled:
             if dlg.getFormat() == 'xlsx':
@@ -293,7 +295,9 @@ class TD_MainController(object):
                     output = self.settings['spectralData'][0:-4] + '_out' + '.xlsx'
                 if filename[-5:]!= 'xlsx':
                     filename+='xlsx'"""
-                self.toExcel(dlg.getDirectory(),dlg.getFilename())
+                self.toExcel(dlg.getDir(),dlg.getFilename())
+            else:
+                self.dumb()
 
 
     def toExcel(self, outputPath, filename): #ToDo
@@ -304,29 +308,11 @@ class TD_MainController(object):
             filename += 'xlsx'
         output = os.path.join(outputPath, filename)
         excelWriter = ExcelWriter(output, self.configs)
-
-        try: #Todo: to ExcelWriter
-            #percentages = list()
-            excelWriter.writeAnalysis(("spectralFile:", self.settings['spectralData']),
-                                      self._analyser.getModificationLoss(),
-                                      self._analyser.calculateRelAbundanceOfSpecies(),
-                                      self.libraryBuilder.getSequence().getSequenceList(),
-                                      self._analyser.calculatePercentages(self.configs['interestingIons']))
-            #self.analyser.createPlot(__maxMod)
-            precursorRegion = self.intensityModeller.getPrecRegion(self.settings['sequName'], abs(self.settings['charge']))
-            excelWriter.writeIons(excelWriter.worksheet2, self.intensityModeller.getObservedIons().values(),
-                                  precursorRegion)
-            excelWriter.writePeaks(excelWriter.worksheet3, 0, 0, self.intensityModeller.getObservedIons().values())
-            row = excelWriter.writeIons(excelWriter.worksheet4, sortIonsByName(self.intensityModeller.getDeletedIons()),
-                                        precursorRegion)
-            excelWriter.writePeaks(excelWriter.worksheet4, row + 3, 0, sortIonsByName(self.intensityModeller.getDeletedIons()))
-            excelWriter.writeIons(excelWriter.worksheet5, sortIonsByName(self.intensityModeller._remodelledIons),
-                                  precursorRegion)
-            excelWriter.writeSumFormulas(self.libraryBuilder.getFragmentLibrary(), self.spectrumHandler.searchedChargeStates)
-            excelWriter.writeConfigurations(self.settings)
-            print("********** saved in:", filename, "**********\n")
-        finally:
-            excelWriter.closeWorkbook()
+        self._analyser.listOfIons = list(self.intensityModeller.getObservedIons().values())
+        excelWriter.toExcel(self._analyser, self.intensityModeller, self.settings,
+                self.libraryBuilder.getSequence().getSequenceList(), self.libraryBuilder.getFragmentLibrary(),
+                            self.spectrumHandler.searchedChargeStates)
+        print("********** saved in:", output, "**********\n")
         try:
             subprocess.call(['open',output])
         except:
@@ -339,5 +325,5 @@ class TD_MainController(object):
         choice = QtWidgets.QMessageBox.question(self.mainWindow, 'Close Search',
                                                 message + "Do you really want to close the search?",
                                                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-        if choice != QtWidgets.QMessageBox.Yes:
+        if choice == QtWidgets.QMessageBox.Yes:
             self.mainWindow.close()

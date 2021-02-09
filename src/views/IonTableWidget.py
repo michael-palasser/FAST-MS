@@ -6,6 +6,8 @@ from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QTableWidget
 from math import log10
 
+from src.views.ResultView import IonTableModel
+
 
 class TableModel(QtCore.QAbstractTableModel):
     def __init__(self, data, parent=None):
@@ -38,27 +40,29 @@ class TableModel(QtCore.QAbstractTableModel):
             """if 0 <= row < self.rowCount():
                 column = index.column()
                 if 0 <= column < self.columnCount():
-                    return self._data[row][column]"""
+                    return self._ions[row][column]"""
 
 
 
 
 class IonTableWidget(QTableWidget):
-    def __init__(self, parrent, data, yPos):
+    def __init__(self, parrent, ions, yPos):
         super(IonTableWidget, self).__init__(parrent)
         print('starting')
         #self.headers = ['m/z', 'z', 'I', 'fragment', 'error /ppm', 'S/N', 'qual.']
-        self._data = data
+        self._ions = ions
+        """model = IonTableModel([ion.getValues() for ion in ions])
+        self.setModel(model)"""
         self.setColumnCount(len(self.getHeaders()))
         self.move(20, yPos)  # 70
         self.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.setRowCount(len(data))
+        self.setRowCount(len(ions))
         self._smallFnt = QFont()
         self._smallFnt.setPointSize(10)
         self._format = ['{:10.5f}','{:2d}', '{:12d}', '','{:4.2f}', '{:6.1f}', '{:4.2f}', '']
         start = time.time()
-        for i, ion in enumerate(data):
+        for i, ion in enumerate(ions):
             self.fill(i, ion)
 
         print(time.time()-start)
@@ -162,9 +166,9 @@ class TickIonTableWidget(IonTableWidget):
 
 
 
-class FinalIonTable(TickIonTableWidget):
+"""class FinalIonTable(TickIonTableWidget):
     def getHeaders(self):
         return ['m/z', 'z', 'I', 'fragment', 'error /ppm', 'S/N', 'qual.','comment', 'del.?']
 
     def getValue(self,ion):
-        return ion.getValues()+ [ion.comment]
+        return ion.getValues()+ [ion.comment]"""

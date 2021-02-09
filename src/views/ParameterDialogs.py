@@ -6,7 +6,6 @@ from os.path import join, isfile
 
 from src import path
 from src.Exceptions import UnvalidInputException
-from src.intact.Main import run
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.Services import FragmentIonService, ModificationService, SequenceService
 from src.views.StartDialogs import OpenFileWidget
@@ -195,7 +194,7 @@ class TDStartDialog(StartDialog):
 
     def setupUi(self, startDialog):
         self.createLabels(("Sequence Name:", "Charge:", "Fragmentation:", "Modifications:", "Nr. of Modifications:",
-                           "Spectral Data:", "Noise Threshold (x10^6):", "Fragment Library:", "Output"),
+                           "Spectral Data:", "Noise Threshold (x10^6):", "Fragment Library:"),#, "Output"),
                           startDialog, 30, 160)
         fragPatterns = FragmentIonService().getAllPatternNames()
         modPatterns = ModificationService().getAllPatternNames()
@@ -213,9 +212,9 @@ class TDStartDialog(StartDialog):
                (QtWidgets.QDoubleSpinBox(startDialog), 'noiseLimit', "Minimal noise level"),
                (QtWidgets.QLineEdit(startDialog), "fragLib", "Name of csv file in the folder 'Fragment_lists' "
                      "containing the isotope patterns of the fragments\n"
-                     "If no file is stated, the program will search for the corresponing file or create a new one"),
-               (QtWidgets.QLineEdit(startDialog), "output",
-                    "Name of the output Excel file\ndefault: name of spectral pattern file + _out.xlsx"))
+                     "If no file is stated, the program will search for the corresponing file or create a new one"))
+               #(QtWidgets.QLineEdit(startDialog), "output",
+                    #"Name of the output Excel file\ndefault: name of spectral pattern file + _out.xlsx"))
         xPos, yPos = self.createWidgets(widgets,200,linewidth)
         self.widgets['charge'].setMinimum(-99)
         self.buttonBox.setGeometry(QtCore.QRect(210, yPos+20, 164, 32))

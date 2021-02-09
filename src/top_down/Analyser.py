@@ -39,9 +39,11 @@ class Analyser(object):
     def getModificationLoss(self):
         if self.modification == "":
             return None
+        print(self.listOfIons)
         modifiedSum = 0
         totalSum = 0
         for ion in self.listOfIons:
+            print(ion.getName(),ion.number)
             if (ion.number==0): #(ion.charge == self.precCharge) and
                 if self.modification in ion.modification:
                     modifiedSum += ion.getRelAbundance()

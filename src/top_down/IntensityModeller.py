@@ -352,7 +352,7 @@ class IntensityModeller(object):
     def getAdjacentIons(self, ionHash):
         monoisotopicDict = {ion.isotopePattern['m/z'][0]: key for key, ion in self._correctedIons.items()}
         monoisotopics = np.array(sorted(list(monoisotopicDict.keys())))
-        distance = 75
+        distance = 100
         flag = 0
         if ionHash not in self._correctedIons.keys():
             flag = 1
@@ -364,7 +364,7 @@ class IntensityModeller(object):
                 adjacentIons = [self._correctedIons[monoisotopicDict[mono]] for mono in monoisotopics]
                 if flag == 1:
                     adjacentIons.append(ion)
-                    return sorted(adjacentIons, key=lambda obj:obj.isotopePattern['m/z'][0])
+                    return sorted(adjacentIons, key=lambda obj:obj.isotopePattern['m/z'][0]), median-distance, median+distance
                 else:
                     return adjacentIons
             elif len(monoisotopics) < 30:
@@ -383,7 +383,7 @@ class IntensityModeller(object):
     def getLimits(ions):
         limits = np.array([(np.min(ion.isotopePattern['m/z']), np.max(ion.isotopePattern['m/z']),
                             np.max(ion.isotopePattern['relAb'])) for ion in ions])
-        return np.min(limits[:,0]), np.max(limits[:,1]), np.max(limits[:,3])
+        return np.min(limits[:,0]), np.max(limits[:,1]), np.max(limits[:,2])
 
 
     def getPrecRegion(self, precName, precCharge):

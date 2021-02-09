@@ -2,7 +2,7 @@ from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import QDialog
 from src import path
 from src.repositories.ConfigurationHandler import ConfigHandler
-from src.top_down.Main import run
+from src.top_down.Main_new import run
 
 
 class AbstractDialog(QDialog):

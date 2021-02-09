@@ -15,14 +15,14 @@ dataPath = join(path, 'src', 'data')
 
 
 class AbstractDialog(QDialog):
-    def __init__(self, title, lineSpacing, widgetWidth):
-        super().__init__(parent=None)
-        self.setObjectName('dialog')
+    def __init__(self, parent, title, lineSpacing, widgetWidth):
+        super().__init__(parent)
+        self.setObjectName(title)
         self.lineSpacing = lineSpacing
         self.widgetWidth = widgetWidth
         self.widgets = dict()
         self.labels = dict()
-        self.formLayout = QtWidgets.QVBoxLayout(self)
+        #self.formLayout = QtWidgets.QVBoxLayout(self)
         self.sizePolicy = self.setNewSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         self._translate = QtCore.QCoreApplication.translate
         self.setWindowTitle(self._translate(self.objectName(), title))
@@ -32,7 +32,7 @@ class AbstractDialog(QDialog):
         self.buttonBox.rejected.connect(self.reject)
         self.newSettings = None
         self.move(300,100)
-        self.ok = False
+        self.canceled = False
 
     @staticmethod
     def setNewSizePolicy(horizontal, vertical):
@@ -48,23 +48,13 @@ class AbstractDialog(QDialog):
         self.labels = {widget[1]:labelName for widget, labelName in zip(widgets,labels)}
         for i, labelName in enumerate(labels):
             label = QtWidgets.QLabel(parent)
-            width = len(labelName)*10
+            width = len(labelName)*7
             label.setGeometry(QtCore.QRect(20, yPos, width, 16))
             label.setText(self._translate(self.objectName(), labelName))
-            self.formLayout.setWidget(i, QtWidgets.QFormLayout.LabelRole, label)
             if width>maxWidth:
                 maxWidth = width
-        """labels = []
-        yPos = 30
-        #print(type(labelNames),type(box),type(xPos),type(lineWidth))
-        for labelname in labelNames:
-            label = QtWidgets.QLabel(parent)
-            label.setGeometry(QtCore.QRect(xPos,yPos,lineWidth,16))
-            _translate = QtCore.QCoreApplication.translate
-            label.setText(_translate(self.objectName(), labelname))
-            labels.append(label)
-            yPos += self.lineSpacing"""
-        return maxWidth
+            yPos += self.lineSpacing
+        return maxWidth+20
 
 
     def createWidgets(self, widgetTuples, xPos):
@@ -79,19 +69,19 @@ class AbstractDialog(QDialog):
         for i, widgetTuple in enumerate(widgetTuples):
             widget = widgetTuple[0]
             if isinstance(widget, QtWidgets.QSpinBox) or isinstance(widget, QtWidgets.QDoubleSpinBox):
-                widget.setGeometry(QtCore.QRect(xPos, yPos-1, self.widgetWidth, 24))
+                widget.setGeometry(QtCore.QRect(xPos, yPos-4, self.widgetWidth, 24))
             elif isinstance(widget, QtWidgets.QLineEdit):
-                widget.setGeometry(QtCore.QRect(xPos, yPos, self.widgetWidth, 21))
+                widget.setGeometry(QtCore.QRect(xPos, yPos-2, self.widgetWidth, 21))
             elif isinstance(widget, QtWidgets.QComboBox):
-                widget.setGeometry(QtCore.QRect(xPos - 3, yPos, self.widgetWidth + 6, 26))
+                widget.setGeometry(QtCore.QRect(xPos - 5, yPos, self.widgetWidth + 6, 26))
             elif isinstance(widget, OpenFileWidget):
-                widget.setGeometry(QtCore.QRect(xPos, yPos-5, self.widgetWidth + 20, 36))
+                widget.setGeometry(QtCore.QRect(xPos, yPos-10, self.widgetWidth + 20, 36))
             else:
-                raise Exception('Unknown type of widget')
+                raise Exception('Unknown type of widget: ', type(widget))
             widget.setObjectName(widgetTuple[1])
             widget.setToolTip(self._translate(self.objectName(), widgetTuple[2]))
             self.widgets[widgetTuple[1]] = widget
-            self.formLayout.setWidget(i, QtWidgets.QFormLayout.FieldRole, widget)
+            #self.formLayout.addWidget(widget)
             yPos += self.lineSpacing
         return xPos+self.widgetWidth, yPos
 
@@ -134,7 +124,8 @@ class AbstractDialog(QDialog):
                 self.setValueOfWidget(item, self.configHandler.get(name))
 
     def reject(self):
-        self.done(0)
+        self.canceled = True
+        super(AbstractDialog, self).reject()
 
     def makeDictToWrite(self):
         newSettings = dict()
@@ -205,8 +196,8 @@ class StartDialog(AbstractDialog):
 
 
 class TDStartDialog(StartDialog):
-    def __init__(self):
-        super().__init__("Settings", 30, 180)
+    def __init__(self, parent):
+        super().__init__(parent, "Settings", 30, 180)
         self.configHandler = ConfigurationHandlerFactory.getTD_SettingHandler()
         self.setupUi(self)
 
@@ -327,24 +318,29 @@ class OpenDialog(QtWidgets.QDialog):
 
 
 class ExportDialog(AbstractDialog):
-    def __init__(self):
-        super(ExportDialog, self).__init__('Export', 30, 150)
+    def __init__(self, parent):
+        super(ExportDialog, self).__init__(parent, 'Export Results', 35, 180)
         widgets = ((self.createComboBox(self,('xlsx','txt')),'format','Format of the output-file(s)'),
-                    ('dir', OpenFileWidget(self,self.widgetWidth, 0, 0, join(path, 'Spectral_data','top-down'),
-                       "Select Directory", ""), 'Select the directory where the output-file should be saved'),
-                    ('name', QtWidgets.QLineEdit(self), "Name of the output-file"))
-        yPos = self.createLabels(('Format: ','Directory:','Filename:'), widgets, self)
-        self.createWidgets(widgets, yPos+40)
+                    (OpenFileWidget(self,self.widgetWidth, 0, 0, join(path, 'Spectral_data','top-down'),
+                       "Select directory", ""), 'dir', 'Select the directory where the output-file should be saved\n'
+                                                       '(default: output'),
+                    (QtWidgets.QLineEdit(self), 'name', "Name of the output-file\n"
+                                                        "(default: name of spectral input file + _out)"))
+        xPos = self.createLabels(('Format:','Directory:','Filename:'), widgets, self)
+        xPos,yPos = self.createWidgets(widgets, xPos+20)
+        self.buttonBox.move(xPos/2, yPos+20)
+        self.show()
 
     def accept(self):
-        if not isdir(self.widgets['dir'].text()):
+        dir = self.widgets['dir'].text()
+        if (dir != '') and not isdir(dir):
             raise UnvalidInputException(self.widgets['dir'].text(), "not found")
         super(ExportDialog, self).accept()
 
     def getFormat(self):
-        return self.widgets['format'].text()
+        return self.widgets['format'].currentText()
 
-    def getPath(self):
+    def getDir(self):
         return self.widgets['dir'].text()
 
     def getFilename(self):

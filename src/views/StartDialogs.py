@@ -143,7 +143,11 @@ class OpenFileWidget(QtWidgets.QWidget):
             file, _ = QFileDialog.getOpenFileName(self, self.__title, self.__startPath, self.__formats, options=options)
             self.lineEdit.setText(file)
         else:
-            dir, _ = QFileDialog.getExistingDirectory(self, self.__title, self.__startPath, options=options)
+            dir = QFileDialog.getExistingDirectory(self, self.__title, self.__startPath)
+            print(dir)
+            if dir:
+                dir = QtCore.QDir.toNativeSeparators(dir)
+                print(dir)
             self.lineEdit.setText(dir)
         #self.__files = files
 

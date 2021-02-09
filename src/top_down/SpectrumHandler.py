@@ -65,7 +65,7 @@ class SpectrumHandler(object):
 
     def getSpectrum(self, *args):
         if args and args[1]:
-            return self.__spectrum(np.where(self.__spectrum[:, 0] > args[0]) & (self.__spectrum[:, 0] < args[1]))
+            return self.__spectrum[np.where((self.__spectrum[:, 0] > args[0]) & (self.__spectrum[:, 0] < args[1]))]
         return self.__spectrum
 
     def getUpperBound(self):
@@ -136,13 +136,15 @@ class SpectrumHandler(object):
     def calculateNoise(self, point, windowSize):
         noise = self.__settings['noiseLimit']
         currentWindow = self.returnArrayInWindow(self.__spectrum, point, windowSize)
+        if currentWindow[:, 1].size < 11:
+            currentWindow = self.returnArrayInWindow(self.__spectrum, point, windowSize*2)
         if currentWindow[:,1].size > 10:     #parameter
             peakInt = currentWindow[:, 1]
             avPeakInt = np.average(peakInt)
             #stdDevPeakInt = np.std(peakInt)
             while True:
                 avPeakInt0 = avPeakInt
-                lowAbundendantPeaks = peakInt[np.where(peakInt < (avPeakInt + 10**6))]#2 * stdDevPeakInt))]
+                lowAbundendantPeaks = peakInt[np.where(peakInt < (avPeakInt + 2* 10**6))]#2 * stdDevPeakInt))]
                 avPeakInt = np.average(lowAbundendantPeaks)
                 if len(lowAbundendantPeaks) == 1:
                     #print(avPeakInt,stdDevPeakInt)

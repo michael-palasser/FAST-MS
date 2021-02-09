@@ -128,19 +128,18 @@ class FragmentIon(Fragment):
         return {'mz':500,'z':self.charge,'int':round(self.intensity),'name':self.getName(),'error':round(self.error, 2),
                 'snr':round(self.getSignalToNoise(), 1),'qual':round(self.quality, 2),'com':self.comment}"""
     def getMoreValues(self):
-        """return [round(self.getMonoisotopic(),5), self.charge, round(self.intensity), self.getName(), round(self.error,2),
-                round(self.getSignalToNoise(),1), round(self.quality,2), round(self.getScore()),self.comment]#"""
-        return [500, self.charge, round(self.intensity), self.getName(), round(self.error,2),
-                round(self.getSignalToNoise(),1), round(self.quality,2), 2,self.comment]
+        return [round(self.getMonoisotopic(),5), self.charge, round(self.intensity), self.getName(), round(self.error,2),
+                round(self.getSignalToNoise(),1), round(self.quality,2), round(self.getScore(),1),self.comment]#"""
+        """return [500, self.charge, round(self.intensity), self.getName(), round(self.error,2),
+                round(self.getSignalToNoise(),1), round(self.quality,2), 2,self.comment]"""
 
     def getPeaks(self):
-        peaks, indizes = [], []
+        peaks = []
         for i, peak in enumerate(self.isotopePattern):
             peaks.append((peak['m/z'], self.charge, round(peak['calcInt']), self.getName(), peak['error'],
                                 peak['used']))
-            indizes.append(i)
-        return pd.DataFrame(data=peaks, columns=['mz', 'z', 'int', 'name', 'used'],
-                            index=pd.MultiIndex.from_tuples(indizes))
+            #indizes.append(i)
+        return peaks #pd.DataFrame(data=peaks, columns=['mz', 'z', 'int', 'name', 'error', 'used'])
 
 
 

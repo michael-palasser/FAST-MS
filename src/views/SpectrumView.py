@@ -49,8 +49,8 @@ modelled = \
 
 class SpectrumView(QtWidgets.QMainWindow):
 
-    def __init__(self, peaks, ions, minRange, maxRange, maxY):
-        super(SpectrumView, self).__init__()
+    def __init__(self, parent, peaks, ions, minRange, maxRange, maxY):
+        super(SpectrumView, self).__init__(parent)
         self.peaks = peaks
         self.ions = ions
         self.int = int

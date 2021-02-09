@@ -44,7 +44,7 @@ class Window(QMainWindow):
 
     def home(self):
         self.addActionToStatusBar(self.tdMenu, 'Analyse Spectrum',
-                                  'Starts analysis of top-down spectrum', TD_MainController)
+                                  'Starts analysis of top-down spectrum', lambda:TD_MainController(self))
         self.addActionToStatusBar(self.tdMenu, 'FragmentIon Modelling',
                                   'Models relative abundance of an isotope distribution', modellingTool)
         self.addActionToStatusBar(self.tdMenu, 'Calculate Occupancies',
@@ -65,7 +65,7 @@ class Window(QMainWindow):
         self.addActionToStatusBar(self.dataEdit, 'Molecules','Edit Molecular Properties', MoleculeEditorController)
         self.addActionToStatusBar(self.dataEdit, 'Sequences','Edit stored sequences', SequenceEditorController)
         xPos = self.createButton('Analyse top-down\nspectrum','Starts analysis of top-down spectrum',40,
-                                  TD_MainController)
+                                  lambda:TD_MainController(self))
         xPos = self.createButton('Analyse spectrum\nof intact molecule', 'Starts analysis of normal intact spectrum', xPos,
                           self.startIntactIonSearch)
         self.setGeometry(50, 50, xPos+40, 230)

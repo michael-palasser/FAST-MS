@@ -32,14 +32,12 @@ def sortIonsByName(ionList):
 
 
 #if __name__ == '__main__':
-class TD_MainController(object):
-    def __init__(self, parent):
-        self.mainWindow = parent
-        self.settings = ConfigurationHandlerFactory.getTD_SettingHandler().getAll()
+class TD_Facade(object):
+    def __init__(self, settings):
+        self.settings = settings
         self.configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
 
-    def run(self):
-
+    def start(self):
         print("\n********** Creating fragment library **********")
         self.libraryBuilder = FragmentLibraryBuilder(self.settings['sequName'], self.settings['fragmentation'],
                         self.settings['modifications'], self.settings['nrMod'])
@@ -57,7 +55,7 @@ class TD_MainController(object):
                 print("done")
             except UnvalidIsotopePatternException:
                 traceback.print_exc()
-                choice = QtWidgets.QMessageBox.question(self.mainWindow, "Problem with importing list of isotope patterns",
+                choice = QtWidgets.QMessageBox.question(None, "Problem with importing list of isotope patterns",
                         "Imported Fragment Library from" + patternReader.getFile() + "incomplete\n"
                         "Should a new library be created?\nThe search will be stopped otherwise",
                                                         QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
@@ -95,45 +93,53 @@ class TD_MainController(object):
             self.intensityModeller.processNoiseIons(ion)
         print("\ndone\nexecution time: ", round((time.time() - start) / 60, 3), "min\n")
 
+    def getSpectrum(self):
+        return self.spectrumHandler.getSpectrum()
+
+    def getMonoisotopicOverlaps(self):
         """Handle spectrum with same monoisotopic peak and charge"""
         print("\n********** Handling overlaps **********")
-        sameMonoisotopics = self.intensityModeller.findSameMonoisotopics()
-        if len(sameMonoisotopics) > 0:
+        return self.intensityModeller.findSameMonoisotopics()
+
+        """if len(sameMonoisotopics) > 0:
             view = CheckMonoisotopicOverlapView(sameMonoisotopics, self.spectrumHandler.getSpectrum())
             view.exec_()
             if view and not view.canceled:
                 self.intensityModeller.deleteSameMonoisotopics(view.getDumplist())
             else:
-                return
+                return"""
 
+    def modelOverlaps(self):
         """remodelling overlaps"""
         print("\n********** Re-modelling overlaps **********")
-        counter = 0
-        while True:
-            complexPatterns = self.intensityModeller.findOverlaps()
-            if len(complexPatterns) > 0:
-                view = CheckOverlapsView(complexPatterns, self.spectrumHandler.getSpectrum())
-                view.exec_()
-                if view and not view.canceled:
-                    self.intensityModeller.remodelComplexPatterns(complexPatterns, view.getDumplist())
-                else:
-                    return
-            if counter > 0:
-                break
-            view = FinalIonView(list(self.intensityModeller.correctedIons.values()), self.spectrumHandler.getSpectrum())
+        return self.intensityModeller.findOverlaps()
+        """if len(complexPatterns) > 0:
+            view = CheckOverlapsView(complexPatterns, self.spectrumHandler.getSpectrum())
             view.exec_()
             if view and not view.canceled:
-                if len(view.getDumplist())>0:
-                    self.intensityModeller.deleteIons(view.getDumplist())
-                    counter +=1
-                else:
-                    break
+                self.intensityModeller.remodelComplexPatterns(complexPatterns, view.getDumplist())
             else:
                 return
+        view = FinalIonView(list(self.intensityModeller._correctedIons.values()), self.spectrumHandler.getSpectrum())
+        view.exec_()
+        if view and not view.canceled:
+            if len(view.getDumplist())>0:
+                self.intensityModeller.deleteIons(view.getDumplist())
+            else:
+                break
+        else:
+            return"""
 
-        """analysis"""
-        self.analyser = Analyser(list(self.intensityModeller.correctedIons.values()), self.libraryBuilder.getSequence().getSequenceList(),
-                        self.settings['charge'], self.libraryBuilder.getModification())
+    def remodelComplexOverlaps(self, complexPatterns, dumpList):
+        self.intensityModeller.remodelComplexPatterns(complexPatterns, dumpList)
+        return self.intensityModeller._correctedIons
+
+    def getSpectrum(self, minLimit, maxLimit):
+        return self._spectrum[np.where((self._spectrum[:,0]>(minLimit)) & (self._spectrum[:,0]<(maxLimit)))]
+
+        #"""analysis"""
+        #self.analyser = Analyser(list(self.intensityModeller._correctedIons.values()), self.libraryBuilder.getSequence().getSequenceList(),
+                        #self.settings['charge'], self.libraryBuilder.getModification())
 
     def toExcel(self): #ToDo
         """output"""
@@ -157,13 +163,13 @@ class TD_MainController(object):
                                       self.analyser.calculatePercentages(self.configs['interestingIons']))
             #self.analyser.createPlot(__maxMod)
             precursorRegion = self.intensityModeller.getPrecRegion(self.settings['sequName'], abs(self.settings['charge']))
-            excelWriter.writeIons(excelWriter.worksheet2, self.intensityModeller.correctedIons.values(),
+            excelWriter.writeIons(excelWriter.worksheet2, self.intensityModeller._correctedIons.values(),
                                   precursorRegion)
-            excelWriter.writePeaks(excelWriter.worksheet3,0,0,self.intensityModeller.correctedIons.values())
-            row = excelWriter.writeIons(excelWriter.worksheet4, sortIonsByName(self.intensityModeller.deletedIons),
-                                  precursorRegion)
-            excelWriter.writePeaks(excelWriter.worksheet4,row+3,0,sortIonsByName(self.intensityModeller.deletedIons))
-            excelWriter.writeIons(excelWriter.worksheet5, sortIonsByName(self.intensityModeller.remodelledIons),
+            excelWriter.writePeaks(excelWriter.worksheet3, 0, 0, self.intensityModeller._correctedIons.values())
+            row = excelWriter.writeIons(excelWriter.worksheet4, sortIonsByName(self.intensityModeller._deletedIons),
+                                        precursorRegion)
+            excelWriter.writePeaks(excelWriter.worksheet4, row + 3, 0, sortIonsByName(self.intensityModeller._deletedIons))
+            excelWriter.writeIons(excelWriter.worksheet5, sortIonsByName(self.intensityModeller._remodelledIons),
                                   precursorRegion)
             excelWriter.writeSumFormulas(self.libraryBuilder.getFragmentLibrary(), self.spectrumHandler.searchedChargeStates)
             print("********** saved in:", output, "**********\n")
@@ -179,5 +185,5 @@ class TD_MainController(object):
 """if __name__ == '__main__':
     app = QApplication(sys.argv)
     gui = Window()
-    TD_MainController(gui).run()
+    TD_Facade(gui).run()
     sys.exit(app.exec_())"""

@@ -166,6 +166,8 @@ class FragmentLibraryBuilder(object):
         precName = "+" + self.__modifPattern.getModification()
         if self.__maxMod > 1:
             precName = "+" +  str(self.__maxMod) + self.__modifPattern.getModification()
+        print(self.__molecule.getFormula())
+        #return
         basicFormula = simpleFormula.addFormula(self.__molecule.getFormula())
         for precTemplate in self.__fragmentation.getItems2():
             if precTemplate.enabled():
@@ -206,6 +208,8 @@ class FragmentLibraryBuilder(object):
         SimpleLadderBack = self.buildSimpleLadder(sequence[::-1])
         backwardFragments = self.createFragmentLadder(SimpleLadderBack, self.__fragmentation.getFragTemplates(-1))
         precursorFragments = self.addPrecursor(SimpleLadderBack[len(sequence) - 1][1])
+        for frag in precursorFragments:
+            print(frag.getName(),frag.formula.toString())
         self.__fragmentLibrary = forwardFragments + backwardFragments + precursorFragments
         self.__fragmentLibrary.sort(key=lambda obj:(obj.type , obj.number))
         #for fragment in self.__fragmentLibrary:

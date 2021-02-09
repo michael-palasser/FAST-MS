@@ -131,13 +131,43 @@ class ExcelWriter(BasicExcelWriter):
         self.format2digit = self.workbook.add_format({'num_format': '0.00'})
         self.format5digit = self.workbook.add_format({'num_format': '0.00000'})
 
+    def toExcel(self, analyser, intensityModeller, settings, sequenceList, fragmentLibrary, searchedChargeStates):
+        try: #Todo: to ExcelWriter
+            #percentages = list()
+            self.writeAnalysis([("spectral file:", settings['spectralData'])],
+                                      analyser.getModificationLoss(),
+                                      analyser.calculateRelAbundanceOfSpecies(),
+                                      sequenceList,
+                                      analyser.calculatePercentages(self.configs['interestingIons']))
+            #self.analyser.createPlot(__maxMod)
+            precursorRegion = intensityModeller.getPrecRegion(settings['sequName'], abs(settings['charge']))
+            self.writeIons(self.worksheet2, intensityModeller.getObservedIons().values(),
+                                  precursorRegion)
+            self.writePeaks(self.worksheet3, 0, 0, intensityModeller.getObservedIons().values())
+            row = self.writeIons(self.worksheet4, self.sortByName(intensityModeller.getDeletedIons().values()),
+                                 precursorRegion)
+            self.writePeaks(self.worksheet4, row + 3, 0, self.sortByName(intensityModeller.getDeletedIons().values()))
+            self.writeIons(self.worksheet5, self.sortByName(intensityModeller.getRemodelledIons()), precursorRegion)
+            self.writeSumFormulas(fragmentLibrary, searchedChargeStates)
+            self.writeConfigurations(settings)
+        finally:
+            self.closeWorkbook()
+
+    @staticmethod
+    def sortByName(ionList):
+        # return sorted(ionList,key=lambda obj:(obj.type ,obj.number))
+        return sorted(ionList, key=lambda obj: (obj.getName(), obj.charge))
+
+
 
     def writeGeneralParameters(self, row, generalParam):
         date = datetime.now().strftime("%d/%m/%Y %H:%M")
-        self.worksheet1.write_row(row, ("Time:",date))
+        self.worksheet1.write_row(row, 0,("Time:",date))
         row=1
+        print(generalParam)
         for tup in generalParam:
-            self.worksheet1.writeRow(row, tup)
+            print(tup)
+            self.worksheet1.write_row(row, 0, tup)
             row +=1
         return row+2
 
@@ -151,6 +181,7 @@ class ExcelWriter(BasicExcelWriter):
             self.worksheet1.write(row,0,'modification_loss:')
             self.worksheet1.write(row,1,modLoss,self.percentFormat)
             row +=1
+        row +=1
         row = self.writeAbundancesOfSpecies(row,relAbundanceOfSpecies)
         if modLoss != None:
             self.writeOccupancies(row, sequence, percentages)
@@ -235,9 +266,11 @@ class ExcelWriter(BasicExcelWriter):
         self.worksheet7.write(0, 0, "Configurations:")
         row = 1
         for key,val in settings.items():
-            self.worksheet7.writeRow(row, (key,val))
+            self.worksheet7.write_row(row, 0, (key,val))
             row += 1
         for key,val in self.configs.items():
-            self.worksheet7.writeRow(row, (key,val))
+            if isinstance(val, list):
+                val = ','.join(val)
+            self.worksheet7.write_row(row, 0, (key,val))
             row += 1
         return row + 2

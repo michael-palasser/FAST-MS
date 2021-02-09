@@ -63,7 +63,7 @@ class AbstractTableModel(QtCore.QAbstractTableModel):
 class IonTableModel(AbstractTableModel):
     def __init__(self, data):
         super(IonTableModel, self).__init__(data, ('{:10.5f}','{:2d}', '{:12d}', '','{:4.2f}', '{:6.1f}', '{:4.2f}',
-               '{:4.2f}', ''), ('m/z','z','intensity','fragment','error /ppm', 'S/N','quality', 'score', 'comment'))
+               '{:4.1f}', ''), ('m/z','z','intensity','fragment','error /ppm', 'S/N','quality', 'score', 'comment'))
 
     """def flags(self, index):
         return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable"""
@@ -96,6 +96,9 @@ class IonTableModel(AbstractTableModel):
     def getHashOfRow(self, rowIndex):
         return (self._data[rowIndex][3],self._data[rowIndex][1])
 
+    def getRow(self, rowIndex):
+        return self._data[rowIndex]
+
     def addData(self, newRow):
         self._data.append(newRow)
 
@@ -109,6 +112,7 @@ class PeakTableModel(AbstractTableModel):
         super(PeakTableModel, self).__init__(data,('{:10.5f}','{:2d}', '{:11d}', '','{:4.2f}', '{:6.1f}', '{:4.2f}', ''),
                          (('m/z','z','intensity','fragment','error /ppm', 'used')))
         self._data = data
+        #print('data',data)
         #self._format = ['{:10.5f}','{:2d}', '{:12d}', '','{:4.2f}', '{:6.1f}', '{:4.2f}', '']
         self._format = ['{:10.5f}','{:2d}', '{:11d}', '','{:4.2f}', '{:6.1f}', '{:4.2f}', '']
 
@@ -119,7 +123,8 @@ class PeakTableModel(AbstractTableModel):
         if index.isValid():
             if role == Qt.DisplayRole:
                 col = index.column()
-                item = self._data.values[index.row()][col]
+                item = self._data[index.row()][col]
+                #print(item)
                 formatString = self._format[col]
                 if col == 3:
                     return item
@@ -311,16 +316,25 @@ class ResultsWindow(QtWidgets.QMainWindow):
 
 class PeakView(QtWidgets.QWidget):
     def __init__(self, peaks):
-        super().__init__()
-        model =PeakTableModel(peaks)
-        self.proxyModel = QSortFilterProxyModel()
-        self.proxyModel.setSourceModel(model)
-        self.table = QtWidgets.QTableView()
+        super().__init__(parent=None)
+        model = PeakTableModel(peaks)
+        #self.proxyModel = QSortFilterProxyModel()
+        #self.proxyModel.setSourceModel(model)
+        self.table = QtWidgets.QTableView(self)
         self.table.setSortingEnabled(True)
-        self.table.setModel(self.proxyModel)
-        self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.table.setModel(model)
+        self.table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        self.table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        #self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.table.customContextMenuRequested['QPoint'].connect(partial(self.showOptions, self.table))
+        #self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        #self.table.move(0,0)
+        title = peaks[0][3] + ', ' + str(peaks[0][1])
+        self.setObjectName(title)
+        self._translate = QtCore.QCoreApplication.translate
+        self.setWindowTitle(self._translate(self.objectName(), self.objectName()))
+        self.resize(650, (len(peaks))*38+30)
         self.show()
 
     def showOptions(self, table, pos):
@@ -328,7 +342,7 @@ class PeakView(QtWidgets.QWidget):
         copyAction = menu.addAction("Copy Table")
         action = menu.exec_(table.viewport().mapToGlobal(pos))
         if action == copyAction:
-            df=pd.DataFrame(data=self._peaks, columns=table.model().getHeaders())
+            df=pd.DataFrame(data=self.table.model().getData(), columns=self.table.model().getHeaders())
             df.to_clipboard(index=False,header=True)
 
 
@@ -341,7 +355,7 @@ if __name__ == '__main__':
                         FragmentIon(Fragment('a', 5, "-G", '', [], 0), 1, [], 0),
                         FragmentIon(Fragment('b', 5, "", '', [], 0), 1, [], 0),
                         FragmentIon(Fragment('b', 5, "-G", '', [], 0), 1, [], 0)]"""
-    def fill(pattern, flag):
+    """def fill(pattern, flag):
         for i, ion in enumerate(pattern):
             ion.intensity = 3 * 10 ** 6 * (i + 1) + i * 100
             ion.error = i + 0.01
@@ -362,6 +376,10 @@ if __name__ == '__main__':
 
     app=QtWidgets.QApplication(sys.argv)
     window=ResultsWindow({(ion.getName(),ion.charge): ion for ion in ions},
-                      {(ion.getName(),ion.charge): ion for ion in delIons}, [],[])
-    window.show()
+                      {(ion.getName(),ion.charge): ion for ion in delIons}, [],[])"""
+    peaks = [(1527.24157, 1, 4649010, 'y05', -2.1067545, 1), (1528.24749953, 1, 2777892, 'y05', 0.0, 1),(1529.24749953, 1, 2777892, 'y05', 0.0, 1)]
+
+    app = QtWidgets.QApplication([])
+    peakview = PeakView(None, peaks)
+    #peakview.show()
     app.exec_()

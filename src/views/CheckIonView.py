@@ -5,7 +5,7 @@ from PyQt5.QtGui import QMovie
 from PyQt5.QtWidgets import QLabel, QMainWindow
 import numpy as np
 
-from src.views.IonTableWidget import IonTableWidget, TickIonTableWidget, FinalIonTable
+from src.views.IonTableWidget import IonTableWidget, TickIonTableWidget
 from src.views.SpectrumView import SpectrumView
 
 
@@ -183,7 +183,7 @@ class CheckOverlapsView(AbstractIonView):
             #self.formLayout.setWidget(i+1, QtWidgets.QFormLayout.SpanningRole, table)  # ToDo
             self.connectTable(table)
             self._tables.append(table)
-            yPos += len(pattern.values())*20+50
+            yPos += len(pattern.values())*20+40
             self.formlayout.addWidget(table)
             spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
             self.formlayout.addItem(spacerItem)
@@ -211,7 +211,7 @@ class CheckMonoisotopicOverlapView(AbstractIonView):
                 table.setColumnWidth(i,width)
             self.connectTable(table)
             self._tables.append(table)
-            yPos += len(pattern.values())*20+50+50
+            yPos += len(pattern.values())*20+40+50
             self.formlayout.addWidget(table)
             spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
             self.formlayout.addItem(spacerItem)
@@ -249,13 +249,13 @@ class CheckMonoisotopicOverlapView(AbstractIonView):
 
 
 
-class FinalIonView(AbstractIonView):
+"""class FinalIonView(AbstractIonView):
     def __init__(self, ions, spectrum):
-        """lbl = QLabel()
+        \"""lbl = QLabel()
         movie = QMovie("loading.gif")
         lbl.setMovie(movie)
         lbl.show()
-        movie.start()"""
+        movie.start()\"""
         super(FinalIonView, self).__init__((ions,), "Results", "Observed Ions:",
                                                                [100, 30, 120, 140, 70, 60, 60, 160, 40], spectrum)
         #movie.stop()
@@ -319,7 +319,7 @@ class FinalIonView(AbstractIonView):
         print(self._dumpList)
         super(FinalIonView, self).accept()
 
-
+"""
 
 
 

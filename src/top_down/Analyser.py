@@ -10,22 +10,23 @@ class Analyser(object):
     '''
     classdocs
     '''
-    def __init__(self, sequence, precCharge, modification):
-        self.listOfIons = None #sorted(listOfIons, key=lambda obj:(obj.type , obj.number))
-        self.sequence = sequence
-        self.precCharge = abs(precCharge)
-        self.modification = modification
-        self.percentageDict = dict()
+    def __init__(self, ions, sequence, precCharge, modification):
+        self._ions = ions #sorted(_ions, key=lambda obj:(obj.type , obj.number))
+        self._sequence = sequence
+        self._precCharge = abs(precCharge)
+        self._modification = modification
+        #self._percentageDict = dict()
 
-    def setListOfIons(self, listOfIons):
-        self.listOfIons = listOfIons
+
+    def setIons(self, ions):
+        self._ions = ions
 
     def calculateRelAbundanceOfSpecies(self):
         relAbundanceOfSpecies = dict()
         totalSum = 0
         """for type in fragmentList:
             relAbundanceOfSpecies[type] = 0"""
-        for ion in self.listOfIons:
+        for ion in self._ions:
             if (ion.score < 5) or (ion.quality<0.3) or (ion.number == 0):
                 if ion.type not in relAbundanceOfSpecies.keys():
                     relAbundanceOfSpecies[ion.type] = ion.getRelAbundance()
@@ -37,73 +38,73 @@ class Analyser(object):
         return relAbundanceOfSpecies
 
     def getModificationLoss(self):
-        if self.modification == "":
+        if self._modification == "":
             return None
-        print(self.listOfIons)
+        print(self._ions)
         modifiedSum = 0
         totalSum = 0
-        for ion in self.listOfIons:
+        for ion in self._ions:
             print(ion.getName(),ion.number)
-            if (ion.number==0): #(ion.charge == self.precCharge) and
-                if self.modification in ion.modification:
+            if (ion.number==0): #(ion.charge == self._precCharge) and
+                if self._modification in ion._modification:
                     modifiedSum += ion.getRelAbundance()
                 totalSum += ion.getRelAbundance()
         return 1 - modifiedSum / totalSum
 
 
     def calculatePercentages(self, interestingIons):
-        if self.modification == "":
+        if self._modification == "":
             return None
         temp = dict()
-        for ion in self.listOfIons:
+        for ion in self._ions:
             if ion.type[0] in interestingIons:
                 if ion.type[0] not in temp:
-                    temp[ion.type[0]] = np.zeros((len(self.sequence), 3))
-                if self.modification in ion.modification:
+                    temp[ion.type[0]] = np.zeros((len(self._sequence), 3))
+                if self._modification in ion._modification:
                     temp[ion.type[0]][ion.number - 1] += \
                         np.array([ion.getRelAbundance(),
-                                  ion.getRelAbundance()*int(self.getNrOfModifications(ion.modification)),0])
+                                  ion.getRelAbundance() * int(self.getNrOfModifications(ion._modification)), 0])
                 else:
                     temp[ion.type[0]][ion.number - 1] += \
                         np.array([ion.getRelAbundance(),0,0])
-        #returnedDict = dict()
+        percentageDict = dict()
         for key,arr in temp.items():
             for row in arr:
                 if row[0]!=0:
                     row[2] = row[1]/row[0]
                 else:
                     row[2] = None
-            self.percentageDict[key] = arr[:,2]
-        return self.percentageDict
+            percentageDict[key] = arr[:, 2]
+        return percentageDict
 
 
     def getNrOfModifications(self, modificationString):
         nrOfModif = 1
-        if modificationString[modificationString.find(self.modification)-1].isdigit():
-            nrOfModif = modificationString[modificationString.find(self.modification)-1]
-            if modificationString[modificationString.find(self.modification) - 2].isdigit():
-                nrOfModif += (10 * modificationString[modificationString.find(self.modification) - 2])
+        if modificationString[modificationString.find(self._modification) - 1].isdigit():
+            nrOfModif = modificationString[modificationString.find(self._modification) - 1]
+            if modificationString[modificationString.find(self._modification) - 2].isdigit():
+                nrOfModif += (10 * modificationString[modificationString.find(self._modification) - 2])
         return nrOfModif
 
-    #ToDo: Other __spectrum, ausslassen wenn -
+    """#ToDo: Other __spectrum, ausslassen wenn -
     def createPlot(self,nr_mod):
         forwLadderX = list()
         forwLadderY = list()
         backLadderX = list()
         backLadderY = list()
-        sequLength = len(self.sequence)
-        sortedPercentages = sorted(self.percentageDict.keys())
+        sequLength = len(self._sequence)
+        sortedPercentages = sorted(self._percentageDict.keys())
         for species in sortedPercentages:
             index = 0
             while index < sequLength:
                 if species in ['a','b','c','d'] \
-                        and self.percentageDict[species][index]!='-':
+                        and self._percentageDict[species][index]!= '-':
                     forwLadderX.append(index+1)
-                    forwLadderY.append(self.percentageDict[species][index])
+                    forwLadderY.append(self._percentageDict[species][index])
                 elif species in ['w','x','y','z'] \
-                        and self.percentageDict[species][len(self.sequence)-index-1] != '-':
+                        and self._percentageDict[species][len(self._sequence) - index - 1] != '-':
                     backLadderX.append(index+1)
-                    backLadderY.append(self.percentageDict[species][len(self.sequence)-index-1])
+                    backLadderY.append(self._percentageDict[species][len(self._sequence) - index - 1])
                 index += 1
         fig, ax1 = plt.subplots()
         ax1.plot(forwLadderX, forwLadderY, color='tab:blue', marker='v', label='c-fragments')
@@ -118,5 +119,5 @@ class Analyser(object):
         plt.rcParams['figure.figsize'] = 15, 4
         #locs, labels = plt.xticks()
         plt.xticks(np.arange(1, sequLength + 1, step=1))
-        plt.show()
+        plt.show()"""
 

@@ -130,7 +130,7 @@ class TD_MainController(object):
                 self.intensityModeller.remodelComplexPatterns(complexPatterns, view.getDumplist())
             else:
                 return 1
-        self._analyser = Analyser(self.libraryBuilder.getSequence().getSequenceList(),
+        self._analyser = Analyser(None, self.libraryBuilder.getSequence().getSequenceList(),
                                  self.settings['charge'], self.libraryBuilder.getModification())
         print("done")
         return 0
@@ -164,9 +164,10 @@ class TD_MainController(object):
         self.createMenu("Edit", {'Repeat ovl. modelling': self.repeatModellingOverlaps},
                         ['Repeat overlap modelling involving user inputs'], [""])
         self.createMenu("Show",
-                {'Occupancy-Plot': self.dumb, 'Charge-Plot': self.dumb, 'Sequence Coverage': self.dumb},
+                {'Occupancy-Plot': self.dumb, 'Charge-Plot': self.dumb, 'Sequence Coverage': self.dumb,
+                 'Original Values':self.dumb},
                 ['Show occupancies as a function of sequence pos.', 'Show av. charge as a function of sequence pos.',
-                 'Show sequence coverage'], ["", "", ''])
+                 'Show sequence coverage', 'Show original values of overlapping ions'], ["", "", '', ''])
 
     def createMenu(self, name, options, tooltips, shortcuts):
         menu = QtWidgets.QMenu(self.menubar)
@@ -203,14 +204,14 @@ class TD_MainController(object):
         scrollArea.setWidgetResizable(True)
         #scrollArea.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         #scrollArea.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-        table = self.makeTable(scrollArea, data)
+        table = self.makeTable(scrollArea, [ion.getMoreValues() for ion in data.values()])
         scrollArea.setWidget(table)
         self.tables.append(table)
         self.tabWidget.setEnabled(True)
 
 
     def makeTable(self, parent, data):
-        tableModel = IonTableModel([ion.getMoreValues() for ion in data.values()])
+        tableModel = IonTableModel(data)
         """self.proxyModel = QSortFilterProxyModel()
         self.proxyModel.setSourceModel(model)"""
         table = QtWidgets.QTableView(parent)
@@ -308,7 +309,7 @@ class TD_MainController(object):
             filename += 'xlsx'
         output = os.path.join(outputPath, filename)
         excelWriter = ExcelWriter(output, self.configs)
-        self._analyser.listOfIons = list(self.intensityModeller.getObservedIons().values())
+        self._analyser.setIons(list(self.intensityModeller.getObservedIons().values()))
         excelWriter.toExcel(self._analyser, self.intensityModeller, self.settings,
                 self.libraryBuilder.getSequence().getSequenceList(), self.libraryBuilder.getFragmentLibrary(),
                             self.spectrumHandler.searchedChargeStates)
@@ -327,3 +328,14 @@ class TD_MainController(object):
                                                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
         if choice == QtWidgets.QMessageBox.Yes:
             self.mainWindow.close()
+
+    def showRemodelledIons(self):
+        remView = QtWidgets.QWidget(self.mainWindow)
+        #title = 'Original Values of Overlapping Ions'
+        remView.setObjectName('Remodelled')
+        remView._translate = QtCore.QCoreApplication.translate
+        remView.setWindowTitle(self._translate(remView.objectName(), 'Original Values of Overlapping Ions'))
+        ions = self.intensityModeller.getRemodelledIons()
+        remView.resize(650, (len(ions))*38+30)
+        self.makeTable(remView,[ion.getMoreValues() for ion in ions])
+        remView.show()

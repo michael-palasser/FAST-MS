@@ -27,6 +27,7 @@ from src.top_down.IntensityModeller import IntensityModeller
 from src.top_down.ExcelWriter import ExcelWriter
 from src.views.CheckIonView import CheckMonoisotopicOverlapView, CheckOverlapsView
 from src.views.ResultView import IonTableModel, PeakView
+from src.views.SequencePlots import PlotFactory
 from src.views.SimpleDialogs import ExportDialog
 from src.views.ParameterDialogs import TDStartDialog
 from src.views.SpectrumView import SpectrumView
@@ -98,39 +99,39 @@ class TD_MainController(object):
         self.spectrumHandler.findPeaks()
         print("\ndone\nexecution time: ", round((time.time() - start) / 60, 3), "min\n")
 
-        self.intensityModeller = IntensityModeller(self.configs)
+        self._intensityModeller = IntensityModeller(self.configs)
         start = time.time()
         print("\n********** Calculating relative abundances **********")
         for ion in self.spectrumHandler.foundIons:
-            self.intensityModeller.processIons(ion)
+            self._intensityModeller.processIons(ion)
         for ion in self.spectrumHandler.ionsInNoise:
-            self.intensityModeller.processNoiseIons(ion)
+            self._intensityModeller.processNoiseIons(ion)
         print("\ndone\nexecution time: ", round((time.time() - start) / 60, 3), "min\n")
 
         """Handle spectrum with same monoisotopic peak and charge"""
         print("\n********** Handling overlaps **********")
-        sameMonoisotopics = self.intensityModeller.findSameMonoisotopics()
+        sameMonoisotopics = self._intensityModeller.findSameMonoisotopics()
         if len(sameMonoisotopics) > 0:
             view = CheckMonoisotopicOverlapView(sameMonoisotopics, self.spectrumHandler.getSpectrum())
             print("User Input requested")
             view.exec_()
             if view and not view.canceled:
-                self.intensityModeller.deleteSameMonoisotopics(view.getDumplist())
+                self._intensityModeller.deleteSameMonoisotopics(view.getDumplist())
             else:
                 return 1
 
         """remodelling overlaps"""
         print("\n********** Re-modelling overlaps **********")
-        complexPatterns = self.intensityModeller.findOverlaps()
+        complexPatterns = self._intensityModeller.findOverlaps()
         if len(complexPatterns) > 0:
             view = CheckOverlapsView(complexPatterns, self.spectrumHandler.getSpectrum())
             print("User Input requested")
             view.exec_()
             if view and not view.canceled:
-                self.intensityModeller.remodelComplexPatterns(complexPatterns, view.getDumplist())
+                self._intensityModeller.remodelComplexPatterns(complexPatterns, view.getDumplist())
             else:
                 return 1
-        self._analyser = Analyser(None, self.libraryBuilder.getSequence().getSequenceList(),
+        self._analyser = Analyser(None, self.libraryBuilder.getSequenceList(),
                                  self.settings['charge'], self.libraryBuilder.getModification())
         print("done")
         return 0
@@ -148,7 +149,7 @@ class TD_MainController(object):
         self.tabWidget = QtWidgets.QTabWidget(self.centralwidget)
         self.createMenuBar()
         self.tables = []
-        for table, name in zip((self.intensityModeller.getObservedIons(), self.intensityModeller.getDeletedIons()),
+        for table, name in zip((self._intensityModeller.getObservedIons(), self._intensityModeller.getDeletedIons()),
                                ('Observed Ions', 'Deleted Ions')):
             self.makeTabWidget(table, name)
         self.verticalLayout.addWidget(self.tabWidget)
@@ -164,7 +165,7 @@ class TD_MainController(object):
         self.createMenu("Edit", {'Repeat ovl. modelling': self.repeatModellingOverlaps},
                         ['Repeat overlap modelling involving user inputs'], [""])
         self.createMenu("Show",
-                {'Occupancy-Plot': self.dumb, 'Charge-Plot': self.dumb, 'Sequence Coverage': self.dumb,
+                {'Occupancy-Plot': self.showOccupancyPlot, 'Charge-Plot': self.showChargeDistrPlot, 'Sequence Coverage': self.dumb,
                  'Original Values':self.dumb},
                 ['Show occupancies as a function of sequence pos.', 'Show av. charge as a function of sequence pos.',
                  'Show sequence coverage', 'Show original values of overlapping ions'], ["", "", '', ''])
@@ -190,7 +191,7 @@ class TD_MainController(object):
 
     def fillUi(self):
         self.tables = []
-        for table, name in zip((self.intensityModeller.getObservedIons(), self.intensityModeller.getDeletedIons()),
+        for table, name in zip((self._intensityModeller.getObservedIons(), self._intensityModeller.getDeletedIons()),
                                ('Observed Ions', 'Deleted Ions')):
             self.makeTabWidget(table, name)
         self.verticalLayout.addWidget(self.tabWidget)
@@ -248,11 +249,11 @@ class TD_MainController(object):
             return
         selectedRow = it.row()
         selectedHash = table.model().getHashOfRow(selectedRow)
-        selectedIon = self.intensityModeller.getIon(selectedHash)
+        selectedIon = self._intensityModeller.getIon(selectedHash)
         if action == showAction:
             #global spectrumView
-            ajacentIons, minLimit, maxLimit  = self.intensityModeller.getAdjacentIons(selectedHash)
-            #minWindow, maxWindow, maxY = self.intensityModeller.getLimits(ajacentIons)
+            ajacentIons, minLimit, maxLimit  = self._intensityModeller.getAdjacentIons(selectedHash)
+            #minWindow, maxWindow, maxY = self._intensityModeller.getLimits(ajacentIons)
             peaks = self.spectrumHandler.getSpectrum(minLimit-1, maxLimit+1)
             spectrumView = SpectrumView(self.mainWindow, peaks, ajacentIons, np.min(selectedIon.isotopePattern['m/z']),
                                 np.max(selectedIon.isotopePattern['m/z']), np.max(selectedIon.isotopePattern['relAb']))
@@ -270,14 +271,14 @@ class TD_MainController(object):
                                         actionStrings[mode][:-1]+'ing '+selectedIon.getName()+"?",
                                         QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
             if choice == QtWidgets.QMessageBox.Yes:
-                self.intensityModeller.switchIon(selectedIon)
+                self._intensityModeller.switchIon(selectedIon)
                 table.model().removeData(selectedRow)
                 self.tables[other].model().addData(selectedIon.getMoreValues())
                 print(actionStrings[mode]+"d",selectedRow, selectedHash)
 
 
     def repeatModellingOverlaps(self):
-        self.intensityModeller.findOverlaps(20)
+        self._intensityModeller.findOverlaps(20)
         self.verticalLayout.removeWidget(self.tabWidget)
         self.tabWidget = QtWidgets.QTabWidget(self.centralwidget)
         self.fillUi()
@@ -285,6 +286,11 @@ class TD_MainController(object):
 
     def dumb(self):
         print('not yet implemented')
+        dlg = QtWidgets.QMessageBox(parent=self.mainWindow, title='Unvalid Request',
+                    text='Sorry, not implemented yet',
+                    icon=QtWidgets.QMessageBox.Information, buttons=QtWidgets.QMessageBox.Ok)
+        if dlg == QtWidgets.QMessageBox.Ok:
+            return
 
     def export(self):
         dlg = ExportDialog(self.mainWindow)
@@ -309,9 +315,9 @@ class TD_MainController(object):
             filename += 'xlsx'
         output = os.path.join(outputPath, filename)
         excelWriter = ExcelWriter(output, self.configs)
-        self._analyser.setIons(list(self.intensityModeller.getObservedIons().values()))
-        excelWriter.toExcel(self._analyser, self.intensityModeller, self.settings,
-                self.libraryBuilder.getSequence().getSequenceList(), self.libraryBuilder.getFragmentLibrary(),
+        self._analyser.setIons(list(self._intensityModeller.getObservedIons().values()))
+        excelWriter.toExcel(self._analyser, self._intensityModeller, self.settings,
+                            self.libraryBuilder.getSequenceList(), self.libraryBuilder.getFragmentLibrary(),
                             self.spectrumHandler.searchedChargeStates)
         print("********** saved in:", output, "**********\n")
         try:
@@ -335,7 +341,27 @@ class TD_MainController(object):
         remView.setObjectName('Remodelled')
         remView._translate = QtCore.QCoreApplication.translate
         remView.setWindowTitle(self._translate(remView.objectName(), 'Original Values of Overlapping Ions'))
-        ions = self.intensityModeller.getRemodelledIons()
+        ions = self._intensityModeller.getRemodelledIons()
         remView.resize(650, (len(ions))*38+30)
         self.makeTable(remView,[ion.getMoreValues() for ion in ions])
         remView.show()
+
+    def showOccupancyPlot(self):
+        self._analyser.setIons(list(self._intensityModeller.getObservedIons().values()))
+        percentageDict = self._analyser.calculatePercentages(self.configs['interestingIons'])
+        print(percentageDict)
+        if percentageDict == None:
+            dlg = QtWidgets.QMessageBox(parent=self.mainWindow, title='Unvalid Request',
+                        text='It is not possible to calculate occupancies for an unmodified molecule.',
+                        icon=QtWidgets.QMessageBox.Information, buttons=QtWidgets.QMessageBox.Ok)
+            if dlg == QtWidgets.QMessageBox.Ok:
+                return
+        plotFactory = PlotFactory(self.mainWindow)
+        forwardFrags = {key:val for key,val in percentageDict.items() if key in self.libraryBuilder.getForwardFragments()}
+        backwardFrags = {key:val for key,val in percentageDict.items() if key in self.libraryBuilder.getForwardFragments()}
+        plotFactory.showOccupancyPlot(self.libraryBuilder.getSequenceList(),{})
+
+
+    def showChargeDistrPlot(self):
+        self._analyser.setIons(list(self._intensityModeller.getObservedIons().values()))
+        print(self._analyser.getAvCharges(self.configs['interestingIons']))

@@ -144,6 +144,11 @@ class SpectrumView(QtWidgets.QMainWindow):
         #print('clicked on bar ' + str(i))
 
 
+
+
+
+
+
 def main():
     app = QtWidgets.QApplication(sys.argv)
     main = SpectrumView(peaks, modelled)

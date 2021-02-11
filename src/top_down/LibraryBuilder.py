@@ -49,6 +49,9 @@ class FragmentLibraryBuilder(object):
     def getSequence(self):
         return self.__sequence
 
+    def getSequenceList(self):
+        return self.__sequence.getSequenceList()
+
     def getFragmentLibrary(self):
         return self.__fragmentLibrary
 
@@ -277,3 +280,14 @@ class FragmentLibraryBuilder(object):
         for fragTemplate in self.__fragmentation.getItems():
             fragItemDict[fragTemplate.getName()] = fragTemplate
         return fragItemDict
+
+    #ToDo
+    def getForwardFragments(self, fragDict, dir):
+        forwardFrags = [fragTemplate.getName() for fragTemplate in self.__fragmentation.getItems()
+                            if fragTemplate.getDirection()==dir]
+        return {key:val for key,val in fragDict.items() if key in forwardFrags}
+
+
+    def getBackwardFragments(self):
+        return [fragTemplate.getName() for fragTemplate in self.__fragmentation.getItems()
+                            if fragTemplate.getDirection()==-1]

@@ -35,6 +35,22 @@ class Fragment(object):
         self.isotopePattern = None
         self.radicals = radicals
 
+    def getType(self):
+        return self.type
+    def getNumber(self):
+        return self.number
+    def getModification(self):
+        return self.modification
+    def getFormula(self):
+        return self.formula
+    def getSequence(self):
+        return self.modification
+    def getIsotopePattern(self):
+        return self.isotopePattern
+    def getRadicals(self):
+        return self.radicals
+
+
     def getName(self):
         if self.number == 0:
             return self.type + self.modification

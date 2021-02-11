@@ -57,26 +57,25 @@ class Analyser(object):
             return None
         temp = dict()
         for ion in self._ions:
-            if ion.type[0] in interestingIons:
-                if ion.type[0] not in temp:
-                    temp[ion.type[0]] = np.zeros((len(self._sequence), 3))
-                if self._modification in ion._modification:
-                    temp[ion.type[0]][ion.number - 1] += \
+            if ion.type in interestingIons:
+                if ion.type not in temp.keys():
+                    temp[ion.type] = np.zeros((len(self._sequence), 3))
+                if self._modification in ion.getModification():
+                    temp[ion.type][ion.number - 1] += \
                         np.array([ion.getRelAbundance(),
-                                  ion.getRelAbundance() * int(self.getNrOfModifications(ion._modification)), 0])
+                                  ion.getRelAbundance() * int(self.getNrOfModifications(ion.getModification())), 0])
                 else:
-                    temp[ion.type[0]][ion.number - 1] += \
+                    temp[ion.type][ion.number - 1] += \
                         np.array([ion.getRelAbundance(),0,0])
-        percentageDict = dict()
-        for key,arr in temp.items():
+        return self.calculateProportions(temp)#dict()
+        '''for key,arr in temp.items():
             for row in arr:
                 if row[0]!=0:
                     row[2] = row[1]/row[0]
                 else:
                     row[2] = None
             percentageDict[key] = arr[:, 2]
-        return percentageDict
-
+        return percentageDict'''
 
     def getNrOfModifications(self, modificationString):
         nrOfModif = 1
@@ -86,8 +85,36 @@ class Analyser(object):
                 nrOfModif += (10 * modificationString[modificationString.find(self._modification) - 2])
         return nrOfModif
 
-    """#ToDo: Other __spectrum, ausslassen wenn -
-    def createPlot(self,nr_mod):
+    def calculateProportions(self, tempDict):
+        proportions = dict()
+        for key,arr in tempDict.items():
+            for row in arr:
+                if row[0]!=0:
+                    row[2] = row[1]/row[0]
+                else:
+                    row[2] = None
+            proportions[key] = arr[:, 2]
+        return proportions
+
+    def getAvCharges(self, interestingIons):
+        temp = dict()
+        redTemp = dict()
+        for ion in self._ions:
+            if ion.type in interestingIons:
+                if ion.type not in temp.keys():
+                    temp[ion.type] = np.zeros((len(self._sequence), 3))
+                    redTemp[ion.type] = np.zeros((len(self._sequence), 3))
+                temp[ion.type][ion.number - 1] += np.array([ion.intensity, ion.intensity * ion.charge, 0])
+                redTemp[ion.type][ion.number - 1] += \
+                    np.array([ion.getRelAbundance(),ion.getRelAbundance() * ion.charge, 0])
+        avCharges = self.calculateProportions(temp)
+        reducedAvCharges = self.calculateProportions(redTemp)
+        return avCharges, reducedAvCharges
+
+
+
+    #ToDo: Other __spectrum, ausslassen wenn -
+    """def createPlot(self,nr_mod):
         forwLadderX = list()
         forwLadderY = list()
         backLadderX = list()

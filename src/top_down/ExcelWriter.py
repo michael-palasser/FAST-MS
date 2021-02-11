@@ -34,12 +34,12 @@ class BasicExcelWriter(object):
             self.worksheet1.write(row, col, val, self.percentFormat)
 
 
-    def writeOccupancies(self, row, sequence, percentageDict):
+    def writeOccupancies(self, row, sequence, percentageDict, forwFrags, backFrags):
         self.worksheet1.write(row, 0, "Occupancies: /%")
         row+=1
         self.worksheet1.write(row, 0, "base'")
         self.worksheet1.write_column(row+1,0, sequence)
-        self.worksheet1.write(row, 1, "#5'")
+        self.worksheet1.write(row, 1, "#5'/N-term.")
         self.worksheet1.write_column(row+1,1, list(range(1,len(sequence)+1)))
         col=2
         for key in sorted(list(percentageDict.keys())):
@@ -47,15 +47,17 @@ class BasicExcelWriter(object):
             self.worksheet1.write(currentRow, col, key)
             currentRow += 1
             for i in range(len(sequence)):
-                if key[0] in ['w', 'x', 'y', 'z']:
+                if key in backFrags:
                     val = percentageDict[key][len(sequence)-i-2]
-                else:
+                elif key in forwFrags:
                     val = percentageDict[key][i]
+                else:
+                    raise Exception("Unknown Direction of Fragment:",key)
                 if val != None:
                     self.writePercentage(currentRow, col, val)
                 currentRow += 1
             col+=1
-        self.worksheet1.write(row, col, "#3'")
+        self.worksheet1.write(row, col, "#3'/C-term.")
         self.worksheet1.write_column(row+1,col, reversed(list(range(1,len(sequence)))))
         self.addChart(row,percentageDict, sequence)
         return row+len(sequence)
@@ -86,7 +88,7 @@ class BasicExcelWriter(object):
             col+=1
         chart.set_size({'width': len(sequence) * 20 + 100, 'height': 400})
         chart.set_title({'name': 'Occupancies'})
-        chart.set_x_axis({'name': 'Sequence',
+        chart.set_x_axis({'name': 'cleavage site',
                            'name_font': {'size': 13},
                            'position_axis': 'on_tick',
                            'num_font': {'size': 10}, })

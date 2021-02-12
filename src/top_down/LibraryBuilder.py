@@ -282,12 +282,15 @@ class FragmentLibraryBuilder(object):
         return fragItemDict
 
     #ToDo
-    def getForwardFragments(self, fragDict, dir):
+    """def selectFragmentsByDir(self, fragDict, dir):
         forwardFrags = [fragTemplate.getName() for fragTemplate in self.__fragmentation.getItems()
                             if fragTemplate.getDirection()==dir]
-        return {key:val for key,val in fragDict.items() if key in forwardFrags}
+        return {key:val for key,val in fragDict.items() if key in forwardFrags}"""
 
 
-    def getBackwardFragments(self):
+    def getFragmentsByDir(self, dir):
         return [fragTemplate.getName() for fragTemplate in self.__fragmentation.getItems()
-                            if fragTemplate.getDirection()==-1]
+                            if fragTemplate.getDirection()==dir]
+
+    def filterByDir(self, fragDict, dir):
+        return {key: val for key, val in fragDict.items() if key in self.getFragmentsByDir(dir)}

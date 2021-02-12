@@ -4,7 +4,7 @@ Created on 10 Aug 2020
 @author: michael
 '''
 import numpy as np
-import pylab as plt
+from math import isnan
 
 class Analyser(object):
     '''
@@ -40,13 +40,11 @@ class Analyser(object):
     def getModificationLoss(self):
         if self._modification == "":
             return None
-        print(self._ions)
         modifiedSum = 0
         totalSum = 0
         for ion in self._ions:
-            print(ion.getName(),ion.number)
             if (ion.number==0): #(ion.charge == self._precCharge) and
-                if self._modification in ion._modification:
+                if self._modification in ion.getModification():
                     modifiedSum += ion.getRelAbundance()
                 totalSum += ion.getRelAbundance()
         return 1 - modifiedSum / totalSum
@@ -111,7 +109,25 @@ class Analyser(object):
         reducedAvCharges = self.calculateProportions(redTemp)
         return avCharges, reducedAvCharges
 
+    def toTable(self, forwardVals, backwardVals):
+        table = []
+        for i, bb in enumerate(self._sequence[:-1]):
+            table.append([bb, i+1])
+        for vals in forwardVals:
+            [table[i].append(val) for i, val in enumerate(vals[:-1])]
+        for vals in backwardVals:
+            [table[i].append(val) for i, val in enumerate(reversed(vals[:-1]))]
+        for i, bb in enumerate(self._sequence[1:]):
+            table[i]+=[len(self._sequence)-i-1,bb]
+        return table
 
+    '''def addColumn(self, table, vals):
+        for i, val in enumerate(vals):
+            if isnan(val):
+                table[i].append('')
+            else:
+                table[i].append(val)
+        return table'''
 
     #ToDo: Other __spectrum, ausslassen wenn -
     """def createPlot(self,nr_mod):

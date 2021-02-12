@@ -4,10 +4,9 @@ Created on 21 Jul 2020
 @author: michael
 '''
 
-import os
 import subprocess
 import traceback
-from os.path import join
+import os
 
 import numpy as np
 import time
@@ -16,7 +15,7 @@ import pandas as pd
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QAbstractItemView
 
-
+from src import path
 from src.Exceptions import UnvalidIsotopePatternException
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.repositories.IsotopePatternRepository import IsotopePatternReader
@@ -26,7 +25,7 @@ from src.top_down.SpectrumHandler import SpectrumHandler
 from src.top_down.IntensityModeller import IntensityModeller
 from src.top_down.ExcelWriter import ExcelWriter
 from src.views.CheckIonView import CheckMonoisotopicOverlapView, CheckOverlapsView
-from src.views.ResultView import IonTableModel, PeakView
+from src.views.ResultView import IonTableModel, PeakView, PlotTableView
 from src.views.SequencePlots import PlotFactory
 from src.views.SimpleDialogs import ExportDialog
 from src.views.ParameterDialogs import TDStartDialog
@@ -166,7 +165,7 @@ class TD_MainController(object):
                         ['Repeat overlap modelling involving user inputs'], [""])
         self.createMenu("Show",
                 {'Occupancy-Plot': self.showOccupancyPlot, 'Charge-Plot': self.showChargeDistrPlot, 'Sequence Coverage': self.dumb,
-                 'Original Values':self.dumb},
+                 'Original Values':self.showRemodelledIons},
                 ['Show occupancies as a function of sequence pos.', 'Show av. charge as a function of sequence pos.',
                  'Show sequence coverage', 'Show original values of overlapping ions'], ["", "", '', ''])
 
@@ -200,19 +199,24 @@ class TD_MainController(object):
         tab = QtWidgets.QWidget()
         self.tabWidget.addTab(tab, "")
         self.tabWidget.setTabText(self.tabWidget.indexOf(tab), self._translate(self.mainWindow.objectName(), name))
-        scrollArea = QtWidgets.QScrollArea(tab)
-        scrollArea.setGeometry(QtCore.QRect(10, 10, 1150, 800))
-        scrollArea.setWidgetResizable(True)
-        #scrollArea.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
-        #scrollArea.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-        table = self.makeTable(scrollArea, [ion.getMoreValues() for ion in data.values()])
-        scrollArea.setWidget(table)
+        table = self.makeScrollArea(tab,[ion.getMoreValues() for ion in data.values()])
         self.tables.append(table)
         self.tabWidget.setEnabled(True)
 
+    def makeScrollArea(self, parent, data):
+        scrollArea = QtWidgets.QScrollArea(parent)
+        scrollArea.setGeometry(QtCore.QRect(10, 10, 1150, 800))
+        scrollArea.setWidgetResizable(True)
+        # scrollArea.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        # scrollArea.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        table = self.makeTable(scrollArea, data)
+        scrollArea.setWidget(table)
+        return table
 
     def makeTable(self, parent, data):
-        tableModel = IonTableModel(data)
+        tableModel = IonTableModel(data,
+                   self._intensityModeller.getPrecRegion(self.settings['sequName'], abs(self.settings['charge'])),
+                   self.configs['shapeMarked'], self.configs['scoreMarked'])
         """self.proxyModel = QSortFilterProxyModel()
         self.proxyModel.setSourceModel(model)"""
         table = QtWidgets.QTableView(parent)
@@ -286,10 +290,9 @@ class TD_MainController(object):
 
     def dumb(self):
         print('not yet implemented')
-        dlg = QtWidgets.QMessageBox(parent=self.mainWindow, title='Unvalid Request',
-                    text='Sorry, not implemented yet',
-                    icon=QtWidgets.QMessageBox.Information, buttons=QtWidgets.QMessageBox.Ok)
-        if dlg == QtWidgets.QMessageBox.Ok:
+        dlg = QtWidgets.QMessageBox(QtWidgets.QMessageBox.Information, 'Unvalid Request',
+                    'Sorry, not implemented yet', QtWidgets.QMessageBox.Ok, self.mainWindow, )
+        if dlg.exec_() and dlg == QtWidgets.QMessageBox.Ok:
             return
 
     def export(self):
@@ -310,14 +313,17 @@ class TD_MainController(object):
     def toExcel(self, outputPath, filename): #ToDo
         """output"""
         if filename == '':
-            filename = self.settings['spectralData'][0:-4] + '_out' + '.xlsx'
-        elif filename[-4:]!= 'xlsx':
-            filename += 'xlsx'
+            inputFileName = os.path.split(self.settings['spectralData'])[-1]
+            filename = inputFileName[0:-4] + '_out' + '.xlsx'
+        elif filename[-5:] != '.xlsx':
+            filename += '.xlsx'
+        if outputPath == '':
+            outputPath = os.path.join(path, 'Spectral_data','top-down')
         output = os.path.join(outputPath, filename)
         excelWriter = ExcelWriter(output, self.configs)
         self._analyser.setIons(list(self._intensityModeller.getObservedIons().values()))
-        excelWriter.toExcel(self._analyser, self._intensityModeller, self.settings,
-                            self.libraryBuilder.getSequenceList(), self.libraryBuilder.getFragmentLibrary(),
+        excelWriter.toExcel(self._analyser, self._intensityModeller, self.libraryBuilder, self.settings,
+                            #self.libraryBuilder.getSequenceList(), self.libraryBuilder.getFragmentLibrary(),
                             self.spectrumHandler.searchedChargeStates)
         print("********** saved in:", output, "**********\n")
         try:
@@ -336,32 +342,47 @@ class TD_MainController(object):
             self.mainWindow.close()
 
     def showRemodelledIons(self):
-        remView = QtWidgets.QWidget(self.mainWindow)
+        self._remView = QtWidgets.QWidget()
         #title = 'Original Values of Overlapping Ions'
-        remView.setObjectName('Remodelled')
-        remView._translate = QtCore.QCoreApplication.translate
-        remView.setWindowTitle(self._translate(remView.objectName(), 'Original Values of Overlapping Ions'))
+        self._remView.setObjectName('Remodelled')
+        self._remView._translate = QtCore.QCoreApplication.translate
+        self._remView.setWindowTitle(self._translate(self._remView.objectName(), 'Original Values of Overlapping Ions'))
         ions = self._intensityModeller.getRemodelledIons()
-        remView.resize(650, (len(ions))*38+30)
-        self.makeTable(remView,[ion.getMoreValues() for ion in ions])
-        remView.show()
+        self.makeScrollArea(self._remView, [ion.getMoreValues() for ion in ions])
+        self._remView.resize(1000, 750)
+        self._remView.show()
 
     def showOccupancyPlot(self):
         self._analyser.setIons(list(self._intensityModeller.getObservedIons().values()))
         percentageDict = self._analyser.calculatePercentages(self.configs['interestingIons'])
-        print(percentageDict)
         if percentageDict == None:
             dlg = QtWidgets.QMessageBox(parent=self.mainWindow, title='Unvalid Request',
                         text='It is not possible to calculate occupancies for an unmodified molecule.',
                         icon=QtWidgets.QMessageBox.Information, buttons=QtWidgets.QMessageBox.Ok)
             if dlg == QtWidgets.QMessageBox.Ok:
                 return
+
         plotFactory = PlotFactory(self.mainWindow)
-        forwardFrags = {key:val for key,val in percentageDict.items() if key in self.libraryBuilder.getForwardFragments()}
-        backwardFrags = {key:val for key,val in percentageDict.items() if key in self.libraryBuilder.getForwardFragments()}
-        plotFactory.showOccupancyPlot(self.libraryBuilder.getSequenceList(),{})
+        forwardVals = self.libraryBuilder.filterByDir(percentageDict,1)
+        backwardVals = self.libraryBuilder.filterByDir(percentageDict,-1)
+        plotFactory.showOccupancyPlot(self.libraryBuilder.getSequenceList(), forwardVals, backwardVals,
+                                      self.settings['nrMod'])
+        self.occupView = PlotTableView(self._analyser.toTable(forwardVals.values(), backwardVals.values()),
+                                       list(percentageDict.keys()), 'Occupancies', 3)
 
 
     def showChargeDistrPlot(self):
         self._analyser.setIons(list(self._intensityModeller.getObservedIons().values()))
-        print(self._analyser.getAvCharges(self.configs['interestingIons']))
+        chargeDict, redChargeDict = self._analyser.getAvCharges(self.configs['interestingIons'])
+        plotFactory1 = PlotFactory(self.mainWindow)
+        #plotFactory2 = PlotFactory(self.mainWindow)
+        forwardVals = self.libraryBuilder.filterByDir(chargeDict,1)
+        backwardVals = self.libraryBuilder.filterByDir(chargeDict,-1)
+        plotFactory1.showChargePlot(self.libraryBuilder.getSequenceList(), forwardVals, backwardVals,
+                                    self.settings['charge'])
+
+        self.chargeView = PlotTableView(self._analyser.toTable(forwardVals.values(), backwardVals.values()),
+                                       list(chargeDict.keys()), 'Av. Charge per Fragment', 1)
+        '''plotFactory2.showChargePlot(self.libraryBuilder.getSequenceList(),
+                                      self.libraryBuilder.filterByDir(redChargeDict,1),
+                                      self.libraryBuilder.filterByDir(redChargeDict,-1),self.settings['charge'])'''

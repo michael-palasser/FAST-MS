@@ -1,7 +1,11 @@
+import copy
 import sys
 from functools import partial
 from math import log10, isnan
 import numpy as np
+
+from src.views.IonTableWidget import IonTableWidget
+
 try:
     from Tkinter import Tk
 except ImportError:
@@ -121,15 +125,19 @@ class IonTableModel(AbstractTableModel):
         #self.removeRow(indexToRemove)
         del self._data[indexToRemove]
 
+    def updateData(self, newRow):
+        for i, row in enumerate(self._data):
+            if row[1]==newRow[1] and row[3]==newRow[3]:
+                self._data[i] = newRow
+                break
 
 class PeakTableModel(AbstractTableModel):
     def __init__(self, data):
-        super(PeakTableModel, self).__init__(data,('{:10.5f}','{:2d}', '{:11d}', '','{:4.2f}', '{:6.1f}', '{:4.2f}', ''),
-                         ('m/z','z','intensity','fragment','error /ppm', 'used'))
+        super(PeakTableModel, self).__init__(data,('{:10.5f}', '{:11d}', '{:11d}','{:4.2f}', ''),
+                         ('m/z','int. (spectrum)','int. (calc.)','error /ppm', 'used'))
         self._data = data
         #print('data',data)
-        #self._format = ['{:10.5f}','{:2d}', '{:12d}', '','{:4.2f}', '{:6.1f}', '{:4.2f}', '']
-        self._format = ['{:10.5f}','{:2d}', '{:11d}', '','{:4.2f}', '{:6.1f}', '{:4.2f}', '']
+        #self._format = ['{:10.5f}', '{:11d}', '{:11d}','{:4.2f}', '']
 
     def flags(self, index):
         return QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
@@ -141,14 +149,17 @@ class PeakTableModel(AbstractTableModel):
                 item = self._data[index.row()][col]
                 #print(item)
                 formatString = self._format[col]
-                if col == 3:
-                    return item
-                if col == 2 :
+                if col == 1 or col ==2:
                     if item >= 10 ** 12:
                         lg10 = str(int(log10(item) + 1))
                         formatString = '{:' + lg10 + 'd}'
-                    return formatString.format(item)
+                elif col==4:
+                    if item:
+                        return 'True'
+                    return 'False'
                 return formatString.format(item)
+        if role == Qt.TextAlignmentRole:
+            return Qt.AlignRight
 
     """def rowCount(self, index):
         return len(self._data.values)
@@ -162,7 +173,7 @@ class PeakTableModel(AbstractTableModel):
                 return ('m/z','z','intensity','fragment','error /ppm', 'used')[section]"""
 
 
-class ResultsWindow(QtWidgets.QMainWindow):
+'''class ResultsWindow(QtWidgets.QMainWindow):
     def __init__(self, ions, deletedIons, spectrum, main):
         super().__init__()
         self._ions = ions
@@ -325,31 +336,31 @@ class ResultsWindow(QtWidgets.QMainWindow):
                 del ionLists[mode][selectedHash]
                 table.model().removeData(selectedRow)
                 self.tables[other].model().addData(ionToDelete.getMoreValues())
-                print(actionStrings[mode]+"d",selectedRow, selectedHash)
+                print(actionStrings[mode]+"d",selectedRow, selectedHash)'''
 
-
-
-class PeakView(QtWidgets.QWidget):
-    def __init__(self, peaks):
+class SimplePeakView(QtWidgets.QWidget):
+    def __init__(self, ion):
         super().__init__(parent=None)
-        model = PeakTableModel(peaks)
-        #self.proxyModel = QSortFilterProxyModel()
-        #self.proxyModel.setSourceModel(model)
+        self._peaks = ion.getPeakValues()
+        print(self._peaks)
+        model = PeakTableModel(self._peaks)
+        # self.proxyModel = QSortFilterProxyModel()
+        # self.proxyModel.setSourceModel(model)
         self.table = QtWidgets.QTableView(self)
         self.table.setSortingEnabled(True)
         self.table.setModel(model)
         self.table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         self.table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        #self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        # self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.table.customContextMenuRequested['QPoint'].connect(partial(self.showOptions, self.table))
-        #self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        #self.table.move(0,0)
-        title = peaks[0][3] + ', ' + str(peaks[0][1])
-        self.setObjectName(title)
+        # self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        # self.table.move(0,0)
+        #title = peaks[0][3] + ', ' + str(peaks[0][1])
+        self.setObjectName(ion.getId())
         self._translate = QtCore.QCoreApplication.translate
         self.setWindowTitle(self._translate(self.objectName(), self.objectName()))
-        self.resize(650, (len(peaks))*38+30)
+        self.resize(650, (len(self._peaks)) * 38 + 30)
         self.show()
 
     def showOptions(self, table, pos):
@@ -357,9 +368,139 @@ class PeakView(QtWidgets.QWidget):
         copyAction = menu.addAction("Copy Table")
         action = menu.exec_(table.viewport().mapToGlobal(pos))
         if action == copyAction:
-            df=pd.DataFrame(data=self.table.model().getData(), columns=self.table.model().getHeaders())
+            df=pd.DataFrame(data=self._peaks, columns=self.headers)
             df.to_clipboard(index=False,header=True)
 
+
+class PeakView(QtWidgets.QMainWindow):
+    def __init__(self, parent, ion, model, save):
+        super(PeakView, self).__init__(parent)
+        self._ion = copy.deepcopy(ion)
+        self._translate = QtCore.QCoreApplication.translate
+        self.setWindowTitle(self._translate(self.objectName(), ion.getName()+', '+str(ion.charge)))
+        #self.centralwidget = QtWidgets.QWidget(self)
+        self.setCentralWidget(QtWidgets.QWidget(self))
+        self._verticalLayout = QtWidgets.QVBoxLayout(self.centralWidget())
+        self._ionTable = IonTableWidget(self.centralWidget(),(self._ion,),30)
+        self._peakTable = PeakWidget(self.centralWidget(), self._ion.getPeakValues())
+        self.model = model
+        self.save = save
+        buttonWidget = QtWidgets.QWidget(self.centralWidget())
+        horizontalLayout = QtWidgets.QHBoxLayout(buttonWidget)
+        horizontalLayout.addWidget(self.makeBtn(buttonWidget,'Model',
+                                'Model isotope distribution to peaks in spectrum', self.modelIon))
+        horizontalLayout.addWidget(self.makeBtn(buttonWidget,'Save',
+                                'Replaces old values with newly calculated ones', self.saveIon))
+        #horizontalLayout.addWidget(self.makeIntensityWidget(self.centralWidget()))
+        horizontalLayout.addItem(QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum))
+        self._verticalLayout.addWidget(buttonWidget)
+
+        self._verticalLayout.addWidget(self._ionTable)
+        self._verticalLayout.addWidget(self._peakTable)
+        self.show()
+
+    @staticmethod
+    def makeBtn(parent, text, toolTip, fun):
+        btn = QtWidgets.QPushButton(parent)
+        btn.setText(text)
+        btn.setToolTip(toolTip)
+        btn.clicked.connect(fun)
+        return btn
+
+    def makeIntensityWidget(self, parent):
+        widget = QtWidgets.QWidget(parent)
+        horizontalLayout = QtWidgets.QHBoxLayout(widget)
+        label = QtWidgets.QLabel(widget)
+        label.setText(self._translate(self.objectName(), 'Int:'))
+        horizontalLayout.addWidget(label)
+        self.intInfo = QtWidgets.QLabel(widget)
+        self.intInfo.setText(self._translate(self.objectName(), str(self._ion.getIntensity())))
+        horizontalLayout.addWidget(self.intInfo)
+        return widget
+
+
+    def modelIon(self):
+        vals = self._peakTable.readTable()
+        newIon = self.model(copy.deepcopy(self._ion),vals)
+        if self._ion.intensity != newIon.intensity:
+            self._ion = newIon
+            self._peakTable.setPeaks(self._ion.getPeakValues())
+            self._verticalLayout.removeWidget(self._ionTable)
+            del self._ionTable
+            self._ionTable =  IonTableWidget(self.centralWidget(),(self._ion,),30)
+            self._verticalLayout.insertWidget(1, self._ionTable)
+            self.intInfo.setText(self._translate(self.objectName(), str(self._ion.getIntensity())))
+
+    def saveIon(self):
+        self.save(self._ion)
+
+
+
+
+class PeakWidget(QtWidgets.QTableWidget):
+    def __init__(self, parent, peaks):
+        super(PeakWidget, self).__init__(parent)
+        self.headers = ('m/z','int. (spectrum)','int. (calc.)','error /ppm', 'used')
+        self._format = ('{:10.5f}','{:11d}', '{:11d}', '{:4.2f}', '')
+        self._peaks = peaks
+        self.setWindowTitle('')
+        self.setColumnCount(len(self.headers))
+        self.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.setRowCount(len(self._peaks))
+        self.fill()
+        self.setHorizontalHeaderLabels(self.headers)
+        self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.setSortingEnabled(True)
+        self.customContextMenuRequested['QPoint'].connect(partial(self.showOptions, self))
+
+
+    def fill(self):
+        #print(self.getValue(ion))
+        for row, peak in enumerate(self._peaks):
+            for j, item in enumerate(peak):
+                newItem = QtWidgets.QTableWidgetItem()
+                newItem.setTextAlignment(QtCore.Qt.AlignRight)
+                if j == 1 or j==2:
+                    formatString = self._format[2]
+                    if item >= 10 ** 12:
+                        lg10 = str(int(log10(item) + 1))
+                        formatString = '{:' + lg10 + 'd}'
+                    newItem.setData(QtCore.Qt.DisplayRole, formatString.format(item))
+                    if j==2:
+                        newItem.setFlags(QtCore.Qt.ItemIsEnabled)
+                elif j==4:
+                    newItem = QtWidgets.QTableWidgetItem()
+                    if item:
+                        newItem.setCheckState(QtCore.Qt.Checked)
+                    else:
+                        newItem.setCheckState(QtCore.Qt.Unchecked)
+                else:
+                    newItem.setData(QtCore.Qt.DisplayRole, self._format[j].format(item))
+                    newItem.setFlags(QtCore.Qt.ItemIsEnabled)
+                self.setItem(row, j, newItem)
+        #self.resizeColumnsToContents()
+        self.resizeRowsToContents()
+        self.resizeColumnsToContents()
+
+
+    def showOptions(self, table, pos):
+        menu = QtWidgets.QMenu()
+        copyAction = menu.addAction("Copy Table")
+        action = menu.exec_(table.viewport().mapToGlobal(pos))
+        if action == copyAction:
+            df=pd.DataFrame(data=self._peaks, columns=self.headers)
+            df.to_clipboard(index=False,header=True)
+
+    def readTable(self):
+        itemList = []
+        for row in range(self.rowCount()):
+            itemList.append((int(self.item(row, 1).text()), int(self.item(row, 4).checkState()/2)==1))
+        return itemList
+
+    def setPeaks(self, peaks):
+        self._peaks = peaks
+        self.fill()
 
 class PlotTableModel(AbstractTableModel):
     def __init__(self, data, keys, precision):

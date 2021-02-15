@@ -31,6 +31,9 @@ class IntensityModeller(object):
     def getRemodelledIons(self):
         return self._remodelledIons
 
+    def addRemodelledIon(self, ion):
+        self._remodelledIons.append(ion)
+
     @staticmethod
     def calculateError(value, theoValue):
         return (value - theoValue) / theoValue * 10 ** 6
@@ -68,12 +71,13 @@ class IntensityModeller(object):
         results (due to overlaps, noise etc.)"""
         print(ion.getName(), ion.charge)
         outlierList = list()
-        ion.error = np.average(ion.isotopePattern['error'][np.where(ion.isotopePattern['error'] != 0)])
+        '''ion.error = np.average(ion.isotopePattern['error'][np.where((ion.isotopePattern['relAb'] != 0) & (ion.isotopePattern['used']))])
         solution, ion.intensity, gValue, outliers = \
             self.modelDistribution(ion.isotopePattern['relAb'], ion.isotopePattern['calcInt'], ion.isotopePattern['m/z'])
         ion.isotopePattern['calcInt'] = ion.isotopePattern['calcInt'] * solution.x
         ion.quality = solution.fun**(0.5) / ion.intensity
-        ion.getScore()
+        ion.getScore()'''
+        ion, outliers = self.modelIon(ion)
         #ToDo: corrected ion not necessary?
         correctedIon = deepcopy(ion)
         if len(outliers) > 0:
@@ -99,11 +103,25 @@ class IntensityModeller(object):
             correctedIon.quality = solution.fun**(0.5) / ion.intensity
             correctedIon.getScore()
             correctedIon.error = np.average(ion.isotopePattern['error'][noOutliers]
-                                            [np.where(ion.isotopePattern['error'][noOutliers] != 0)])
+                                            [np.where(ion.isotopePattern['relAb'][noOutliers] != 0)])
             for peak in correctedIon.isotopePattern:
                 if peak['m/z'] in outlierList:
-                    peak['used'] = 0
+                    peak['used'] = False
         return correctedIon
+
+
+    def modelIon(self, ion):
+
+        noOutliers = np.where(ion.isotopePattern['used'])
+        ion.error = np.average(ion.isotopePattern['error'][np.where(ion.isotopePattern['relAb'][noOutliers] != 0)])
+        solution, ion.intensity, gValue, outliers = \
+            self.modelDistribution(ion.isotopePattern['relAb'][noOutliers], ion.isotopePattern['calcInt'][noOutliers],
+                                   ion.isotopePattern['m/z'][noOutliers])
+        ion.isotopePattern['calcInt'] = ion.isotopePattern['calcInt'] * solution.x
+        if ion.getIntensity() != 0:
+            ion.quality = solution.fun ** (0.5) / ion.intensity
+            ion.getScore()
+        return ion, outliers
 
     def processIons(self, ion):
         correctedIon = self.calculateIntensity(ion)
@@ -384,6 +402,11 @@ class IntensityModeller(object):
             return self._deletedIons[ionHash]
         raise Exception("Ion " + ionHash[0] + ", " + str(ionHash[1]) + " unknown!")
 
+    def getRemodelledIon(self, ionHash):
+        for ion in self.getRemodelledIons():
+            if self.getHash(ion) == ionHash:
+                return ion
+
     @staticmethod
     def getLimits(ions):
         limits = np.array([(np.min(ion.isotopePattern['m/z']), np.max(ion.isotopePattern['m/z']),
@@ -399,3 +422,9 @@ class IntensityModeller(object):
         precursorList.sort()
         print()
         return (precursorList[0],precursorList[-1]+70/precCharge)
+
+    def remodelSingleIon(self, ion, values):
+        values = np.array(values)
+        ion.isotopePattern['relAb'] = values[:,0]
+        ion.isotopePattern['used'] = values[:,1]
+        return self.modelIon(ion)[0]

@@ -61,7 +61,7 @@ class SpectrumHandler(object):
         self.ionsInNoise = list()
         self.searchedChargeStates = dict()
         self.peaksArrType = np.dtype([('m/z', np.float64), ('relAb', np.float64),('m/z_theo', np.float64),
-                             ('calcInt', np.float64), ('error', np.float32), ('used', np.uint8)])
+                             ('calcInt', np.float64), ('error', np.float32), ('used', np.bool_)])
 
     def getSpectrum(self, *args):
         if args and args[1]:
@@ -277,10 +277,8 @@ class SpectrumHandler(object):
                         sumInt += (peakQuantitiy - 1 - len(foundMainPeaks)) * noise * 0.5              #if one or more isotope peaks were not found noise added #parameter
                         notInNoise = np.where(theoreticalPeaks['calcInt'] >noise*
                                               configs['thresholdFactor'] / (sumInt/sumIntTheo))
-                        inNoise = np.where(theoreticalPeaks['calcInt'] <= noise*
-                                           configs['thresholdFactor'] / (sumInt/sumIntTheo))
-
-
+                        '''inNoise = np.where(theoreticalPeaks['calcInt'] <= noise*
+                                           configs['thresholdFactor'] / (sumInt/sumIntTheo))'''
                         if theoreticalPeaks[notInNoise].size != 0:
                             foundPeaks = list()
                             #find other isotope Peaks
@@ -310,15 +308,15 @@ class SpectrumHandler(object):
     def addToDeletedIons(self, fragment, foundMainPeaks, noise, z):
         foundMainPeaksArr = np.sort(np.array(foundMainPeaks, dtype=self.peaksArrType), order=['m/z'])
         noiseIon = FragmentIon(fragment, z, foundMainPeaksArr, noise)
-        noiseIon.comment = 'noise'
+        noiseIon.comment = 'noise,'
         self.ionsInNoise.append(noiseIon)
 
     def getCorrectPeak(self, foundIsotopePeaks, theoPeak):
         if len(foundIsotopePeaks) == 0:
-            return (theoPeak['m/z'], 0, theoPeak['m/z'], theoPeak['calcInt'], 0, 1)  # passt mir noch nicht
+            return (theoPeak['m/z'], 0, theoPeak['m/z'], theoPeak['calcInt'], 0, True)  # passt mir noch nicht
         elif len(foundIsotopePeaks) == 1:
             return (foundIsotopePeaks[0][0], foundIsotopePeaks[0][1], theoPeak['m/z'], theoPeak['calcInt'],
-                    self.calculateError(foundIsotopePeaks[0][0], theoPeak['m/z']), 1)
+                    self.calculateError(foundIsotopePeaks[0][0], theoPeak['m/z']), True)
         else:
             lowestError = 100
             for peak in foundIsotopePeaks:
@@ -326,4 +324,4 @@ class SpectrumHandler(object):
                 if abs(error) < abs(lowestError):
                     lowestError = error
                     lowestErrorPeak = peak
-            return (lowestErrorPeak[0], lowestErrorPeak[1], theoPeak['m/z'], theoPeak['calcInt'], lowestError, 1)
+            return (lowestErrorPeak[0], lowestErrorPeak[1], theoPeak['m/z'], theoPeak['calcInt'], lowestError, True)

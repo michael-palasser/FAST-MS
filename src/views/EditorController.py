@@ -298,15 +298,57 @@ class AbstractEditorControllerWithTabs(AbstractEditorController, ABC):
         tabWidget = QtWidgets.QTabWidget(self.centralwidget)
         #tabWidget.setGeometry(QtCore.QRect(20, yPos+50, 201, 181))
         self.tab1 = QtWidgets.QWidget()
+
+        #print('1')
+        #verticalLayout = QtWidgets.QVBoxLayout(self.centralwidget)
+        #print('2')
+        #self.tab1.setLayout(verticalLayout)
+
+        #print('3')
         self.table1 = self.createTableWidget(self.tab1, self.pattern.getItems(), yPos+50, self.service.getHeaders()[0],
                                              self.service.getBoolVals()[0])
+        '''tabWidget.resize(200,200)
+        self.tab1.resize(200,200)'''
+
         tabWidget.addTab(self.tab1, "")
         tabWidget.setTabText(tabWidget.indexOf(self.tab1), self._translate("MainWindow", tabName1))
-        self.tab2 = QtWidgets.QWidget()
-        print("2:", self.pattern.getItems2())
+
+        #verticalLayout.addWidget(self.tab1)
+        self.tab2 = QtWidgets.QWidget(self.centralwidget)
+        #print("2:", self.pattern.getItems2())
         self.table2 = self.createTableWidget(self.tab2, self.pattern.getItems2(), yPos+50, self.service.getHeaders()[1],
                                              self.service.getBoolVals()[1])
         tabWidget.addTab(self.tab2, "")
+        tabWidget.setTabText(tabWidget.indexOf(self.tab2), self._translate("MainWindow", tabName2))
+        tabWidget.setEnabled(True)
+
+        self.formLayout.setWidget(yPos+1, QtWidgets.QFormLayout.SpanningRole, tabWidget)   #ToDo
+        #self.formLayout.setWidget(yPos+2, QtWidgets.QFormLayout.SpanningRole, self.tab1)   #ToDo
+
+        self.table1.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        #verticalSpacer = QtWidgets.QSpacerItem(20, 20, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+        #self.formLayout.setItem(yPos+2, QtWidgets.QFormLayout.SpanningRole, verticalSpacer)   #ToDo
+        return tabWidget
+
+
+    """def makeTabWidget(self, yPos, tabName1, tabName2):
+        tabWidget = QtWidgets.QTabWidget(self.centralwidget)
+        #tabWidget.setGeometry(QtCore.QRect(20, yPos+50, 201, 181))
+        '''self.tab1 = QtWidgets.QWidget(self.centralwidget)
+        verticalLayout = QtWidgets.QVBoxLayout(self.centralwidget)
+        self.tab1.setLayout()
+        self.table1 = self.createTableWidget(self.tab1, self.pattern.getItems(), yPos+50, self.service.getHeaders()[0],
+                                             self.service.getBoolVals()[0])
+        tabWidget.addTab(self.tab1, "")
+        verticalLayout.addWidget(self.table1)'''
+        self.tab1, self.table1 = self.makeTab(yPos+50, tabWidget)
+        tabWidget.setTabText(tabWidget.indexOf(self.tab1), self._translate(self.mainWindow.objectName(), tabName1))
+        '''self.tab2 = QtWidgets.QWidget()
+        print("2:", self.pattern.getItems2())
+        self.table2 = self.createTableWidget(self.tab2, self.pattern.getItems2(), yPos+50, self.service.getHeaders()[1],
+                                             self.service.getBoolVals()[1])
+        tabWidget.addTab(self.tab2, "")'''
+        self.tab1, self.table1 = self.makeTab(yPos, tabWidget)
         tabWidget.setTabText(tabWidget.indexOf(self.tab2), self._translate("MainWindow", tabName2))
         tabWidget.setEnabled(True)
 
@@ -314,6 +356,17 @@ class AbstractEditorControllerWithTabs(AbstractEditorController, ABC):
         self.formLayout.setWidget(yPos+1, QtWidgets.QFormLayout.SpanningRole, tabWidget)   #ToDo
         self.table1.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         return tabWidget
+
+    def makeTab(self,yPos,tabWidget):
+        tab = QtWidgets.QWidget(self.centralwidget)
+        verticalLayout = QtWidgets.QVBoxLayout(self.centralwidget)
+        tab.setLayout(verticalLayout)
+        table = self.createTableWidget(tab, self.pattern.getItems(), yPos + 50,
+                                             self.service.getHeaders()[0],
+                                             self.service.getBoolVals()[0])
+        tabWidget.addTab(tab, "")
+        verticalLayout.addWidget(table)
+        return tab, table"""
 
     def openAgain(self, *args):
         title = "Open"

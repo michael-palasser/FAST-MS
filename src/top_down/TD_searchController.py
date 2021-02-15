@@ -152,7 +152,7 @@ class TD_MainController(object):
                                ('Observed Ions', 'Deleted Ions')):
             self.makeTabWidget(table, name)
         self.verticalLayout.addWidget(self.tabWidget)
-        self.mainWindow.resize(1200, 900)
+        self.mainWindow.resize(1000, 900)
         self.mainWindow.show()
 
     def createMenuBar(self):
@@ -197,21 +197,31 @@ class TD_MainController(object):
 
     def makeTabWidget(self, data, name):
         tab = QtWidgets.QWidget()
+        verticalLayout = QtWidgets.QVBoxLayout(self.mainWindow)
+        tab.setLayout(verticalLayout)
         self.tabWidget.addTab(tab, "")
         self.tabWidget.setTabText(self.tabWidget.indexOf(tab), self._translate(self.mainWindow.objectName(), name))
-        table = self.makeScrollArea(tab,[ion.getMoreValues() for ion in data.values()])
+        scrollArea,table = self.makeScrollArea(tab,[ion.getMoreValues() for ion in data.values()])
+        verticalLayout.addWidget(scrollArea)
         self.tables.append(table)
         self.tabWidget.setEnabled(True)
+        #self.tabWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        #tab.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+
+        # scrollArea.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
     def makeScrollArea(self, parent, data):
         scrollArea = QtWidgets.QScrollArea(parent)
-        scrollArea.setGeometry(QtCore.QRect(10, 10, 1150, 800))
+        #scrollArea.setGeometry(QtCore.QRect(10, 10, 1150, 800))
         scrollArea.setWidgetResizable(True)
         # scrollArea.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         # scrollArea.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         table = self.makeTable(scrollArea, data)
+
+        table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         scrollArea.setWidget(table)
-        return table
+        return scrollArea, table
 
     def makeTable(self, parent, data):
         tableModel = IonTableModel(data,
@@ -262,8 +272,9 @@ class TD_MainController(object):
             spectrumView = SpectrumView(self.mainWindow, peaks, ajacentIons, np.min(selectedIon.isotopePattern['m/z']),
                                 np.max(selectedIon.isotopePattern['m/z']), np.max(selectedIon.isotopePattern['relAb']))
         elif action == peakAction:
-            global peakview
-            peakview = PeakView(selectedIon.getPeaks())
+            #global peakview
+            PeakView(self.mainWindow, selectedIon, self._intensityModeller.remodelSingleIon, self.saveSingleIon)
+
         elif action == copyRowAction:
             df=pd.DataFrame(data=[table.model().getRow(selectedRow)], columns=table.model().getHeaders())
             df.to_clipboard(index=False,header=True)
@@ -281,12 +292,36 @@ class TD_MainController(object):
                 print(actionStrings[mode]+"d",selectedRow, selectedHash)
 
 
+
+
+
+    def saveSingleIon(self, newIon):
+        newIonHash = self._intensityModeller.getHash(newIon)
+        if newIonHash in self._intensityModeller.getObservedIons():
+            ionDict = self._intensityModeller.getObservedIons()
+            index = 0
+        else:
+            ionDict = self._intensityModeller.getDeletedIons()
+            index = 1
+        oldIon = ionDict[newIonHash]
+        if oldIon.getIntensity() != newIon.getIntensity():
+            choice = QtWidgets.QMessageBox.question(self.mainWindow, 'Saving Ion',
+                                                    "Please confirm to change the values of ion: " + oldIon.getId(),
+                                                    QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
+            if choice == QtWidgets.QMessageBox.Ok:
+                self._intensityModeller.addRemodelledIon(oldIon)
+                newIon.comment += 'man.mod.'
+                ionDict[newIonHash] = newIon
+                self.tables[index].model().updateData(newIon.getMoreValues())
+                print('Saved', newIon.getName(),',', newIon.charge)
+
+
+
     def repeatModellingOverlaps(self):
         self._intensityModeller.findOverlaps(20)
         self.verticalLayout.removeWidget(self.tabWidget)
         self.tabWidget = QtWidgets.QTabWidget(self.centralwidget)
         self.fillUi()
-
 
     def dumb(self):
         print('not yet implemented')
@@ -344,13 +379,44 @@ class TD_MainController(object):
     def showRemodelledIons(self):
         self._remView = QtWidgets.QWidget()
         #title = 'Original Values of Overlapping Ions'
-        self._remView.setObjectName('Remodelled')
         self._remView._translate = QtCore.QCoreApplication.translate
         self._remView.setWindowTitle(self._translate(self._remView.objectName(), 'Original Values of Overlapping Ions'))
         ions = self._intensityModeller.getRemodelledIons()
-        self.makeScrollArea(self._remView, [ion.getMoreValues() for ion in ions])
+        verticalLayout = QtWidgets.QVBoxLayout(self._remView)
+        scrollArea, table = self.makeScrollArea(self._remView, [ion.getMoreValues() for ion in ions])
+        table.customContextMenuRequested['QPoint'].connect(partial(self.showRedOptions, table))
+        verticalLayout.addWidget(scrollArea)
         self._remView.resize(1000, 750)
         self._remView.show()
+
+    def showRedOptions(self, table, pos):
+        menu = QtWidgets.QMenu()
+        showAction = menu.addAction("Show in Spectrum")
+        peakAction = menu.addAction("Show Peaks")
+        copyRowAction = menu.addAction("Copy Row")
+        copyTableAction = menu.addAction("Copy Table")
+        action = menu.exec_(table.viewport().mapToGlobal(pos))
+        it = table.indexAt(pos)
+        if it is None:
+            return
+        selectedRow = it.row()
+        selectedHash = table.model().getHashOfRow(selectedRow)
+        selectedIon = self._intensityModeller.getRemodelledIon(selectedHash)
+        if action == showAction:
+            ajacentIons, minLimit, maxLimit  = self._intensityModeller.getAdjacentIons(selectedHash)
+            ajacentIons = [ion for ion in ajacentIons if self._intensityModeller.getHash(ion)!=selectedHash]
+            peaks = self.spectrumHandler.getSpectrum(minLimit-1, maxLimit+1)
+            SpectrumView(self.mainWindow, peaks, [selectedIon]+ajacentIons, np.min(selectedIon.isotopePattern['m/z']),
+                                np.max(selectedIon.isotopePattern['m/z']), np.max(selectedIon.isotopePattern['relAb']))
+        elif action == peakAction:
+            PeakView(self.mainWindow, selectedIon, self._intensityModeller.remodelSingleIon, self.saveSingleIon)
+        elif action == copyRowAction:
+            df=pd.DataFrame(data=[table.model().getRow(selectedRow)], columns=table.model().getHeaders())
+            df.to_clipboard(index=False,header=True)
+        elif action == copyTableAction:
+            df=pd.DataFrame(data=table.model().getData(), columns=table.model().getHeaders())
+            df.to_clipboard(index=False,header=True)
+
 
     def showOccupancyPlot(self):
         self._analyser.setIons(list(self._intensityModeller.getObservedIons().values()))

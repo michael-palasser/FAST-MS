@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import QLabel, QMainWindow
 import numpy as np
 
 from src.views.IonTableWidget import IonTableWidget, TickIonTableWidget
+from src.views.ResultView import SimplePeakView
 from src.views.SpectrumView import SpectrumView
 
 
@@ -115,15 +116,16 @@ class AbstractIonView(QtWidgets.QDialog):
 
     def showOptions(self, table, pos):
         global view
-        """it = table.itemAt(pos)
+        it = table.itemAt(pos)
         if it is None:
             return
         selectedRowIndex = it.row()
         columnCount = table.columnCount()
         item_range = QtWidgets.QTableWidgetSelectionRange(0, selectedRowIndex, columnCount - 1, selectedRowIndex)
-        table.setRangeSelected(item_range, True)"""
+        table.setRangeSelected(item_range, True)
         menu = QtWidgets.QMenu()
         showAction = menu.addAction("Show in Spectrum")
+        peakAction = menu.addAction("Show Peaks")
         action = menu.exec_(table.viewport().mapToGlobal(pos))
         if action == showAction:
             """index = None
@@ -142,7 +144,11 @@ class AbstractIonView(QtWidgets.QDialog):
             ions = self.getIons(table)
             minLimit, maxLimit, YLimit = self.getLimits(ions)
             peaks = self._spectrum[np.where((self._spectrum[:,0]>(minLimit-5)) & (self._spectrum[:,0]<(maxLimit+5)))]
-            view = SpectrumView(peaks, ions, minLimit, maxLimit, YLimit)
+            view = SpectrumView(self, peaks, ions, minLimit, maxLimit, YLimit)
+        elif action == peakAction:
+            global peakview
+            peakview = SimplePeakView(table.getIon(selectedRowIndex))
+
 
     def getIons(self, *args):
         index = None

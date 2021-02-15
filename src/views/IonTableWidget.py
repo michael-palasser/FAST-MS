@@ -6,48 +6,11 @@ from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QTableWidget
 from math import log10
 
-from src.views.ResultView import IonTableModel
-
-
-class TableModel(QtCore.QAbstractTableModel):
-    def __init__(self, data, parent=None):
-        super(TableModel, self).__init__(parent)
-        self._data = data
-        self._formats = ['{:10.5f}','{:2d}', '{:12d}', '','{:4.2f}', '{:6.1f}', '{:4.2f}', '']
-
-
-    def rowCount(self, parent=None):
-        return len(self._data)
-
-    def columnCount(self, parent=None):
-        return len(self._data[0]) if self.rowCount() else 0
-
-    def data(self, index, role=QtCore.Qt.DisplayRole):
-        if role == QtCore.Qt.DisplayRole:
-            i = index.row()
-            j = index.column()
-
-            if j == 2:
-                currentData = self._data[i][j]
-                formatString = self._format[2]
-                if currentData >= 10 ** 13:
-                    lg10 = str(int(log10(currentData) + 1))
-                    formatString = '{:' + lg10 + 'd}'
-                return formatString.format(currentData)
-            else:
-                return self._format[j].format(self._data[i][j])
-
-            """if 0 <= row < self.rowCount():
-                column = index.column()
-                if 0 <= column < self.columnCount():
-                    return self._ions[row][column]"""
-
-
 
 
 class IonTableWidget(QTableWidget):
-    def __init__(self, parrent, ions, yPos):
-        super(IonTableWidget, self).__init__(parrent)
+    def __init__(self, parent, ions, yPos):
+        super(IonTableWidget, self).__init__(parent)
         print('starting')
         #self.headers = ['m/z', 'z', 'I', 'fragment', 'error /ppm', 'S/N', 'qual.']
         self._ions = ions
@@ -76,7 +39,7 @@ class IonTableWidget(QTableWidget):
         # self.customContextMenuRequested['QPoint'].connect(partial(self.editRow, self, bools))
 
     def getHeaders(self):
-        return ['m/z', 'z', 'I', 'fragment', 'error /ppm', 'S/N', 'qual.']
+        return ['m/z','z','intensity','fragment','error /ppm', 'S/N','quality']
 
     def getValue(self,ion):
         return ion.getValues()
@@ -133,14 +96,17 @@ class IonTableWidget(QTableWidget):
         #self.resizeColumnsToContents()
         self.resizeRowsToContents()
 
-
+    def getIon(self, row):
+        for ion in self._ions:
+            if ion.getName() == self.item(row, 3).text() and ion.charge == int(self.item(row, 1).text()):
+                return ion
 
 
 class TickIonTableWidget(IonTableWidget):
-    def __init__(self, parrent, data, yPos):
+    def __init__(self, parent, data, yPos):
         #self.headers = ['m/z', 'z', 'I', 'fragment', 'error /ppm', 'S/N', 'qual.']
         self.checkBoxes = []
-        super(TickIonTableWidget, self).__init__(parrent, data, yPos)
+        super(TickIonTableWidget, self).__init__(parent, data, yPos)
 
     def getHeaders(self):
         return super(TickIonTableWidget, self).getHeaders() + ['del.?']

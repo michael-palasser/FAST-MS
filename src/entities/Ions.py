@@ -99,6 +99,8 @@ class FragmentIon(Fragment):
         self.noise = noise
         self.comment = ""
 
+    def getIntensity(self):
+        return round(self.intensity)
 
     def toString(self):
         return str(round(self.getMonoisotopic(), 5)) + "\t\t" + str(self.charge) + "\t" + str(
@@ -135,28 +137,28 @@ class FragmentIon(Fragment):
                 '{:3.2f}'.format(round(self.error,2)),
                 '{:6.1f}'.format(round(self.getSignalToNoise(),1)),
                 '{:3.2f}'.format(round(self.quality,2))]"""
-        """return [round(self.getMonoisotopic(),5), self.charge, round(self.intensity), self.getName(), round(self.error,2),
+        return [round(self.getMonoisotopic(),5), self.charge, round(self.intensity), self.getName(), round(self.error,2),
                 round(self.getSignalToNoise(),1), round(self.quality,2)]#"""
-        return [500, self.charge, round(self.intensity), self.getName(), round(self.error,2),
-                round(self.getSignalToNoise(),1), round(self.quality,2)]
 
-    """def getValueDict(self):
-        return {'mz':500,'z':self.charge,'int':round(self.intensity),'name':self.getName(),'error':round(self.error, 2),
-                'snr':round(self.getSignalToNoise(), 1),'qual':round(self.quality, 2),'com':self.comment}"""
+    def getId(self):
+        return self.getName()+', '+str(self.charge)
+
     def getMoreValues(self):
         return [round(self.getMonoisotopic(),5), self.charge, round(self.intensity), self.getName(), round(self.error,2),
-                round(self.getSignalToNoise(),1), round(self.quality,2), round(self.getScore(),1),self.comment]#"""
-        """return [500, self.charge, round(self.intensity), self.getName(), round(self.error,2),
-                round(self.getSignalToNoise(),1), round(self.quality,2), 2,self.comment]"""
+                round(self.getSignalToNoise(),1), round(self.quality,2), round(self.getScore(),1),self.comment]
 
     def getPeaks(self):
         peaks = []
         for i, peak in enumerate(self.isotopePattern):
-            peaks.append((peak['m/z'], self.charge, round(peak['calcInt']), self.getName(), peak['error'],
-                                peak['used']))
+            peaks.append((peak['m/z'], self.charge, round(peak['calcInt']), peak['error'], peak['used']))
             #indizes.append(i)
         return peaks #pd.DataFrame(data=peaks, columns=['mz', 'z', 'int', 'name', 'error', 'used'])
 
+    def getPeakValues(self):
+        peaks = []
+        for i, peak in enumerate(self.isotopePattern):
+            peaks.append((peak['m/z'], round(peak['relAb']), round(peak['calcInt']), peak['error'], peak['used']))
+        return peaks
 
 
 class IntactIon(object):

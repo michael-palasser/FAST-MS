@@ -143,15 +143,15 @@ class ExcelWriter(BasicExcelWriter):
         self.format2digit = self.workbook.add_format({'num_format': '0.00'})
         self.format5digit = self.workbook.add_format({'num_format': '0.00000'})
 
-    def toExcel(self, analyser, intensityModeller, libraryBuilder, settings, searchedChargeStates):
+    def toExcel(self, analyser, intensityModeller, properties, fragmentLibrary, settings, spectrumHandler):
         try: #Todo: to ExcelWriter
             #percentages = list()
-            self.writeAnalysis([("spectral file:", settings['spectralData'])],
+            self.writeAnalysis({"spectral file:": settings['spectralData'], 'max. m/z:':spectrumHandler.getUpperBound()},
                                       analyser.getModificationLoss(),
                                       analyser.calculateRelAbundanceOfSpecies(),
-                                      libraryBuilder.getSequenceList(),
+                                      properties.getSequenceList(),
                                       analyser.calculatePercentages(self.configs['interestingIons']),
-                                      libraryBuilder.getFragmentsByDir(1), libraryBuilder.getFragmentsByDir(-1))
+                                      properties.getFragmentsByDir(1), properties.getFragmentsByDir(-1))
             #self.analyser.createPlot(__maxMod)
             precursorRegion = intensityModeller.getPrecRegion(settings['sequName'], abs(settings['charge']))
             self.writeIons(self.worksheet2, intensityModeller.getObservedIons().values(),
@@ -161,7 +161,7 @@ class ExcelWriter(BasicExcelWriter):
                                  precursorRegion)
             self.writePeaks(self.worksheet4, row + 3, 0, self.sortByName(intensityModeller.getDeletedIons().values()))
             self.writeIons(self.worksheet5, self.sortByName(intensityModeller.getRemodelledIons()), precursorRegion)
-            self.writeSumFormulas(libraryBuilder.getFragmentLibrary(), searchedChargeStates)
+            self.writeSumFormulas(fragmentLibrary, spectrumHandler.searchedChargeStates)
             self.writeConfigurations(settings)
         finally:
             self.closeWorkbook()
@@ -178,9 +178,8 @@ class ExcelWriter(BasicExcelWriter):
         self.worksheet1.write_row(row, 0,("Time:",date))
         row=1
         print(generalParam)
-        for tup in generalParam:
-            print(tup)
-            self.worksheet1.write_row(row, 0, tup)
+        for key,val in generalParam.items():
+            self.worksheet1.write_row(row, 0, (key,val))
             row +=1
         return row+2
 

@@ -20,6 +20,7 @@ from src.Exceptions import UnvalidIsotopePatternException
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.repositories.IsotopePatternRepository import IsotopePatternReader
 from src.top_down.Analyser import Analyser
+from src.top_down.SearchProperties import PropertyStorage
 from src.top_down.LibraryBuilder import FragmentLibraryBuilder
 from src.top_down.SpectrumHandler import SpectrumHandler
 from src.top_down.IntensityModeller import IntensityModeller
@@ -53,8 +54,9 @@ class TD_MainController(object):
 
     def search(self):
         print("\n********** Creating fragment library **********")
-        self.libraryBuilder = FragmentLibraryBuilder(self.settings['sequName'], self.settings['fragmentation'],
-                        self.settings['modifications'], self.settings['nrMod'])
+        self._propStorage = PropertyStorage(self.settings['sequName'], self.settings['fragmentation'],
+                        self.settings['modifications'])
+        self.libraryBuilder = FragmentLibraryBuilder(self._propStorage, self.settings['nrMod'])
         self.libraryBuilder.createFragmentLibrary()
 
         """read existing ion-list file or create new one"""
@@ -88,9 +90,8 @@ class TD_MainController(object):
             return 1
         #spectralFile = os.path.join(path, 'Spectral_data','top-down', self.settings['spectralData'])
         print("\n********** Importing spectral pattern from:", self.settings['spectralData'], "**********")
-        self.spectrumHandler = SpectrumHandler(self.settings['spectralData'], self.libraryBuilder.getSequence(), self.libraryBuilder.getMolecule(),
-                  self.libraryBuilder.getFragmentLibrary(), self.libraryBuilder.getPrecursor(),
-                  self.libraryBuilder.getChargedModifications(), self.libraryBuilder.getFragItemDict(), self.settings)
+        self.spectrumHandler = SpectrumHandler(self.settings['spectralData'], self._propStorage,
+                  self.libraryBuilder.getFragmentLibrary(), self.libraryBuilder.getPrecursor(), self.settings)
 
         """Finding fragments"""
         print("\n********** Search for spectrum **********")
@@ -130,8 +131,8 @@ class TD_MainController(object):
                 self._intensityModeller.remodelComplexPatterns(complexPatterns, view.getDumplist())
             else:
                 return 1
-        self._analyser = Analyser(None, self.libraryBuilder.getSequenceList(),
-                                 self.settings['charge'], self.libraryBuilder.getModification())
+        self._analyser = Analyser(None, self._propStorage.getSequenceList(),
+                                 self.settings['charge'], self._propStorage.getModification())
         print("done")
         return 0
 
@@ -357,9 +358,8 @@ class TD_MainController(object):
         output = os.path.join(outputPath, filename)
         excelWriter = ExcelWriter(output, self.configs)
         self._analyser.setIons(list(self._intensityModeller.getObservedIons().values()))
-        excelWriter.toExcel(self._analyser, self._intensityModeller, self.libraryBuilder, self.settings,
-                            #self.libraryBuilder.getSequenceList(), self.libraryBuilder.getFragmentLibrary(),
-                            self.spectrumHandler.searchedChargeStates)
+        excelWriter.toExcel(self._analyser, self._intensityModeller, self._propStorage,
+                            self.libraryBuilder.getFragmentLibrary(), self.settings, self.spectrumHandler)
         print("********** saved in:", output, "**********\n")
         try:
             subprocess.call(['open',output])

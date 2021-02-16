@@ -132,7 +132,7 @@ class MoleculeService(AbstractServiceForPatterns):
         super(MoleculeService, self).__init__(MoleculeRepository())
 
     def makeNew(self):
-        return Makromolecule("", "", "", 10*[["", "", 0]], None)
+        return Makromolecule("", "", "", 10*[["", "", 0.,0.]], None)
 
 
     def getFormula(self, item):

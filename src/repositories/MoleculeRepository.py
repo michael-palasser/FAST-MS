@@ -8,7 +8,7 @@ class MoleculeRepository(AbstractRepositoryWithItems):
     def __init__(self):
         super(MoleculeRepository, self).__init__(join('shared.db'), 'molecules',
                                                  ("name", "gain", "loss"),
-                                                 {"monomeres": ('name', 'formula', 'acidity','patternId')},(2,),())
+                                                 {"buildingBlocks": ('name', 'formula', 'gbP', 'gbN','patternId')},(2,3),())
 
     def makeTables(self):
         self._conn.cursor().execute("""
@@ -18,11 +18,12 @@ class MoleculeRepository(AbstractRepositoryWithItems):
                         "gain"	text NOT NULL,
                         "loss"	text NOT NULL);""")
         self._conn.cursor().execute("""
-            CREATE TABLE IF NOT EXISTS monomeres (
+            CREATE TABLE IF NOT EXISTS buildingBlocks (
                 "id"	integer PRIMARY KEY UNIQUE ,
                 "name"	text NOT NULL,
                 "formula" text NOT NULL ,
-                "acidity" real NOT NULL ,
+                "gbP" real NOT NULL ,
+                "gbN" real NOT NULL ,
                 "patternId" text NOT NULL );""")
 
     def createPattern(self, pattern):
@@ -35,8 +36,10 @@ class MoleculeRepository(AbstractRepositoryWithItems):
 
     def getItemColumns(self):
         return {'Name':'First Letter must be uppercase, all other letters must be lowercase',
-                'Formula':'molecular formula of monomer',
-                'Acidity':'Enter a positive value for acidic monomers or a negative for basic ones'} #ToDo: which value
+                'Formula':'molecular formula of the building block',
+                'GB+':'Enter the gas phase basicity (kJ/mol) of the building block in positive mode',
+                'GB-':'Enter the gas phase basicity (kJ/mol) of the (deprotonated) building block in negative mode\n'
+                      '(not relevant for nucleic acids)'}
 
     def getPattern(self, name):
         pattern = self.get('name', name)
@@ -46,5 +49,5 @@ class MoleculeRepository(AbstractRepositoryWithItems):
     def getItems(self,patternId, table):
         listOfItems = list()
         for item in super(MoleculeRepository, self).getItems(patternId, [key for key in self._itemDict.keys()][0]):
-            listOfItems.append((item[1], item[2], item[3])) #, item[3], item[4], item[5]) )
+            listOfItems.append((item[1], item[2], item[3], item[4])) #, item[3], item[4], item[5]) )
         return listOfItems

@@ -22,7 +22,7 @@ class FragmentLibraryBuilder(object):
     Creates library for top-down fragments
     '''
 
-    def __init__(self, sequName, fragmentation, modificationPattern, maxMod):
+    def __init__(self, properties, maxMod):
         '''
         Constructor
         :param precName: name of precursor (String)
@@ -36,21 +36,25 @@ class FragmentLibraryBuilder(object):
         __fragmentLibrary: list of all fragments
         radicalDict: list of fragments which contain radicals
         '''
-        self.__sequence = SequenceService().get(sequName)
+        '''self.__sequence = SequenceService().get(sequName)
         #self.sequenceList = self.__sequence.getSequenceList()
         self.__molecule = MoleculeService().getPatternWithObjects(self.__sequence.getMolecule(), BuildingBlock)
         #self.__monomers = MoleculeService().getItemDict(self.__sequence.getMolecule())
         self.__fragmentation = FragmentIonService().getPatternWithObjects(fragmentation, FragItem)
-        self.__modifPattern = ModificationService().getPatternWithObjects(modificationPattern, ModifiedItem)
+        self.__modifPattern = ModificationService().getPatternWithObjects(modificationPattern, ModifiedItem)'''
+        self.__sequence = properties.getSequence()
+        self.__molecule = properties.getMolecule()
+        self.__fragmentation = properties.getFragmentation()
+        self.__modifPattern = properties.getModification()
         self.__maxMod = maxMod
         self.__fragmentLibrary = list()
         self.__precursor = None
 
-    def getSequence(self):
+    '''def getSequence(self):
         return self.__sequence
 
     def getSequenceList(self):
-        return self.__sequence.getSequenceList()
+        return self.__sequence.getSequenceList()'''
 
     def getFragmentLibrary(self):
         return self.__fragmentLibrary
@@ -58,14 +62,14 @@ class FragmentLibraryBuilder(object):
     def getPrecursor(self):
         return self.__precursor
 
-    def getModification(self):
-        return self.__modifPattern.getModification()
+    '''def getModification(self):
+        return self.__modifPattern.getModification()'''
 
     def setFragmentLibrary(self, patternReader):
         self.__fragmentLibrary = patternReader.addIsotopePatternFromFile(self.__fragmentLibrary)
 
-    def getMolecule(self):
-        return self.__molecule
+    '''def getMolecule(self):
+        return self.__molecule'''
 
     def buildSimpleLadder(self, sequ):
         '''
@@ -76,7 +80,7 @@ class FragmentLibraryBuilder(object):
         simpleLadder = list()
         length = 1
         sumFormula = MolecularFormula(dict())
-        monomers = self.__molecule.getMonomerDict()
+        monomers = self.__molecule.getBBDict()
         for link in sequ:
             if link not in monomers.keys():
                 print("problem at", length)
@@ -253,7 +257,7 @@ class FragmentLibraryBuilder(object):
         return fragment
 
 
-    def getChargedModifications(self):
+    """def getChargedModifications(self):
         '''
         Finds and returns charged modifications
         :return: dict of chargedModifications (modification:charge)
@@ -264,6 +268,7 @@ class FragmentLibraryBuilder(object):
                 chargedModifications[modification.getName()] = modification.getZEffect()
         return chargedModifications
 
+    
     def getImportantModifications(self):
         '''
         Finds and returns modifications where the occupancy should be calculated
@@ -279,7 +284,7 @@ class FragmentLibraryBuilder(object):
         fragItemDict = dict()
         for fragTemplate in self.__fragmentation.getItems():
             fragItemDict[fragTemplate.getName()] = fragTemplate
-        return fragItemDict
+        return fragItemDict"""
 
     #ToDo
     """def selectFragmentsByDir(self, fragDict, dir):
@@ -288,9 +293,9 @@ class FragmentLibraryBuilder(object):
         return {key:val for key,val in fragDict.items() if key in forwardFrags}"""
 
 
-    def getFragmentsByDir(self, dir):
+    '''def getFragmentsByDir(self, dir):
         return [fragTemplate.getName() for fragTemplate in self.__fragmentation.getItems()
                             if fragTemplate.getDirection()==dir]
 
     def filterByDir(self, fragDict, dir):
-        return {key: val for key, val in fragDict.items() if key in self.getFragmentsByDir(dir)}
+        return {key: val for key, val in fragDict.items() if key in self.getFragmentsByDir(dir)}'''

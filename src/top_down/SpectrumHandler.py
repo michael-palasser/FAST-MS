@@ -3,10 +3,13 @@ Created on 27 Jul 2020
 
 @author: michael
 '''
+from math import exp
 from os.path import join
 from re import findall
 import numpy as np
 import copy
+
+from scipy.constants import R
 
 from src.data.Constants import E_MASS, P_MASS
 from src.entities.Ions import FragmentIon
@@ -25,12 +28,12 @@ class SpectrumHandler(object):
     protonMass = 1.00727647
     eMass = 5.48579909065 * 10 ** (-4)
     #ToDo:
-    basicAA = {'H': 3, 'R': 10, 'K': 10,
+    '''basicAA = {'H': 3, 'R': 10, 'K': 10,
                'D': 0.5, 'E': 0.5}
     acidicAA = {'D': 10, 'E': 10,
-                'H': 0.9, 'R': 0.5, 'K': 0.5, }
+                'H': 0.9, 'R': 0.5, 'K': 0.5, }'''
 
-    def __init__(self, filePath, sequence, molecule, fragmentLibrary, precursor, chargedModifications, fragmentation, settings):
+    def __init__(self, filePath, properties, fragmentLibrary, precursor, settings):
         '''
         Constructor
         :param molecule: RNA/DNA/P (String)
@@ -38,28 +41,25 @@ class SpectrumHandler(object):
         :param fragmentLibrary: list of fragments from AbstractLibraryBuilder
         :param chargedModifications: output of getChargedModifications()-fct (AbstractLibraryBuilder): dict
         '''
-        self.__sequence = sequence
-        self.__molecule = molecule
+
+        self.__sequList = properties.getSequenceList()
+        self.__properties = properties
         self.__fragmentLibrary = fragmentLibrary
-        self.__chargedModifications = chargedModifications
-        self.__fragTemplates = fragmentation
         self.__settings = settings
         self.__charge = abs(self.__settings['charge'])
         self.__sprayMode = 1
         if self.__settings['charge'] < 0:
             self.__sprayMode = -1
-        #self.precMz = 0
+
         self.__upperBound=0
-        #self.__spectrum=list()
         self.precursor = precursor
-        #self.normalizationFactor = 1
-        #self.normalizationFactor = 0
         self.normalizationFactor = None
 
         self.addSpectrum(filePath)
         self.foundIons = list()
         self.ionsInNoise = list()
         self.searchedChargeStates = dict()
+        self.expectedChargeStates = dict()
         self.peaksArrType = np.dtype([('m/z', np.float64), ('relAb', np.float64),('m/z_theo', np.float64),
                              ('calcInt', np.float64), ('error', np.float32), ('used', np.bool_)])
 
@@ -171,34 +171,30 @@ class SpectrumHandler(object):
         return (value - theoValue) / theoValue * 10 ** 6
 
     def getNormalizationFactor(self):
-        molecule = self.__molecule.getName()
+        molecule = self.__properties.getMolecule().getName()
         if molecule in ['RNA', 'DNA'] and self.__sprayMode == -1:
-            return self.__charge / self.precursor.formula.formulaDict['P']
-        elif molecule == 'Protein':
-            return self.__charge / self.getPeptideScore(self.__sequence)
+            #return self.__charge / self.precursor.formula.formulaDict['P']
+            return self.__charge / len(self.__sequList)
+        #elif molecule == 'Protein' and self.__sprayMode == 1:
+         #   return self.__charge / self.getChargeScore(self.__sequList)
         #elif molecule in ['RNA', 'DNA'] and self.__sprayMode == 1:
-        #    return self.__charge / len(self.__sequence)
+        #    return self.__charge / len(self.__sequList)
         else:
-            return self.__charge / len(self.__sequence)
+            return self.__charge / self.getChargeScore(self.__sequList)
 
-    def getPeptideScore(self, fragment): #ToDo
-        if self.__sprayMode== -1:
-                chargeDict = self.acidicAA
-        else:
-            chargeDict = self.basicAA
+    def getChargeScore(self, fragment): #ToDo
+        chargeDict = self.__properties.getGPBsOfBBs(self.__sprayMode)
         score = 0
-        """if self.__fragTemplates[fragment.type].getDirection() == 1 and self.__sprayMode== 1:
+        """if self.__properties.getFragmentation()[fragment.type].getDirection() == 1 and self.__sprayMode== 1:
             score ="""
-        for aa in fragment.sequenceList:
-            if aa in chargeDict:
-                score += chargeDict[aa]
-            else:
-                score += 1
+        #if self.__sprayMode == 1:
+        for bb in fragment.sequenceList:
+            score += exp(self.__sprayMode*chargeDict[bb]/(R*298))
         return score
 
     def getModCharge(self, fragment):
         modCharge = 0
-        for mod, charge in self.__chargedModifications.items():
+        for mod, charge in self.__properties.getChargedModifications.items():
             if mod in fragment.modification:
                 nrMod = 1
                 if len(findall(r"(\d+)"+mod, fragment.modification)) > 0:
@@ -208,13 +204,14 @@ class SpectrumHandler(object):
 
     #ToDo: Test SearchParameters, Proteins!, Parameters
     def getSearchParameters(self, fragment,precModCharge):
-        molecule = self.__molecule.getName()
+        molecule = self.__properties.getMolecule().getName()
         if molecule in ['RNA' ,'DNA'] and self.__sprayMode == -1:
+            probableZ = (fragment.number-1) * self.normalizationFactor
             if fragment.formula.formulaDict['P'] == 0:
                 return None
-            probableZ = fragment.formula.formulaDict['P'] * self.normalizationFactor
+            #probableZ = fragment.formula.formulaDict['P'] * self.normalizationFactor
         elif molecule == 'Protein':
-            probableZ = self.getPeptideScore(fragment) * self.normalizationFactor
+            probableZ = self.getChargeScore(fragment) * self.normalizationFactor
         elif molecule in ['RNA' ,'DNA'] and self.__sprayMode == 1:
             probableZ = fragment.number * self.normalizationFactor
         else:

@@ -28,10 +28,10 @@ class SpectrumHandler(object):
     protonMass = 1.00727647
     eMass = 5.48579909065 * 10 ** (-4)
     #ToDo:
-    '''basicAA = {'H': 3, 'R': 10, 'K': 10,
+    basicAA = {'H': 3, 'R': 10, 'K': 10,
                'D': 0.5, 'E': 0.5}
     acidicAA = {'D': 10, 'E': 10,
-                'H': 0.9, 'R': 0.5, 'K': 0.5, }'''
+                'H': 0.9, 'R': 0.5, 'K': 0.5, }
 
     def __init__(self, filePath, properties, fragmentLibrary, precursor, settings):
         '''
@@ -173,8 +173,8 @@ class SpectrumHandler(object):
     def getNormalizationFactor(self):
         molecule = self.__properties.getMolecule().getName()
         if molecule in ['RNA', 'DNA'] and self.__sprayMode == -1:
-            #return self.__charge / self.precursor.formula.formulaDict['P']
-            return self.__charge / len(self.__sequList)
+            return self.__charge / self.precursor.formula.formulaDict['P']
+            #return self.__charge / len(self.__sequList)
         #elif molecule == 'Protein' and self.__sprayMode == 1:
          #   return self.__charge / self.getChargeScore(self.__sequList)
         #elif molecule in ['RNA', 'DNA'] and self.__sprayMode == 1:
@@ -194,7 +194,7 @@ class SpectrumHandler(object):
 
     def getModCharge(self, fragment):
         modCharge = 0
-        for mod, charge in self.__properties.getChargedModifications.items():
+        for mod, charge in self.__properties.getChargedModifications().items():
             if mod in fragment.modification:
                 nrMod = 1
                 if len(findall(r"(\d+)"+mod, fragment.modification)) > 0:
@@ -205,8 +205,10 @@ class SpectrumHandler(object):
     #ToDo: Test SearchParameters, Proteins!, Parameters
     def getSearchParameters(self, fragment,precModCharge):
         molecule = self.__properties.getMolecule().getName()
+        print(molecule)
         if molecule in ['RNA' ,'DNA'] and self.__sprayMode == -1:
-            probableZ = (fragment.number-1) * self.normalizationFactor
+            #probableZ = (fragment.number-1) * self.normalizationFactor
+            probableZ = fragment.formula.formulaDict['P']* self.normalizationFactor
             if fragment.formula.formulaDict['P'] == 0:
                 return None
             #probableZ = fragment.formula.formulaDict['P'] * self.normalizationFactor

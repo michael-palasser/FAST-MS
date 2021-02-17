@@ -420,7 +420,6 @@ class IntensityModeller(object):
             if (ion.type == precName) and (ion.charge == precCharge):
                 precursorList.append(ion.getMonoisotopic())
         precursorList.sort()
-        print()
         return (precursorList[0],precursorList[-1]+70/precCharge)
 
     def remodelSingleIon(self, ion, values):

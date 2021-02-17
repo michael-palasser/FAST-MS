@@ -198,7 +198,7 @@ class TD_MainController(object):
 
     def makeTabWidget(self, data, name):
         tab = QtWidgets.QWidget()
-        verticalLayout = QtWidgets.QVBoxLayout(self.mainWindow)
+        verticalLayout = QtWidgets.QVBoxLayout()
         tab.setLayout(verticalLayout)
         self.tabWidget.addTab(tab, "")
         self.tabWidget.setTabText(self.tabWidget.indexOf(tab), self._translate(self.mainWindow.objectName(), name))
@@ -266,11 +266,11 @@ class TD_MainController(object):
         selectedHash = table.model().getHashOfRow(selectedRow)
         selectedIon = self._intensityModeller.getIon(selectedHash)
         if action == showAction:
-            #global spectrumView
+            global spectrumView
             ajacentIons, minLimit, maxLimit  = self._intensityModeller.getAdjacentIons(selectedHash)
             #minWindow, maxWindow, maxY = self._intensityModeller.getLimits(ajacentIons)
             peaks = self.spectrumHandler.getSpectrum(minLimit-1, maxLimit+1)
-            spectrumView = SpectrumView(self.mainWindow, peaks, ajacentIons, np.min(selectedIon.isotopePattern['m/z']),
+            spectrumView = SpectrumView(None, peaks, ajacentIons, np.min(selectedIon.isotopePattern['m/z']),
                                 np.max(selectedIon.isotopePattern['m/z']), np.max(selectedIon.isotopePattern['relAb']))
         elif action == peakAction:
             #global peakview
@@ -403,10 +403,11 @@ class TD_MainController(object):
         selectedHash = table.model().getHashOfRow(selectedRow)
         selectedIon = self._intensityModeller.getRemodelledIon(selectedHash)
         if action == showAction:
+            global view
             ajacentIons, minLimit, maxLimit  = self._intensityModeller.getAdjacentIons(selectedHash)
             ajacentIons = [ion for ion in ajacentIons if self._intensityModeller.getHash(ion)!=selectedHash]
             peaks = self.spectrumHandler.getSpectrum(minLimit-1, maxLimit+1)
-            SpectrumView(self.mainWindow, peaks, [selectedIon]+ajacentIons, np.min(selectedIon.isotopePattern['m/z']),
+            view = SpectrumView(None, peaks, [selectedIon]+ajacentIons, np.min(selectedIon.isotopePattern['m/z']),
                                 np.max(selectedIon.isotopePattern['m/z']), np.max(selectedIon.isotopePattern['relAb']))
         elif action == peakAction:
             PeakView(self.mainWindow, selectedIon, self._intensityModeller.remodelSingleIon, self.saveSingleIon)

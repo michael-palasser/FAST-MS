@@ -47,7 +47,7 @@ modelled = \
 
         super().setOpts(**opts)"""
 
-class SpectrumView(QtWidgets.QMainWindow):
+class SpectrumView(QtWidgets.QWidget):
 
     def __init__(self, parent, peaks, ions, minRange, maxRange, maxY):
         super(SpectrumView, self).__init__(parent)
@@ -55,16 +55,16 @@ class SpectrumView(QtWidgets.QMainWindow):
         self.ions = ions
         self.int = int
         self._translate = QtCore.QCoreApplication.translate
-        self.width = 700
-        self.hight = 400
-        self.resize(self.width,self.hight)
+        #self.width = 700
+        #self.hight = 400
+        #self.resize(self.width,self.hight)
+        self.resize(700,400)
         width = 0.02
-
+        self.layout=QtWidgets.QVBoxLayout(self)
         styles = {"black": "#f00", "font-size": "18px"}
 
-        self.graphWidget = pg.PlotWidget()
-
-        self.setCentralWidget(self.graphWidget)
+        self.graphWidget = pg.PlotWidget(self)
+        #self.setCentralWidget(self.graphWidget)
         #self.vb = pg.GraphicsLayout().addViewBox(self.graphWidget)
         #self.vb.setLimits(yMin=0)
         self.graphWidget.setLabel('left', 'Rel.Ab.in au', **styles)
@@ -78,17 +78,19 @@ class SpectrumView(QtWidgets.QMainWindow):
         self.plot(width) #ToDo: Correct Width (linear fct)
         self.makeWidthWidgets(width)
 
+        self.layout.addWidget(self.graphWidget)
         self.show()
         print('finished')
 
     def makeWidthWidgets(self, width):
-        self.spinBox = QtWidgets.QDoubleSpinBox(self.centralWidget())
+        self.spinBox = QtWidgets.QDoubleSpinBox(self)
         self.spinBox.setDecimals(3)
         self.spinBox.setValue(width)
-        self.spinBox.move(65,10)
+        #self.spinBox.move(65,10)
+        self.spinBox.setGeometry(QtCore.QRect(65, 10, 65, 26))
         self.spinBox.setToolTip("Change Width of Peaks (in Da)")
         self.pushButton = QtWidgets.QPushButton(self)
-        self.pushButton.setGeometry(QtCore.QRect(60, 30, 70, 32))
+        self.pushButton.setGeometry(QtCore.QRect(60, 32, 70, 32))
         self.pushButton.setText(self._translate(self.objectName(), "Update"))
         self.pushButton.setToolTip("Change Width of Peaks (in Da)")
         self.pushButton.clicked.connect(self.changeWidth)
@@ -144,14 +146,26 @@ class SpectrumView(QtWidgets.QMainWindow):
         #print('clicked on bar ' + str(i))
 
 
+class TheoSpectrumView(SpectrumView):
+    def __init__(self, parent, peaks, modelledPeaks, minRange, maxRange, maxY):
+        super(TheoSpectrumView, self).__init__(parent, peaks, modelledPeaks, minRange, maxRange, maxY)
 
 
+    def plot(self, width):
+        #self.legend = pg.LegendItem(offset=(0., .5), labelTextSize='12pt')
+        #self.legend.setParentItem(self.graphWidget.graphicsItem())
+        self.peakBars = pg.BarGraphItem(x=self.peaks[:,0], height=self.peaks[:,1], width=width, brush='k')
+        #self.legend.addItem(self.peakBars, 'spectrum')
+        self.graphWidget.addItem(self.peakBars)
+        self.modelledBars = pg.BarGraphItem(x=self.ions[:,0], height=self.ions[:,1], width=0.005, brush='r')
+        self.graphWidget.addItem(self.modelledBars)
+        #self.legend.addItem(self.modelledBars, 'modelled')
 
 
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
-    main = SpectrumView(peaks, modelled)
+    main = SpectrumView(None,peaks, modelled,500,501,12*10**6)
     sys.exit(app.exec_())
 
 

@@ -13,7 +13,8 @@ class UnvalidInputException(Exception):
         self.message = message
 
     def __str__(self):
-        return(repr("Invalid Input: " + self.element + ", " + self.message))
+        return(repr("Unvalid Input: " + self.element + ", " + self.message))
+
 
 
 class UnvalidIsotopePatternException(Exception):

@@ -104,21 +104,21 @@ class ModifiedItem(PrecursorItem):
 
 
 class IntactPattern(PatternWithItems):
-    def __init__(self,  name, gain, loss, items, id):
+    def __init__(self,  name, items, id):
         super(IntactPattern, self).__init__(name, items, id)
-        self.__initGain = gain
-        self.__initLoss = loss
+        '''self.__initGain = gain
+        self.__initLoss = loss'''
 
-    def getInitGain(self):
+    '''def getInitGain(self):
         return self.__initGain
 
     def getInitLoss(self):
-        return self.__initLoss
+        return self.__initLoss'''
 
-    def getFormula(self):
+    '''def getFormula(self):
         formulaDict = AbstractItem2.stringToFormula(self.__initGain, dict(), 1)
         return AbstractItem2.stringToFormula(self.__initLoss, formulaDict, -1)
-
+'''
 
 class IntactModification(AbstractItem2):
     def __init__(self, item):

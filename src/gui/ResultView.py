@@ -4,7 +4,7 @@ from functools import partial
 from math import log10, isnan
 import numpy as np
 
-from src.views.IonTableWidget import IonTableWidget
+from src.gui.IonTableWidget import IonTableWidget
 
 try:
     from Tkinter import Tk
@@ -17,7 +17,7 @@ from PyQt5.QtGui import QStandardItem
 from PyQt5.QtWidgets import QAbstractItemView
 
 from src.entities.Ions import FragmentIon, Fragment
-from src.views.SpectrumView import SpectrumView
+from src.gui.SpectrumView import SpectrumView
 
 class AbstractTableModel(QtCore.QAbstractTableModel):
     def __init__(self, data, format, headers):

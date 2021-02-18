@@ -11,7 +11,7 @@ from os.path import join
 
 class IntactRepository(AbstractRepositoryWithItems):
     def __init__(self):
-        super(IntactRepository, self).__init__(join('intact.db'), 'intactPatterns', ("name", "gain", "loss"),
+        super(IntactRepository, self).__init__(join('intact.db'), 'intactPatterns', ("name",),
                                                {"intactModItems":('name', 'gain', 'loss', 'nrMod','enabled', 'patternId')}, (3,), (4,))
         #self._conn = sqlite3.connect(':memory:')
 
@@ -19,9 +19,7 @@ class IntactRepository(AbstractRepositoryWithItems):
         self._conn.cursor().execute("""
             CREATE TABLE IF NOT EXISTS intactPatterns (
                 "id"	integer PRIMARY KEY UNIQUE ,
-                "name"	text NOT NULL UNIQUE,
-                "gain" text NOT NULL ,
-                "loss" text NOT NULL );""")
+                "name"	text NOT NULL UNIQUE );""")
         self._conn.cursor().execute("""
             CREATE TABLE IF NOT EXISTS intactModItems (
                 "id"	integer PRIMARY KEY UNIQUE,
@@ -42,8 +40,7 @@ class IntactRepository(AbstractRepositoryWithItems):
 
     def getPattern(self, name):
         pattern = self.get('name', name)
-        return IntactPattern(pattern[1], pattern[2], pattern[3],
-                             self.getItems(pattern[0],[key for key in self._itemDict.keys()][0]), pattern[0])
+        return IntactPattern(pattern[1], self.getItems(pattern[0],[key for key in self._itemDict.keys()][0]), pattern[0])
 
     def getItems(self,patternId, table):
         listOfItems = list()
@@ -69,10 +66,10 @@ class IntactRepository(AbstractRepositoryWithItems):
         :return:
         """
         # try:
-        patternId = self.create(pattern.getName(), pattern.getInitGain(), pattern.getInitLoss())
+        patternId = self.create(pattern.getName())
         self.insertItems(patternId, pattern.getItems(), 0)
 
     def updatePattern(self, pattern):
-        self.update(pattern.getName(), pattern.getInitGain(), pattern.getInitLoss(), pattern.getId())
+        self.update(pattern.getName(), pattern.getId())
         self.deleteAllItems(pattern.getId())
         self.insertItems(pattern.getId(), pattern.getItems(), 0)

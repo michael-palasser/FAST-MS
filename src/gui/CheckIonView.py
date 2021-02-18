@@ -5,9 +5,9 @@ from PyQt5.QtGui import QMovie
 from PyQt5.QtWidgets import QLabel, QMainWindow
 import numpy as np
 
-from src.views.IonTableWidget import IonTableWidget, TickIonTableWidget
-from src.views.ResultView import SimplePeakView
-from src.views.SpectrumView import SpectrumView
+from src.gui.IonTableWidget import IonTableWidget, TickIonTableWidget
+from src.gui.ResultView import SimplePeakView
+from src.gui.SpectrumView import SpectrumView
 
 
 class LoadingWidget(QtWidgets.QWidget):

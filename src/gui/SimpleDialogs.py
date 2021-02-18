@@ -8,7 +8,7 @@ from src import path
 from src.Exceptions import UnvalidInputException
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.Services import FragmentIonService, ModificationService, SequenceService
-from src.views.StartDialogs import OpenFileWidget
+from src.gui.StartDialogs import OpenFileWidget
 
 dataPath = join(path, 'src', 'data')
 

@@ -14,7 +14,7 @@ from PyQt5 import QtWidgets
 
 from src.Exceptions import UnvalidIsotopePatternException
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
-#from src.views.ParameterDialogs import TDStartDialog
+#from src.gui.ParameterDialogs import TDStartDialog
 from src.repositories.IsotopePatternRepository import IsotopePatternReader
 from src.top_down.Analyser import Analyser
 from src.top_down.LibraryBuilder import FragmentLibraryBuilder

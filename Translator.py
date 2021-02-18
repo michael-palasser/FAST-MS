@@ -254,7 +254,7 @@ def writeIntactModifs():
     modifications = readIntactModifs()
     try:
         for key,val in modifications.items():
-            service.savePattern(IntactPattern(key, "H1", "O2P1", val, None))
+            service.save(IntactPattern(key, val, None))
     except:
         traceback.print_exc()
     finally:
@@ -302,4 +302,4 @@ fragPath = join(path, 'Parameters', 'protein-fragmentation','ECD.txt')
 
 #writeModifications()"""
 
-#writeIntactModifs()
+writeIntactModifs()

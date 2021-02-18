@@ -25,12 +25,12 @@ from src.top_down.LibraryBuilder import FragmentLibraryBuilder
 from src.top_down.SpectrumHandler import SpectrumHandler
 from src.top_down.IntensityModeller import IntensityModeller
 from src.top_down.ExcelWriter import ExcelWriter
-from src.views.CheckIonView import CheckMonoisotopicOverlapView, CheckOverlapsView
-from src.views.ResultView import IonTableModel, PeakView, PlotTableView
-from src.views.SequencePlots import PlotFactory
-from src.views.SimpleDialogs import ExportDialog
-from src.views.ParameterDialogs import TDStartDialog
-from src.views.SpectrumView import SpectrumView
+from src.gui.CheckIonView import CheckMonoisotopicOverlapView, CheckOverlapsView
+from src.gui.ResultView import IonTableModel, PeakView, PlotTableView
+from src.gui.SequencePlots import PlotFactory
+from src.gui.SimpleDialogs import ExportDialog
+from src.gui.ParameterDialogs import TDStartDialog
+from src.gui.SpectrumView import SpectrumView
 
 
 def sortIonsByName(ionList):

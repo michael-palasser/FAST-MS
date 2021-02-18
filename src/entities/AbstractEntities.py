@@ -120,6 +120,8 @@ class AbstractItem1(ABC):
                 formulaDict[element] += number * sign
             else:
                 formulaDict[element] = number * sign
+        if len(formulaDict)<1:
+            raise UnvalidInputException(formulaString, "Unvalid format of formula")
         return formulaDict
 
 

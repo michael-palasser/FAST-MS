@@ -8,7 +8,7 @@ from src import path
 from src.Exceptions import UnvalidInputException
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.Services import FragmentIonService, ModificationService, SequenceService
-from src.views.StartDialogs import OpenFileWidget
+from src.gui.StartDialogs import OpenFileWidget
 
 dataPath = join(path, 'src', 'data')
 
@@ -162,9 +162,9 @@ class StartDialog(AbstractDialog):
             newSettings['spectralData'] += '.txt'
         try:
             newSettings = self.checkValues(newSettings)
-        except UnvalidInputException:
+        except UnvalidInputException as e:
             traceback.print_exc()
-            QMessageBox.warning(self, "Problem occured", traceback.format_exc(), QMessageBox.Ok)
+            QMessageBox.warning(self, "Problem occured", e.__str__(), QMessageBox.Ok)
         return newSettings
 
     def checkValues(self, configs, *args):

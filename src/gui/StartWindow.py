@@ -3,20 +3,22 @@ Created on 20 Oct 2020
 
 @author: michael
 '''
-import sys
+import traceback
 
-from PyQt5 import QtCore
-from PyQt5.QtCore import QCoreApplication
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import QApplication, QWidget, QMainWindow, QPushButton, QAction
+from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QAction
 
-from src.views.EditorController import *
-from src.views.ParameterDialogs import TD_configurationDialog, IntactStartDialog
+from src.gui.IsotopePatternController import IsotopePatternController
+from src.gui.EditorController import *
+from src.gui.ParameterDialogs import TD_configurationDialog, IntactStartDialog
 from src.top_down.ModellingTool import main as modellingTool
 from src.top_down.OccupancyRecalculator import run as occupancyRecalculator
 from src.top_down.SpectrumComparator import run as spectrumComparator
 from src.intact.Main import run as IntactIonsSearch
-from src.top_down.TD_searchController import TD_MainController
+from src.gui.TD_searchController import TD_MainController
+
+
+class UnvalidInputException(object):
+    pass
 
 
 class Window(QMainWindow):
@@ -44,30 +46,35 @@ class Window(QMainWindow):
 
     def home(self):
         self.addActionToStatusBar(self.tdMenu, 'Analyse Spectrum',
-                                  'Starts analysis of top-down spectrum', lambda:TD_MainController(self))
-        self.addActionToStatusBar(self.tdMenu, 'FragmentIon Modelling',
-                                  'Models relative abundance of an isotope distribution', modellingTool)
+                              'Starts analysis of top-down spectrum', lambda:TD_MainController(self))
+        self.addActionToStatusBar(self.tdMenu, 'Isotope Pattern Tool',
+                              'Calculates isotope pattern of an ion', lambda:IsotopePatternController(self))
+        self.addActionToStatusBar(self.tdMenu, 'Calc. Abundances',
+                              'Calculates relative abundances of an ion list', modellingTool)
         self.addActionToStatusBar(self.tdMenu, 'Calculate Occupancies',
-                                  'Calculates occupancies of a given ion list', occupancyRecalculator)
+                              'Calculates occupancies of a given ion list', occupancyRecalculator)
         self.addActionToStatusBar(self.tdMenu, 'Compare Analysis',
-                                  'Compares the ion lists of multiple spectra', lambda: spectrumComparator(self))
+                              'Compares the ion lists of multiple spectra', lambda: spectrumComparator(self))
         self.addActionToStatusBar(self.tdEditMenu, 'Edit Parameters',
-                                  'Edit configurations',self.editTopDownConfig)
+                              'Edit configurations',self.editTopDownConfig)
         self.addActionToStatusBar(self.tdEditMenu, 'Edit Fragments',
-                                  'Edit fragment patterns',FragmentEditorController)
+                              'Edit fragment patterns', lambda:self.editData(FragmentEditorController))
         self.addActionToStatusBar(self.tdEditMenu, 'Edit Modifications',
-                                  'Edit modification/ligand patterns',ModificationEditorController)
+                              'Edit modification/ligand patterns',lambda:self.editData(ModificationEditorController))
         self.addActionToStatusBar(self.esiMenu, 'Analyse spectrum',
-                                  'Starts analysis of intact spectrum', IntactIonsSearch)
+                              'Starts analysis of intact spectrum', lambda:self.editData(IntactIonsSearch))
         self.addActionToStatusBar(self.esiMenu, 'Edit Ions',
-                                  'Edit Intact Ions', IntactIonEditorController)
-        self.addActionToStatusBar(self.dataEdit, 'Elements','Edit element table ', ElementEditorController)
-        self.addActionToStatusBar(self.dataEdit, 'Molecules','Edit Molecular Properties', MoleculeEditorController)
-        self.addActionToStatusBar(self.dataEdit, 'Sequences','Edit stored sequences', SequenceEditorController)
+                              'Edit Intact Ions', lambda:self.editData(IntactIonEditorController))
+        self.addActionToStatusBar(self.dataEdit, 'Elements','Edit element table ',
+                              lambda:self.editData(ElementEditorController))
+        self.addActionToStatusBar(self.dataEdit, 'Molecules','Edit Molecular Properties',
+                              lambda:self.editData(MoleculeEditorController))
+        self.addActionToStatusBar(self.dataEdit, 'Sequences','Edit stored sequences',
+                              lambda:self.editData(SequenceEditorController))
         xPos = self.createButton('Analyse top-down\nspectrum','Starts analysis of top-down spectrum',40,
-                                  lambda:TD_MainController(self))
-        xPos = self.createButton('Analyse spectrum\nof intact molecule', 'Starts analysis of normal intact spectrum', xPos,
-                          self.startIntactIonSearch)
+                              lambda:TD_MainController(self))
+        xPos = self.createButton('Analyse spectrum\nof intact molecule', 'Starts analysis of normal intact spectrum',
+                             xPos, self.startIntactIonSearch)
         self.setGeometry(50, 50, xPos+40, 230)
         self.show()
 
@@ -98,6 +105,12 @@ class Window(QMainWindow):
         dialog = TD_configurationDialog(self)
         dialog.exec_()
 
+    def editData(self, controller):
+        controller()
+        '''except UnvalidInputException:
+            traceback.print_exc()
+            print('hey')
+            QtWidgets.QMessageBox.warning(self, "Problem occured", traceback.format_exc(), QtWidgets.QMessageBox.Ok)'''
 
 def run():
     app = QApplication(sys.argv)

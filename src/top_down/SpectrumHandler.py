@@ -213,11 +213,12 @@ class SpectrumHandler(object):
                 return None
             #probableZ = fragment.formula.formulaDict['P'] * self.normalizationFactor
         elif molecule == 'Protein':
-            probableZ = self.getChargeScore(fragment) * self.normalizationFactor
+            #probableZ = self.getChargeScore(fragment) * self.normalizationFactor
+            probableZ = len(self.__sequList) * self.normalizationFactor
         elif molecule in ['RNA' ,'DNA'] and self.__sprayMode == 1:
-            probableZ = fragment.number * self.normalizationFactor
+            probableZ = len(self.__sequList) * self.normalizationFactor
         else:
-            probableZ = fragment.number * self.normalizationFactor
+            probableZ = len(self.__sequList) * self.normalizationFactor
         probableZ -= fragment.radicals
         tolerance = configs['zTolerance']
         lowZ, highZ = 1, self.__charge

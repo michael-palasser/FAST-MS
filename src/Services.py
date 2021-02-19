@@ -307,7 +307,7 @@ class ModificationService(AbstractServiceForPatterns):
         if name == '-':
             return ModificationPattern("", "", [],[], None)
         else:
-            return super(ModificationService, self).getPatternWithObjects(name, *args)
+            return super(ModificationService, self).getPatternWithObjects(name, ModifiedItem)
 
 
 

@@ -209,7 +209,7 @@ class MolecularFormula(object):
             monoisotopic += val*monoMass"""
         return monoisotopic
 
-    def calculateTestIsotopePattern(self, maxIso): #ToDo
+    def calcIsotopePatternSlowly(self, *args): #ToDo
         '''
         Calculates isotope patterns based on molecular formulas
         :return: isotope pattern1 (structured numpy array: [(mass,relative Abundance)])
@@ -227,10 +227,24 @@ class MolecularFormula(object):
             isotopeTable = self.makeIsotopeTable()
         isotopeTable = isotopeTable.astype([('index',np.int32), ('nr',np.int32), ('nrIso',np.int32),
              ('relAb',np.float64), ('mass',np.float64), ('M+',np.int32)])
-        for isoPeak in range(maxIso):
-            sf.setIsotopeTable(isotopeTable)
-            ultrafineStruct = np.array(calculate(isoPeak, isotopeTable))
-            prop = np.sum(ultrafineStruct[:,1])
-            M_iso = np.sum(ultrafineStruct[:,0]*ultrafineStruct[:,1])/prop
-            isotope_pattern.append((M_iso,prop))
+        if args and args[0]:
+            for isoPeak in range(args[0]):
+                sf.setIsotopeTable(isotopeTable)
+                ultrafineStruct = np.array(calculate(isoPeak, isotopeTable))
+                prop = np.sum(ultrafineStruct[:,1])
+                M_iso = np.sum(ultrafineStruct[:,0]*ultrafineStruct[:,1])/prop
+                isotope_pattern.append((M_iso,prop))
+        else:
+            mostAbundant=10**(-10)
+            prop = 1
+            isoPeak=0
+            while (prop / mostAbundant > 0.02):  # ToDo:Parameter
+                setIsotopeTable(isotopeTable)
+                ultrafineStruct = np.array(calculate(isoPeak, isotopeTable))
+                prop = np.sum(ultrafineStruct[:, 1])
+                M_iso = np.sum(ultrafineStruct[:, 0] * ultrafineStruct[:, 1]) / prop
+                isotope_pattern.append((M_iso, prop))
+                isoPeak += 1
+                if prop > mostAbundant:
+                    mostAbundant = prop
         return np.array(isotope_pattern, dtype=[('m/z',np.float64),('calcInt', np.float64)])

@@ -11,7 +11,7 @@ import copy
 
 from scipy.constants import R
 
-from src.data.Constants import E_MASS, P_MASS
+from scipy.constants import electron_mass, proton_mass
 from src.entities.Ions import FragmentIon
 from src import path
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
@@ -25,8 +25,6 @@ class SpectrumHandler(object):
     '''
     Reads spectra, calculates noise and finds peaks in __spectrum
     '''
-    protonMass = 1.00727647
-    eMass = 5.48579909065 * 10 ** (-4)
     #ToDo:
     basicAA = {'H': 3, 'R': 10, 'K': 10,
                'D': 0.5, 'E': 0.5}
@@ -103,7 +101,7 @@ class SpectrumHandler(object):
 
     def getMz(self, mass, z, radicals):
         #print(z ,mass/z + self.protonMass*self.mode)
-        return mass/z + self.protonMass*self.__sprayMode + radicals*(E_MASS + P_MASS)
+        return mass/z + proton_mass*self.__sprayMode + radicals*(electron_mass + proton_mass)
 
 
     def findUpperBound(self):

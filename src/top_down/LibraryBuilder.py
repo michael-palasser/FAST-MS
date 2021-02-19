@@ -7,7 +7,7 @@ import re
 from multiprocessing import Pool
 
 from src.MolecularFormula import MolecularFormula
-from src.data.Constants import E_MASS
+from scipy.constants import electron_mass
 from src.entities.GeneralEntities import BuildingBlock
 from src.entities.Ions import Fragment
 from src.entities.IonTemplates import FragItem, ModifiedItem, PrecursorItem

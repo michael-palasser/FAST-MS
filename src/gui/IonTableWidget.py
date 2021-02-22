@@ -6,6 +6,7 @@ from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QTableWidget
 from math import log10
 
+from src.Exceptions import UnvalidInputException
 
 
 class IonTableWidget(QTableWidget):
@@ -101,6 +102,39 @@ class IonTableWidget(QTableWidget):
             if ion.getName() == self.item(row, 3).text() and ion.charge == int(self.item(row, 1).text()):
                 return ion
 
+
+class IsoPatternIon(IonTableWidget):
+    def getHeaders(self):
+        return ['m/z','z','intensity','fragment','quality']
+
+    def fill(self, row, ion):
+        for j, item in enumerate(ion):
+            if j == 3:
+                newItem = QtWidgets.QTableWidgetItem(str(item))
+                newItem.setTextAlignment(QtCore.Qt.AlignLeft)
+                newItem.setFlags(QtCore.Qt.ItemIsEnabled)
+            else:
+                newItem = QtWidgets.QTableWidgetItem()
+                newItem.setTextAlignment(QtCore.Qt.AlignRight)
+                if j == 2:
+                    formatString = self._format[2]
+                    if item >= 10 ** 13:
+                        lg10 = str(int(log10(item) + 1))
+                        formatString = '{:' + lg10 + 'd}'
+                    newItem.setData(QtCore.Qt.DisplayRole, formatString.format(item))
+                else:
+                    newItem.setData(QtCore.Qt.DisplayRole, self._format[j].format(item))
+                    newItem.setFlags(QtCore.Qt.ItemIsEnabled)
+            self.setItem(row, j, newItem)
+        self.resizeRowsToContents()
+
+    def getIntensity(self):
+        if self._ions == ((),):
+            return 100
+        try:
+            return int(self.item(0,2).text())
+        except ValueError:
+            raise UnvalidInputException('Unvalid Intensity', self.item(0,2).text())
 
 class TickIonTableWidget(IonTableWidget):
     def __init__(self, parent, data, yPos):

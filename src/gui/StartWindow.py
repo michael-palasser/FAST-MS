@@ -7,7 +7,7 @@ import traceback
 
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QAction
 
-from src.gui.IsotopePatternController import IsotopePatternController
+from src.gui.IsotopePatternController import IsotopePatternController, IsotopePatternView
 from src.gui.EditorController import *
 from src.gui.ParameterDialogs import TD_configurationDialog, IntactStartDialog
 from src.top_down.ModellingTool import main as modellingTool
@@ -48,7 +48,7 @@ class Window(QMainWindow):
         self.addActionToStatusBar(self.tdMenu, 'Analyse Spectrum',
                               'Starts analysis of top-down spectrum', lambda:TD_MainController(self))
         self.addActionToStatusBar(self.tdMenu, 'Isotope Pattern Tool',
-                              'Calculates isotope pattern of an ion', lambda:IsotopePatternController(self))
+                              'Calculates isotope pattern of an ion', lambda:IsotopePatternView(self))
         self.addActionToStatusBar(self.tdMenu, 'Calc. Abundances',
                               'Calculates relative abundances of an ion list', modellingTool)
         self.addActionToStatusBar(self.tdMenu, 'Calculate Occupancies',

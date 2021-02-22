@@ -437,11 +437,11 @@ class PeakView(QtWidgets.QMainWindow):
 
 
 
-class PeakWidget(QtWidgets.QTableWidget):
-    def __init__(self, parent, peaks):
-        super(PeakWidget, self).__init__(parent)
-        self.headers = ('m/z','int. (spectrum)','int. (calc.)','error /ppm', 'used')
-        self._format = ('{:10.5f}','{:11d}', '{:11d}', '{:4.2f}', '')
+class GeneralPeakWidget(QtWidgets.QTableWidget):
+    def __init__(self, parent, headers, format, peaks):
+        super(GeneralPeakWidget, self).__init__(parent)
+        self.headers = headers
+        self._format = format
         self._peaks = peaks
         self.setWindowTitle('')
         self.setColumnCount(len(self.headers))
@@ -469,7 +469,7 @@ class PeakWidget(QtWidgets.QTableWidget):
                     newItem.setData(QtCore.Qt.DisplayRole, formatString.format(item))
                     if j==2:
                         newItem.setFlags(QtCore.Qt.ItemIsEnabled)
-                elif j==4:
+                elif j==len(peak)-1:
                     newItem = QtWidgets.QTableWidgetItem()
                     if item:
                         newItem.setCheckState(QtCore.Qt.Checked)
@@ -502,6 +502,18 @@ class PeakWidget(QtWidgets.QTableWidget):
         self._peaks = peaks
         self.fill()
 
+
+class PeakWidget(GeneralPeakWidget):
+    def __init__(self, parent, peaks):
+        super(PeakWidget, self).__init__(parent, ('m/z','int. (spectrum)','int. (calc.)','error /ppm', 'used'),
+                                         ('{:10.5f}','{:11d}', '{:11d}', '{:4.2f}', ''), peaks)
+
+class IsoPatternPeakWidget(GeneralPeakWidget):
+    def __init__(self, parent, peaks):
+        super(IsoPatternPeakWidget, self).__init__(parent, ('m/z','int. (spectrum)','int. (calc.)', 'used'),
+                                         ('{:10.5f}','{:11d}', '{:11d}', ''), peaks)
+
+
 class PlotTableModel(AbstractTableModel):
     def __init__(self, data, keys, precision):
         self.ionTypes = len(keys)
@@ -522,6 +534,8 @@ class PlotTableModel(AbstractTableModel):
                 elif isnan(item):
                     return ''
                 return self._format[col].format(item)
+
+
 
 class PlotTableView(QtWidgets.QWidget):
     def __init__(self, data, keys, title, precision):

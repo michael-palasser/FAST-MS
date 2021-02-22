@@ -11,7 +11,7 @@ import copy
 
 from scipy.constants import R
 
-from scipy.constants import electron_mass, proton_mass
+from scipy.constants import electron_mass, proton_mass, N_A
 from src.entities.Ions import FragmentIon
 from src import path
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
@@ -20,6 +20,9 @@ configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
 
 def getErrorLimit(mz):
     return configs['k']/1000 * mz + configs['d']
+
+eMass = electron_mass*N_A*1000
+protMass = proton_mass *N_A*1000
 
 class SpectrumHandler(object):
     '''
@@ -99,9 +102,10 @@ class SpectrumHandler(object):
         self.__spectrum = self.__spectrum[np.where(self.__spectrum[:, 0] < (self.findUpperBound() + 10))]
         print("\nmax m/z:", self.__upperBound)
 
-    def getMz(self, mass, z, radicals):
+    @staticmethod
+    def getMz(mass, z, radicals):
         #print(z ,mass/z + self.protonMass*self.mode)
-        return mass/z + proton_mass*self.__sprayMode + radicals*(electron_mass + proton_mass)
+        return abs(mass/z + protMass) + radicals*(eMass + protMass)
 
 
     def findUpperBound(self):
@@ -251,7 +255,7 @@ class SpectrumHandler(object):
                 #if self.__settings['dissociation'] in ['ECD', 'EDD', 'ETD'] and fragment.number == 0:
                 #    theoreticalPeaks['mass'] += ((self.protonMass-self.eMass) * (self.__charge - z))
                     #print("heeeeee\n",fragment.getName(),z, theoreticalPeaks['mass'])
-                theoreticalPeaks['m/z'] = self.getMz(theoreticalPeaks['m/z'], z, fragment.radicals)
+                theoreticalPeaks['m/z'] = self.getMz(theoreticalPeaks['m/z'], z * self.__sprayMode, fragment.radicals)
                 if (configs['lowerBound'] < theoreticalPeaks[0]['m/z'] < self.__upperBound):
                     self.searchedChargeStates[fragment.getName()].append(z)
                     #make a guess of the ion abundance based on number in range

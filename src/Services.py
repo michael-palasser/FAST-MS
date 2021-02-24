@@ -1,12 +1,10 @@
 from abc import ABC
 
 from src.entities.GeneralEntities import Makromolecule, Element, BuildingBlock
-from src.Exceptions import UnvalidInputException
-import numpy as np
 from src.repositories.TD_Repositories import *
 from src.repositories.MoleculeRepository import MoleculeRepository
 from src.repositories.PeriodicTableRepository import PeriodicTableRepository
-from src.repositories.SequenceRepository import SequenceRepository, Sequence
+from src.repositories.SequenceRepository import SequenceRepository
 from src.repositories.IntactRepository import *
 from src.entities.IonTemplates import *
 

@@ -4,6 +4,7 @@ from functools import partial
 from math import log10, isnan
 import numpy as np
 
+from src.Exceptions import UnvalidInputException
 from src.gui.IonTableWidget import IonTableWidget
 
 try:
@@ -140,7 +141,8 @@ class PeakTableModel(AbstractTableModel):
         #self._format = ['{:10.5f}', '{:11d}', '{:11d}','{:4.2f}', '']
 
     def flags(self, index):
-        return QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
+        return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
+
 
     def data(self, index, role):
         if index.isValid():
@@ -368,7 +370,7 @@ class SimplePeakView(QtWidgets.QWidget):
         copyAction = menu.addAction("Copy Table")
         action = menu.exec_(table.viewport().mapToGlobal(pos))
         if action == copyAction:
-            df=pd.DataFrame(data=self._peaks, columns=self.headers)
+            df=pd.DataFrame(data=self._peaks, columns=self.table.model().getHeaders())
             df.to_clipboard(index=False,header=True)
 
 
@@ -429,7 +431,7 @@ class PeakView(QtWidgets.QMainWindow):
             del self._ionTable
             self._ionTable =  IonTableWidget(self.centralWidget(),(self._ion,),30)
             self._verticalLayout.insertWidget(1, self._ionTable)
-            self.intInfo.setText(self._translate(self.objectName(), str(self._ion.getIntensity())))
+            #self.intInfo.setText(self._translate(self.objectName(), str(self._ion.getIntensity())))
 
     def saveIon(self):
         self.save(self._ion)
@@ -489,7 +491,10 @@ class GeneralPeakWidget(QtWidgets.QTableWidget):
         copyAction = menu.addAction("Copy Table")
         action = menu.exec_(table.viewport().mapToGlobal(pos))
         if action == copyAction:
+            #peaks.astype(float)
             df=pd.DataFrame(data=self._peaks, columns=self.headers)
+            df['int. (spectrum)']= self._peaks['relAb']
+            df['int. (calc.)']= self._peaks['calcInt']
             df.to_clipboard(index=False,header=True)
 
     def readTable(self):
@@ -502,6 +507,8 @@ class GeneralPeakWidget(QtWidgets.QTableWidget):
         self._peaks = peaks
         self.fill()
 
+    def getPeaks(self):
+        return self._peaks
 
 class PeakWidget(GeneralPeakWidget):
     def __init__(self, parent, peaks):
@@ -512,7 +519,17 @@ class IsoPatternPeakWidget(GeneralPeakWidget):
     def __init__(self, parent, peaks):
         super(IsoPatternPeakWidget, self).__init__(parent, ('m/z','int. (spectrum)','int. (calc.)', 'used'),
                                          ('{:10.5f}','{:11d}', '{:11d}', ''), peaks)
-
+    def readTable(self):
+        itemList = []
+        for row in range(self.rowCount()):
+            try:
+                intensity = 0
+                if self.item(row, 1).text() != '':
+                    intensity = int(self.item(row, 1).text())
+                itemList.append((intensity, int(self.item(row, 3).checkState()/2)==1, float(self.item(row, 0).text())))
+            except ValueError:
+                raise UnvalidInputException('Intensities must be numbers',self.item(row, 1).text())
+        return itemList
 
 class PlotTableModel(AbstractTableModel):
     def __init__(self, data, keys, precision):

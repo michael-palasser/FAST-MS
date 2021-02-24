@@ -105,7 +105,10 @@ class SpectrumHandler(object):
     @staticmethod
     def getMz(mass, z, radicals):
         #print(z ,mass/z + self.protonMass*self.mode)
-        return abs(mass/z + protMass) + radicals*(eMass + protMass)
+        if z != 0:
+            return abs(mass/z + protMass) + radicals*(eMass + protMass)
+        else:
+            return abs(mass) + radicals*(eMass + protMass)
 
 
     def findUpperBound(self):

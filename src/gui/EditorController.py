@@ -7,6 +7,7 @@ import sys
 
 
 from src.Services import *
+from src.entities.GeneralEntities import Sequence
 
 
 class AbstractSimpleEditorController(ABC):

@@ -132,7 +132,7 @@ class TD_MainController(object):
             else:
                 return 1
         self._analyser = Analyser(None, self._propStorage.getSequenceList(),
-                                 self.settings['charge'], self._propStorage.getModification())
+                                 self.settings['charge'], self._propStorage.getModificationName())
         print("done")
         return 0
 
@@ -293,9 +293,6 @@ class TD_MainController(object):
                 print(actionStrings[mode]+"d",selectedRow, selectedHash)
 
 
-
-
-
     def saveSingleIon(self, newIon):
         newIonHash = self._intensityModeller.getHash(newIon)
         if newIonHash in self._intensityModeller.getObservedIons():
@@ -430,9 +427,9 @@ class TD_MainController(object):
                 return
 
         plotFactory = PlotFactory(self.mainWindow)
-        forwardVals = self.libraryBuilder.filterByDir(percentageDict,1)
-        backwardVals = self.libraryBuilder.filterByDir(percentageDict,-1)
-        plotFactory.showOccupancyPlot(self.libraryBuilder.getSequenceList(), forwardVals, backwardVals,
+        forwardVals = self._propStorage.filterByDir(percentageDict,1)
+        backwardVals = self._propStorage.filterByDir(percentageDict,-1)
+        plotFactory.showOccupancyPlot(self._propStorage.getSequenceList(), forwardVals, backwardVals,
                                       self.settings['nrMod'])
         self.occupView = PlotTableView(self._analyser.toTable(forwardVals.values(), backwardVals.values()),
                                        list(percentageDict.keys()), 'Occupancies', 3)
@@ -443,9 +440,9 @@ class TD_MainController(object):
         chargeDict, redChargeDict = self._analyser.getAvCharges(self.configs['interestingIons'])
         plotFactory1 = PlotFactory(self.mainWindow)
         #plotFactory2 = PlotFactory(self.mainWindow)
-        forwardVals = self.libraryBuilder.filterByDir(chargeDict,1)
-        backwardVals = self.libraryBuilder.filterByDir(chargeDict,-1)
-        plotFactory1.showChargePlot(self.libraryBuilder.getSequenceList(), forwardVals, backwardVals,
+        forwardVals = self._propStorage.filterByDir(chargeDict,1)
+        backwardVals = self._propStorage.filterByDir(chargeDict,-1)
+        plotFactory1.showChargePlot(self._propStorage.getSequenceList(), forwardVals, backwardVals,
                                     self.settings['charge'])
 
         self.chargeView = PlotTableView(self._analyser.toTable(forwardVals.values(), backwardVals.values()),

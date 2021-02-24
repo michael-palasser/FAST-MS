@@ -1,4 +1,3 @@
-import numpy as np
 import copy
 
 from src.fastFunctions import *
@@ -84,13 +83,14 @@ class MolecularFormula(object):
         '''
         :return: String of molecular formula
         '''
-        returnedString = 'C' + str(self.formulaDict['C']) + 'H' + str(self.formulaDict['H'])
+        #returnedString = 'C' + str(self.formulaDict['C']) + 'H' + str(self.formulaDict['H'])
+        returnedString = ''
         for element in sorted(list(self.formulaDict.keys())):
-            if element in ['C','H']:
-                continue
-            else:
-                if self.formulaDict[element] > 0:
-                    returnedString += element + str(self.formulaDict[element])
+            #if element in ['C','H']:
+            #    continue
+            #else:
+            if self.formulaDict[element] > 0:
+                returnedString += element + str(self.formulaDict[element])
         return returnedString
 
 

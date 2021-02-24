@@ -111,7 +111,6 @@ class IntensityModeller(object):
 
 
     def modelIon(self, ion):
-
         noOutliers = np.where(ion.isotopePattern['used'])
         ion.error = np.average(ion.isotopePattern['error'][np.where(ion.isotopePattern['relAb'][noOutliers] != 0)])
         solution, ion.intensity, gValue, outliers = \
@@ -427,3 +426,21 @@ class IntensityModeller(object):
         ion.isotopePattern['relAb'] = values[:,0]
         ion.isotopePattern['used'] = values[:,1]
         return self.modelIon(ion)[0]
+
+    def modelSimply(self, peakArray):
+        '''
+
+        :param peakArray: m/z,relAb,calcInt,used
+        :return:
+        '''
+        noOutliers = np.where(peakArray['used'])
+        solution, intensity, gValue, outliers = \
+            self.modelDistribution(peakArray['relAb'][noOutliers], peakArray['calcInt'][noOutliers],
+                                   peakArray['m/z'][noOutliers])
+        peakArray['calcInt'] = np.around(peakArray['calcInt'] * solution.x)
+        print('modelled',peakArray, intensity)
+        if intensity != 0:
+            quality = solution.fun ** (0.5) / intensity
+            return peakArray, intensity, quality
+        else:
+            return peakArray, intensity, 0

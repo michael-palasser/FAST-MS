@@ -6,12 +6,14 @@ import numpy as np
 from src.MolecularFormula import MolecularFormula
 from src.Services import *
 from src.entities.AbstractEntities import AbstractItem1
+from src.entities.GeneralEntities import Sequence
 from src.gui.IonTableWidget import IsoPatternIon
 from src.gui.ResultView import IsoPatternPeakWidget
 from src.gui.SpectrumView import TheoSpectrumView
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.top_down.IntensityModeller import IntensityModeller
 from src.top_down.SpectrumHandler import SpectrumHandler
+from src.intact.LibraryBuilder import IntactLibraryBuilder
 
 
 class IsotopePatternController(object):
@@ -20,6 +22,7 @@ class IsotopePatternController(object):
         self._fragService = FragmentIonService()
         self._modService = ModificationService()
         self._elements = PeriodicTableService().getAllPatternNames()
+        self._molecules = self._moleculeService.getAllPatternNames()
         self._intensityModeller = IntensityModeller(ConfigurationHandlerFactory.getTD_ConfigHandler().getAll())
         self._peakDtype = np.dtype([('m/z', np.float64), ('relAb', np.int32), ('calcInt', np.int32), ('used', np.bool_)])
         #self._peakDtype = np.dtype([('m/z', float), ('relAb', float), ('calcInt', float), ('used', np.bool_)])
@@ -28,7 +31,7 @@ class IsotopePatternController(object):
         self._isotopePattern = None
 
     def getMolecules(self):
-        return ['mol. formula']+self._moleculeService.getAllPatternNames()
+        return ['mol. formula']+self._molecules
 
     def getFragmentationNames(self):
         return self._fragService.getAllPatternNames()
@@ -39,7 +42,7 @@ class IsotopePatternController(object):
     def getFragItems(self, fragmentationName):
         return [fragTemplate.getName() for fragTemplate in
                 self._fragService.getPatternWithObjects(fragmentationName).getItems()],\
-               [precTemplate.getName() for precTemplate in
+               ['intact']+[precTemplate.getName() for precTemplate in
                 self._fragService.getPatternWithObjects(fragmentationName).getItems2()]
 
 
@@ -47,9 +50,11 @@ class IsotopePatternController(object):
         return [modTemplate.getName() for modTemplate in
                 self._modService.getPatternWithObjects(modifPatternName).getItems()]
 
-    def calculate(self, formulaString, charge, radicals, intensity):
-        formula = self.checkFormula(formulaString)
-        formula = MolecularFormula(formula)
+    def calculate(self, mode, inputString, charge, radicals, intensity, *args):
+        if mode == self.getMolecules()[0]:
+            formula = MolecularFormula(self.checkFormula(inputString))
+        else:
+            formula = self.getFormula(mode, inputString, args[0], args[1], args[2], args[3])
         if formula != self._formula:
             if formula.calcIsotopePatternSlowly(1)['m/z'][0]>6000:
                 self._isotopePattern = formula.calculateIsotopePattern()
@@ -73,6 +78,32 @@ class IsotopePatternController(object):
             if key not in self._elements:
                 print("Element: " + key + " unknown")
                 raise UnvalidInputException(formulaString, ", Element: " + key + " unknown")
+        return formula
+
+    def getFormula(self, molecule, sequString, fragmentationName, fragTemplName, modifPatternName, modifName):
+        molecule = self._moleculeService.get(molecule)
+        sequenceList = Sequence("",sequString,molecule.getName(),0).getSequenceList()
+        #formula = MolecularFormula(molecule.getFormula())
+        buildingBlocks = molecule.getBBDict()
+        formula = MolecularFormula({})
+        for link in sequenceList:
+            formula = formula.addFormula(buildingBlocks[link].getFormula())
+        fragmentation = self._fragService.getPatternWithObjects(fragmentationName)
+        if fragTemplName in (['intact']+[precTempl.getName() for precTempl in fragmentation.getItems2()]):
+            formula = formula.addFormula(molecule.getFormula())
+            if fragTemplName != 'intact':
+                fragTempl = [precTempl for precTempl in fragmentation.getItems2() if precTempl.getName()==fragTemplName][0]
+            else:
+                fragTempl = PrecursorItem(("", "", "", "", 0, True))
+            #name = 'intact'+ fragTempl.getName()
+        else:
+            fragTempl = [fragTempl for fragTempl in fragmentation.getItems() if fragTempl.getName()==fragTemplName][0]
+            #name = fragTempl.getName()+len(sequenceList)
+        formula = formula.addFormula(fragTempl.getFormula())
+        if modifPatternName != '-':
+            modPattern = self._modService.getPatternWithObjects(modifPatternName)
+            modif = [modif for modif in modPattern.getItems() if modif.getName()==modifName][0]
+            formula = formula.addFormula(modif.getFormula())
         return formula
 
     def model(self, peaks):
@@ -231,8 +262,14 @@ class IsotopePatternView(QtWidgets.QMainWindow):
         try:
             charge = int(self.charge.text())
             self._intensity = self._ionTable.getIntensity()
-            peaks, formula, neutralMass= self._controller.calculate(self.inputForm.text(),charge, int(self.radicals.text()),
-                                                        self._intensity)
+            if self.modeBox.currentIndex() == 0:
+                peaks, formula, neutralMass= self._controller.calculate(self.modeBox.currentText(),
+                                            self.inputForm.text(), charge, int(self.radicals.text()), self._intensity)
+            else:
+                peaks, formula, neutralMass= self._controller.calculate(self.modeBox.currentText(),
+                                        self.inputForm.text(), charge, int(self.radicals.text()), self._intensity,
+                                        self.fragmentationBox.currentText(), self.fragmentBox.currentText(),
+                                        self.modPatternBox.currentText(), self.modifBox.currentText())
         except UnvalidInputException as e:
             QtWidgets.QMessageBox.warning(self, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
             return

@@ -136,10 +136,10 @@ class OpenFileWidget(QtWidgets.QWidget):
         #files = self.openFileNamesDialog(self.__title, self.__formats)
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
-        if mode == 1:
+        if mode == 2:
             files, _ = QFileDialog.getOpenFileNames(self, self.__title, self.__startPath, self.__formats, options=options)
             self.lineEdit.setText(',  '.join(files))
-        elif mode == 2:
+        elif mode == 1:
             file, _ = QFileDialog.getOpenFileName(self, self.__title, self.__startPath, self.__formats, options=options)
             self.lineEdit.setText(file)
         else:

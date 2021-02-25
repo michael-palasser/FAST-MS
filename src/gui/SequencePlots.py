@@ -23,6 +23,7 @@ class PlotFactory(object):
         self._forwardVals = forwardVals
         self._backwardVals = backwardVals
         self._sequence = sequence
+        self._maxY = maxY
         #self._translate = QtCore.QCoreApplication.translate
         #self.plotWdw.resize(len(sequence) * 30 + 200, 400)
         self.p = pg.plot()
@@ -36,7 +37,7 @@ class PlotFactory(object):
         self.p2.setYLink(self.p)
         styles = {"black": "#f00", "font-size": "20px"}
         self.p.setLabel('bottom', 'cleavage site', **styles)
-        yRange = [-maxY*0.05,maxY*1.05]
+        yRange = [-self._maxY*0.05,self._maxY*1.05]
         self.p.setXRange(0.02, len(self._sequence)+0.02)
         self.p.plotItem.vb.setLimits(xMin=0,xMax=len(self._sequence)+0.01, yMin=yRange[0], yMax=yRange[1])
         self.p2.setLimits(xMin=0,xMax=len(self._sequence)+0.01, yMin=yRange[0], yMax=yRange[1])
@@ -98,7 +99,7 @@ class PlotFactory(object):
         for key, vals in currentDict.items():
             name = key + '-ions'
             if parent!=self.p:
-                vals = [1-val for val in vals]
+                vals = [self._maxY-val for val in vals]
             scatter = pg.ScatterPlotItem(x=xVals, y=vals, symbol=markers[i],
                                          pen =pg.mkPen(color=colours[i], width=2),
                                          brush=(0,0,0,0), size=10, pxMode=True, name = name)
@@ -107,8 +108,8 @@ class PlotFactory(object):
            # parent.addItem(curve)
             self.p.addItem(scatter)
             self.p.addItem(curve)
-            if parent != self.p:
-                self.p.plotItem.legend.addItem(scatter, name)
+            #if parent != self.p:
+            #    self.p.plotItem.legend.addItem(scatter, name)
             #self.graphWidget.plot(xVals, vals, pen=pen, )
             #self.p.plotItem.legend.addItem(i,key)
             i+=1

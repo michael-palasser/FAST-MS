@@ -165,10 +165,12 @@ class TD_MainController(object):
         self.createMenu("Edit", {'Repeat ovl. modelling': self.repeatModellingOverlaps},
                         ['Repeat overlap modelling involving user inputs'], [""])
         self.createMenu("Show",
-                {'Occupancy-Plot': self.showOccupancyPlot, 'Charge-Plot': self.showChargeDistrPlot, 'Sequence Coverage': self.dumb,
+                {'Results': self.mainWindow.show, 'Occupancy-Plot': self.showOccupancyPlot,
+                 'Charge-Plot': self.showChargeDistrPlot, 'Sequence Coverage': self.dumb,
                  'Original Values':self.showRemodelledIons},
-                ['Show occupancies as a function of sequence pos.', 'Show av. charge as a function of sequence pos.',
-                 'Show sequence coverage', 'Show original values of overlapping ions'], ["", "", '', ''])
+                ['Show lists of observed and deleted ions' ,'Show occupancies as a function of sequence pos.',
+                 'Show av. charge as a function of sequence pos.', 'Show sequence coverage',
+                 'Show original values of overlapping ions'], ['',"", "", '', ''])
 
     def createMenu(self, name, options, tooltips, shortcuts):
         menu = QtWidgets.QMenu(self.menubar)
@@ -202,7 +204,7 @@ class TD_MainController(object):
         tab.setLayout(verticalLayout)
         self.tabWidget.addTab(tab, "")
         self.tabWidget.setTabText(self.tabWidget.indexOf(tab), self._translate(self.mainWindow.objectName(), name))
-        scrollArea,table = self.makeScrollArea(tab,[ion.getMoreValues() for ion in data.values()])
+        scrollArea,table = self.makeScrollArea(tab,[ion.getMoreValues() for ion in data.values()], self.showOptions)
         verticalLayout.addWidget(scrollArea)
         self.tables.append(table)
         self.tabWidget.setEnabled(True)
@@ -211,20 +213,20 @@ class TD_MainController(object):
 
         # scrollArea.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
-    def makeScrollArea(self, parent, data):
+    def makeScrollArea(self, parent, data, fun):
         scrollArea = QtWidgets.QScrollArea(parent)
         #scrollArea.setGeometry(QtCore.QRect(10, 10, 1150, 800))
         scrollArea.setWidgetResizable(True)
         # scrollArea.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         # scrollArea.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-        table = self.makeTable(scrollArea, data)
+        table = self.makeTable(scrollArea, data, fun)
 
         table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         scrollArea.setWidget(table)
         return scrollArea, table
 
-    def makeTable(self, parent, data):
+    def makeTable(self, parent, data,fun):
         tableModel = IonTableModel(data,
                    self._intensityModeller.getPrecRegion(self.settings['sequName'], abs(self.settings['charge'])),
                    self.configs['shapeMarked'], self.configs['scoreMarked'])
@@ -234,16 +236,14 @@ class TD_MainController(object):
         table.setModel(tableModel)
         table.setSortingEnabled(True)
         #table.setModel(self.proxyModel)
-        self.connectTable(table)
+        table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        table.customContextMenuRequested['QPoint'].connect(partial(fun, table))
         table.setSelectionBehavior(QAbstractItemView.SelectRows)
         table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         return table
 
 
-    def connectTable(self, table):
-        table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        table.customContextMenuRequested['QPoint'].connect(partial(self.showOptions, table))
 
     def showOptions(self, table, pos):
         menu = QtWidgets.QMenu()
@@ -380,7 +380,7 @@ class TD_MainController(object):
         self._remView.setWindowTitle(self._translate(self._remView.objectName(), 'Original Values of Overlapping Ions'))
         ions = self._intensityModeller.getRemodelledIons()
         verticalLayout = QtWidgets.QVBoxLayout(self._remView)
-        scrollArea, table = self.makeScrollArea(self._remView, [ion.getMoreValues() for ion in ions])
+        scrollArea, table = self.makeScrollArea(self._remView, [ion.getMoreValues() for ion in ions], self.showRedOptions)
         table.customContextMenuRequested['QPoint'].connect(partial(self.showRedOptions, table))
         verticalLayout.addWidget(scrollArea)
         self._remView.resize(1000, 750)

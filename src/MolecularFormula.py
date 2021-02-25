@@ -23,6 +23,7 @@ class MolecularFormula(object):
         :param formulaDict: key = element, value = quantity
         '''
         self.formulaDict = formulaDict
+        self._periodicTable = periodicTableService.getElements(self.formulaDict.keys())
 
 
     def addFormula(self, *args):
@@ -99,7 +100,6 @@ class MolecularFormula(object):
         Calculates isotope patterns based on molecular formulas
         :return: isotope pattern1 (structured numpy array: [(mass,relative Abundance)])
         '''
-        self._periodicTable = periodicTableService.getElements(self.formulaDict.keys())
         mostAbundant=10**(-10)
         prop = 1
         isoPeak=0
@@ -203,7 +203,8 @@ class MolecularFormula(object):
         '''
         monoisotopic = 0
         for elem,val in self.formulaDict.items():
-            monoisotopic += val*self._periodicTable[elem][0][2]
+            #print(elem, val, self._periodicTable[elem][0][1])
+            monoisotopic += val*self._periodicTable[elem][0][1]
             """arr = np.array(self._periodicTable[elem])
             monoMass = arr[np.where(arr[:,3] == np.max(arr[:,3]))][0][2]
             monoisotopic += val*monoMass"""

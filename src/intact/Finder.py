@@ -125,8 +125,10 @@ class Finder(object):
                 y = list()
                 x = list()
                 errorList = list()
+                print('new Limit',limit)
                 for ion in ionList:
                     calibratedX = self.fun_parabola(ion.mz, solution[0], solution[1], solution[2])
+                    print(abs(self.calculateError(calibratedX, ion.theoMz)))
                     if abs(self.calculateError(calibratedX, ion.theoMz)) < limit:
                         y.append(ion.theoMz)
                         x.append(ion.mz)

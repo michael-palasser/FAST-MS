@@ -50,9 +50,9 @@ class Window(QMainWindow):
         self.addActionToStatusBar(self.tdMenu, 'Isotope Pattern Tool',
                               'Calculates isotope pattern of an ion', lambda:IsotopePatternView(self))
         self.addActionToStatusBar(self.tdMenu, 'Calc. Abundances',
-                              'Calculates relative abundances of an ion list', modellingTool)
+                              'Calculates relative abundances of an ion list', lambda: modellingTool(self))
         self.addActionToStatusBar(self.tdMenu, 'Calculate Occupancies',
-                              'Calculates occupancies of a given ion list', occupancyRecalculator)
+                              'Calculates occupancies of a given ion list', lambda: occupancyRecalculator(self))
         self.addActionToStatusBar(self.tdMenu, 'Compare Analysis',
                               'Compares the ion lists of multiple spectra', lambda: spectrumComparator(self))
         self.addActionToStatusBar(self.tdEditMenu, 'Edit Parameters',

@@ -205,7 +205,7 @@ class TDStartDialog(StartDialog):
                (self.createComboBox(startDialog,fragPatterns), "fragmentation", "Name of the fragmentation - pattern"),
                (self.createComboBox(startDialog,modPatterns), "modifications", "Name of the modification/ligand - pattern"),
                (QtWidgets.QSpinBox(startDialog), "nrMod", "How often is the precursor ion modified?"),
-               (OpenFileWidget(self,linewidth, 0, 2, join(path, 'Spectral_data','top-down'),  "Open File",
+               (OpenFileWidget(self,linewidth, 0, 1, join(path, 'Spectral_data','top-down'),  "Open File",
                                "Plain Text Files (*txt);;Comma Separated Values (*csv);;All Files (*)"),
                 "spectralData","Name of the file with spectral peaks (txt or csv format)\n"
                                      "If no file is stated, the program will just calculate the fragment library"),
@@ -459,7 +459,8 @@ class IntactStartDialog(DialogWithTabs, StartDialog):
         """if (newSettings['spectralData'][-4:] != '.txt') and (newSettings['spectralData'][-4:] != '.csv'):
             newSettings['spectralData'] += '.txt'
         self.checkValues(newSettings)"""
-        self.configHandler.write(super(IntactStartDialog, self).accept())
+        self.configHandler.write(newSettings)
+        super(IntactStartDialog, self).accept()
 
 
     def checkValues(self, configs, *args):

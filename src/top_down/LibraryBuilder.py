@@ -7,11 +7,7 @@ import re
 from multiprocessing import Pool
 
 from src.MolecularFormula import MolecularFormula
-from scipy.constants import electron_mass
-from src.entities.GeneralEntities import BuildingBlock
 from src.entities.Ions import Fragment
-from src.entities.IonTemplates import FragItem, ModifiedItem, PrecursorItem
-from src.Services import SequenceService, MoleculeService, FragmentIonService, ModificationService
 
 
 
@@ -79,14 +75,14 @@ class FragmentLibraryBuilder(object):
         '''
         simpleLadder = list()
         length = 1
-        sumFormula = MolecularFormula(dict())
+        formula = MolecularFormula(dict())
         monomers = self.__molecule.getBBDict()
         for link in sequ:
             if link not in monomers.keys():
                 print("problem at", length)
                 raise Exception(link)
-            sumFormula = sumFormula.addFormula(monomers[link].getFormula())
-            simpleLadder.append((sequ[:length],sumFormula))
+            formula = formula.addFormula(monomers[link].getFormula())
+            simpleLadder.append((sequ[:length],formula))
             length += 1
         return simpleLadder
 

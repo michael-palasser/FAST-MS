@@ -7,11 +7,13 @@ from src.MolecularFormula import MolecularFormula
 from src.Services import *
 from src.entities.AbstractEntities import AbstractItem1
 from src.entities.GeneralEntities import Sequence
+from src.entities.Ions import FragmentIon, Fragment
 from src.gui.IonTableWidget import IsoPatternIon
 from src.gui.ResultView import IsoPatternPeakWidget
 from src.gui.SpectrumView import TheoSpectrumView
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.top_down.IntensityModeller import IntensityModeller
+from src.top_down.LibraryBuilder import FragmentLibraryBuilder
 from src.top_down.SpectrumHandler import SpectrumHandler
 from src.intact.LibraryBuilder import IntactLibraryBuilder
 
@@ -29,6 +31,8 @@ class IsotopePatternController(object):
 
         self._formula = None
         self._isotopePattern = None
+        self._ion = None
+        self._neutralMass = None
 
     def getMolecules(self):
         return ['mol. formula']+self._molecules
@@ -50,25 +54,35 @@ class IsotopePatternController(object):
         return [modTemplate.getName() for modTemplate in
                 self._modService.getPatternWithObjects(modifPatternName).getItems()]
 
+    def getIon(self):
+        return self._ion
+
+    def getNeutralMass(self):
+        return self._neutralMass
+
     def calculate(self, mode, inputString, charge, radicals, intensity, *args):
         if mode == self.getMolecules()[0]:
-            formula = MolecularFormula(self.checkFormula(inputString))
+            fragment = Fragment('-',0,'',MolecularFormula(self.checkFormula(inputString)),[],radicals)
         else:
-            formula = self.getFormula(mode, inputString, args[0], args[1], args[2], args[3])
-        if formula != self._formula:
-            if formula.calcIsotopePatternSlowly(1)['m/z'][0]>6000:
-                self._isotopePattern = formula.calculateIsotopePattern()
+            fragment = self.getFormula(mode, inputString, args[0], args[1], args[2], args[3])
+        if fragment.formula != self._formula:
+            self._formula = fragment.formula
+            #self._fragment = fragment
+            if self._formula.calcIsotopePatternSlowly(1)['m/z'][0]>6000:
+                self._isotopePattern = self._formula.calculateIsotopePattern()
             else:
-                self._isotopePattern = formula.calcIsotopePatternSlowly()
-            self._isotopePattern['calcInt'] *= intensity
-        neutralMass = self._isotopePattern['m/z'][0]
+                self._isotopePattern = self._formula.calcIsotopePatternSlowly()
         isotopePattern = copy.deepcopy(self._isotopePattern)
+        isotopePattern['calcInt'] *= intensity
+        self._neutralMass = isotopePattern['m/z'][0]
         isotopePattern['m/z'] = SpectrumHandler.getMz(isotopePattern['m/z'],charge,radicals)
         peaks = []
         for row in isotopePattern:
             peaks.append((row['m/z'],0,round(row['calcInt']),1))
         peaks = np.array(peaks, dtype=self._peakDtype)
-        return peaks, formula.toString(),neutralMass
+        self._ion = FragmentIon(fragment, charge, peaks,0)
+        self._ion.quality = 0
+        return self._ion, self._neutralMass
 
     def checkFormula(self,formulaString):
         formula = AbstractItem1.stringToFormula(formulaString,{},1)
@@ -95,22 +109,27 @@ class IsotopePatternController(object):
                 fragTempl = [precTempl for precTempl in fragmentation.getItems2() if precTempl.getName()==fragTemplName][0]
             else:
                 fragTempl = PrecursorItem(("", "", "", "", 0, True))
-            #name = 'intact'+ fragTempl.getName()
+            species = 'intact'
+            number = 0
+            rest = fragTempl.getName()
         else:
             fragTempl = [fragTempl for fragTempl in fragmentation.getItems() if fragTempl.getName()==fragTemplName][0]
-            #name = fragTempl.getName()+len(sequenceList)
+            species, rest = FragmentLibraryBuilder.processTemplateName(fragTempl.getName())
+            number = len(sequenceList)
         formula = formula.addFormula(fragTempl.getFormula())
         if modifPatternName != '-':
             modPattern = self._modService.getPatternWithObjects(modifPatternName)
             modif = [modif for modif in modPattern.getItems() if modif.getName()==modifName][0]
             formula = formula.addFormula(modif.getFormula())
-        return formula
+            rest+=modifName
+        return Fragment(species, number, rest, formula, sequenceList, fragTempl.getRadicals())
 
     def model(self, peaks):
         peakArr = np.array(peaks, dtype=self._peakDtype)
         if np.all(peakArr['relAb']==0):
             raise UnvalidInputException('All Intensities = 0', '')
-        return self._intensityModeller.modelSimply(peakArr)
+        self._ion.isotopePattern, self._ion.intensity, self._ion.quality =  self._intensityModeller.modelSimply(peakArr)
+        return self._ion
 
 
 class IsotopePatternView(QtWidgets.QMainWindow):
@@ -153,7 +172,7 @@ class IsotopePatternView(QtWidgets.QMainWindow):
 
         self.pushCalc = self.makeBtn(60, 140, "Calculate")
         self.pushCalc.clicked.connect(self.calculateIsotopePattern)
-        self.pushModel = self.makeBtn(140,140, "Model")
+        self.pushModel = self.makeBtn(140, 140, "Model")
         self.pushModel.clicked.connect(self.modelInt)
         self.makeOptions()
 
@@ -161,18 +180,18 @@ class IsotopePatternView(QtWidgets.QMainWindow):
 
         self.spectrumView.setGeometry(QtCore.QRect(250, 30, 350, 290))
         self.spectrumView.setFrameShape(QtWidgets.QFrame.StyledPanel)
-        #self.spectrumView.setFrameShadow(QtWidgets.QFrame.Raised)
+        # self.spectrumView.setFrameShadow(QtWidgets.QFrame.Raised)
         self.spectrumView.setAttribute(QtCore.Qt.WA_StyledBackground, True)
         self.spectrumView.setStyleSheet('background-color: white')
 
         self.makeIonTable(())
-        #self.ionTable.setGeometry(QtCore.QRect(20, 335, 550, 50))
+        # self.ionTable.setGeometry(QtCore.QRect(20, 335, 550, 50))
         peakLabel = QtWidgets.QLabel(self.centralwidget)
         peakLabel.setGeometry(QtCore.QRect(25, 415, 60, 16))
         peakLabel.setText(self._translate(self.objectName(), "Peaks:"))
 
         self.makePeakTable((()))
-        #self.peakTable.setGeometry(QtCore.QRect(20, 400, 550, 190))
+        # self.peakTable.setGeometry(QtCore.QRect(20, 400, 550, 190))
 
         self.modeBox.currentIndexChanged.connect(self.activateFrame)
         self.setCentralWidget(self.centralwidget)
@@ -263,18 +282,19 @@ class IsotopePatternView(QtWidgets.QMainWindow):
             charge = int(self.charge.text())
             self._intensity = self._ionTable.getIntensity()
             if self.modeBox.currentIndex() == 0:
-                peaks, formula, neutralMass= self._controller.calculate(self.modeBox.currentText(),
+                ion, neutralMass= self._controller.calculate(self.modeBox.currentText(),
                                             self.inputForm.text(), charge, int(self.radicals.text()), self._intensity)
             else:
-                peaks, formula, neutralMass= self._controller.calculate(self.modeBox.currentText(),
+                ion, neutralMass= self._controller.calculate(self.modeBox.currentText(),
                                         self.inputForm.text(), charge, int(self.radicals.text()), self._intensity,
                                         self.fragmentationBox.currentText(), self.fragmentBox.currentText(),
                                         self.modPatternBox.currentText(), self.modifBox.currentText())
         except UnvalidInputException as e:
             QtWidgets.QMessageBox.warning(self, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
             return
-
-        self.restartView((peaks['m/z'][0],abs(charge), self._intensity,"-", 0.,formula, neutralMass), peaks)
+        self.restartView(ion, neutralMass)
+        '''self.restartView((ion.isotopePattern['m/z'][0],abs(charge), self._intensity,"-", 0.,ion.formula,
+                          neutralMass), ion.isotopePattern)'''
         '''self.spectrumView = TheoSpectrumView(self.centralwidget,(),isotopePattern)
         self.spectrumView.setGeometry(QtCore.QRect(270, 30, 300, 290))
         self.peakTable.hide()
@@ -292,15 +312,18 @@ class IsotopePatternView(QtWidgets.QMainWindow):
         self.resize(585, 420+hight+30)'''
         #self.peakTable.show()
 
-    def restartView(self, ion, peaks):
-        self.spectrumView = TheoSpectrumView(self.centralwidget, peaks, 350)
+    def restartView(self, ion, neutralMass):
+        self.spectrumView = TheoSpectrumView(self.centralwidget, ion.isotopePattern, 350)
         self.spectrumView.setGeometry(QtCore.QRect(250, 30, 350, 290))
         self.peakTable.hide()
         del self.peakTable
         del self._ionTable
-        self.makeIonTable(ion)
-        hight = self.makePeakTable(peaks)
+        self.makeIonTable(ion, neutralMass)
+        hight = self.makePeakTable(ion.isotopePattern)
         self.resize(615, 420 + hight + 30)
+
+    #def getIonVals(self, ion, neutralMass):
+    #    return (ion.isotopePattern['m/z'][0], abs(ion.charge), self._intensity, "-", 0., ion.formula, neutralMass)
 
     def makeIonTable(self, ion):
         self._ionTable = IsoPatternIon(self.centralwidget,(ion,),335)
@@ -317,8 +340,7 @@ class IsotopePatternView(QtWidgets.QMainWindow):
         self.peakTable.resizeColumnsToContents()
         self.peakTable.show()
         return hight
-    #def formatSpectrumView(self):
-     #   self.spectrumView.setGeometry(QtCore.QRect(320, 35, 250, 235))
+
 
     def modelInt(self):
         inputVals = sorted(self.peakTable.readTable(), key=lambda tup:tup[2])
@@ -326,11 +348,12 @@ class IsotopePatternView(QtWidgets.QMainWindow):
         for i, peak in enumerate(self.peakTable.getPeaks()):
             peaks.append((peak[0],inputVals[i][0], peak[2], inputVals[i][1]))
         try:
-            peaks, self._intensity, quality = self._controller.model(peaks)
+            ion = self._controller.model(peaks)
+            self._intensity = round(ion.intensity)
         except UnvalidInputException as e:
             QtWidgets.QMessageBox.warning(self, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
             return
-        ionVals = list(self._ionTable.getIon(0))
-        ionVals[2] = round(self._intensity)
-        ionVals[4] = quality
-        self.restartView(ionVals, peaks)
+        #ionVals = list(self._ionTable.getIon(0))
+        #ionVals[2] = round(self._intensity)
+        #ionVals[4] = quality
+        self.restartView(ion, self._controller.getNeutralMass())

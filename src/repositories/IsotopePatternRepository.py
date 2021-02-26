@@ -47,6 +47,8 @@ class IsotopePatternReader(object):
             i=0
             for i,row in enumerate(reader):
                 #print(row)
+                if len(row) < 3:
+                    continue
                 if counter == 0:
                     name = row[0]
                     counter = 1

@@ -10,9 +10,6 @@ from src.MolecularFormula import MolecularFormula
 from src.entities.Ions import Fragment
 
 
-
-
-
 class FragmentLibraryBuilder(object):
     '''
     Creates library for top-down fragments
@@ -129,14 +126,16 @@ class FragmentLibraryBuilder(object):
             if len(linkSequ) == len(self.__sequence.getSequenceList()):
                 continue
             for template in fragTemplates:
-                templateName = template.getName()
+                #templateName = template.getName()
+                species, rest = self.processTemplateName(template.getName())
                 templateRadicals = template.getRadicals()
-                if self.checkForProlines(templateName[0],linkSequ, basicLadder):
+                #if self.checkForProlines(templateName[0],linkSequ, basicLadder):
+                if self.checkForProlines(species,linkSequ, basicLadder):
                     continue
                 formula = linkFormula.addFormula(template.getFormula())
                 if self.checkForResidue(template.getResidue(), linkSequ):
                     if (not formula.checkForNegativeValues()) and template.enabled():
-                        ladder.append(Fragment(templateName[0], len(linkSequ), templateName[1:], formula, linkSequ,
+                        ladder.append(Fragment(species, len(linkSequ), rest, formula, linkSequ,
                                                templateRadicals))
                         for nrMod in range(1, self.__maxMod + 1):
                             for modif in self.__modifPattern.getItems():
@@ -145,15 +144,22 @@ class FragmentLibraryBuilder(object):
                                     formula = linkFormula.addFormula(template.getFormula(),
                                                     MolecularFormula(modif.getFormula()).multiplyFormula(nrMod).formulaDict)
                                     if self.checkForResidue(modif.getResidue(), linkSequ) and not formula.checkForNegativeValues()\
-                                            and ((modifName+templateName[1:]) not in self.__modifPattern.getExcluded()):
+                                            and ((modifName+rest) not in self.__modifPattern.getExcluded()):
                                             #Constructor: type, number, modification, loss, formula
                                             if self.__maxMod > 1:
                                                 modifName = modifName[0]+str(nrMod)+modifName[1:]
-                                            newFragment = Fragment(templateName[0],len(linkSequ),modifName+templateName[1:],
+                                            newFragment = Fragment(species,len(linkSequ),modifName+rest,
                                                            formula, linkSequ, templateRadicals+modif.getRadicals())
                                             ladder.append(newFragment)
         return ladder
 
+
+    @staticmethod
+    def processTemplateName(templName):
+        search = re.search(r"([+,-])",'c+G+CMCT-G')
+        if search == None:
+            return templName, ""
+        return templName[0:search.start()], templName[search.start():]
 
 
     #ToDo: adducts
@@ -169,7 +175,6 @@ class FragmentLibraryBuilder(object):
         precName = "+" + self.__modifPattern.getModification()
         if self.__maxMod > 1:
             precName = "+" +  str(self.__maxMod) + self.__modifPattern.getModification()
-        print(self.__molecule.getFormula())
         #return
         basicFormula = simpleFormula.addFormula(self.__molecule.getFormula())
         for precTemplate in self.__fragmentation.getItems2():

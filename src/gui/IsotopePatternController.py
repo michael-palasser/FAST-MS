@@ -47,7 +47,7 @@ class IsotopePatternController(object):
         return [fragTemplate.getName() for fragTemplate in
                 self._fragService.getPatternWithObjects(fragmentationName).getItems()],\
                ['intact']+[precTemplate.getName() for precTemplate in
-                self._fragService.getPatternWithObjects(fragmentationName).getItems2()]
+                self._fragService.getPatternWithObjects(fragmentationName).getItems2()][1:]
 
 
     def getModifItems(self, modifPatternName):
@@ -64,7 +64,7 @@ class IsotopePatternController(object):
         if mode == self.getMolecules()[0]:
             fragment = Fragment('-',0,'',MolecularFormula(self.checkFormula(inputString)),[],radicals)
         else:
-            fragment = self.getFormula(mode, inputString, args[0], args[1], args[2], args[3])
+            fragment = self.getFormula(mode, inputString, args[0], args[1], args[2], args[3], args[4])
         if fragment.formula != self._formula:
             self._formula = fragment.formula
             #self._fragment = fragment
@@ -94,7 +94,7 @@ class IsotopePatternController(object):
                 raise UnvalidInputException(formulaString, ", Element: " + key + " unknown")
         return formula
 
-    def getFormula(self, molecule, sequString, fragmentationName, fragTemplName, modifPatternName, modifName):
+    def getFormula(self, molecule, sequString, fragmentationName, fragTemplName, modifPatternName, modifName, nrMod):
         molecule = self._moleculeService.get(molecule)
         sequenceList = Sequence("",sequString,molecule.getName(),0).getSequenceList()
         #formula = MolecularFormula(molecule.getFormula())
@@ -117,10 +117,12 @@ class IsotopePatternController(object):
             species, rest = FragmentLibraryBuilder.processTemplateName(fragTempl.getName())
             number = len(sequenceList)
         formula = formula.addFormula(fragTempl.getFormula())
-        if modifPatternName != '-':
+        if modifPatternName != '-' and nrMod != 0:
             modPattern = self._modService.getPatternWithObjects(modifPatternName)
             modif = [modif for modif in modPattern.getItems() if modif.getName()==modifName][0]
-            formula = formula.addFormula(modif.getFormula())
+            formula = formula.addFormula({key:val*nrMod for key,val in modif.getFormula().items()})
+            if nrMod != 1:
+                rest+=str(nrMod)
             rest+=modifName
         return Fragment(species, number, rest, formula, sequenceList, fragTempl.getRadicals())
 
@@ -142,100 +144,119 @@ class IsotopePatternView(QtWidgets.QMainWindow):
         self._translate = QtCore.QCoreApplication.translate
         self.setWindowTitle(self._translate(self.objectName(), 'Isotope Pattern Tool'))
         self.centralwidget = QtWidgets.QWidget(self)
+        self._vertLayout = QtWidgets.QVBoxLayout(self.centralwidget)
+        self._upperW =QtWidgets.QWidget(self.centralwidget)
 
-        self.inputForm = QtWidgets.QLineEdit(self.centralwidget)
-        self.inputForm.setGeometry(QtCore.QRect(15, 30, 185, 21))
+        self.inputForm = QtWidgets.QLineEdit(self._upperW)
+        self.inputForm.setGeometry(QtCore.QRect(15, 20, 185, 21))
         self.inputForm.returnPressed.connect(self.calculateIsotopePattern)
 
-        modeLabel = QtWidgets.QLabel(self.centralwidget)
-        modeLabel.setGeometry(QtCore.QRect(15, 70, 60, 16))
+        modeLabel = QtWidgets.QLabel(self._upperW)
+        modeLabel.setGeometry(QtCore.QRect(250, 20, 60, 16))
         modeLabel.setText(self._translate(self.objectName(), "Mode:"))
-        self.modeBox = QtWidgets.QComboBox(self.centralwidget)
-        self.modeBox.setGeometry(QtCore.QRect(65, 67, 120, 26))
+        self.modeBox = QtWidgets.QComboBox(self._upperW)
+        self.modeBox.setGeometry(QtCore.QRect(290, 17, 120, 26))
         self.fillComboBox(self.modeBox, self._controller.getMolecules())
 
-        chargeLabel = QtWidgets.QLabel(self.centralwidget)
-        chargeLabel.setGeometry(QtCore.QRect(15, 100, 60, 16))
+        chargeLabel = QtWidgets.QLabel(self._upperW)
+        chargeLabel.setGeometry(QtCore.QRect(15, 60, 60, 16))
         chargeLabel.setText(self._translate(self.objectName(), "Charge:"))
-        self.charge = QtWidgets.QSpinBox(self.centralwidget)
-        self.charge.setGeometry(QtCore.QRect(70, 97, 50, 24))
+        self.charge = QtWidgets.QSpinBox(self._upperW)
+        self.charge.setGeometry(QtCore.QRect(70, 57, 50, 24))
         self.charge.setMinimum(-99)
         self.charge.valueChanged.connect(self.calculateIsotopePattern)
-        radicalLabel = QtWidgets.QLabel(self.centralwidget)
-        radicalLabel.setGeometry(QtCore.QRect(130, 100, 60, 16))
+        radicalLabel = QtWidgets.QLabel(self._upperW)
+        radicalLabel.setGeometry(QtCore.QRect(130, 60, 60, 16))
         radicalLabel.setText(self._translate(self.objectName(), "Radicals:"))
-        self.radicals = QtWidgets.QSpinBox(self.centralwidget)
-        self.radicals.setGeometry(QtCore.QRect(190, 97, 40, 24))
+        self.radicals = QtWidgets.QSpinBox(self._upperW)
+        self.radicals.setGeometry(QtCore.QRect(190, 57, 40, 24))
         self.radicals.setMinimum(-9)
         self.radicals.setMaximum(9)
         self.radicals.valueChanged.connect(self.calculateIsotopePattern)
 
-        self.pushCalc = self.makeBtn(60, 140, "Calculate")
+        self.pushCalc = self.makeBtn(60, 100, "Calculate")
         self.pushCalc.clicked.connect(self.calculateIsotopePattern)
-        self.pushModel = self.makeBtn(140, 140, "Model")
+        self.pushModel = self.makeBtn(140, 100, "Model")
         self.pushModel.clicked.connect(self.modelInt)
         self.makeOptions()
 
-        self.spectrumView = QtWidgets.QFrame(self.centralwidget)
+        self.spectrumView = QtWidgets.QFrame(self._upperW)
 
-        self.spectrumView.setGeometry(QtCore.QRect(250, 30, 350, 290))
+        self.spectrumView.setGeometry(QtCore.QRect(250, 50, 350, 280))
         self.spectrumView.setFrameShape(QtWidgets.QFrame.StyledPanel)
         # self.spectrumView.setFrameShadow(QtWidgets.QFrame.Raised)
         self.spectrumView.setAttribute(QtCore.Qt.WA_StyledBackground, True)
         self.spectrumView.setStyleSheet('background-color: white')
-
-        self.makeIonTable(())
+        self._vertLayout.addWidget(self._upperW)
+        self._vertLayout.addSpacing(10)
+        self.makeIonTable(None, None)
         # self.ionTable.setGeometry(QtCore.QRect(20, 335, 550, 50))
-        peakLabel = QtWidgets.QLabel(self.centralwidget)
-        peakLabel.setGeometry(QtCore.QRect(25, 415, 60, 16))
-        peakLabel.setText(self._translate(self.objectName(), "Peaks:"))
+        self._peakLabel = QtWidgets.QLabel(self.centralwidget)
+        self._peakLabel.setGeometry(QtCore.QRect(25, 415, 60, 16))
+        self._peakLabel.setText(self._translate(self.objectName(), "Peaks:"))
 
+        self._vertLayout.addWidget(self._peakLabel)
         self.makePeakTable((()))
         # self.peakTable.setGeometry(QtCore.QRect(20, 400, 550, 190))
 
         self.modeBox.currentIndexChanged.connect(self.activateFrame)
+        width = 615
+        self._upperW.setGeometry(QtCore.QRect(0,0,width,335))
+        self._upperW.setMinimumHeight(325)
+        #self._vertLayout.addWidget(self._upperW)
+        #self._vertLayout.addWidget(self._ionTable)
+        #self._vertLayout.addWidget(self._peakLabel)
+        #self._vertLayout.addWidget(self.peakTable)
+        self.centralwidget.setLayout(self._vertLayout)
         self.setCentralWidget(self.centralwidget)
-        self.resize(615, 400)
+        self.setGeometry(QtCore.QRect(100,50,width, 400))
         self.show()
 
 
+
     def makeOptions(self):
-        self.frame = QtWidgets.QFrame(self.centralwidget)
-        self.frame.setGeometry(QtCore.QRect(15, 180, 220, 140))
+        self.frame = QtWidgets.QFrame(self._upperW)
+        self.frame.setGeometry(QtCore.QRect(15, 155, 220, 170))
         self.frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
-        frameLabels = ("Fragmentation:", "Fragment:", "Modif.Pattern:", "Modification:")
+        frameLabels = ("Fragmentation:", "Fragment:", "Modif.Pattern:", "Modification:", "Nr.of Mod.:")
         self.fragmentationBox = QtWidgets.QComboBox(self.frame)
         self.fragmentBox = QtWidgets.QComboBox(self.frame)
         self.fragmentationBox.currentIndexChanged.connect(self.getFragValues)
         self.modPatternBox = QtWidgets.QComboBox(self.frame)
         self.modPatternBox.currentIndexChanged.connect(self.getModValues)
         self.modifBox = QtWidgets.QComboBox(self.frame)
-        self.fillFrame(frameLabels, (self.fragmentationBox, self.fragmentBox, self.modPatternBox, self.modifBox),
-                       ("", "", "", ""))
+        self.nrOfMods = QtWidgets.QSpinBox(self.frame)
+        self.fillFrame(frameLabels, (self.fragmentationBox, self.fragmentBox,
+                                     self.modPatternBox, self.modifBox, self.nrOfMods),
+                       ("", "", "", "", ''))
         #self.boxes = (self.fragmentationBox, self.modPatternBox, self.fragmentBox, self.modifBox)
         self.frame.hide()
 
     def makeBtn(self,xPos, yPos, name):
-        btn = QtWidgets.QPushButton(self.centralwidget)
+        btn = QtWidgets.QPushButton(self._upperW)
         btn.setGeometry(QtCore.QRect(xPos-int(81/2), yPos, 81, 32))
         btn.setText(self._translate(self.objectName(), name))
         return btn
 
-    def fillFrame(self, labelNames, boxes, toolTips):
+    def fillFrame(self, labelNames, widgets, toolTips):
         yPos = 10
         for i, labelName in enumerate(labelNames):
             label = QtWidgets.QLabel(self.frame)
             label.setGeometry(QtCore.QRect(10, yPos, 90, 16))
             label.setText(self._translate(self.objectName(), labelName))
-            boxes[i].setGeometry(QtCore.QRect(100, yPos - 4, 120, 26))
-            boxes[i].setToolTip(toolTips[i])
+            widgets[i].setGeometry(QtCore.QRect(100, yPos - 4, 120, 26))
+            widgets[i].setToolTip(toolTips[i])
             yPos += 30
             if i == 1:
                 yPos += 10
 
 
     def fillComboBox(self, box, options, *args):
+        #[box.removeItem(i) for i in range(box.count())]
+        #box.item
+        #box.rem
+        [box.model().item(i).setEnabled(True) for i in range(box.count())]
         toAdjust = box.count()-len(options)
         if args:
             toAdjust-=len(args[0])-1
@@ -248,7 +269,11 @@ class IsotopePatternView(QtWidgets.QMainWindow):
             box.setItemText(i, self._translate(self.objectName(), option))
         if args:
             lastIndex = len(options)
-            box.insertSeparator(lastIndex)
+            #box.insertSeparator(lastIndex)
+            #box.setItemText(lastIndex+1, self._translate(self.objectName(), 'intact'))
+            box.setItemText(lastIndex, self._translate(self.objectName(), ''))
+            box.model().item(lastIndex).setEnabled(False)
+            lastIndex += 1
             for i,option in enumerate(args[0]):
                 box.setItemText(i+lastIndex, self._translate(self.objectName(), option))
 
@@ -286,9 +311,9 @@ class IsotopePatternView(QtWidgets.QMainWindow):
                                             self.inputForm.text(), charge, int(self.radicals.text()), self._intensity)
             else:
                 ion, neutralMass= self._controller.calculate(self.modeBox.currentText(),
-                                        self.inputForm.text(), charge, int(self.radicals.text()), self._intensity,
-                                        self.fragmentationBox.currentText(), self.fragmentBox.currentText(),
-                                        self.modPatternBox.currentText(), self.modifBox.currentText())
+                                self.inputForm.text(), charge, int(self.radicals.text()), self._intensity,
+                                self.fragmentationBox.currentText(), self.fragmentBox.currentText(),
+                                self.modPatternBox.currentText(), self.modifBox.currentText(), self.nrOfMods.value())
         except UnvalidInputException as e:
             QtWidgets.QMessageBox.warning(self, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
             return
@@ -313,22 +338,36 @@ class IsotopePatternView(QtWidgets.QMainWindow):
         #self.peakTable.show()
 
     def restartView(self, ion, neutralMass):
-        self.spectrumView = TheoSpectrumView(self.centralwidget, ion.isotopePattern, 350)
-        self.spectrumView.setGeometry(QtCore.QRect(250, 30, 350, 290))
+        self.spectrumView.hide()
+        del self.spectrumView
+        self.spectrumView = TheoSpectrumView(self.centralwidget, ion.isotopePattern, 365)
+        self.spectrumView.setGeometry(QtCore.QRect(250, 50, 365, 300))
+        #self.spectrumView.setGeometry(QtCore.QRect(250, 50, 350, 280))
         self.peakTable.hide()
+        self._ionTable.hide()
+        self._vertLayout.removeWidget(self._ionTable)
+        self._vertLayout.removeWidget(self.peakTable)
+        self._vertLayout.removeWidget(self._peakLabel)
         del self.peakTable
         del self._ionTable
         self.makeIonTable(ion, neutralMass)
+        self._vertLayout.addSpacing(10)
+        self._vertLayout.addWidget(self._peakLabel)
         hight = self.makePeakTable(ion.isotopePattern)
         self.resize(615, 420 + hight + 30)
 
     #def getIonVals(self, ion, neutralMass):
     #    return (ion.isotopePattern['m/z'][0], abs(ion.charge), self._intensity, "-", 0., ion.formula, neutralMass)
 
-    def makeIonTable(self, ion):
-        self._ionTable = IsoPatternIon(self.centralwidget,(ion,),335)
-        self._ionTable.setGeometry(QtCore.QRect(15, 340,585,55))
+    def makeIonTable(self, ion, neutralMass):
+        vals = ()
+        if ion != None:
+            vals = (ion.isotopePattern['m/z'][0], abs(ion.charge), self._intensity, ion.getName(), ion.quality,
+                    ion.formula.toString(), neutralMass)
+        self._ionTable = IsoPatternIon(self.centralwidget, (vals,), 0)
+        #self._ionTable.setGeometry(QtCore.QRect(15, 0, 585, 49))
         self._ionTable.resizeColumnsToContents()
+        self._vertLayout.addWidget(self._ionTable)
         self._ionTable.show()
 
     def makePeakTable(self, peaks):
@@ -336,8 +375,9 @@ class IsotopePatternView(QtWidgets.QMainWindow):
         hight = len(peaks) * 21 + 28
         if hight>400:
             hight=400
-        self.peakTable.setGeometry(QtCore.QRect(50, 440, 450, hight)) #290
+        #self.peakTable.setGeometry(QtCore.QRect(50, 440, 450, hight)) #290
         self.peakTable.resizeColumnsToContents()
+        self._vertLayout.addWidget(self.peakTable)
         self.peakTable.show()
         return hight
 

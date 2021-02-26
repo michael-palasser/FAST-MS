@@ -185,7 +185,7 @@ class SpectrumHandler(object):
         #elif molecule in ['RNA', 'DNA'] and self.__sprayMode == 1:
         #    return self.__charge / len(self.__sequList)
         else:
-            return self.__charge / self.getChargeScore(self.__sequList)
+            return self.__charge / len(self.__sequList)#self.getChargeScore(self.__sequList)
 
     def getChargeScore(self, fragment): #ToDo
         chargeDict = self.__properties.getGPBsOfBBs(self.__sprayMode)

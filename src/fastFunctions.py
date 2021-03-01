@@ -1,6 +1,5 @@
 import math
 from numba import njit
-from numba.typed import List
 import numpy as np
 
 @njit

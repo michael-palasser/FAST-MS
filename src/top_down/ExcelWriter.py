@@ -4,7 +4,7 @@ Created on 13 Aug 2020
 @author: michael
 '''
 import xlsxwriter
-import numpy as np
+from numpy import isnan
 from datetime import datetime
 
 
@@ -30,7 +30,7 @@ class BasicExcelWriter(object):
 
 
     def writePercentage(self,row,col, val):
-        if (val != None) and (not np.isnan(val)):
+        if (val != None) and (not isnan(val)):
             self.worksheet1.write(row, col, val, self.percentFormat)
 
 

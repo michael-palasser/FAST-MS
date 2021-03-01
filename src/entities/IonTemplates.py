@@ -1,5 +1,4 @@
-from src.entities.AbstractEntities import PatternWithItems, AbstractItem2
-from src.Exceptions import UnvalidInputException
+from src.entities.AbstractEntities import PatternWithItems, AbstractItem2, AbstractItem3
 
 
 class FragmentationPattern(PatternWithItems):
@@ -38,19 +37,16 @@ class FragmentationPattern(PatternWithItems):
                 fragTemplates.append(item)
         return fragTemplates
 
-class PrecursorItem(AbstractItem2):
+
+
+class PrecursorItem(AbstractItem3):
     def __init__(self, item):
-        super(PrecursorItem, self).__init__(name=item[0], gain=item[1], loss=item[2], enabled=item[5])
-        self._residue = item[3]
-        self._radicals = item[4]
+        super(PrecursorItem, self).__init__(name=item[0], gain=item[1], loss=item[2],
+                                            residue=item[3], radicals=item[4], enabled=item[5])
 
-    def getResidue(self):
-        return self._residue
 
-    def getRadicals(self):
-        return self._radicals
 
-    def check(self, elements, monomeres):
+    '''def check(self, elements, monomeres):
         for key in self.getFormula().keys():
             if key not in elements:
                 raise UnvalidInputException(self.getName(), "Element: " + key + " unknown")
@@ -58,12 +54,14 @@ class PrecursorItem(AbstractItem2):
         try:
             self._radicals = int(self._radicals)
         except ValueError:
-            raise UnvalidInputException(self.getName(), "Number required: " + str(self._radicals))
+            raise UnvalidInputException(self.getName(), "Number required: " + str(self._radicals))'''
 
 
-class FragItem(PrecursorItem):
+class FragItem(AbstractItem3):
     def __init__(self, item):
-        super(FragItem, self).__init__((item[0], item[1], item[2], item[3], item[4], item[6]))
+        item = self.processItem(item)
+        super(FragItem, self).__init__(name=item[0], gain=item[1], loss=item[2],
+                                            residue=item[3], radicals=item[4], enabled=item[6])
         self.__direct = item[5]
 
     def getDirection(self):
@@ -89,9 +87,11 @@ class ModificationPattern(PatternWithItems):
         return excluded
 
 
-class ModifiedItem(PrecursorItem):
+class ModifiedItem(AbstractItem3):
     def __init__(self, item):
-        super(ModifiedItem, self).__init__((item[0], item[1], item[2], item[3], item[4],item[7]))
+        item = self.processItem(item)
+        super(ModifiedItem, self).__init__(name=item[0], gain=item[1], loss=item[2],
+                                            residue=item[3], radicals=item[4], enabled=item[7])
         self._calcOccupancy = item[5]
         self.__zEffect = item[6]
 
@@ -122,6 +122,7 @@ class IntactPattern(PatternWithItems):
 
 class IntactModification(AbstractItem2):
     def __init__(self, item):
+        item = self.processItem(item)
         super(IntactModification, self).__init__(name=item[0], enabled=item[4], gain=item[1], loss=item[2])
         self._nrMod = item[3]
 

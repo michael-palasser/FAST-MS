@@ -4,16 +4,13 @@ Created on 27 Jul 2020
 @author: michael
 '''
 from math import exp
-from os.path import join
 from re import findall
 import numpy as np
 import copy
-
 from scipy.constants import R
 
 from scipy.constants import electron_mass, proton_mass, N_A
 from src.entities.Ions import FragmentIon
-from src import path
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 
 configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
@@ -106,7 +103,7 @@ class SpectrumHandler(object):
     def getMz(mass, z, radicals):
         #print(z ,mass/z + self.protonMass*self.mode)
         if z != 0:
-            return abs(mass/z + protMass) + radicals*(eMass + protMass)
+            return abs(mass/z + protMass) + radicals*(eMass + protMass)/z
         else:
             return abs(mass) + radicals*(eMass + protMass)
 
@@ -219,7 +216,7 @@ class SpectrumHandler(object):
             #probableZ = fragment.formula.formulaDict['P'] * self.normalizationFactor
         elif molecule == 'Protein':
             #probableZ = self.getChargeScore(fragment) * self.normalizationFactor
-            probableZ = len(self.__sequList) * self.normalizationFactor
+            probableZ = len(fragment.sequence) * self.normalizationFactor
         elif molecule in ['RNA' ,'DNA'] and self.__sprayMode == 1:
             probableZ = len(self.__sequList) * self.normalizationFactor
         else:
@@ -296,23 +293,23 @@ class SpectrumHandler(object):
                                 foundPeaks.append((theoPeak['m/z'],0,theoPeak['m/z'],theoPeak['calcInt'],0,1))"""
                             foundPeaksArr = np.sort(np.array(foundPeaks, dtype=self.peaksArrType),order=['m/z'])
                             if not np.all(foundPeaksArr['relAb']==0):
-                                self.foundIons.append(FragmentIon(fragment, z, foundPeaksArr, noise))
+                                self.foundIons.append(FragmentIon(fragment, np.min(theoreticalPeaks['m/z']), z, foundPeaksArr, noise))
                                 #print(fragment.getName(),z,'\n', theoreticalPeaks[0]['m/z'], z, "{:.2e}".format(noise))
                                 #print(fragment.getName(),foundPeaksArr)
                                 for peak in foundPeaksArr:
                                     if peak['relAb']>0:
                                         print("\t",np.around(peak['m/z'],4),"\t",peak['relAb'])
                             else:
-                                self.addToDeletedIons(fragment, foundMainPeaks, noise, z)
+                                self.addToDeletedIons(fragment, foundMainPeaks, noise, np.min(theoreticalPeaks['m/z']), z)
                         else:
                             """for theoPeak in theoreticalPeaks[inNoise]:
                                 foundMainPeaks.append((theoPeak['m/z'],0,theoPeak['m/z'],theoPeak['relAb'],0,1))"""
-                            self.addToDeletedIons(fragment, foundMainPeaks, noise, z)
+                            self.addToDeletedIons(fragment, foundMainPeaks, noise, np.min(theoreticalPeaks['m/z']), z)
 
 
-    def addToDeletedIons(self, fragment, foundMainPeaks, noise, z):
+    def addToDeletedIons(self, fragment, foundMainPeaks, noise, monoisotopic, z):
         foundMainPeaksArr = np.sort(np.array(foundMainPeaks, dtype=self.peaksArrType), order=['m/z'])
-        noiseIon = FragmentIon(fragment, z, foundMainPeaksArr, noise)
+        noiseIon = FragmentIon(fragment, monoisotopic, z, foundMainPeaksArr, noise)
         noiseIon.comment = 'noise,'
         self.ionsInNoise.append(noiseIon)
 

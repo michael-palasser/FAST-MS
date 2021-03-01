@@ -223,11 +223,25 @@ class TDStartDialog(StartDialog):
             try:
                 self.widgets["fragmentation"].setCurrentText(self.configHandler.get('fragmentation'))
                 self.widgets["modifications"].setCurrentText(self.configHandler.get('modifications'))
-                self.widgets["nrMod"].setValue(self.configHandler.get('nrMod'))
+                self.changeNrOfMods()
+                #self.widgets["nrMod"].setValue(self.configHandler.get('nrMod'))
             except KeyError:
                 traceback.print_exc()
         self.defaultButton = self.makeDefaultButton()
         self.defaultButton.setGeometry(QtCore.QRect(40, yPos + 20, 113, 32))
+        self.widgets['modifications'].currentTextChanged.connect(self.changeNrOfMods)
+
+    def changeNrOfMods(self):
+        if self.widgets['modifications'].currentText() == '-':
+            self.widgets['nrMod'].setValue(0)
+            self.widgets['nrMod'].setEnabled(False)
+        elif 'nrMod' in self.configHandler.getAll().keys():
+            self.widgets['nrMod'].setEnabled(True)
+            self.widgets["nrMod"].setValue(self.configHandler.get('nrMod'))
+        else:
+            self.widgets['nrMod'].setEnabled(True)
+            self.widgets["nrMod"].setValue(1)
+
 
     def backToLast(self):
         super(TDStartDialog, self).backToLast()

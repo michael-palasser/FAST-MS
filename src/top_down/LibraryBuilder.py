@@ -3,7 +3,7 @@ Created on 21 Jul 2020
 
 @author: michael
 '''
-import re
+from re import search as reSearch
 from multiprocessing import Pool
 
 from src.MolecularFormula import MolecularFormula
@@ -156,9 +156,10 @@ class FragmentLibraryBuilder(object):
 
     @staticmethod
     def processTemplateName(templName):
-        search = re.search(r"([+,-])",'c+G+CMCT-G')
+        search = reSearch(r"([+,-])",templName)
         if search == None:
             return templName, ""
+        #print('hey',templName[0:search.start()], templName[search.start():])
         return templName[0:search.start()], templName[search.start():]
 
 
@@ -172,14 +173,18 @@ class FragmentLibraryBuilder(object):
         precursorFragments = []
         sequence = self.__sequence.getSequenceList()
         sequenceName = self.__sequence.getName()
-        precName = "+" + self.__modifPattern.getModification()
-        if self.__maxMod > 1:
+        precName = ""
+        if self.__maxMod == 1:
+            precName = "+" + self.__modifPattern.getModification()
+        elif self.__maxMod > 1:
             precName = "+" +  str(self.__maxMod) + self.__modifPattern.getModification()
         #return
         basicFormula = simpleFormula.addFormula(self.__molecule.getFormula())
         for precTemplate in self.__fragmentation.getItems2():
             if precTemplate.enabled():
-                templateName = precTemplate.getName()
+                #templateName = precTemplate.getName()
+                species, templateName = self.processTemplateName(precTemplate.getName())
+                #print(species, templateName)
                 tempFormula = basicFormula.addFormula(precTemplate.getFormula())
                 templateRadicals = precTemplate.getRadicals()
                 newFragment = Fragment(sequenceName, 0, templateName, tempFormula, sequence, templateRadicals)
@@ -213,11 +218,12 @@ class FragmentLibraryBuilder(object):
                 print(elem)
         sequence = self.__sequence.getSequenceList()
         forwardFragments = self.createFragmentLadder(self.buildSimpleLadder(sequence), self.__fragmentation.getFragTemplates(1))
+        print('hey')
         SimpleLadderBack = self.buildSimpleLadder(sequence[::-1])
         backwardFragments = self.createFragmentLadder(SimpleLadderBack, self.__fragmentation.getFragTemplates(-1))
         precursorFragments = self.addPrecursor(SimpleLadderBack[len(sequence) - 1][1])
-        for frag in precursorFragments:
-            print(frag.getName(),frag.formula.toString())
+        #for frag in precursorFragments:
+        #    print(frag.getName(),frag.formula.toString())
         self.__fragmentLibrary = forwardFragments + backwardFragments + precursorFragments
         self.__fragmentLibrary.sort(key=lambda obj:(obj.type , obj.number))
         #for fragment in self.__fragmentLibrary:

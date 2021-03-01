@@ -3,13 +3,9 @@ Created on 3 Jul 2020
 
 @author: michael
 '''
-import math
-import os
+from math import exp
 
-import numpy as np
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
-from src import path
-import pandas as pd
 
 noiseLimit = ConfigurationHandlerFactory.getTD_SettingHandler().get('noiseLimit')
 
@@ -34,6 +30,7 @@ class Fragment(object):
         self.sequence = sequence
         self.isotopePattern = None
         self.radicals = radicals
+
 
     def getType(self):
         return self.type
@@ -79,7 +76,7 @@ class FragmentIon(Fragment):
     charged fragment
     '''
 
-    def __init__(self, fragment, charge, isotopePattern, noise):
+    def __init__(self, fragment, monoisotopic, charge, isotopePattern, noise):
         '''
         Constructor
         :param fragment: Type Fragment
@@ -90,6 +87,7 @@ class FragmentIon(Fragment):
         '''
         super().__init__(fragment.type, fragment.number, fragment.modification,
                          fragment.formula, fragment.sequence, fragment.radicals,)
+        self.monoisotopicRaw = monoisotopic
         self.charge = charge
         self.isotopePattern = isotopePattern
         self.intensity = 0
@@ -108,15 +106,15 @@ class FragmentIon(Fragment):
                str(round(self.error, 2)) + "\t\t" + str(round(self.quality, 2)) #+ "\t" + self.comment
 
     def getMonoisotopic(self):
-        #return 500.
-        return np.min(self.isotopePattern['m/z_theo']) * (1 + self.error * 10 ** (-6))  # np.min(self.isotopePattern['m/z'])
+        #return np.min(self.isotopePattern['m/z_theo']) * (1 + self.error * 10 ** (-6))  # np.min(self.isotopePattern['m/z'])
+        return self.monoisotopicRaw * (1 + self.error * 10 ** (-6))
 
     def getScore(self):
         if self.quality > 1.5:
             print('warning:', round(self.quality, 2), self.getName())
             self.score = 10 ** 6
         else:
-            self.score = math.exp(10 * self.quality) / 20 * self.quality * self.intensity / noiseLimit
+            self.score = exp(10 * self.quality) / 20 * self.quality * self.intensity / noiseLimit
         return self.score
 
     def getSignalToNoise(self):
@@ -137,7 +135,7 @@ class FragmentIon(Fragment):
                 '{:3.2f}'.format(round(self.error,2)),
                 '{:6.1f}'.format(round(self.getSignalToNoise(),1)),
                 '{:3.2f}'.format(round(self.quality,2))]"""
-        return [round(self.getMonoisotopic(),5), self.charge, round(self.intensity), self.getName(), round(self.error,2),
+        return [round(self.getMonoisotopic(),5), self.charge, int(round(self.intensity)), self.getName(), round(self.error,2),
                 round(self.getSignalToNoise(),1), round(self.quality,2)]#"""
 
     def getId(self):

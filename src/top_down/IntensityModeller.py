@@ -418,6 +418,8 @@ class IntensityModeller(object):
         for ion in self._correctedIons.values():
             if (ion.type == precName) and (ion.charge == precCharge):
                 precursorList.append(ion.getMonoisotopic())
+        if len(precursorList)<2:
+            return (0,0)
         precursorList.sort()
         return (precursorList[0],precursorList[-1]+70/precCharge)
 

@@ -3,7 +3,7 @@ import sys
 import pyqtgraph as pg
 from PyQt5 import QtWidgets, QtCore
 import numpy as np
-from PyQt5.QtWidgets import QInputDialog
+#from PyQt5.QtWidgets import QInputDialog
 
 mz = [500.1,500.2,500.3,500.4]
 Int1 = [1*10**6, 1.8*10**6, 1.7*10**6, 0.8*10**6 ]

@@ -80,7 +80,7 @@ class IsotopePatternController(object):
         for row in isotopePattern:
             peaks.append((row['m/z'],0,round(row['calcInt']),1))
         peaks = np.array(peaks, dtype=self._peakDtype)
-        self._ion = FragmentIon(fragment, charge, peaks,0)
+        self._ion = FragmentIon(fragment, np.min(peaks['m/z']), charge, peaks,0)
         self._ion.quality = 0
         return self._ion, self._neutralMass
 
@@ -190,13 +190,19 @@ class IsotopePatternView(QtWidgets.QMainWindow):
         self._vertLayout.addWidget(self._upperW)
         self._vertLayout.addSpacing(10)
         self.makeIonTable(None, None)
+        #self._vertLayout.addWidget(self._ionTable)
+        self._spaceItem = QtWidgets.QSpacerItem(0, 10, QtWidgets.QSizePolicy.Expanding)
+        self._vertLayout.addItem(self._spaceItem)
+        print(self._vertLayout.indexOf(self._ionTable))
         # self.ionTable.setGeometry(QtCore.QRect(20, 335, 550, 50))
         self._peakLabel = QtWidgets.QLabel(self.centralwidget)
         self._peakLabel.setGeometry(QtCore.QRect(25, 415, 60, 16))
         self._peakLabel.setText(self._translate(self.objectName(), "Peaks:"))
-
         self._vertLayout.addWidget(self._peakLabel)
+        print(self._vertLayout.indexOf(self._peakLabel))
         self.makePeakTable((()))
+        #self._vertLayout.addWidget(self.peakTable)
+        print(self._vertLayout.indexOf(self.peakTable))
         # self.peakTable.setGeometry(QtCore.QRect(20, 400, 550, 190))
 
         self.modeBox.currentIndexChanged.connect(self.activateFrame)
@@ -345,15 +351,23 @@ class IsotopePatternView(QtWidgets.QMainWindow):
         #self.spectrumView.setGeometry(QtCore.QRect(250, 50, 350, 280))
         self.peakTable.hide()
         self._ionTable.hide()
-        self._vertLayout.removeWidget(self._ionTable)
-        self._vertLayout.removeWidget(self.peakTable)
-        self._vertLayout.removeWidget(self._peakLabel)
+        print('ion',self._vertLayout.indexOf(self._ionTable))
+        #self._vertLayout.removeWidget(self._ionTable)
+        #self._vertLayout.removeWidget(self.peakTable)
+        print('label',self._vertLayout.indexOf(self._peakLabel))
+        print('peak',self._vertLayout.indexOf(self.peakTable))
+        #self._vertLayout.removeWidget(self._peakLabel)
         del self.peakTable
         del self._ionTable
         self.makeIonTable(ion, neutralMass)
-        self._vertLayout.addSpacing(10)
-        self._vertLayout.addWidget(self._peakLabel)
+        #self._vertLayout.addSpacing(10)
+        self._vertLayout.insertItem(3, self._spaceItem)
+        self._vertLayout.insertWidget(4, self._peakLabel)
+        #self._vertLayout.insertWidget(2, self._ionTable)
+        #self._vertLayout.addSpacing(10)
+        #self._vertLayout.addWidget(self._peakLabel)
         hight = self.makePeakTable(ion.isotopePattern)
+        #self._vertLayout.insertWidget(5, self.peakTable)
         self.resize(615, 420 + hight + 30)
 
     #def getIonVals(self, ion, neutralMass):
@@ -367,7 +381,9 @@ class IsotopePatternView(QtWidgets.QMainWindow):
         self._ionTable = IsoPatternIon(self.centralwidget, (vals,), 0)
         #self._ionTable.setGeometry(QtCore.QRect(15, 0, 585, 49))
         self._ionTable.resizeColumnsToContents()
-        self._vertLayout.addWidget(self._ionTable)
+        self._vertLayout.insertWidget(2,self._ionTable)
+        print('ion',self._vertLayout.indexOf(self._ionTable))
+        #self._vertLayout.addWidget(self._ionTable)
         self._ionTable.show()
 
     def makePeakTable(self, peaks):
@@ -377,7 +393,9 @@ class IsotopePatternView(QtWidgets.QMainWindow):
             hight=400
         #self.peakTable.setGeometry(QtCore.QRect(50, 440, 450, hight)) #290
         self.peakTable.resizeColumnsToContents()
-        self._vertLayout.addWidget(self.peakTable)
+        #self._vertLayout.addWidget(self.peakTable)
+        self._vertLayout.insertWidget(5,self.peakTable)
+        print('peak',self._vertLayout.indexOf(self.peakTable))
         self.peakTable.show()
         return hight
 

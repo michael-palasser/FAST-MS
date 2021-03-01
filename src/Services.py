@@ -1,5 +1,6 @@
 from abc import ABC
 
+from src.Exceptions import UnvalidInputException
 from src.entities.GeneralEntities import Makromolecule, Element, BuildingBlock
 from src.repositories.TD_Repositories import *
 from src.repositories.MoleculeRepository import MoleculeRepository
@@ -270,7 +271,8 @@ class FragmentIonService(AbstractServiceForPatterns):
 
     def getPatternWithObjects(self, name, *args):
         pattern = super(FragmentIonService, self).getPatternWithObjects(name, FragItem)
-        precItems = [PrecursorItem(("", "", "", "", 0, True))]
+        #precItems = [PrecursorItem(("", "", "", "", 0, True))]
+        precItems = []
         for item in pattern.getItems2():
             precItems.append(PrecursorItem(item))
         pattern.setItems2(precItems)

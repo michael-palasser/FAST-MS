@@ -3,7 +3,7 @@ import sys
 
 import numpy as np
 import os
-import re
+from re import findall
 from datetime import datetime
 from PyQt5 import QtWidgets, QtCore
 
@@ -46,10 +46,10 @@ def run(mainWindow):
             ionList = list()
             speciesList = list()
             for ion in arr:
-                species = re.findall(r"([a-z]+)", ion['name'])[0]
+                species = findall(r"([a-z]+)", ion['name'])[0]
                 if (species not in speciesList) and (species!=sequenceName):
                     speciesList.append(species)
-                number = int(re.findall(r"([0-9]+)", ion['name'])[0])
+                number = int(findall(r"([0-9]+)", ion['name'])[0])
                 if ion['name'].find('+') != -1:
                     modif = ion['name'][ion['name'].find('+'):]
                 else:

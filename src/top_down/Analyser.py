@@ -94,20 +94,36 @@ class Analyser(object):
             proportions[key] = arr[:, 2]
         return proportions
 
-    def getAvCharges(self, interestingIons):
+    def getAvCharges(self, interestingIons, reduced):
         temp = dict()
-        redTemp = dict()
+        #redTemp = dict()
+        chargeDict = dict()
         for ion in self._ions:
             if ion.type in interestingIons:
                 if ion.type not in temp.keys():
                     temp[ion.type] = np.zeros((len(self._sequence), 3))
-                    redTemp[ion.type] = np.zeros((len(self._sequence), 3))
-                temp[ion.type][ion.number - 1] += np.array([ion.intensity, ion.intensity * ion.charge, 0])
-                redTemp[ion.type][ion.number - 1] += \
-                    np.array([ion.getRelAbundance(),ion.getRelAbundance() * ion.charge, 0])
+                    #chargeDict[ion.type] = len(self._sequence)*[[]]
+                    chargeDict[ion.type] = [[] for i in range(len(self._sequence))]
+                    #redTemp[ion.type] = np.zeros((len(self._sequence), 3))
+                chargeDict[ion.type][ion.number - 1].append(ion.charge)
+                if reduced:
+                    temp[ion.type][ion.number - 1] += \
+                                        np.array([ion.getRelAbundance(),ion.getRelAbundance() * ion.charge, 0])
+                else:
+                    temp[ion.type][ion.number - 1] += np.array([ion.intensity, ion.intensity * ion.charge, 0])
         avCharges = self.calculateProportions(temp)
-        reducedAvCharges = self.calculateProportions(redTemp)
-        return avCharges, reducedAvCharges
+        minMaxChargeDict = dict()
+        for key,vals in chargeDict.items():
+            minMaxCharges = []
+            for charges in vals:
+                if len(charges)>1:
+                    minMaxCharges.append((min(charges),max(charges)))
+                else:
+                    minMaxCharges.append((np.nan, np.nan))
+            minMaxChargeDict[key] = np.array(minMaxCharges)
+            print(key,minMaxCharges)
+        #reducedAvCharges = self.calculateProportions(redTemp)
+        return avCharges, minMaxChargeDict
 
     def toTable(self, forwardVals, backwardVals):
         table = []

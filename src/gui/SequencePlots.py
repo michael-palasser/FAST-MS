@@ -9,14 +9,17 @@ import pyqtgraph as pg
 class PlotFactory(object):
     def __init__(self, parent):
         self._parent = parent
+        self._colours = ['r', 'm', 'y', 'c', 'g', 'b']
         '''self._colours = ['r', 'm', 'y', 'c', 'g', 'b']
         self._markers = ['o','t', 's', 'p','h', 'star', '+', 'd', 'x', 't1','t2', 't3']'''
 
     def showOccupancyPlot(self, sequence, forwardVals, backwardVals, maxY):
         self.initiatePlot(sequence, forwardVals, backwardVals, maxY, self.formatForOccupancies)
 
-    def showChargePlot(self, sequence, forwardVals, backwardVals, maxY):
+    def showChargePlot(self, sequence, forwardVals, backwardVals, maxY, forwardVals2, backwardVals2):
         self.initiatePlot(sequence, forwardVals, backwardVals, abs(maxY), self.formatForCharges)
+        self.plotMinMaxVals(forwardVals2, backwardVals2)
+
 
     def initiatePlot(self, sequence, forwardVals, backwardVals, maxY, func):
         #self.plotWdw = QtWidgets.QMainWindow(self._parent)
@@ -83,12 +86,12 @@ class PlotFactory(object):
 
 
     def plot(self):
-        colours = ['r', 'm', 'y', 'c', 'g', 'b']
         markers = ['t1', 'o', 's', 'p', 'h', 'star', 't2', 't3', '+', 'd', 'x','t']
         sequLength = len(self._sequence)
         #xVals = [i+1 for i in range(sequLength)]
-        self.plotCurve([i+1 for i in range(sequLength)], self._forwardVals, colours, markers,self.p)
-        self.plotCurve([sequLength-i-1 for i in range(sequLength)], self._backwardVals, colours[::-1], markers[::-1],self.p2)
+        self.plotCurve([i+1 for i in range(sequLength)], self._forwardVals, self._colours, markers,self.p)
+        self.plotCurve([sequLength-i-1 for i in range(sequLength)], self._backwardVals, self._colours[::-1],
+                       markers[::-1],self.p2)
         self.updateViews()
         self.p.getViewBox().sigResized.connect(self.updateViews)
         #self.setCentralWidget(self.p)
@@ -112,6 +115,28 @@ class PlotFactory(object):
             #    self.p.plotItem.legend.addItem(scatter, name)
             #self.graphWidget.plot(xVals, vals, pen=pen, )
             #self.p.plotItem.legend.addItem(i,key)
+            i+=1
+
+    def plotMinMaxVals(self, forwardVals, backwardVals):
+        sequLength = len(self._sequence)
+
+        self.plotVals([i+1 for i in range(sequLength)], forwardVals, self._colours, self.p)
+        self.plotVals([sequLength-i-1 for i in range(sequLength)], backwardVals, self._colours[::-1], self.p2)
+
+    def plotVals(self, xVals, currentDict, colours, parent):
+        i=0
+        for key, vals in currentDict.items():
+            #name = key + '-ions'
+            marker = '+'
+            if parent!=self.p:
+                vals = np.array([self._maxY-val for val in vals])
+                marker = 'x'
+            #print(key, vals)
+            #[print(key,xVal,yVal) for xVal,yVal in zip(xVals,vals)]
+            self.p.addItem(pg.ScatterPlotItem(x=xVals, y=vals[:,0], symbol=marker,
+                                         pen =pg.mkPen(color=colours[i], width=0.8), size=8, pxMode=True))
+            self.p.addItem(pg.ScatterPlotItem(x=xVals, y=vals[:,1], symbol=marker,
+                                         pen =pg.mkPen(color=colours[i], width=0.8), size=8, pxMode=True))
             i+=1
 
     def makeCustomMarker(self, char):

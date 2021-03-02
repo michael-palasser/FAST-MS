@@ -42,6 +42,7 @@ class PropertyStorage(object):
         for modification in self.__modifPattern.getItems():
             if modification.getZEffect() != 0:
                 chargedModifications[modification.getName()] = modification.getZEffect()
+
         return chargedModifications
 
     def getImportantModifications(self):

@@ -29,7 +29,8 @@ from src.gui.CheckIonView import CheckMonoisotopicOverlapView, CheckOverlapsView
 from src.gui.ResultView import IonTableModel, PeakView, PlotTableView
 from src.gui.SequencePlots import PlotFactory
 from src.gui.SimpleDialogs import ExportDialog
-from src.gui.ParameterDialogs import TDStartDialog
+#from src.gui.ParameterDialogs import TDStartDialog
+from src.gui.ParameterDialogsNew import TDStartDialog
 from src.gui.SpectrumView import SpectrumView
 
 
@@ -166,11 +167,13 @@ class TD_MainController(object):
                         ['Repeat overlap modelling involving user inputs'], [""])
         self.createMenu("Show",
                 {'Results': self.mainWindow.show, 'Occupancy-Plot': self.showOccupancyPlot,
-                 'Charge-Plot': self.showChargeDistrPlot, 'Sequence Coverage': self.dumb,
-                 'Original Values':self.showRemodelledIons},
+                 'Charge-Plot': lambda: self.showChargeDistrPlot(False),
+                 'Reduced Charge-Plot':lambda: self.showChargeDistrPlot(True),
+                 'Sequence Coverage': self.dumb, 'Original Values':self.showRemodelledIons},
                 ['Show lists of observed and deleted ions' ,'Show occupancies as a function of sequence pos.',
-                 'Show av. charge as a function of sequence pos.', 'Show sequence coverage',
-                 'Show original values of overlapping ions'], ['',"", "", '', ''])
+                 'Show av. charge as a function of sequence pos. (Calculated with Int. values)',
+                 'Show av. charge as a function of sequence pos. (Calculated with Int./z values)',
+                 'Show sequence coverage', 'Show original values of overlapping ions'], ['',"", "", '', '', ''])
 
     def createMenu(self, name, options, tooltips, shortcuts):
         menu = QtWidgets.QMenu(self.menubar)
@@ -435,15 +438,17 @@ class TD_MainController(object):
                                        list(percentageDict.keys()), 'Occupancies', 3)
 
 
-    def showChargeDistrPlot(self):
+    def showChargeDistrPlot(self, reduced):
         self._analyser.setIons(list(self._intensityModeller.getObservedIons().values()))
-        chargeDict, redChargeDict = self._analyser.getAvCharges(self.configs['interestingIons'])
+        chargeDict, minMaxCharges = self._analyser.getAvCharges(self.configs['interestingIons'], reduced)
         plotFactory1 = PlotFactory(self.mainWindow)
         #plotFactory2 = PlotFactory(self.mainWindow)
         forwardVals = self._propStorage.filterByDir(chargeDict,1)
         backwardVals = self._propStorage.filterByDir(chargeDict,-1)
+        forwardLimits = self._propStorage.filterByDir(minMaxCharges,1)
+        backwardLimits = self._propStorage.filterByDir(minMaxCharges,-1)
         plotFactory1.showChargePlot(self._propStorage.getSequenceList(), forwardVals, backwardVals,
-                                    self.settings['charge'])
+                                    self.settings['charge'], forwardLimits, backwardLimits)
 
         self.chargeView = PlotTableView(self._analyser.toTable(forwardVals.values(), backwardVals.values()),
                                        list(chargeDict.keys()), 'Av. Charge per Fragment', 1)

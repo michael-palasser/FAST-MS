@@ -207,7 +207,6 @@ class SpectrumHandler(object):
     #ToDo: Test SearchParameters, Proteins!, Parameters
     def getSearchParameters(self, fragment,precModCharge):
         molecule = self.__properties.getMolecule().getName()
-        print(molecule)
         if molecule in ['RNA' ,'DNA'] and self.__sprayMode == -1:
             #probableZ = (fragment.number-1) * self.normalizationFactor
             probableZ = fragment.formula.formulaDict['P']* self.normalizationFactor
@@ -225,11 +224,11 @@ class SpectrumHandler(object):
         tolerance = configs['zTolerance']
         lowZ, highZ = 1, self.__charge
         zEffect = (precModCharge - self.getModCharge(fragment)) * self.__sprayMode
-        if (probableZ-tolerance + zEffect)> 1:
+        if (probableZ-tolerance + zEffect)> lowZ:
             lowZ = round(probableZ-tolerance + zEffect)
-        if (probableZ+tolerance + precModCharge)< self.__charge:
+        if (probableZ+tolerance + zEffect)< highZ:
             highZ = round(probableZ + tolerance + zEffect)
-        print(fragment.getName(),lowZ,highZ)
+        print(fragment.getName(),lowZ,round(probableZ + zEffect,2),highZ)
         return range(lowZ,highZ+1)
 
 
@@ -250,7 +249,6 @@ class SpectrumHandler(object):
             if zRange == None:
                 continue
             for z in zRange:
-                print(fragment.getName(),z)
                 theoreticalPeaks = copy.deepcopy(fragment.isotopePattern)
                 #if self.__settings['dissociation'] in ['ECD', 'EDD', 'ETD'] and fragment.number == 0:
                 #    theoreticalPeaks['mass'] += ((self.protonMass-self.eMass) * (self.__charge - z))

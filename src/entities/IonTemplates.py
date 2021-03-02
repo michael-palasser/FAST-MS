@@ -92,8 +92,8 @@ class ModifiedItem(AbstractItem3):
         item = self.processItem(item)
         super(ModifiedItem, self).__init__(name=item[0], gain=item[1], loss=item[2],
                                             residue=item[3], radicals=item[4], enabled=item[7])
-        self._calcOccupancy = item[5]
-        self.__zEffect = item[6]
+        self.__zEffect = item[5]
+        self._calcOccupancy = item[6]
 
     def getCalcOccupancy(self):
         return self._calcOccupancy

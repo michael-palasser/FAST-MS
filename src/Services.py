@@ -105,6 +105,7 @@ class AbstractServiceForPatterns(AbstractService, ABC):
         pattern = self.get(name)
         items = []
         for item in pattern.getItems():
+            print(item)
             items.append(args[0](item))
         pattern.setItems(items)
         return pattern

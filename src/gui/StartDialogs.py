@@ -8,7 +8,6 @@ from os.path import join
 class AbstractStartDialog1(QtWidgets.QDialog):
     def __init__(self, parent, title, lineSpacing):
         super().__init__(parent)
-        self.setObjectName('dialog')
         self.widgets = []
         self.lineSpacing = lineSpacing
         self._translate = QtCore.QCoreApplication.translate
@@ -101,22 +100,25 @@ class SpectrumComparatorStartDialog(AbstractStartDialog1):
 
 
 class OpenFileWidget(QtWidgets.QWidget):
-    def __init__(self, parrent, width, yPos, mode,startPath, title, formats):
-        super(OpenFileWidget, self).__init__(parrent)
-        self.setGeometry(QtCore.QRect(20, yPos, width, 36))
-        #self.horizontalLayout = QtWidgets.QHBoxLayout(self)
+    def __init__(self, parent, mode,startPath, title, formats):
+        super(OpenFileWidget, self).__init__(parent)
+        #self.setGeometry(QtCore.QRect(20, yPos, width, 36))
+        self.horizontalLayout = QtWidgets.QHBoxLayout(self)
+        self.horizontalLayout.setContentsMargins(0,0,0,0)
         self.lineEdit = QtWidgets.QLineEdit(self)
-        self.lineEdit.setGeometry(QtCore.QRect(0, 5, width-32, 21))
 
-        #self.horizontalLayout.addWidget(self.lineEdit)
+        #self.lineEdit.setGeometry(QtCore.QRect(0, 5, width-32, 21))
+
+        self.horizontalLayout.addWidget(self.lineEdit)
         self.pushButton = QtWidgets.QPushButton(self)
-        self.pushButton.setGeometry(QtCore.QRect(width-32, 0, 36, 30))
+        #self.pushButton.setGeometry(QtCore.QRect(width-32, 0, 36, 30))
         self.pushButton.setIcon(QtGui.QIcon('open.png'))
-        self.pushButton.setIconSize(QtCore.QSize(24,24))
+        self.pushButton.setIconSize(QtCore.QSize(26,26))
+        self.pushButton.setMaximumSize(26,26)
         #self.pushButton.setGeometry(QtCore.QRect(250, yPos, 26, 26))
-        _translate = QtCore.QCoreApplication.translate
+        #_translate = QtCore.QCoreApplication.translate
         #self.pushButton.setText(_translate(self.objectName(), "O"))
-        #self.horizontalLayout.addWidget(self.pushButton)
+        self.horizontalLayout.addWidget(self.pushButton)
         self.__startPath = startPath
         self.__title = title
         self.__formats = formats

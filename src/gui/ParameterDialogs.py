@@ -217,6 +217,7 @@ class TDStartDialog(StartDialog):
                     #"Name of the output Excel file\ndefault: name of spectral pattern file + _out.xlsx"))
         xPos, yPos = self.createWidgets(widgets,200,linewidth)
         self.widgets['charge'].setMinimum(-99)
+        self.widgets['noiseLimit'].setMinimum(0.01)
         self.buttonBox.setGeometry(QtCore.QRect(210, yPos+20, 164, 32))
         #self.widgets['charge'].setValue(2)
         if self.configHandler.getAll() != None:

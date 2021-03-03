@@ -10,16 +10,13 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QAction
 from src.gui.IsotopePatternController import IsotopePatternView
 from src.gui.EditorController import *
 #from src.gui.ParameterDialogs import TD_configurationDialog, IntactStartDialog
-from src.gui.ParameterDialogsNew import TD_configurationDialog, IntactStartDialog
+from src.gui.ParameterDialogsNew import TD_configurationDialog
+from src.gui.StartDialogs import IntactStartDialog
 from src.top_down.ModellingTool import main as modellingTool
 from src.top_down.OccupancyRecalculator import run as occupancyRecalculator
 from src.top_down.SpectrumComparator import run as spectrumComparator
 from src.intact.Main import run as IntactIonsSearch
 from src.gui.TD_searchController import TD_MainController
-
-
-class UnvalidInputException(object):
-    pass
 
 
 class Window(QMainWindow):
@@ -107,7 +104,10 @@ class Window(QMainWindow):
         dialog.exec_()
 
     def editData(self, controller):
-        controller()
+        try:
+            controller()
+        except CanceledException:
+            pass
         '''except UnvalidInputException:
             traceback.print_exc()
             print('hey')

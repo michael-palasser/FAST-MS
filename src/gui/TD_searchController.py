@@ -30,7 +30,7 @@ from src.gui.ResultView import IonTableModel, PeakView, PlotTableView
 from src.gui.SequencePlots import PlotFactory
 from src.gui.SimpleDialogs import ExportDialog
 #from src.gui.ParameterDialogs import TDStartDialog
-from src.gui.ParameterDialogsNew import TDStartDialog
+from src.gui.StartDialogs import TDStartDialog
 from src.gui.SpectrumView import SpectrumView
 
 
@@ -203,8 +203,8 @@ class TD_MainController(object):
 
     def makeTabWidget(self, data, name):
         tab = QtWidgets.QWidget()
-        verticalLayout = QtWidgets.QVBoxLayout()
-        tab.setLayout(verticalLayout)
+        verticalLayout = QtWidgets.QVBoxLayout(tab)
+        #tab.setLayout(verticalLayout)
         self.tabWidget.addTab(tab, "")
         self.tabWidget.setTabText(self.tabWidget.indexOf(tab), self._translate(self.mainWindow.objectName(), name))
         scrollArea,table = self.makeScrollArea(tab,[ion.getMoreValues() for ion in data.values()], self.showOptions)

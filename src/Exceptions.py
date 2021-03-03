@@ -24,3 +24,8 @@ class UnvalidIsotopePatternException(Exception):
 
     def __str__(self):
         return(repr("Stored Isotope Pattern is deprecated: " + self.fragment + " " + self.message))
+
+
+class CanceledException(Exception):
+    def __init__(self, message):
+        self.message = message

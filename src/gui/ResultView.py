@@ -557,9 +557,9 @@ class PlotTableModel(AbstractTableModel):
 class PlotTableView(QtWidgets.QWidget):
     def __init__(self, data, keys, title, precision):
         super().__init__(parent=None)
-
+        verticalLayout = QtWidgets.QVBoxLayout(self)
         scrollArea = QtWidgets.QScrollArea(self)
-        scrollArea.setGeometry(QtCore.QRect(10, 10, len(data[0])*50+200, len(data)*22+25))
+        #scrollArea.setGeometry(QtCore.QRect(10, 10, len(data[0])*50+200, len(data)*22+25))
         scrollArea.setWidgetResizable(True)
         # scrollArea.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         # scrollArea.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
@@ -581,7 +581,8 @@ class PlotTableView(QtWidgets.QWidget):
         self.setWindowTitle(self._translate(self.objectName(), self.objectName()))
         self.table.resizeColumnsToContents()
         self.table.resizeRowsToContents()
-        self.resize(len(data[0])*50+200, len(data)*22+25)
+        verticalLayout.addWidget(scrollArea)
+        #self.resize(len(data[0])*50+200, len(data)*22+25)
         self.show()
 
     def showOptions(self, table, pos):

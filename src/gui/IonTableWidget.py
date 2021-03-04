@@ -11,7 +11,7 @@ from src.Exceptions import UnvalidInputException
 
 
 class IonTableWidget(QTableWidget):
-    def __init__(self, parent, ions):
+    def __init__(self, parent, ions, yPos):
         super(IonTableWidget, self).__init__(parent)
         print('starting')
         #self.headers = ['m/z', 'z', 'I', 'fragment', 'error /ppm', 'S/N', 'qual.']
@@ -19,9 +19,9 @@ class IonTableWidget(QTableWidget):
         """model = IonTableModel([ion.getValues() for ion in ions])
         self.setModel(model)"""
         self.setColumnCount(len(self.getHeaders()))
-        #self.move(20, yPos)  # 70
+        self.move(20, yPos)  # 70
         self.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
-        self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         self.setRowCount(len(ions))
         self._smallFnt = QFont()
         self._smallFnt.setPointSize(10)

@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QAction
 from src.gui.IsotopePatternController import IsotopePatternView
 from src.gui.EditorController import *
 #from src.gui.ParameterDialogs import TD_configurationDialog, IntactStartDialog
-from src.gui.ParameterDialogsNew import TD_configurationDialog
+from src.gui.ParameterDialogs import TD_configurationDialog
 from src.gui.StartDialogs import IntactStartDialog
 from src.top_down.ModellingTool import main as modellingTool
 from src.top_down.OccupancyRecalculator import run as occupancyRecalculator
@@ -44,7 +44,9 @@ class Window(QMainWindow):
 
     def home(self):
         self.addActionToStatusBar(self.tdMenu, 'Analyse Spectrum',
-                              'Starts analysis of top-down spectrum', lambda:TD_MainController(self))
+                              'Starts analysis of top-down spectrum', lambda:TD_MainController(self, True))
+        self.addActionToStatusBar(self.tdMenu, 'Load Analysis',
+                              'Loads an old analysis', lambda:TD_MainController(self, False))
         self.addActionToStatusBar(self.tdMenu, 'Isotope Pattern Tool',
                               'Calculates isotope pattern of an ion', lambda:IsotopePatternView(self))
         self.addActionToStatusBar(self.tdMenu, 'Calc. Abundances',

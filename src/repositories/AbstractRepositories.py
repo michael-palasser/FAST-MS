@@ -143,41 +143,15 @@ class AbstractRepositoryWithItems(AbstractRepository, ABC):
     def getPattern(self, name):
         pass
 
-
-    def getPatternWithObjects(self, name):
-        pass
-
     def getItems(self, patternId, table):
         #table = [key for key in self._itemDict.keys()][0]
         cur = self._conn.cursor()
         cur.execute("SELECT * FROM " + table + " WHERE patternId=?", (patternId,))
         return cur.fetchall()
 
-        """listOfItems = list()
-        for item in cur.fetchall():
-            row = []
-            for val in item:
-                row
-            #propertyDict = {}
-            #for i, val in enumerate(self._itemDict.values()):
-            #    propertyDict[val]= item[i]
-            listOfItems.append(propertyDict)
-
-        return listOfItems"""
-
-
-    """def getAllPatterns(self):
-        listOfPatterns = list()
-        for pattern in self.getAll():
-            listOfPatterns.append(PatternWithItems(pattern[1], 
-                                    self.getItems(pattern[0],[key for key in self._itemDict.keys()][0]), pattern[0]))
-        return listOfPatterns"""
 
     def getAllPatternNames(self):
-        listOfNames = list()
-        for pattern in self.getAll():
-            listOfNames.append(pattern[1])
-        return listOfNames
+        return [pattern[1] for pattern in self.getAll()]
 
     def updatePattern(self, pattern):
         self.update(pattern.getName(), pattern.getId())

@@ -100,6 +100,13 @@ class FragmentIon(Fragment):
     def getIntensity(self):
         return round(self.intensity)
 
+    def setRemaining(self, intensity, error, quality, comment):
+        self.intensity = intensity
+        self.error = error
+        self.quality = quality
+        self.comment = comment
+        self.getScore()
+
     def toString(self):
         return str(round(self.getMonoisotopic(), 5)) + "\t\t" + str(self.charge) + "\t" + str(
             round(self.intensity)) + "\t" + '{:12}'.format(self.getName()) + "\t" + \
@@ -155,7 +162,7 @@ class FragmentIon(Fragment):
     def getPeakValues(self):
         peaks = []
         for i, peak in enumerate(self.isotopePattern):
-            peaks.append((peak['m/z'], round(peak['relAb']), round(peak['calcInt']), peak['error'], peak['used']))
+            peaks.append([peak['m/z'], round(peak['relAb']), round(peak['calcInt']), peak['error'], peak['used']])
         return peaks
 
 

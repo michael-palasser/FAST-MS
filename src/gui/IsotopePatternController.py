@@ -9,7 +9,7 @@ from src.entities.AbstractEntities import AbstractItem1
 from src.entities.GeneralEntities import Sequence
 from src.entities.Ions import FragmentIon, Fragment
 from src.gui.IonTableWidget import IsoPatternIon
-from src.gui.ResultView import IsoPatternPeakWidget
+from src.gui.PeakViews import IsoPatternPeakWidget
 from src.gui.SpectrumView import TheoSpectrumView
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.top_down.IntensityModeller import IntensityModeller
@@ -146,6 +146,7 @@ class IsotopePatternView(QtWidgets.QMainWindow):
         self.centralwidget = QtWidgets.QWidget(self)
         self._vertLayout = QtWidgets.QVBoxLayout(self.centralwidget)
         self._upperW =QtWidgets.QWidget(self.centralwidget)
+        #self._horizLayout = QtWidgets.QHBoxLayout(self._upperW)
 
         self.inputForm = QtWidgets.QLineEdit(self._upperW)
         self.inputForm.setGeometry(QtCore.QRect(15, 20, 185, 21))

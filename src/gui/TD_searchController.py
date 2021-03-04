@@ -26,7 +26,9 @@ from src.top_down.SpectrumHandler import SpectrumHandler
 from src.top_down.IntensityModeller import IntensityModeller
 from src.top_down.ExcelWriter import ExcelWriter
 from src.gui.CheckIonView import CheckMonoisotopicOverlapView, CheckOverlapsView
-from src.gui.ResultView import IonTableModel, PeakView, PlotTableView
+from src.gui.ResultView import IonTableModel
+from src.gui.PlotTables import PlotTableView
+from src.gui.PeakViews import PeakView
 from src.gui.SequencePlots import PlotFactory
 from src.gui.SimpleDialogs import ExportDialog
 #from src.gui.ParameterDialogs import TDStartDialog
@@ -42,15 +44,18 @@ def sortIonsByName(ionList):
 
 #if __name__ == '__main__':
 class TD_MainController(object):
-    def __init__(self, mainWindow):
-        dialog = TDStartDialog(None)
-        dialog.exec_()
-        if dialog.canceled:
-            return
-        self.settings = dialog.newSettings
-        self.configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
-        if self.search() == 0:
-            self.setUpUi(mainWindow)
+    def __init__(self, parent, new):
+        if new:
+            dialog = TDStartDialog(None)
+            dialog.exec_()
+            if dialog.canceled:
+                return
+            self.settings = dialog.newSettings
+            self.configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
+            if self.search() == 0:
+                self.setUpUi(parent)
+        else:
+
 
 
     def search(self):

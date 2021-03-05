@@ -31,7 +31,7 @@ class SpectrumHandler(object):
     acidicAA = {'D': 10, 'E': 10,
                 'H': 0.9, 'R': 0.5, 'K': 0.5, }
 
-    def __init__(self, filePath, properties, fragmentLibrary, precursor, settings):
+    def __init__(self, filePath, properties, precursor, settings):
         '''
         Constructor
         :param molecule: RNA/DNA/P (String)
@@ -42,13 +42,11 @@ class SpectrumHandler(object):
 
         self.__sequList = properties.getSequenceList()
         self.__properties = properties
-        self.__fragmentLibrary = fragmentLibrary
         self.__settings = settings
         self.__charge = abs(self.__settings['charge'])
         self.__sprayMode = 1
         if self.__settings['charge'] < 0:
             self.__sprayMode = -1
-
         self.__upperBound=0
         self.precursor = precursor
         self.normalizationFactor = None
@@ -57,7 +55,7 @@ class SpectrumHandler(object):
         self.foundIons = list()
         self.ionsInNoise = list()
         self.searchedChargeStates = dict()
-        self.expectedChargeStates = dict()
+        #self.expectedChargeStates = dict()
         self.peaksArrType = np.dtype([('m/z', np.float64), ('relAb', np.float64),('m/z_theo', np.float64),
                              ('calcInt', np.float64), ('error', np.float32), ('used', np.bool_)])
 
@@ -233,7 +231,7 @@ class SpectrumHandler(object):
 
 
     #ToDo: Refactor
-    def findPeaks(self):
+    def findPeaks(self, fragmentLibrary):
         """finds fragments and isotope distribution; parameters:
         low_limit  ... peaks with a lower m/z will be neglected
         high_limit ... peaks with a higher m/z will be neglected
@@ -241,7 +239,7 @@ class SpectrumHandler(object):
         np.set_printoptions(suppress=True)
         precModCharge = self.getModCharge(self.precursor)
         self.normalizationFactor = self.getNormalizationFactor()
-        for fragment in self.__fragmentLibrary:
+        for fragment in fragmentLibrary:
             self.searchedChargeStates[fragment.getName()] = []
             fragment.isotopePattern = np.sort(fragment.isotopePattern, order='calcInt')[::-1]
             zRange = self.getSearchParameters(fragment,precModCharge)
@@ -325,3 +323,6 @@ class SpectrumHandler(object):
                     lowestError = error
                     lowestErrorPeak = peak
             return (lowestErrorPeak[0], lowestErrorPeak[1], theoPeak['m/z'], theoPeak['calcInt'], lowestError, True)
+
+    def setSearchedChargeStates(self, searchedZStates):
+        self.searchedChargeStates = searchedZStates

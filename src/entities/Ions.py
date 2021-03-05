@@ -165,6 +165,20 @@ class FragmentIon(Fragment):
             peaks.append([peak['m/z'], round(peak['relAb']), round(peak['calcInt']), peak['error'], peak['used']])
         return peaks
 
+    def toStorage(self):
+        return [self.type, self.number, self.modification, self.formula, self.sequence, self.radicals,
+               self.monoisotopicRaw, self.charge, int(round(self.noise)), int(round(self.intensity)),
+                float(self.error), self.quality, self.comment]
+    '''def fromStorage(self):
+        return [self.type, self.number, self.modification, self.formula, self.sequence, self.radicals,
+               self.monoisotopicRaw, self.charge, self.noise, self.intensity,
+                self.error, self.quality, self.comment]'''
+
+    def peaksToStorage(self):
+        peaks = []
+        for i, peak in enumerate(self.isotopePattern):
+            peaks.append([peak['m/z'], round(peak['relAb']), round(peak['calcInt']), float(peak['error']), int(peak['used'])])
+        return peaks
 
 class IntactIon(object):
     def __init__(self, name, modification, mz,theoMz, charge, intensity, nrOfModifications):

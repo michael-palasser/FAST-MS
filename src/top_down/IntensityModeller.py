@@ -446,3 +446,8 @@ class IntensityModeller(object):
             return peakArray, intensity, quality
         else:
             return peakArray, intensity, 0
+
+    def setIonLists(self, observedIons, deletedIons, remIons):
+        self._correctedIons = {self.getHash(ion):ion for ion in observedIons}
+        self._deletedIons = {self.getHash(ion):ion for ion in deletedIons}
+        self._remodelledIons = remIons

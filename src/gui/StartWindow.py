@@ -72,7 +72,7 @@ class Window(QMainWindow):
         self.addActionToStatusBar(self.dataEdit, 'Sequences','Edit stored sequences',
                               lambda:self.editData(SequenceEditorController))
         xPos = self.createButton('Analyse top-down\nspectrum','Starts analysis of top-down spectrum',40,
-                              lambda:TD_MainController(self))
+                              lambda:TD_MainController(self, True))
         xPos = self.createButton('Analyse spectrum\nof intact molecule', 'Starts analysis of normal intact spectrum',
                              xPos, self.startIntactIonSearch)
         self.setGeometry(50, 50, xPos+40, 230)

@@ -16,18 +16,20 @@ class SearchService(object):
 
     def getSearch(self, name):
         search =self._rep.getSearch(name)
-        ions = [self.ionToDB(ion) for ion in search.getIons()]
-        deletedIons = [self.ionToDB(ion) for ion in search.getDeletedIons()]
-        remIons = [self.ionToDB(ion) for ion in search.getRemIons()]
-        return search.getSettings(), ions, deletedIons, remIons
+        ions = [self.ionFromDB(ion) for ion in search.getIons()]
+        deletedIons = [self.ionFromDB(ion) for ion in search.getDeletedIons()]
+        remIons = [self.ionFromDB(ion) for ion in search.getRemIons()]
+        searchedZStates = {frag: zsString.split(',') for frag,zsString in search.getSearchedZStates().items()}
+        return search.getSettings(), ions, deletedIons, remIons, searchedZStates, search.getLogFile()
 
 
-    def saveSearch(self, name, settings, ions, deletedIons, remIons):
+    def saveSearch(self, name, settings, ions, deletedIons, remIons, searchedZStates, logFile):
         ions = [self.ionToDB(ion) for ion in ions]
         deletedIons = [self.ionToDB(ion) for ion in deletedIons]
         remIons = [self.ionToDB(ion) for ion in remIons]
-        search = Search([name, datetime.now().strftime("%d/%m/%Y %H:%M")]+ list(settings.values()),
-                        ions, deletedIons, remIons)
+        searchedZStates = {frag: ','.join([str(z) for z in zs]) for frag,zs in searchedZStates.items()}
+        search = Search([None,name, datetime.now().strftime("%d/%m/%Y %H:%M")]+ list(settings.values()),
+                        ions, deletedIons, remIons, searchedZStates, logFile)
         if name in self._rep.getAllNames():
             self._rep.updateSearch(search)
         else:
@@ -42,3 +44,6 @@ class SearchService(object):
         ion.sequence = ','.join(ion.sequence)
         ion.formula = ion.formula.toString()
         return ion
+
+    def deleteSearch(self, name):
+        self._rep.delete(name)

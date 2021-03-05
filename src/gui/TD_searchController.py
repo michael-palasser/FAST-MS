@@ -17,11 +17,13 @@ from PyQt5.QtWidgets import QAbstractItemView
 
 from src import path
 from src.Exceptions import UnvalidIsotopePatternException
+from src.entities.logFile import LogFile
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.repositories.IsotopePatternRepository import IsotopePatternReader
 from src.top_down.Analyser import Analyser
 from src.top_down.SearchProperties import PropertyStorage
 from src.top_down.LibraryBuilder import FragmentLibraryBuilder
+from src.top_down.SearchService import SearchService
 from src.top_down.SpectrumHandler import SpectrumHandler
 from src.top_down.IntensityModeller import IntensityModeller
 from src.top_down.ExcelWriter import ExcelWriter
@@ -30,7 +32,7 @@ from src.gui.ResultView import IonTableModel
 from src.gui.PlotTables import PlotTableView
 from src.gui.PeakViews import PeakView
 from src.gui.SequencePlots import PlotFactory
-from src.gui.SimpleDialogs import ExportDialog
+from src.gui.SimpleDialogs import ExportDialog, SelectSearchDlg, OpenSpectralDataDlg
 #from src.gui.ParameterDialogs import TDStartDialog
 from src.gui.StartDialogs import TDStartDialog
 from src.gui.SpectrumView import SpectrumView
@@ -52,10 +54,44 @@ class TD_MainController(object):
                 return
             self.settings = dialog.newSettings
             self.configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
+            self._logFile = LogFile(self.settings, self.configs)
             if self.search() == 0:
                 self.setUpUi(parent)
         else:
+            searchService = SearchService()
+            #self._search =
+            dialog = SelectSearchDlg(parent, searchService.getAllSearchNames(),self.deleteSearch, searchService)
+            if dialog.exec_() and not dialog.canceled:
+                self.configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
+                self.settings, observedIons, delIons, remIons, searchedZStates, logFile = \
+                    searchService.getSearch(dialog.getName())
+                self._logFile = LogFile(logFile)
+                if not os.path.isfile(self.settings['spectralData']):
+                    dlg = OpenSpectralDataDlg(parent)
+                    if dlg.exec_() and not dlg.canceled:
+                        self.settings['spectralData'] = dlg.getValue()
+                self._propStorage = PropertyStorage(self.settings['sequName'], self.settings['fragmentation'],
+                                                    self.settings['modifications'])
+                self.libraryBuilder = FragmentLibraryBuilder(self._propStorage, self.settings['nrMod'])
+                self.libraryBuilder.createFragmentLibrary()
 
+                self.spectrumHandler = SpectrumHandler(self.settings['spectralData'], self._propStorage,
+                                                       self.libraryBuilder.getPrecursor(), self.settings)
+                self.spectrumHandler.setSearchedChargeStates(searchedZStates)
+                self._intensityModeller = IntensityModeller(self.configs)
+                self._intensityModeller.setIonLists(observedIons, delIons, remIons)
+                self._analyser = Analyser(None, self._propStorage.getSequenceList(), self.settings['charge'],
+                                          self._propStorage.getModificationName())
+                self.setUpUi(parent)
+                '''for ion in observedIons:
+                    print(ion.getName())
+                    print(ion.toStorage())
+                    print(ion.getPeakValues())
+                    print()'''
+
+    @staticmethod
+    def deleteSearch(name, searchService):
+        searchService.deleteSearch(name)
 
 
     def search(self):
@@ -97,12 +133,12 @@ class TD_MainController(object):
         #spectralFile = os.path.join(path, 'Spectral_data','top-down', self.settings['spectralData'])
         print("\n********** Importing spectral pattern from:", self.settings['spectralData'], "**********")
         self.spectrumHandler = SpectrumHandler(self.settings['spectralData'], self._propStorage,
-                  self.libraryBuilder.getFragmentLibrary(), self.libraryBuilder.getPrecursor(), self.settings)
+                                               self.libraryBuilder.getPrecursor(), self.settings)
 
         """Finding fragments"""
         print("\n********** Search for spectrum **********")
         start = time.time()
-        self.spectrumHandler.findPeaks()
+        self.spectrumHandler.findPeaks(self.libraryBuilder.getFragmentLibrary())
         print("\ndone\nexecution time: ", round((time.time() - start) / 60, 3), "min\n")
 
         self._intensityModeller = IntensityModeller(self.configs)
@@ -122,7 +158,9 @@ class TD_MainController(object):
             print("User Input requested")
             view.exec_()
             if view and not view.canceled:
-                self._intensityModeller.deleteSameMonoisotopics(view.getDumplist())
+                dumpList = view.getDumplist()
+                [self._logFile.deleteMonoisotopic(ion) for ion in dumpList]
+                self._intensityModeller.deleteSameMonoisotopics(dumpList)
             else:
                 return 1
 
@@ -134,7 +172,9 @@ class TD_MainController(object):
             print("User Input requested")
             view.exec_()
             if view and not view.canceled:
-                self._intensityModeller.remodelComplexPatterns(complexPatterns, view.getDumplist())
+                dumpList = view.getDumplist()
+                [self._logFile.deleteIon(ion) for ion in dumpList]
+                self._intensityModeller.remodelComplexPatterns(complexPatterns, dumpList)
             else:
                 return 1
         self._analyser = Analyser(None, self._propStorage.getSequenceList(),
@@ -155,9 +195,10 @@ class TD_MainController(object):
         self.tabWidget = QtWidgets.QTabWidget(self.centralwidget)
         self.createMenuBar()
         self.tables = []
-        for table, name in zip((self._intensityModeller.getObservedIons(), self._intensityModeller.getDeletedIons()),
+        for data, name in zip((self._intensityModeller.getObservedIons(), self._intensityModeller.getDeletedIons()),
                                ('Observed Ions', 'Deleted Ions')):
-            self.makeTabWidget(table, name)
+            print('data', data)
+            self.makeTabWidget(data, name)
         self.verticalLayout.addWidget(self.tabWidget)
         self.mainWindow.resize(1000, 900)
         self.mainWindow.show()
@@ -166,7 +207,7 @@ class TD_MainController(object):
         self.menubar = QtWidgets.QMenuBar(self.mainWindow)
         self.mainWindow.setMenuBar(self.menubar)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 340, 22))
-        self.createMenu("File", {'Save': self.dumb, 'Export': self.export,
+        self.createMenu("File", {'Save': self.saveAnalysis, 'Export': self.export,
                                  'Close': self.close}, ['', '', ''], ["Ctrl+S", '', "Ctrl+Q"])
         self.createMenu("Edit", {'Repeat ovl. modelling': self.repeatModellingOverlaps},
                         ['Repeat overlap modelling involving user inputs'], [""])
@@ -340,15 +381,15 @@ class TD_MainController(object):
         dlg = ExportDialog(self.mainWindow)
         dlg.exec_()
         if dlg and not dlg.canceled:
-            if dlg.getFormat() == 'xlsx':
-                """"filename = dlg.getFilename()
-                if filename == '':
-                    output = self.settings['spectralData'][0:-4] + '_out' + '.xlsx'
-                if filename[-5:]!= 'xlsx':
-                    filename+='xlsx'"""
-                self.toExcel(dlg.getDir(),dlg.getFilename())
-            else:
-                self.dumb()
+            #if dlg.getFormat() == 'xlsx':
+            """filename = dlg.getFilename()
+            if filename == '':
+                output = self.settings['spectralData'][0:-4] + '_out' + '.xlsx'
+            if filename[-5:]!= 'xlsx':
+                filename+='xlsx'"""
+            self.toExcel(dlg.getDir(),dlg.getFilename())
+            #else:
+            #    self.dumb()
 
 
     def toExcel(self, outputPath, filename): #ToDo
@@ -460,3 +501,24 @@ class TD_MainController(object):
         '''plotFactory2.showChargePlot(self.libraryBuilder.getSequenceList(),
                                       self.libraryBuilder.filterByDir(redChargeDict,1),
                                       self.libraryBuilder.filterByDir(redChargeDict,-1),self.settings['charge'])'''
+
+    def saveAnalysis(self):
+        searchService = SearchService()
+        names = searchService.getAllSearchNames()
+        while True:
+            name, ok = QtWidgets.QInputDialog.getText(self.mainWindow, 'Save Analysis', 'Enter the name: ')
+            if ok:
+                if name in names:
+                    choice = QtWidgets.QMessageBox.question(self.mainWindow, "Overwriting",
+                                "There is already a saved analysis with name :"+name+"\nDo you want to overwrite it?",
+                                                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+                    if choice == QtWidgets.QMessageBox.Yes:
+                        break
+                else:
+                    break
+            else:
+                return
+        searchService.saveSearch(name, self.settings, self._intensityModeller.getObservedIons().values(),
+                                 self._intensityModeller.getDeletedIons().values(),
+                                 self._intensityModeller.getRemodelledIons(),
+                                 self.spectrumHandler.searchedChargeStates, self._logFile)

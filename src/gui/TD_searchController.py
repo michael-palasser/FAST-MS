@@ -18,6 +18,7 @@ from PyQt5.QtWidgets import QAbstractItemView
 from src import path
 from src.Exceptions import UnvalidIsotopePatternException
 from src.entities.logFile import LogFile
+from src.gui.LogFileView import LogFileView
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.repositories.IsotopePatternRepository import IsotopePatternReader
 from src.top_down.Analyser import Analyser
@@ -30,7 +31,7 @@ from src.top_down.ExcelWriter import ExcelWriter
 from src.gui.CheckIonView import CheckMonoisotopicOverlapView, CheckOverlapsView
 from src.gui.ResultView import IonTableModel
 from src.gui.PlotTables import PlotTableView
-from src.gui.PeakViews import PeakView
+from src.gui.PeakViews import PeakView, SimplePeakView
 from src.gui.SequencePlots import PlotFactory
 from src.gui.SimpleDialogs import ExportDialog, SelectSearchDlg, OpenSpectralDataDlg
 #from src.gui.ParameterDialogs import TDStartDialog
@@ -54,7 +55,9 @@ class TD_MainController(object):
                 return
             self.settings = dialog.newSettings
             self.configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
-            self._logFile = LogFile(self.settings, self.configs)
+            self._propStorage = PropertyStorage(self.settings['sequName'], self.settings['fragmentation'],
+                                                self.settings['modifications'])
+            self._logFile = LogFile(self.settings, self.configs, self._propStorage)
             if self.search() == 0:
                 self.setUpUi(parent)
         else:
@@ -96,8 +99,6 @@ class TD_MainController(object):
 
     def search(self):
         print("\n********** Creating fragment library **********")
-        self._propStorage = PropertyStorage(self.settings['sequName'], self.settings['fragmentation'],
-                        self.settings['modifications'])
         self.libraryBuilder = FragmentLibraryBuilder(self._propStorage, self.settings['nrMod'])
         self.libraryBuilder.createFragmentLibrary()
 
@@ -201,6 +202,7 @@ class TD_MainController(object):
             self.makeTabWidget(data, name)
         self.verticalLayout.addWidget(self.tabWidget)
         self.mainWindow.resize(1000, 900)
+        self._logFileView = LogFileView(None, self._logFile)
         self.mainWindow.show()
 
     def createMenuBar(self):
@@ -215,11 +217,13 @@ class TD_MainController(object):
                 {'Results': self.mainWindow.show, 'Occupancy-Plot': self.showOccupancyPlot,
                  'Charge-Plot': lambda: self.showChargeDistrPlot(False),
                  'Reduced Charge-Plot':lambda: self.showChargeDistrPlot(True),
-                 'Sequence Coverage': self.dumb, 'Original Values':self.showRemodelledIons},
+                 'Sequence Coverage': self.dumb, 'Original Values':self.showRemodelledIons,
+                 'Log File':self.showLogFile},
                 ['Show lists of observed and deleted ions' ,'Show occupancies as a function of sequence pos.',
                  'Show av. charge as a function of sequence pos. (Calculated with Int. values)',
                  'Show av. charge as a function of sequence pos. (Calculated with Int./z values)',
-                 'Show sequence coverage', 'Show original values of overlapping ions'], ['',"", "", '', '', ''])
+                 'Show sequence coverage', 'Show original values of overlapping ions', 'Show Protocol'],
+                ['',"", "", '', '', '', ''])
 
     def createMenu(self, name, options, tooltips, shortcuts):
         menu = QtWidgets.QMenu(self.menubar)
@@ -324,7 +328,6 @@ class TD_MainController(object):
         elif action == peakAction:
             #global peakview
             PeakView(self.mainWindow, selectedIon, self._intensityModeller.remodelSingleIon, self.saveSingleIon)
-
         elif action == copyRowAction:
             df=pd.DataFrame(data=[table.model().getRow(selectedRow)], columns=table.model().getHeaders())
             df.to_clipboard(index=False,header=True)
@@ -336,10 +339,16 @@ class TD_MainController(object):
                                         actionStrings[mode][:-1]+'ing '+selectedIon.getName()+"?",
                                         QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
             if choice == QtWidgets.QMessageBox.Yes:
+                if mode ==0:
+                    self._logFile.deleteIon(selectedIon)
+                else:
+                    self._logFile.restoreIon(selectedIon)
+                self._logFileView.update()
                 self._intensityModeller.switchIon(selectedIon)
                 table.model().removeData(selectedRow)
                 self.tables[other].model().addData(selectedIon.getMoreValues())
                 print(actionStrings[mode]+"d",selectedRow, selectedHash)
+
 
 
     def saveSingleIon(self, newIon):
@@ -356,6 +365,8 @@ class TD_MainController(object):
                                                     "Please confirm to change the values of ion: " + oldIon.getId(),
                                                     QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
             if choice == QtWidgets.QMessageBox.Ok:
+                self._logFile.changeIon(oldIon,newIon)
+                self._logFileView.update()
                 self._intensityModeller.addRemodelledIon(oldIon)
                 newIon.comment += 'man.mod.'
                 ionDict[newIonHash] = newIon
@@ -365,6 +376,7 @@ class TD_MainController(object):
 
 
     def repeatModellingOverlaps(self):
+        self._logFile.repeatModelling()
         self._intensityModeller.findOverlaps(20)
         self.verticalLayout.removeWidget(self.tabWidget)
         self.tabWidget = QtWidgets.QTabWidget(self.centralwidget)
@@ -387,12 +399,32 @@ class TD_MainController(object):
                 output = self.settings['spectralData'][0:-4] + '_out' + '.xlsx'
             if filename[-5:]!= 'xlsx':
                 filename+='xlsx'"""
-            self.toExcel(dlg.getDir(),dlg.getFilename())
+            self._logFile.export()
+            #self.toExcel(dlg.getDir(),dlg.getFilename())
+            outputPath, filename = dlg.getDir(), dlg.getFilename()
+            if filename == '':
+                inputFileName = os.path.split(self.settings['spectralData'])[-1]
+                filename = inputFileName[0:-4] + '_out' + '.xlsx'
+            elif filename[-5:] != '.xlsx':
+                filename += '.xlsx'
+            if outputPath == '':
+                outputPath = os.path.join(path, 'Spectral_data', 'top-down')
+            output = os.path.join(outputPath, filename)
+            excelWriter = ExcelWriter(output, self.configs)
+            self._analyser.setIons(list(self._intensityModeller.getObservedIons().values()))
+            excelWriter.toExcel(self._analyser, self._intensityModeller, self._propStorage,
+                                self.libraryBuilder.getFragmentLibrary(), self.settings, self.spectrumHandler,
+                                self._logFile.toString())
+            print("********** saved in:", output, "**********\n")
+            try:
+                subprocess.call(['open', output])
+            except:
+                pass
             #else:
             #    self.dumb()
 
 
-    def toExcel(self, outputPath, filename): #ToDo
+    '''def toExcel(self, outputPath, filename): #ToDo
         """output"""
         if filename == '':
             inputFileName = os.path.split(self.settings['spectralData'])[-1]
@@ -405,12 +437,13 @@ class TD_MainController(object):
         excelWriter = ExcelWriter(output, self.configs)
         self._analyser.setIons(list(self._intensityModeller.getObservedIons().values()))
         excelWriter.toExcel(self._analyser, self._intensityModeller, self._propStorage,
-                            self.libraryBuilder.getFragmentLibrary(), self.settings, self.spectrumHandler)
+                            self.libraryBuilder.getFragmentLibrary(), self.settings, self.spectrumHandler,
+                            self._logFile.toString())
         print("********** saved in:", output, "**********\n")
         try:
             subprocess.call(['open',output])
         except:
-            pass
+            pass'''
 
     def close(self):
         message = ''
@@ -456,7 +489,8 @@ class TD_MainController(object):
             view = SpectrumView(None, peaks, [selectedIon]+ajacentIons, np.min(selectedIon.isotopePattern['m/z']),
                                 np.max(selectedIon.isotopePattern['m/z']), np.max(selectedIon.isotopePattern['relAb']))
         elif action == peakAction:
-            PeakView(self.mainWindow, selectedIon, self._intensityModeller.remodelSingleIon, self.saveSingleIon)
+            #PeakView(self.mainWindow, selectedIon, self._intensityModeller.remodelSingleIon, self.saveSingleIon)
+            SimplePeakView(self.mainWindow, selectedIon)
         elif action == copyRowAction:
             df=pd.DataFrame(data=[table.model().getRow(selectedRow)], columns=table.model().getHeaders())
             df.to_clipboard(index=False,header=True)
@@ -464,6 +498,8 @@ class TD_MainController(object):
             df=pd.DataFrame(data=table.model().getData(), columns=table.model().getHeaders())
             df.to_clipboard(index=False,header=True)
 
+    def showLogFile(self):
+        self._logFileView.show()
 
     def showOccupancyPlot(self):
         self._analyser.setIons(list(self._intensityModeller.getObservedIons().values()))
@@ -518,7 +554,11 @@ class TD_MainController(object):
                     break
             else:
                 return
+        print('Saving analysis', name)
+        self._logFile.save()
         searchService.saveSearch(name, self.settings, self._intensityModeller.getObservedIons().values(),
                                  self._intensityModeller.getDeletedIons().values(),
                                  self._intensityModeller.getRemodelledIons(),
                                  self.spectrumHandler.searchedChargeStates, self._logFile)
+        print('done')
+        self._logFileView.update()

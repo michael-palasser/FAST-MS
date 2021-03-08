@@ -37,5 +37,11 @@
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
       <jdbc-url>jdbc:sqlite:$PROJECT_DIR$/src/data/shared.db</jdbc-url>
     </data-source>
+    <data-source source="LOCAL" name="search" uuid="9e06b234-e3b9-44fe-927f-ecb8e31045d3">
+      <driver-ref>sqlite.xerial</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
+      <jdbc-url>jdbc:sqlite:$PROJECT_DIR$/src/data/search.db</jdbc-url>
+    </data-source>
   </component>
 </project>

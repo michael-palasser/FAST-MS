@@ -55,8 +55,8 @@ class PeakTableModel(AbstractTableModel):
 
 
 class SimplePeakView(QtWidgets.QWidget):
-    def __init__(self, ion):
-        super().__init__(parent=None)
+    def __init__(self, parent, ion):
+        super().__init__(parent)
         self._peaks = ion.getPeakValues()
         print(self._peaks)
         model = PeakTableModel(self._peaks)

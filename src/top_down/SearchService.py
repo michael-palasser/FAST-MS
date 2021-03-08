@@ -41,6 +41,7 @@ class SearchService(object):
         return ion
 
     def ionToDB(self, ion):
+        #print(ion.getName(), ion.formula)
         ion.sequence = ','.join(ion.sequence)
         ion.formula = ion.formula.toString()
         return ion

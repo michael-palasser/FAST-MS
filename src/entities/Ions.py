@@ -162,7 +162,8 @@ class FragmentIon(Fragment):
     def getPeakValues(self):
         peaks = []
         for i, peak in enumerate(self.isotopePattern):
-            peaks.append([peak['m/z'], round(peak['relAb']), round(peak['calcInt']), peak['error'], peak['used']])
+            peaks.append([round(peak['m/z'],5), round(peak['relAb']), round(peak['calcInt']), round(peak['error'],2),
+                         peak['used']])
         return peaks
 
     def toStorage(self):

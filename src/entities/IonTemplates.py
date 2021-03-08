@@ -37,6 +37,14 @@ class FragmentationPattern(PatternWithItems):
                 fragTemplates.append(item)
         return fragTemplates
 
+    def toString(self):
+        string = ''
+        for item in self._items:
+            string += '\n\t' + ', '.join(item.toString())
+        string += '\n\t-Precursor-Fragments:'
+        for item in self.__items2:
+            string += '\n\t' + ', '.join(item.toString())
+        return string
 
 
 class PrecursorItem(AbstractItem3):
@@ -67,6 +75,10 @@ class FragItem(AbstractItem3):
     def getDirection(self):
         return self.__direct
 
+    def toString(self):
+        parentVals = super(FragItem, self).toString()
+        return parentVals[0:-1]+[str(self.__direct), parentVals[-1]]
+
 
 class ModificationPattern(PatternWithItems):
     def __init__(self, name, modification, listOfMod, exclusionList, id):
@@ -86,6 +98,13 @@ class ModificationPattern(PatternWithItems):
             excluded.append(tuple[0])
         return excluded
 
+    def toString(self):
+        string = self.__modification
+        for item in self._items:
+            string += '\n\t' + ', '.join(item.toString())
+        string += '\n\t-Excluded:\n\t' + ', '.join(self.__items2)
+        return string
+
 
 class ModifiedItem(AbstractItem3):
     def __init__(self, item):
@@ -93,13 +112,17 @@ class ModifiedItem(AbstractItem3):
         super(ModifiedItem, self).__init__(name=item[0], gain=item[1], loss=item[2],
                                             residue=item[3], radicals=item[4], enabled=item[7])
         self.__zEffect = item[5]
-        self._calcOccupancy = item[6]
-
-    def getCalcOccupancy(self):
-        return self._calcOccupancy
+        self.__calcOccupancy = item[6]
 
     def getZEffect(self):
         return self.__zEffect
+
+    def getCalcOccupancy(self):
+        return self.__calcOccupancy
+
+    def toString(self):
+        parentVals = super(ModifiedItem, self).toString()
+        return parentVals[0:-1]+[str(self.__zEffect), str(self.__calcOccupancy), parentVals[-1]]
 
 
 

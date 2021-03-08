@@ -10,7 +10,7 @@ class SearchRepository(AbstractRepository):
     def __init__(self, ):
         super(SearchRepository, self).__init__('search.db', 'searches',
                                                ('name', "date","sequName", "charge", "fragmentation", "modifications",
-                                                "nrMod", "spectralData", "noiseLimit", "fragLib", 'logFile'), (), ())
+                                                "nrMod", "spectralData", "noiseLimit", "fragLib"), (), ())
         #self.__conn = sqlite3.connect(':memory:')
         self._depTables = {'ions': ("type", "number", "modif", "formula", "sequ", "radicals", "monoiso", "charge",
                                     "noise", "int", "error", "qual", "comment", 'status', "parentId"),
@@ -92,7 +92,8 @@ class SearchRepository(AbstractRepository):
             else:
                 remIons.append(ion)
         searchedZStates = {ionVals[1]:ionVals[2] for ionVals in self.getItems(searchVals[0], 'chargeStates')}
-        log = self.getItems(searchVals[0], 'logs')[1]
+        print(self.getItems(searchVals[0], 'logs'))
+        log = self.getItems(searchVals[0], 'logs')[0][1]
         return Search(searchVals, ions, delIons, remIons, searchedZStates, log)
 
 
@@ -114,6 +115,7 @@ class SearchRepository(AbstractRepository):
         self.insertItems(searchId, search.getIons(), 0)
         self.insertItems(searchId, search.getDeletedIons(), 1)
         self.insertItems(searchId, search.getIons(), 2)
+        self.createItem('logs', (search.getLogFile().toString(),searchId))
         [self.createItem('chargeStates', [frag,zList, searchId]) for frag,zList in search.getSearchedZStates().items()]
 
     def create(self, vals):

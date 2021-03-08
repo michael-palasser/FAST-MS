@@ -153,7 +153,7 @@ class AbstractIonView(QtWidgets.QDialog):
             view = SpectrumView(None, peaks, ions, minLimit, maxLimit, YLimit)
         elif action == peakAction:
             global peakview
-            peakview = SimplePeakView(table.getIon(selectedRowIndex))
+            peakview = SimplePeakView(None, table.getIon(selectedRowIndex))
 
     def getIons(self, *args):
         index = None

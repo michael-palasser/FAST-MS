@@ -226,3 +226,5 @@ class AbstractItem3(AbstractItem2):
     def getRadicals(self):
         return self._radicals
 
+    def toString(self):
+        return [self._name, self._gain, self._loss, self._residue, str(self._radicals), str(self._enabled)]

@@ -139,11 +139,11 @@ class ExcelWriter(BasicExcelWriter):
         self.worksheet4 = self.workbook.add_worksheet('deleted ions')
         self.worksheet5 = self.workbook.add_worksheet('ions before remodelling')
         self.worksheet6 = self.workbook.add_worksheet('molecular formulas')
-        self.worksheet7 = self.workbook.add_worksheet('configurations')
+        self.worksheet7 = self.workbook.add_worksheet('log')
         self.format2digit = self.workbook.add_format({'num_format': '0.00'})
         self.format5digit = self.workbook.add_format({'num_format': '0.00000'})
 
-    def toExcel(self, analyser, intensityModeller, properties, fragmentLibrary, settings, spectrumHandler):
+    def toExcel(self, analyser, intensityModeller, properties, fragmentLibrary, settings, spectrumHandler, logString):
         try: #Todo: to ExcelWriter
             #percentages = list()
             self.writeAnalysis({"spectral file:": settings['spectralData'], 'max. m/z:':spectrumHandler.getUpperBound()},
@@ -162,7 +162,7 @@ class ExcelWriter(BasicExcelWriter):
             self.writePeaks(self.worksheet4, row + 3, 0, self.sortByName(intensityModeller.getDeletedIons().values()))
             self.writeIons(self.worksheet5, self.sortByName(intensityModeller.getRemodelledIons()), precursorRegion)
             self.writeSumFormulas(fragmentLibrary, spectrumHandler.searchedChargeStates)
-            self.writeConfigurations(settings)
+            self.writeLogFile(logString)
         finally:
             self.closeWorkbook()
 
@@ -274,15 +274,10 @@ class ExcelWriter(BasicExcelWriter):
         return itemString
 
 
-    def writeConfigurations(self, settings):
-        self.worksheet7.write(0, 0, "Configurations:")
-        row = 1
-        for key,val in settings.items():
-            self.worksheet7.write_row(row, 0, (key,val))
-            row += 1
-        for key,val in self.configs.items():
-            if isinstance(val, list):
-                val = ','.join(val)
-            self.worksheet7.write_row(row, 0, (key,val))
-            row += 1
-        return row + 2
+    def writeLogFile(self, log):
+        #self.worksheet7.write(0, 0, "Configurations:")
+        for i, line in enumerate(log.split('\n')):
+            col = 0
+            if line.startswith('\t'):
+                col =1
+            self.worksheet7.write(i, col, line)

@@ -8,7 +8,9 @@ import sys
 from src.Exceptions import CanceledException
 from src.Services import *
 from src.entities.GeneralEntities import Sequence
+from src.gui.AbstractMainWindows import AbstractMainWindow
 from src.gui.SimpleDialogs import OpenDialog
+from src.gui.Widgets import BoxUpdateWidget
 
 
 class AbstractSimpleEditorController(ABC):
@@ -20,13 +22,14 @@ class AbstractSimpleEditorController(ABC):
         self.createMenuBar(options)
 
     def setUpUi(self, title):
-        self.mainWindow = QtWidgets.QMainWindow()
-        self.mainWindow.setObjectName(title)
+        self.mainWindow = AbstractMainWindow(None, title)
+        #self.mainWindow.setObjectName(title)
         self._translate = QtCore.QCoreApplication.translate
-        self.mainWindow.setWindowTitle(self._translate(self.mainWindow.objectName(), title))
+        '''self.mainWindow.setWindowTitle(self._translate(self.mainWindow.objectName(), title))
         self.centralwidget = QtWidgets.QWidget(self.mainWindow)
 
-        self.mainWindow.setCentralWidget(self.centralwidget)
+        self.mainWindow.setCentralWidget(self.centralwidget)'''
+        self.centralwidget = self.mainWindow.centralwidget()
         self.formLayout = QtWidgets.QFormLayout(self.centralwidget)
         self.formLayout.setFieldGrowthPolicy(QtWidgets.QFormLayout.ExpandingFieldsGrow)
         #self.mainWindow.setStatusBar(QtWidgets.QStatusBar(self.mainWindow))
@@ -247,7 +250,7 @@ class AbstractEditorController(AbstractSimpleEditorController, ABC):
                                             self.service.getBoolVals())
 
     def open(self, title):
-        openDialog = OpenDialog(title, self.service.getAllPatternNames())
+        openDialog = OpenDialog(title, self.service.getAllPatternNames()+['--New--'])
         openDialog.show()
         if openDialog.exec_() and openDialog.accepted:
             if openDialog.comboBox.currentText() != "--New--":
@@ -421,8 +424,11 @@ class FragmentEditorController(AbstractEditorControllerWithTabs):
     def __init__(self):
         super(FragmentEditorController, self).__init__(FragmentIonService(), "Edit Fragments", "Fragment-Pattern")
         upperWidget = self.makeUpperWidget()
-        self.createWidgets(upperWidget, upperWidget.layout(), ["Name: "],
-                           {"name": QtWidgets.QLineEdit(self.centralwidget)}, [self.pattern.getName()])
+        precWidget = BoxUpdateWidget(self.centralwidget, [item[0] for item in self.pattern.getItems2()])
+        precWidget.connectBtn(lambda : precWidget.updateBox(self.getPrecNames()))
+        self.createWidgets(upperWidget, upperWidget.layout(), ["Name: ", 'Precursor: '],
+                           {"name": QtWidgets.QLineEdit(self.centralwidget), 'precursor': precWidget},
+                           [self.pattern.getName(), self.pattern.getPrecursor()])
         self.tabWidget = self.makeTabWidget("Fragments", "Precursor-Fragments")
         self.mainWindow.show()
 
@@ -432,8 +438,28 @@ class FragmentEditorController(AbstractEditorControllerWithTabs):
         if args and args[0]:
             id = args[0]
         super(FragmentEditorController, self).save(FragmentationPattern(self.widgets["name"].text(),
+                                                                        self.widgets['precursor'].currentText(),
                             self.readTable(self.table1, self.service.getBoolVals()[0]),
                              self.readTable(self.table2, self.service.getBoolVals()[1]), id))
+
+    '''def makeBoxBtnWidget(self, parent):
+        widget = QtWidgets.QWidget(parent)
+        horizontalLayout = QtWidgets.QHBoxLayout(widget)
+        comboBox = QtWidgets.QComboBox(widget)
+        self.widgets['precursor'] = comboBox
+        btn = self.mainWindow.makePushBtn(widget, 'Update', lambda: self.mainWindow.updateComboBox(comboBox, self.getPrecNames()))
+        self.mainWindow.updateComboBox(comboBox, self.getPrecNames())
+        horizontalLayout.addWidget(comboBox)
+        horizontalLayout.addWidget(btn)
+        return widget'''
+
+    def getPrecNames(self):
+        return [item[0] for item in self.readTable(self.table2, self.service.getBoolVals()[1])]
+
+    def openAgain(self, *args):
+        super(FragmentEditorController, self).openAgain()
+        self.widgets['precursor'].updateBox(self.getPrecNames())
+        self.widgets['precursor'].setText(self.pattern.getPrecursor())
 
 
 
@@ -457,7 +483,7 @@ class ModificationEditorController(AbstractEditorControllerWithTabs):
         self.widgets["modification"].setText(self.pattern.getModification())
 
     def open(self, title):
-        openDialog = OpenDialog(title, self.service.getAllPatternNames()[1:])
+        openDialog = OpenDialog(title, self.service.getAllPatternNames()[1:]+['--New--'])
         openDialog.show()
         if openDialog.exec_() and openDialog.accepted:
             if openDialog.comboBox.currentText() != "--New--":

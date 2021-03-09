@@ -28,10 +28,10 @@ class AbstractRepository(ABC):
     def makeTables(self):
         pass
 
-    def create(self, *args):
+    def create(self, vals):
         """
 
-        :param args: Values of the newly created item
+        :param vals: Values of the newly created item
         :return:
         """
         cur = self._conn.cursor()
@@ -42,12 +42,12 @@ class AbstractRepository(ABC):
             #sql = 'INSERT INTO ' + self._mainTable + '(' + self._columns[0] + ''')
                                           #VALUES(''' + (len(self._columns) * '?,')[:-1] + ')'
         #print(self._mainTable, args,sql, self._columns)
-        print(sql,args)
+        print(sql, vals)
         try:
-            cur.execute(sql, args)
+            cur.execute(sql, vals)
         except sqlite3.OperationalError:
             self.makeTables()
-            cur.execute(sql, args)
+            cur.execute(sql, vals)
         self._conn.commit()
         return cur.lastrowid
 
@@ -82,16 +82,18 @@ class AbstractRepository(ABC):
             return []
 
 
-    def update(self, *args):
+    def update(self, vals): #ToDo
         """
 
-        :param args: new attributes, last attribute must be id
+        :param vals: new attributes, last attribute must be id
         :return:
         """
+        #print(vals)
+        #print(vals[0])
         cur = self._conn.cursor()
         sql = 'UPDATE ' + self._mainTable + ' SET ' + '=?, '.join(self._columns) + '=? WHERE id=?'
-        print(sql, args)
-        cur.execute(sql, args)
+        print(sql, vals)
+        cur.execute(sql, vals)
         self._conn.commit()
 
 
@@ -107,6 +109,7 @@ class AbstractRepository(ABC):
         self._conn.close()
 
 
+
 class AbstractRepositoryWithItems(AbstractRepository, ABC):
     def __init__(self,database, tableName, columns, itemDict, integerVals, boolVals):
         super(AbstractRepositoryWithItems, self).__init__(database, tableName, columns, integerVals, boolVals)
@@ -120,7 +123,7 @@ class AbstractRepositoryWithItems(AbstractRepository, ABC):
         :return:
         """
         #try:
-        self.insertItems(self.create(pattern.getName()), pattern.getItems(), 0)
+        self.insertItems(self.create((pattern.getName(),)), pattern.getItems(), 0)
         #except sqlite3.IntegrityError:
          #   raise AlreadyPresentException(pattern.getName())
 
@@ -128,7 +131,8 @@ class AbstractRepositoryWithItems(AbstractRepository, ABC):
         table = [key for key in self._itemDict.keys()][index]
         for item in items:
             #self.checkFormatOfItem(item)
-            self.createItem(table, item + [patternId])
+            print(item)
+            self.createItem(table, list(item) + [patternId])
 
 
     def createItem(self,table, attributes):
@@ -154,7 +158,7 @@ class AbstractRepositoryWithItems(AbstractRepository, ABC):
         return [pattern[1] for pattern in self.getAll()]
 
     def updatePattern(self, pattern):
-        self.update(pattern.getName(), pattern.getId())
+        self.update((pattern.getName(), pattern.getId()))
         self.deleteAllItems(pattern.getId())
         self.insertItems(pattern.getId(), pattern.getItems(), 0)
 
@@ -174,6 +178,11 @@ class AbstractRepositoryWithItems(AbstractRepository, ABC):
         #id = super(AbstractRepositoryWith2Items, self).delete(name)
         self.deleteAllItems(super(AbstractRepositoryWithItems, self).delete(name))
 
+    def deleteTables(self):
+        cur = self._conn.cursor()
+        for table in ([self._mainTable]+list(self._itemDict.keys())):
+            cur.execute('DROP TABLE '+table)
+        self._conn.commit()
 
 class AbstractRepositoryWith2Items(AbstractRepositoryWithItems, ABC):
     """def __init__(self,database, tableName, columns, itemDict):

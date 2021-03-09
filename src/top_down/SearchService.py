@@ -1,3 +1,4 @@
+from copy import deepcopy
 from datetime import datetime
 
 from src.MolecularFormula import MolecularFormula
@@ -42,9 +43,10 @@ class SearchService(object):
 
     def ionToDB(self, ion):
         #print(ion.getName(), ion.formula)
-        ion.sequence = ','.join(ion.sequence)
-        ion.formula = ion.formula.toString()
-        return ion
+        processedIon = deepcopy(ion)
+        processedIon.sequence = ','.join(ion.sequence)
+        processedIon.formula = ion.formula.toString()
+        return processedIon
 
     def deleteSearch(self, name):
         self._rep.delete(name)

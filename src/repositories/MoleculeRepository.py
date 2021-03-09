@@ -27,10 +27,10 @@ class MoleculeRepository(AbstractRepositoryWithItems):
                 "patternId" text NOT NULL );""")
 
     def createPattern(self, pattern):
-        self.insertItems(self.create(pattern.getName(), pattern.getGain(), pattern.getLoss()), pattern.getItems(), 0)
+        self.insertItems(self.create((pattern.getName(), pattern.getGain(), pattern.getLoss())), pattern.getItems(), 0)
 
     def updatePattern(self, pattern):
-        self.update(pattern.getName(), pattern.getGain(), pattern.getLoss(), pattern.getId())
+        self.update((pattern.getName(), pattern.getGain(), pattern.getLoss(), pattern.getId()))
         self.deleteAllItems(pattern.getId())
         self.insertItems(pattern.getId(), pattern.getItems(), 0)
 

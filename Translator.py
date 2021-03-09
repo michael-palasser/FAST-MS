@@ -165,8 +165,8 @@ def writeFragments(name, fragPath,precFrag):
             gain, loss = 'H1', 'O2P1'
         else:
             gain, loss = 'H2O', '' '''
-        print(FragmentationPattern(name, fragments, precFrag, None).getItems2())
-        service.savePattern(FragmentationPattern(name, fragments, precFrag, None))
+        print(FragmentationPattern(name, 'Prec', fragments, precFrag, None).getItems2())
+        service.save(FragmentationPattern(name, 'Prec', fragments, precFrag, None))
     except:
         traceback.print_exc()
     finally:
@@ -224,7 +224,7 @@ def writeModifications():
                             modif = "DEPC+H2O-CO"
                         elif name == '134':
                             modif = "2DEPC+H2O-CO"
-                        service.savePattern(ModificationPattern(name, modif, modifications, excluded, None))
+                        service.save(ModificationPattern(name, modif, modifications, excluded, None))
     except:
         traceback.print_exc()
     finally:
@@ -261,9 +261,9 @@ def writeIntactModifs():
         service.close()
 
 
-writeElements()
-writeMolecules()
-writeSequences()
+#writeElements()
+#writeMolecules()
+#writeSequences()
 """with open(os.path.join(path, 'Parameters', 'Protein' + '.txt')) as f:
     for line in f:
         if line.startswith('#') or line == "":
@@ -298,8 +298,13 @@ prcFrags = [
     ['+2e', '', '', '', 2,True]]
 fragPath = join(path, 'Parameters', 'protein-fragmentation','ECD.txt')
 
-#writeFragments("Protein_ECD",fragPath, prcFrags)
+writeFragments("RNA_CAD",fragPath, prcFrags)
+writeFragments("Protein_CAD",fragPath, prcFrags)
+writeFragments("Protein_ECD",fragPath, prcFrags)
 
 #writeModifications()"""
 
-writeIntactModifs()
+#writeIntactModifs()
+
+#service = FragmentIonService()
+#service.restart()

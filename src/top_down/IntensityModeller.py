@@ -153,7 +153,7 @@ class IntensityModeller(object):
                 sameMonoisotopic = [self._correctedIons[(elem['name'][0], elem['charge'][0])]]
                 for elem2 in self._monoisotopicList[same_mono_index]:
                     sameMonoisotopic.append(self._correctedIons[(elem2['name'], elem2['charge'])])
-                sameMonoisotopic.sort(key=lambda obj:abs(obj.error))
+                sameMonoisotopic.sort(key=lambda obj:(abs(obj.error),obj.getName()))
                 if sameMonoisotopic not in sameMonoisotopics:
                     self.commentIonsInPatterns(([self.getHash(ion) for ion in sameMonoisotopic],))
                     sameMonoisotopics.append(sameMonoisotopic)
@@ -203,7 +203,8 @@ class IntensityModeller(object):
                 print(pattern)
                 if len(pattern) > maxOverlaps:
                     self.commentIonsInPatterns((pattern,))
-                    complexPatterns.append([self._correctedIons[ionTup] for ionTup in pattern])
+                    complexPatterns.append(sorted([self._correctedIons[ionTup] for ionTup in pattern],
+                                                  key=lambda ion: ion.isotopePattern['m/z'][0]))
                 else:
                     simplePatterns.append(pattern)
         if flag == 0:

@@ -66,10 +66,10 @@ class IntactRepository(AbstractRepositoryWithItems):
         :return:
         """
         # try:
-        patternId = self.create(pattern.getName())
+        patternId = self.create((pattern.getName(),))
         self.insertItems(patternId, pattern.getItems(), 0)
 
     def updatePattern(self, pattern):
-        self.update(pattern.getName(), pattern.getId())
+        self.update((pattern.getName(), pattern.getId()))
         self.deleteAllItems(pattern.getId())
         self.insertItems(pattern.getId(), pattern.getItems(), 0)

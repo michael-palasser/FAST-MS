@@ -29,12 +29,6 @@ class FragmentLibraryBuilder(object):
         __fragmentLibrary: list of all fragments
         radicalDict: list of fragments which contain radicals
         '''
-        '''self.__sequence = SequenceService().get(sequName)
-        #self.sequenceList = self.__sequence.getSequenceList()
-        self.__molecule = MoleculeService().getPatternWithObjects(self.__sequence.getMolecule(), BuildingBlock)
-        #self.__monomers = MoleculeService().getItemDict(self.__sequence.getMolecule())
-        self.__fragmentation = FragmentIonService().getPatternWithObjects(fragmentation, FragItem)
-        self.__modifPattern = ModificationService().getPatternWithObjects(modificationPattern, ModifiedItem)'''
         self.__sequence = properties.getSequence()
         self.__molecule = properties.getMolecule()
         self.__fragmentation = properties.getFragmentation()
@@ -43,11 +37,6 @@ class FragmentLibraryBuilder(object):
         self.__fragmentLibrary = list()
         self.__precursor = None
 
-    '''def getSequence(self):
-        return self.__sequence
-
-    def getSequenceList(self):
-        return self.__sequence.getSequenceList()'''
 
     def getFragmentLibrary(self):
         return self.__fragmentLibrary
@@ -55,14 +44,8 @@ class FragmentLibraryBuilder(object):
     def getPrecursor(self):
         return self.__precursor
 
-    '''def getModification(self):
-        return self.__modifPattern.getModification()'''
-
     def setFragmentLibrary(self, patternReader):
         self.__fragmentLibrary = patternReader.addIsotopePatternFromFile(self.__fragmentLibrary)
-
-    '''def getMolecule(self):
-        return self.__molecule'''
 
     def buildSimpleLadder(self, sequ):
         '''
@@ -173,7 +156,7 @@ class FragmentLibraryBuilder(object):
         precursorFragments = []
         sequence = self.__sequence.getSequenceList()
         sequenceName = self.__sequence.getName()
-        precName = ""
+        species, precName = self.processTemplateName(self.__fragmentation.getPrecursor())
         if self.__maxMod == 1:
             precName = "+" + self.__modifPattern.getModification()
         elif self.__maxMod > 1:
@@ -204,6 +187,7 @@ class FragmentLibraryBuilder(object):
                             precursorFragments.append(newFragment)
                             if (name == precName):  #ToDo: check no Modification
                                 self.__precursor = newFragment
+        #[print(frag.getName(),frag.getRadicals()) for frag in precursorFragments]
         return precursorFragments
     
 

@@ -50,7 +50,7 @@ class LogFile(object):
         self._logString += '\n* Save Analysis: '+ datetime.now().strftime("%d/%m/%Y %H:%M")
 
     def load(self):
-        self._logString += '\n* Load Analysis: '+ datetime.now().strftime("%d/%m/%Y %H:%M")
+        self._logString += '\n\n* Load Analysis: '+ datetime.now().strftime("%d/%m/%Y %H:%M")
 
     def toString(self):
         return self._logString

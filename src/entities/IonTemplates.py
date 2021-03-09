@@ -2,12 +2,15 @@ from src.entities.AbstractEntities import PatternWithItems, AbstractItem2, Abstr
 
 
 class FragmentationPattern(PatternWithItems):
-    def __init__(self, name, fragmentTypes, precursorFragments, id):
+    def __init__(self, name, precursor, fragmentTypes, precursorFragments, id):
         super(FragmentationPattern, self).__init__(name, fragmentTypes,id)
+        self.__precursor = precursor
         #self.__initGain = gain
         #self.__initLoss = loss
         self.__items2 = precursorFragments
 
+    def getPrecursor(self):
+        return self.__precursor
 
     '''def getInitGain(self):
         return self.__initGain
@@ -51,8 +54,6 @@ class PrecursorItem(AbstractItem3):
     def __init__(self, item):
         super(PrecursorItem, self).__init__(name=item[0], gain=item[1], loss=item[2],
                                             residue=item[3], radicals=item[4], enabled=item[5])
-
-
 
     '''def check(self, elements, monomeres):
         for key in self.getFormula().keys():

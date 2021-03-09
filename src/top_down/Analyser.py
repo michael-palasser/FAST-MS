@@ -123,6 +123,9 @@ class Analyser(object):
             minMaxChargeDict[key] = np.array(minMaxCharges)
             print(key,minMaxCharges)
         #reducedAvCharges = self.calculateProportions(redTemp)
+        for key,vals in minMaxChargeDict.items():
+            print(key)
+            [print(i, val[0], val[1]) for i,val in enumerate(vals)]
         return avCharges, minMaxChargeDict
 
     def toTable(self, forwardVals, backwardVals):

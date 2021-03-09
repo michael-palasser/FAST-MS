@@ -3,13 +3,11 @@ Created on 20 Oct 2020
 
 @author: michael
 '''
-import traceback
 
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QAction
 
-from src.gui.IsotopePatternController import IsotopePatternView
+from src.gui.IsotopePatternView import IsotopePatternView
 from src.gui.EditorController import *
-#from src.gui.ParameterDialogs import TD_configurationDialog, IntactStartDialog
 from src.gui.ParameterDialogs import TD_configurationDialog
 from src.gui.StartDialogs import IntactStartDialog
 from src.top_down.ModellingTool import main as modellingTool
@@ -26,7 +24,7 @@ class Window(QMainWindow):
         mainMenu = self.menuBar()
         self.tdMenu = mainMenu.addMenu('&Top-Down Tools')
         self.tdEditMenu = mainMenu.addMenu('&Top-Down Configurations')
-        self.esiMenu = mainMenu.addMenu('&IntactIonSearch')
+        self.esiMenu = mainMenu.addMenu('&Other Tools')
         self.dataEdit = mainMenu.addMenu('&Edit data')
         self.move(200,200)
         # self.setWindowIcon(QIcon('pic.png'))
@@ -47,8 +45,6 @@ class Window(QMainWindow):
                               'Starts analysis of top-down spectrum', lambda:TD_MainController(self, True))
         self.addActionToStatusBar(self.tdMenu, 'Load Analysis',
                               'Loads an old analysis', lambda:TD_MainController(self, False))
-        self.addActionToStatusBar(self.tdMenu, 'Isotope Pattern Tool',
-                              'Calculates isotope pattern of an ion', lambda:IsotopePatternView(self))
         self.addActionToStatusBar(self.tdMenu, 'Calc. Abundances',
                               'Calculates relative abundances of an ion list', lambda: modellingTool(self))
         self.addActionToStatusBar(self.tdMenu, 'Calculate Occupancies',
@@ -61,10 +57,12 @@ class Window(QMainWindow):
                               'Edit fragment patterns', lambda:self.editData(FragmentEditorController))
         self.addActionToStatusBar(self.tdEditMenu, 'Edit Modifications',
                               'Edit modification/ligand patterns',lambda:self.editData(ModificationEditorController))
-        self.addActionToStatusBar(self.esiMenu, 'Analyse spectrum',
-                              'Starts analysis of intact spectrum', lambda:self.editData(IntactIonsSearch))
-        self.addActionToStatusBar(self.esiMenu, 'Edit Ions',
+        self.addActionToStatusBar(self.esiMenu, 'Analyse Intact Ions',
+                              'Starts analysis of spectrum with unfragmented ions', lambda:self.editData(IntactIonsSearch))
+        self.addActionToStatusBar(self.esiMenu, 'Edit Intact Ions',
                               'Edit Intact Ions', lambda:self.editData(IntactIonEditorController))
+        self.addActionToStatusBar(self.esiMenu, 'Isotope Pattern Tool',
+                                  'Calculates the isotope pattern of an ion', lambda: IsotopePatternView(self))
         self.addActionToStatusBar(self.dataEdit, 'Elements','Edit element table ',
                               lambda:self.editData(ElementEditorController))
         self.addActionToStatusBar(self.dataEdit, 'Molecules','Edit Molecular Properties',

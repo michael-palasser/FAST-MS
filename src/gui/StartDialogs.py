@@ -6,7 +6,8 @@ from src import path
 from os.path import join
 
 from src.Services import FragmentIonService, ModificationService, SequenceService
-from src.gui.AbstractDialogs import StartDialog, DialogWithTabs, AbstractDialog, OpenFileWidget
+from src.gui.AbstractDialogs import StartDialog, DialogWithTabs, AbstractDialog
+from src.gui.Widgets import OpenFileWidget
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 
 

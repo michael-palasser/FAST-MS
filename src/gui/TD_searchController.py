@@ -16,8 +16,8 @@ from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QAbstractItemView
 
 from src import path
-from src.Exceptions import UnvalidIsotopePatternException
-from src.entities.logFile import LogFile
+from src.Exceptions import UnvalidIsotopePatternException, UnvalidInputException
+from src.entities.LogFile import LogFile
 from src.gui.LogFileView import LogFileView
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.repositories.IsotopePatternRepository import IsotopePatternReader
@@ -58,8 +58,13 @@ class TD_MainController(object):
             self._propStorage = PropertyStorage(self.settings['sequName'], self.settings['fragmentation'],
                                                 self.settings['modifications'])
             self._logFile = LogFile(self.settings, self.configs, self._propStorage)
-            if self.search() == 0:
-                self.setUpUi(parent)
+            self.saved = False
+            try:
+                if self.search() == 0:
+                    self.setUpUi(parent)
+            except UnvalidInputException as e:
+                traceback.print_exc()
+                QtWidgets.QMessageBox.warning(None, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
         else:
             searchService = SearchService()
             #self._search =
@@ -85,6 +90,7 @@ class TD_MainController(object):
                 self._intensityModeller.setIonLists(observedIons, delIons, remIons)
                 self._analyser = Analyser(None, self._propStorage.getSequenceList(), self.settings['charge'],
                                           self._propStorage.getModificationName())
+                self.saved = True
                 self.setUpUi(parent)
                 '''for ion in observedIons:
                     print(ion.getName())
@@ -115,7 +121,7 @@ class TD_MainController(object):
             except UnvalidIsotopePatternException:
                 traceback.print_exc()
                 choice = QtWidgets.QMessageBox.question(None, "Problem with importing list of isotope patterns",
-                        "Imported Fragment Library from" + patternReader.getFile() + "incomplete\n"
+                        "Imported Fragment Library from " + patternReader.getFile() + " incomplete\n"
                         "Should a new library be created?\nThe search will be stopped otherwise",
                                                         QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
                 if choice != QtWidgets.QMessageBox.Yes:
@@ -154,6 +160,7 @@ class TD_MainController(object):
         """Handle spectrum with same monoisotopic peak and charge"""
         print("\n********** Handling overlaps **********")
         sameMonoisotopics = self._intensityModeller.findSameMonoisotopics()
+        print('mono', sameMonoisotopics)
         if len(sameMonoisotopics) > 0:
             view = CheckMonoisotopicOverlapView(sameMonoisotopics, self.spectrumHandler.getSpectrum())
             print("User Input requested")
@@ -184,7 +191,6 @@ class TD_MainController(object):
         return 0
 
     def setUpUi(self, parent):
-        self.saved = False
         self.mainWindow = QtWidgets.QMainWindow(parent)
         self.mainWindow.setObjectName("Results")
         self._translate = QtCore.QCoreApplication.translate
@@ -344,6 +350,7 @@ class TD_MainController(object):
                 else:
                     self._logFile.restoreIon(selectedIon)
                 self._logFileView.update()
+                self.saved = False
                 self._intensityModeller.switchIon(selectedIon)
                 table.model().removeData(selectedRow)
                 self.tables[other].model().addData(selectedIon.getMoreValues())
@@ -367,6 +374,7 @@ class TD_MainController(object):
             if choice == QtWidgets.QMessageBox.Ok:
                 self._logFile.changeIon(oldIon,newIon)
                 self._logFileView.update()
+                self.saved = False
                 self._intensityModeller.addRemodelledIon(oldIon)
                 newIon.comment += 'man.mod.'
                 ionDict[newIonHash] = newIon
@@ -377,6 +385,7 @@ class TD_MainController(object):
 
     def repeatModellingOverlaps(self):
         self._logFile.repeatModelling()
+        self.saved = False
         self._intensityModeller.findOverlaps(20)
         self.verticalLayout.removeWidget(self.tabWidget)
         self.tabWidget = QtWidgets.QTabWidget(self.centralwidget)
@@ -448,7 +457,7 @@ class TD_MainController(object):
     def close(self):
         message = ''
         if self.saved == False:
-            message = 'Warning: Results not saved.\n'
+            message = 'Warning: Unsaved Results\n'
         choice = QtWidgets.QMessageBox.question(self.mainWindow, 'Close Search',
                                                 message + "Do you really want to close the search?",
                                                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
@@ -546,7 +555,7 @@ class TD_MainController(object):
             if ok:
                 if name in names:
                     choice = QtWidgets.QMessageBox.question(self.mainWindow, "Overwriting",
-                                "There is already a saved analysis with name :"+name+"\nDo you want to overwrite it?",
+                                "There is already a saved analysis with name: "+name+"\nDo you want to overwrite it?",
                                                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
                     if choice == QtWidgets.QMessageBox.Yes:
                         break
@@ -560,5 +569,6 @@ class TD_MainController(object):
                                  self._intensityModeller.getDeletedIons().values(),
                                  self._intensityModeller.getRemodelledIons(),
                                  self.spectrumHandler.searchedChargeStates, self._logFile)
+        self.saved = True
         print('done')
         self._logFileView.update()

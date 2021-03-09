@@ -13,7 +13,6 @@ from src.Exceptions import UnvalidInputException
 class IonTableWidget(QTableWidget):
     def __init__(self, parent, ions, yPos):
         super(IonTableWidget, self).__init__(parent)
-        print('starting')
         #self.headers = ['m/z', 'z', 'I', 'fragment', 'error /ppm', 'S/N', 'qual.']
         self._ions = ions
         """model = IonTableModel([ion.getValues() for ion in ions])
@@ -29,15 +28,10 @@ class IonTableWidget(QTableWidget):
         start = time.time()
         for i, ion in enumerate(ions):
             self.fill(i, ion)
-
-        print(time.time()-start)
         self.setHorizontalHeaderLabels(self.getHeaders())
         self.resizeColumnsToContents()
         self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.setSortingEnabled(True)
-
-
-        print('done')
         # self.customContextMenuRequested['QPoint'].connect(partial(self.editRow, self, bools))
 
     def getFormat(self):

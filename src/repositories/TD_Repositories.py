@@ -8,7 +8,7 @@ class FragmentationRepository(AbstractRepositoryWith2Items):
     def __init__(self):
         #self.__conn = sqlite3.connect(dbFile)
         super(FragmentationRepository, self).__init__(join('top_down.db'), 'fragPatterns',
-                                                      ("name",),
+                                                      ("name", 'precursor'),
                     {'fragmentTypes':('name', 'gain', 'loss', 'residue', 'radicals', 'direct', 'enabled', 'patternId'),
                      'precFragments':('name', 'gain', 'loss', 'residue', 'radicals', 'enabled', 'patternId')},
                                                       ((4,5),(4,)), ((6,),(5,)))
@@ -18,7 +18,8 @@ class FragmentationRepository(AbstractRepositoryWith2Items):
         self._conn.cursor().execute("""
             CREATE TABLE IF NOT EXISTS fragPatterns (
                 "id"	integer PRIMARY KEY UNIQUE ,
-                "name"	text NOT NULL UNIQUE);""")
+                "name"	text NOT NULL UNIQUE,
+                "precursor" text NOT NULL);""")
         self._conn.cursor().execute("""
             CREATE TABLE IF NOT EXISTS fragmentTypes (
                 "id"	integer PRIMARY KEY UNIQUE,
@@ -49,34 +50,37 @@ class FragmentationRepository(AbstractRepositoryWith2Items):
         :return:
         """
         # try:
-        patternId = self.create(pattern.getName())
+        patternId = self.create((pattern.getName(),pattern.getPrecursor()))
         self.insertItems(patternId, pattern.getItems(), 0)
         self.insertItems(patternId, pattern.getItems2(), 1)
 
     def updatePattern(self, pattern):
-        self.update(pattern.getName(), pattern.getId())
+        self.update((pattern.getName(), pattern.getPrecursor(), pattern.getId()))
         super(FragmentationRepository, self).updatePattern(pattern)
 
 
     def getItemColumns(self):
         columns1 = super(FragmentationRepository, self).getItemColumns()
-        columns1.update(
-            {'Residue':"If the species is dependent on the occurence of a specific residue within the sequenceList, enter the residue",
-             'Radicals':"Enter the number of radicals",
-             'Direction':"Enter +1 for forward (e.g. N-/5'- terminus) or -1 for backward (e.g. C-/3'- terminus)",
-             'Enabled':"Activate/Deactivate Species"})
+        columns1.update({'Residue': "If the species is dependent on the occurence of a specific residue within the "
+                                    "sequenceList, enter the residue",
+                         'Radicals': "Enter the number of radicals",
+                         'Direction': "Enter +1 for forward (e.g. N-/5'- terminus) or -1 for backward (e.g. C-/3'- terminus)",
+                         'Enabled': "Activate/Deactivate Species"})
         columns1['Name'] = 'Name of the fragment, 1. letter specifies type of fragment, optionally followed by "+" or "-".\n' \
                            + columns1['Name']
         columns2 = super(FragmentationRepository, self).getItemColumns()
-        columns2.update(
-            {'Residue': "If the species is dependent on the occurence of a specific residue within the sequenceList, enter the residue",
-             'Radicals': "Enter the number of radicals", 'Enabled': "Activate/Deactivate Species"})
+        columns2.update({'Residue': "If the species is dependent on the occurence of a specific residue within the "
+                                    "sequenceList, enter the residue",
+                         'Radicals': "Enter the number of radicals", 'Enabled': "Activate/Deactivate Species"})
         return (columns1,columns2)
 
     def getPattern(self, name):
         pattern = self.get('name', name)
         listOfLists = self.getAllItems(pattern[0])
-        return FragmentationPattern(pattern[1], listOfLists[0], listOfLists[1], pattern[0])
+        try:
+            return FragmentationPattern(pattern[1], pattern[2], listOfLists[0], listOfLists[1], pattern[0])
+        except:
+            return FragmentationPattern(pattern[1], 'Prec', listOfLists[0], listOfLists[1], pattern[0])
 
     def getAllItems(self, patternId):
         keyList = [key for key in self._itemDict.keys()]
@@ -135,24 +139,23 @@ class ModificationRepository(AbstractRepositoryWith2Items):
         :return:
         """
         # try:
-        patternId = self.create(pattern.getName(), pattern.getModification())
+        patternId = self.create((pattern.getName(), pattern.getModification()))
         self.insertItems(patternId, pattern.getItems(), 0)
         self.insertItems(patternId, pattern.getItems2(), 1)
 
 
     def updatePattern(self, pattern):
-        self.update(pattern.getName(), pattern.getModification(), pattern.getId())
+        self.update((pattern.getName(), pattern.getModification(), pattern.getId()))
         super(ModificationRepository, self).updatePattern(pattern)
 
 
     def getItemColumns(self):
         columns = super(ModificationRepository, self).getItemColumns()
-        columns.update(
-            {'Residue':"If the species is dependent on the occurence of a specific residue within the sequenceList, enter "
-            "the residue", 'Radicals':"Enter the number of radicals",
-            'z-Effect':"If the modification alters the charge of modified fragment enter an (empiric) number of the extent",
-            'calcOcc':'Should the modification be used for occupancy calculation?',
-            'Enabled':"Activate/Deactivate Modification"})
+        columns.update({'Residue': "If the species is dependent on the occurence of a specific residue within the "
+                                   "sequenceList, enter the residue", 'Radicals': "Enter the number of radicals",
+                        'z-Effect': "If the modification alters the charge of modified fragment enter an (empiric) number of the extent",
+                        'calcOcc': 'Should the modification be used for occupancy calculation?',
+                        'Enabled': "Activate/Deactivate Modification"})
         return (columns,{'Name': 'Modification to be excluded'})
 
 
@@ -174,13 +177,13 @@ class ModificationRepository(AbstractRepositoryWith2Items):
         return listOfLists
 
 
-    def getPatternWithObjects(self, name):
+    '''def getPatternWithObjects(self, name):
         pattern = self.get('name', name)
         listOfItemLists = self.getItemsAsObjects(pattern[0])
-        return ModificationPattern(pattern[1], pattern[2], listOfItemLists[0], listOfItemLists[1], pattern[0])
+        return ModificationPattern(pattern[1], pattern[2], listOfItemLists[0], listOfItemLists[1], pattern[0])'''
 
 
-    def getItemsAsObjects(self, patternId):
+    '''def getItemsAsObjects(self, patternId):
         keyList = [key for key in self._itemDict.keys()]
         listOfItemLists = []
         #for table in self._itemDict.keys():
@@ -190,4 +193,4 @@ class ModificationRepository(AbstractRepositoryWith2Items):
             listOfItems.append(ModifiedItem(item))
         listOfItemLists.append(listOfItems)
         listOfItemLists += [item for item in self.getItems(patternId, keyList[1])]
-        return listOfItemLists
+        return listOfItemLists'''

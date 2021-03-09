@@ -3,7 +3,7 @@ import numpy as np
 
 from src.entities.Ions import FragmentIon, Fragment
 from src.entities.Search import Search
-from src.repositories.AbstractRepositories import AbstractRepositoryWithItems, AbstractRepository
+from src.repositories.AbstractRepositories import AbstractRepository
 
 
 class SearchRepository(AbstractRepository):
@@ -118,12 +118,12 @@ class SearchRepository(AbstractRepository):
         self.createItem('logs', (search.getLogFile().toString(),searchId))
         [self.createItem('chargeStates', [frag,zList, searchId]) for frag,zList in search.getSearchedZStates().items()]
 
-    def create(self, vals):
-        """
+    """def create(self, vals):
+        '''
 
         :param args: Values of the newly created item
         :return:
-        """
+        '''
         cur = self._conn.cursor()
         sql = 'INSERT INTO ' + self._mainTable + '(' + ', '.join(self._columns) + ''') 
                               VALUES(''' + (len(self._columns) * '?,')[:-1] + ')'
@@ -134,7 +134,7 @@ class SearchRepository(AbstractRepository):
             self.makeTables()
             cur.execute(sql, vals)
         self._conn.commit()
-        return cur.lastrowid
+        return cur.lastrowid"""
 
     def insertItems(self, searchId, ions, status):
         for ion in ions:
@@ -153,18 +153,31 @@ class SearchRepository(AbstractRepository):
 
 
     def updateSearch(self, search):
-        searchId = self.getSearch(search.getName())
-        self.update(search.getVals()[0], searchId)
+        searchId = self.get('name', search.getName())[0]
+        self.update(search.getVals() + [searchId])
         self.deleteIons(searchId)
         self.insertItems(searchId, search.getIons(), 0)
         self.insertItems(searchId, search.getDeletedIons(), 1)
         self.insertItems(searchId, search.getIons(), 2)
 
+    '''def update(self, vals): #ToDo
+        """
+
+        :param args: new attributes, last attribute must be id
+        :return:
+        """
+        cur = self._conn.cursor()
+        sql = 'UPDATE ' + self._mainTable + ' SET ' + '=?, '.join(self._columns) + '=? WHERE id=?'
+        print(sql, vals)
+        cur.execute(sql, vals)
+        self._conn.commit()'''
+
+
     def deleteIons(self, searchId):
         cur = self._conn.cursor()
         for ion in self.getItems(searchId, 'ions'):
-            cur.execute("DELETE FROM peaks WHERE patternId=?", (ion[0],))
-        cur.execute("DELETE FROM ions WHERE patternId=?", (searchId,))
+            cur.execute("DELETE FROM peaks WHERE parentId=?", (ion[0],))
+        cur.execute("DELETE FROM ions WHERE parentId=?", (searchId,))
         self._conn.commit()
 
     def delete(self, searchName):

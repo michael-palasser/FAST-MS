@@ -10,6 +10,8 @@ import copy
 from scipy.constants import R
 
 from scipy.constants import electron_mass, proton_mass, N_A
+
+from src.Exceptions import UnvalidInputException
 from src.entities.Ions import FragmentIon
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 
@@ -43,12 +45,13 @@ class SpectrumHandler(object):
         self.__sequList = properties.getSequenceList()
         self.__properties = properties
         self.__settings = settings
-        self.__charge = abs(self.__settings['charge'])
         self.__sprayMode = 1
         if self.__settings['charge'] < 0:
             self.__sprayMode = -1
         self.__upperBound=0
         self.precursor = precursor
+        self.__charge = abs(self.__settings['charge'] - self.precursor.getRadicals())
+        print(self.__charge, self.precursor.getName(), self.precursor.getRadicals())
         self.normalizationFactor = None
 
         self.addSpectrum(filePath)
@@ -56,7 +59,7 @@ class SpectrumHandler(object):
         self.ionsInNoise = list()
         self.searchedChargeStates = dict()
         #self.expectedChargeStates = dict()
-        self.peaksArrType = np.dtype([('m/z', np.float64), ('relAb', np.float64),('m/z_theo', np.float64),
+        self.peaksArrType = np.dtype([('m/z', np.float64), ('relAb', np.float64),
                              ('calcInt', np.float64), ('error', np.float32), ('used', np.bool_)])
 
     def getSpectrum(self, *args):
@@ -84,12 +87,16 @@ class SpectrumHandler(object):
 
     def addSpectrumFromTxt(self, file):
         spectralList = list()
-        for line in file:
+        for i,line in enumerate(file):
             if line.startswith("m/z"):
                 continue
             line = line.rstrip().split()
             if len(line)>1:
-                spectralList.append((float(line[0]),float(line[1])))
+                try:
+                    spectralList.append((float(line[0]),float(line[1])))
+                except ValueError:
+                    raise UnvalidInputException('Problem with format in spectral data', '  '.join(line) +' (line '+str(i)+
+                                                ') Format must be  "m/z    Int." !')
         return np.array(spectralList)
 
     def resizeSpectrum(self):
@@ -180,7 +187,7 @@ class SpectrumHandler(object):
         #elif molecule in ['RNA', 'DNA'] and self.__sprayMode == 1:
         #    return self.__charge / len(self.__sequList)
         else:
-            return self.__charge / len(self.__sequList)#self.getChargeScore(self.__sequList)
+            return self.__charge  / len(self.__sequList)#self.getChargeScore(self.__sequList)
 
     def getChargeScore(self, fragment): #ToDo
         chargeDict = self.__properties.getGPBsOfBBs(self.__sprayMode)
@@ -311,9 +318,9 @@ class SpectrumHandler(object):
 
     def getCorrectPeak(self, foundIsotopePeaks, theoPeak):
         if len(foundIsotopePeaks) == 0:
-            return (theoPeak['m/z'], 0, theoPeak['m/z'], theoPeak['calcInt'], 0, True)  # passt mir noch nicht
+            return (theoPeak['m/z'], 0, theoPeak['calcInt'], 0, True)  # passt mir noch nicht
         elif len(foundIsotopePeaks) == 1:
-            return (foundIsotopePeaks[0][0], foundIsotopePeaks[0][1], theoPeak['m/z'], theoPeak['calcInt'],
+            return (foundIsotopePeaks[0][0], foundIsotopePeaks[0][1], theoPeak['calcInt'],
                     self.calculateError(foundIsotopePeaks[0][0], theoPeak['m/z']), True)
         else:
             lowestError = 100
@@ -322,7 +329,7 @@ class SpectrumHandler(object):
                 if abs(error) < abs(lowestError):
                     lowestError = error
                     lowestErrorPeak = peak
-            return (lowestErrorPeak[0], lowestErrorPeak[1], theoPeak['m/z'], theoPeak['calcInt'], lowestError, True)
+            return (lowestErrorPeak[0], lowestErrorPeak[1], theoPeak['calcInt'], lowestError, True)
 
     def setSearchedChargeStates(self, searchedZStates):
         self.searchedChargeStates = searchedZStates

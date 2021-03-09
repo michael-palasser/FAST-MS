@@ -3,7 +3,8 @@ from os.path import join, isdir
 
 from src import path
 from src.Exceptions import UnvalidInputException
-from src.gui.AbstractDialogs import AbstractDialog, OpenFileWidget
+from src.gui.AbstractDialogs import AbstractDialog
+from src.gui.Widgets import OpenFileWidget
 
 dataPath = join(path, 'src', 'data')
 

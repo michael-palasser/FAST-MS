@@ -27,8 +27,8 @@ class Search(object):
         return self._date
 
     def getVals(self):
-        return self._name, self._date, self._sequName, self._charge, self._fragmentation, self._modifications, \
-               self._nrMod, self._spectralData, self._noiseLimit, self._fragLib
+        return [self._name, self._date, self._sequName, self._charge, self._fragmentation, self._modifications,
+                self._nrMod, self._spectralData, self._noiseLimit, self._fragLib]
 
     def getIons(self):
         return self._ions

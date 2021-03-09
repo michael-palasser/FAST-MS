@@ -25,7 +25,7 @@ class SequenceRepository(AbstractRepository):
 
     def createSequence(self, sequence):
         try:
-            self.create(sequence.getName(), sequence.getSequenceString(), sequence.getMolecule())
+            self.create((sequence.getName(), sequence.getSequenceString(), sequence.getMolecule()))
         except sqlite3.IntegrityError:
             raise AlreadyPresentException(sequence.getName())
 

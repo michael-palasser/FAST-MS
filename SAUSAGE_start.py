@@ -1,2 +1,2 @@
 import os
-os.system("python -m src.views.StartWindow")
+os.system("python -m src.gui.StartWindow")

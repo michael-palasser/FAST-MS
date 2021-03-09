@@ -34,7 +34,7 @@ def writeElements():
         service.close()
 
 
-def readMoleculeFile(moleculeFile):
+def readMoleculeFile(moleculeFile, molecule):
     '''
     reads and processes file which contains formulas of monomeres and precursor ions
     :param moleculeFile: (RNA.txt, DNA.txt, Protein.txt in Parameters - folder)
@@ -43,6 +43,10 @@ def readMoleculeFile(moleculeFile):
     monomers = []
     mode = 'monomers'
     h2o = {'H':2, 'O':1}
+    gpb_nuc_pos={'A':913,'C':916,'G':928,'T':850, 'U':842}
+    gpb_nuc_neg={'A':1460,'C':1430,'G':1388,'T':1420, 'U':1418}
+    gpb_prot_pos={'P':980,'W':980,'Q':993,'K':1008, 'R':1051, 'H':1024}
+    gpbDict_prot_neg={'E':1424,'D':1429,'H':1433,'W':1436,'Y':1439,'C':1460}
     for line in moleculeFile:
         if line.startswith('#precursor ions'):
             mode = 'precIons'
@@ -50,10 +54,25 @@ def readMoleculeFile(moleculeFile):
             continue
         lineList = removeEmptyElements(line.rstrip().split('\t'))
         if mode == 'monomers':
+            name = lineList[0]
+            if molecule == "Protein":
+                gbPos = 927
+                gbNeg = 1483
+                if name in gpb_prot_pos.keys():
+                    gbPos = gpb_prot_pos[name]
+                if name in gpbDict_prot_neg.keys():
+                    gbNeg = gpbDict_prot_neg[name]
+                monomers.append([name, lineList[1], gbPos, gbNeg])
+            else:
+                #gbPos = 927
+                #if name in gpb_prot_pos.keys():
+                gbPos = gpb_nuc_pos[name]
+                #if name in gpbDict_prot_neg.keys():
+                gbNeg = gpb_nuc_neg[name]
+                monomers.append([name, lineList[1], gbPos, gbNeg])
+
             #formula = MolecularFormula(AbstractItem2.stringToFormula(lineList[1], dict(),1)).addFormula(h2o).toString()
             #print(lineList[1], formula)
-            monomers.append([lineList[0],lineList[1], 0])
-            print("hey",[lineList[0],lineList[1]])
             #self.monomers[lineList[0]] = self.stringToFormula(lineList[1],dict(),1)
     return monomers
 
@@ -66,8 +85,11 @@ def writeMolecules():
             moleculePath = os.path.join(path, 'Parameters', molecule + '.txt')
             print(moleculePath)
             with open(moleculePath) as f:
-                monomers = readMoleculeFile(f)
-            service.savePattern(Makromolecule(molecule, "", "", monomers,None))
+                monomers = readMoleculeFile(f, molecule)
+            gain,loss = 'H','O2P1'
+            if molecule == 'Protein':
+                gain, loss = 'H2O', ''
+            service.savePattern(Makromolecule(molecule, gain, loss, monomers,None))
     except:
         traceback.print_exc()
     finally:
@@ -143,8 +165,8 @@ def writeFragments(name, fragPath,precFrag):
             gain, loss = 'H1', 'O2P1'
         else:
             gain, loss = 'H2O', '' '''
-        print(FragmentationPattern(name, fragments, precFrag, None).getItems2())
-        service.savePattern(FragmentationPattern(name, fragments, precFrag, None))
+        print(FragmentationPattern(name, 'Prec', fragments, precFrag, None).getItems2())
+        service.save(FragmentationPattern(name, 'Prec', fragments, precFrag, None))
     except:
         traceback.print_exc()
     finally:
@@ -202,7 +224,7 @@ def writeModifications():
                             modif = "DEPC+H2O-CO"
                         elif name == '134':
                             modif = "2DEPC+H2O-CO"
-                        service.savePattern(ModificationPattern(name, modif, modifications, excluded, None))
+                        service.save(ModificationPattern(name, modif, modifications, excluded, None))
     except:
         traceback.print_exc()
     finally:
@@ -232,16 +254,16 @@ def writeIntactModifs():
     modifications = readIntactModifs()
     try:
         for key,val in modifications.items():
-            service.savePattern(IntactPattern(key, "H1", "O2P1", val, None))
+            service.save(IntactPattern(key, val, None))
     except:
         traceback.print_exc()
     finally:
         service.close()
 
 
-writeElements()
-writeMolecules()
-writeSequences()
+#writeElements()
+#writeMolecules()
+#writeSequences()
 """with open(os.path.join(path, 'Parameters', 'Protein' + '.txt')) as f:
     for line in f:
         if line.startswith('#') or line == "":
@@ -276,8 +298,13 @@ prcFrags = [
     ['+2e', '', '', '', 2,True]]
 fragPath = join(path, 'Parameters', 'protein-fragmentation','ECD.txt')
 
-#writeFragments("Protein_ECD",fragPath, prcFrags)
+writeFragments("RNA_CAD",fragPath, prcFrags)
+writeFragments("Protein_CAD",fragPath, prcFrags)
+writeFragments("Protein_ECD",fragPath, prcFrags)
 
 #writeModifications()"""
 
 #writeIntactModifs()
+
+#service = FragmentIonService()
+#service.restart()

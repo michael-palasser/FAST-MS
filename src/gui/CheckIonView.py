@@ -5,13 +5,14 @@ from PyQt5.QtGui import QMovie
 from PyQt5.QtWidgets import QLabel, QMainWindow
 import numpy as np
 
-from src.views.IonTableWidget import IonTableWidget, TickIonTableWidget, FinalIonTable
-from src.views.SpectrumView import SpectrumView
+from src.gui.IonTableWidget import IonTableWidget, TickIonTableWidget
+from src.gui.PeakViews import SimplePeakView
+from src.gui.SpectrumView import SpectrumView
 
 
 class LoadingWidget(QtWidgets.QWidget):
-    def __init__(self):
-        super(LoadingWidget, self).__init__()
+    def __init__(self, parent):
+        super(LoadingWidget, self).__init__(parent)
         self.loading_lbl = QLabel(self)
         loading_movie = QMovie("loading.gif")  # some gif in here
         self.loading_lbl.setMovie(loading_movie)
@@ -38,7 +39,8 @@ class AbstractIonView(QtWidgets.QDialog):
         label = QtWidgets.QLabel(self)
         label.setGeometry(QtCore.QRect(20, 20, 400, 16))
         label.setText(self._translate(self.objectName(), message))
-
+        self.verticalLayout.addWidget(label)
+        self.verticalLayout.addSpacing(12)
         """self.loading_lbl = QLabel(self)
         #self.loading_lbl.setStyleSheet('border: 1px solid red')  # just for illustration
         #self.loading_lbl.setAlignment(QtCore.Qt.AlignCenter)
@@ -64,6 +66,7 @@ class AbstractIonView(QtWidgets.QDialog):
 
         self.scrollArea.setWidget(self.contents)
         self.scrollArea.resize(width+90, finall_y-10)
+        self.verticalLayout.addWidget(self.scrollArea)
         finall_y = self.makeButtonBox(width, finall_y+90)
         self.resize(width + 130, finall_y + 20)
         self.canceled = False
@@ -81,13 +84,14 @@ class AbstractIonView(QtWidgets.QDialog):
         return (ion.getName(),ion.charge)
 
     def setUpUi(self, title):
-        self.setObjectName("dialog")
+        self.verticalLayout = QtWidgets.QVBoxLayout(self)
         self._translate = QtCore.QCoreApplication.translate
         self.setWindowTitle(self._translate(self.objectName(), title))
         self.scrollArea = QtWidgets.QScrollArea(self)
         self.contents = QtWidgets.QWidget()
-        self.formlayout = QtWidgets.QFormLayout()
-        self.contents.setLayout(self.formlayout)
+        self.formlayout = QtWidgets.QFormLayout(self.contents)
+        self.formlayout.setFieldGrowthPolicy(QtWidgets.QFormLayout.ExpandingFieldsGrow)
+        #self.contents.setLayout(self.formlayout)
         self.scrollArea.setGeometry(QtCore.QRect(20, 60, 361, 161))
         #self.scrollArea.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.scrollArea.setWidgetResizable(True)
@@ -98,6 +102,7 @@ class AbstractIonView(QtWidgets.QDialog):
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
         self.buttonBox.move(width - self.buttonBox.width() - 50, yPos)
+        self.verticalLayout.addWidget(self.buttonBox)
         return yPos + 30
 
     def accept(self):
@@ -115,15 +120,16 @@ class AbstractIonView(QtWidgets.QDialog):
 
     def showOptions(self, table, pos):
         global view
-        """it = table.itemAt(pos)
+        it = table.itemAt(pos)
         if it is None:
             return
         selectedRowIndex = it.row()
         columnCount = table.columnCount()
         item_range = QtWidgets.QTableWidgetSelectionRange(0, selectedRowIndex, columnCount - 1, selectedRowIndex)
-        table.setRangeSelected(item_range, True)"""
+        table.setRangeSelected(item_range, True)
         menu = QtWidgets.QMenu()
         showAction = menu.addAction("Show in Spectrum")
+        peakAction = menu.addAction("Show Peaks")
         action = menu.exec_(table.viewport().mapToGlobal(pos))
         if action == showAction:
             """index = None
@@ -141,8 +147,13 @@ class AbstractIonView(QtWidgets.QDialog):
                     maxLimit = maxMz"""
             ions = self.getIons(table)
             minLimit, maxLimit, YLimit = self.getLimits(ions)
-            peaks = self._spectrum[np.where((self._spectrum[:,0]>(minLimit-5)) & (self._spectrum[:,0]<(maxLimit+5)))]
-            view = SpectrumView(peaks, ions, minLimit, maxLimit, YLimit)
+            peaks = self._spectrum[
+                np.where((self._spectrum[:, 0] > (minLimit - 5)) & (self._spectrum[:, 0] < (maxLimit + 5)))]
+
+            view = SpectrumView(None, peaks, ions, minLimit, maxLimit, YLimit)
+        elif action == peakAction:
+            global peakview
+            peakview = SimplePeakView(None, table.getIon(selectedRowIndex))
 
     def getIons(self, *args):
         index = None
@@ -246,80 +257,5 @@ class CheckMonoisotopicOverlapView(AbstractIonView):
                     self._dumpList.append(ion)
         print(self._dumpList)
         super(CheckMonoisotopicOverlapView, self).accept()
-
-
-
-class FinalIonView(AbstractIonView):
-    def __init__(self, ions, spectrum):
-        """lbl = QLabel()
-        movie = QMovie("loading.gif")
-        lbl.setMovie(movie)
-        lbl.show()
-        movie.start()"""
-        super(FinalIonView, self).__init__((ions,), "Results", "Observed Ions:",
-                                                               [100, 30, 120, 140, 70, 60, 60, 160, 40], spectrum)
-        #movie.stop()
-
-    def makeTables(self, yPos):
-        self._ions = self._patterns[0]
-        self.__table = FinalIonTable(self.contents, self._ions.values(), yPos)  # self.createTableWidget(self, pattern, yPos)
-        for i, width in enumerate(self._widths):
-            self.__table.setColumnWidth(i, width)
-        # self.formLayout.setWidget(i+1, QtWidgets.QFormLayout.SpanningRole, table)  # ToDo
-        self.connectTable(self.__table)
-        yPos += len(self._ions.values()) * 20 + 50
-        self.formlayout.addWidget(self.__table)
-        return yPos
-
-
-    def showOptions(self, table, pos):
-        global view
-        menu = QtWidgets.QMenu()
-        showAction = menu.addAction("Show in Spectrum")
-        action = menu.exec_(table.viewport().mapToGlobal(pos))
-
-        it = table.itemAt(pos)
-        if it is None:
-            return
-        selectedRowIndex = it.row()
-        columnCount = table.columnCount()
-        item_range = QtWidgets.QTableWidgetSelectionRange(0, selectedRowIndex, columnCount - 1, selectedRowIndex)
-        table.setRangeSelected(item_range, True)
-        selectedHash = (table.item(selectedRowIndex, 3).text(), int(table.item(selectedRowIndex, 1).text()))
-        print(selectedHash)
-        if action == showAction:
-            ions = self.getIons(self._ions[selectedHash])
-            print(ions)
-            minLimit, maxLimit, maxY = self.getLimits(ions)
-            peaks = self._spectrum[np.where((self._spectrum[:,0]>(minLimit-5)) & (self._spectrum[:,0]<(maxLimit+5)))]
-            view = SpectrumView(peaks, ions, np.min(self._ions[selectedHash].isotopePattern['m/z']),
-                                np.max(self._ions[selectedHash].isotopePattern['m/z']),
-                                np.max(self._ions[selectedHash].isotopePattern['relAb']))
-
-
-    def getIons(self, ion):
-        monoisotopicDict = {ion.isotopePattern['m/z'][0]:key for key,ion in self._ions.items()}
-        monoisotopics = np.array(sorted(list(monoisotopicDict.keys())))
-        distance = 50
-        median = ion.isotopePattern['m/z'][0]
-
-        while True:
-            monoisotopics = monoisotopics[np.where(abs(monoisotopics-median)<distance )]
-            if len(monoisotopics)< 20:
-                print(median,[monoisotopicDict[mono] for mono in monoisotopics])
-                return [self._ions[monoisotopicDict[mono]] for mono in monoisotopics]
-            elif len(monoisotopics)<30:
-                distance /=1.5
-            else:
-                distance /=2
-        #for hash, ion in self._patterns[0].items():
-
-    def accept(self):
-        self._dumpList += self.__table.getDumpList()
-        print(self._dumpList)
-        super(FinalIonView, self).accept()
-
-
-
 
 

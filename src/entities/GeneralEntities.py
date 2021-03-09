@@ -19,7 +19,7 @@ class Makromolecule(PatternWithItems):
         formula = AbstractItem2.stringToFormula(self.__gain, dict(), 1)
         return AbstractItem2.stringToFormula(self.__loss, formula, -1)
 
-    def getMonomerDict(self):
+    def getBBDict(self):
         itemDict = dict()
         for item in self._items:
             if isinstance(item, BuildingBlock):
@@ -33,7 +33,8 @@ class BuildingBlock(AbstractItem1):
     def __init__(self, item):
         super(BuildingBlock, self).__init__(item[0])
         self.__formulaString = item[1]
-        self.__acidity = item[2]
+        self.__gbP = item[2]
+        self.__gbN = item[3]
 
     def getFormulaString(self):
         return self.__formulaString
@@ -41,8 +42,16 @@ class BuildingBlock(AbstractItem1):
     def getFormula(self):
         return self.stringToFormula(self.__formulaString,dict(),1)
 
-    def getAcidity(self):
-        return self.__acidity
+    def getGbP(self):
+        return self.__gbP
+
+    def getGbN(self):
+        return self.__gbN
+
+    def getGB(self, mode):
+        if mode == 1:
+            return self.__gbP
+        return self.__gbN
 
 
 class Element(PatternWithItems):

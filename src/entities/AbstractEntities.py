@@ -100,6 +100,62 @@ class AbstractItem1(ABC):
 
     @staticmethod
     def stringToFormula(formulaString, formulaDict, sign):
+        #everything in parenthesis
+        beginIndizes = [m.start() for m in re.finditer('\(', formulaString)]
+        endIndizes = [m.start() for m in re.finditer('\)', formulaString)]
+        if len(beginIndizes) != len(endIndizes):
+            raise UnvalidInputException(formulaString, 'Incorrect use of parenthesis')
+        #subString = formulaString[:beginIndizes[0]]
+        #formulaDict = AbstractItem1.stringToFormula2(formulaString[:beginIndizes[0]], formulaDict, sign)
+        #print(beginIndizes,endIndizes)
+        lastEnd = 0
+        for bI,eI in zip(beginIndizes,endIndizes):
+            #print(formulaString[lastEnd:bI],formulaString[bI+1:eI])
+            formulaDict = AbstractItem1.stringToFormula2(formulaString[lastEnd:bI], formulaDict, sign)
+            temp = AbstractItem1.stringToFormula2(formulaString[bI+1:eI], {}, sign)
+            if (len(formulaString)>eI+1) and (formulaString[eI+1].isnumeric()):
+                nr = int(re.findall('\)\d+', formulaString[bI+1:])[0][1:])
+                #print('nr',nr)
+                temp = {key:val*nr for key,val in temp.items()}
+            AbstractItem1.addToDict(formulaDict,temp)
+            lastEnd = eI
+        formulaDict = AbstractItem1.stringToFormula2(formulaString[lastEnd:],formulaDict,sign)
+        return formulaDict
+
+
+        '''if ')' in formulaString:
+            print('yes')
+        if ('(' in formulaString) and (')' in formulaString):
+            print(re.findall('\)[^A-Z]',formulaString))
+            for form,nrStr in zip(re.findall('\(.*?\)',formulaString), re.findall('\)[^A-Z]',formulaString)):
+                nr=1
+                if len(nrStr)>1:
+                    nr = int(nrStr[1:])
+                temp = {key:val*nr for key,val in AbstractItem1.stringToFormula2(form[1:-1], {}, sign).items()}
+                for element, number in temp.items():
+                    if element in formulaDict.keys():
+                        formulaDict[element] += number
+                    else:
+                        formulaDict[element] = number
+            #everything outside parenthesis
+            print(formulaDict)
+            for subString in formulaString.split('('):
+                if subString !='':
+                    if not ')' in subString:
+                        formulaDict = AbstractItem1.stringToFormula2(subString,formulaDict,sign)
+                    else:
+                        subI2 = subString.split(')')
+                        match = re.match(r"([0-9]+)([a-z]+)", subI2[1], re.I)  # re.I: ignore case: ?
+                        if match:
+                            formulaDict = AbstractItem1.stringToFormula2(match.group(2),formulaDict,sign)
+                        elif not subI2[1].isnumeric():
+                            formulaDict = AbstractItem1.stringToFormula2(subI2[1],formulaDict,sign)
+        else:
+            formulaDict = AbstractItem1.stringToFormula2(formulaString, formulaDict, sign)
+        return formulaDict'''
+
+    @staticmethod
+    def stringToFormula2(formulaString, formulaDict, sign):
         '''
         Converts a String to a formula - dict and adds or subtracts it to or from an original formula
         :param formulaString: String which should be converted to a formula
@@ -107,7 +163,7 @@ class AbstractItem1(ABC):
         :param sign: +1 or -1 for addition or subtraction of formula to or from formulaDict
         :return: new formula (dict)
         '''
-        if formulaString == "":
+        if formulaString == "" or formulaString == "-":
             return formulaDict
         for item in re.findall('[A-Z][^A-Z]*', formulaString):
             element = item
@@ -120,15 +176,36 @@ class AbstractItem1(ABC):
                 formulaDict[element] += number * sign
             else:
                 formulaDict[element] = number * sign
+        if len(formulaDict)<1:
+            raise UnvalidInputException(formulaString, "Unvalid format of formula")
         return formulaDict
+
+    @staticmethod
+    def addToDict(dict1,dict2):
+        print('adding', dict1,dict2)
+        for element, number in dict2.items():
+            if element in dict1.keys():
+                dict1[element] += number
+            else:
+                dict1[element] = number
+        return dict1
 
 
 class AbstractItem2(AbstractItem1, ABC):
-    def __init__(self, name, enabled, gain, loss):
+    def __init__(self, name, gain, loss, enabled):
         super(AbstractItem2, self).__init__(name)
-        self._enabled = enabled
         self._gain = gain
         self._loss = loss
+        self._enabled = enabled
+
+    def processItem(self, item):
+        processedItem = []
+        for val in item:
+            if val =='':
+                processedItem.append('-')
+            else:
+                processedItem.append(val)
+        return processedItem
 
     def enabled(self):
         return (self._enabled == 1)
@@ -137,27 +214,17 @@ class AbstractItem2(AbstractItem1, ABC):
         formulaDict = self.stringToFormula(self._gain, dict(), 1)
         return self.stringToFormula(self._loss, formulaDict, -1)
 
+class AbstractItem3(AbstractItem2):
+    def __init__(self, name, gain, loss, residue, radicals, enabled):
+        super(AbstractItem3, self).__init__(name, gain, loss, enabled)
+        self._residue = residue
+        self._radicals = radicals
 
+    def getResidue(self):
+        return self._residue
 
-"""class PrecursorItem(AbstractItem2):
-    #def __init__(self, name, gain, loss, residue, radicals, enabled):
-    def __init__(self, item):
-        super(PrecursorItem, self).__init__(name=item[0], gain=item[1], loss=item[2], enabled=item[5])
-        self._residue = item[3]
-        self._radicals = item[4]
+    def getRadicals(self):
+        return self._radicals
 
-        def getResidue(self):
-            return self._residue
-
-        def getRadicals(self):
-            return self._radicals
-
-        def check(self, elements, monomeres):
-            for key in self.getFormula().keys():
-                if key not in elements:
-                    raise UnvalidInputException(self.getName(), "Element: " + key + " unknown")
-            # self._residue = residue  unchecked!
-            try:
-                self._radicals = int(self._radicals)
-            except ValueError:
-                raise UnvalidInputException(self.getName(), "Number required: " + str(self._radicals))"""
+    def toString(self):
+        return [self._name, self._gain, self._loss, self._residue, str(self._radicals), str(self._enabled)]

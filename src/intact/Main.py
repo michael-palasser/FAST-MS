@@ -16,7 +16,7 @@ from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.intact.Analyser import IntactAnalyser
 from src.intact.ExcelWriter import IntactExcelWriter
 from src import path
-#from src.views.ParameterDialogs import IntactStartDialog
+#from src.gui.ParameterDialogs import IntactStartDialog
 
 
 def run():
@@ -62,7 +62,7 @@ def run():
         excelWriter.closeWorkbook()
 
     try:
-        subprocess.call(['openAgain',output])
+        subprocess.call(['open',output])
     except:
         pass
     return 0

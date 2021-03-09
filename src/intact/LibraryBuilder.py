@@ -21,8 +21,9 @@ class IntactLibraryBuilder(object):
         '''
         self.sequence = SequenceService().get(sequName)
         self.sequenceList = self.sequence.getSequenceList()
-        self.monomers = MoleculeService().getItemDict(self.sequence.getMolecule())
+        self._molecule = MoleculeService().get(self.sequence.getMolecule())
         self.modifications = IntactIonService().getPatternWithObjects(modificationName, IntactModification)
+        print('here')
 
 
     def createLibrary(self):
@@ -35,6 +36,7 @@ class IntactLibraryBuilder(object):
         for item in self.modifications.getItems():
             if item.enabled():
                 modFormula = unmodFormula.addFormula(item.getFormula())
+                print(item.getName(), modFormula.toString(), modFormula.calculateMonoIsotopic())
                 library[item.getName()] = (modFormula.calculateMonoIsotopic(),item.getNrMod())
         return library
 
@@ -44,7 +46,8 @@ class IntactLibraryBuilder(object):
 
         :return: unmodified intact ion
         '''
-        formula = MolecularFormula(self.modifications.getFormula())
+        formula = MolecularFormula(self._molecule.getFormula())
+        buildingBlocks = self._molecule.getBBDict()
         for link in self.sequenceList:
-            formula = formula.addFormula(self.monomers[link].getFormula())
+            formula = formula.addFormula(buildingBlocks[link].getFormula())
         return formula

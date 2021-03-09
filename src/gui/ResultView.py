@@ -1,0 +1,122 @@
+from math import log10
+
+
+try:
+    from Tkinter import Tk
+except ImportError:
+    from tkinter import Tk
+from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import Qt
+
+
+class AbstractTableModel(QtCore.QAbstractTableModel):
+    def __init__(self, data, format, headers):
+        super(AbstractTableModel, self).__init__()
+        self._data = data
+        self._format = format
+        self._headers = headers
+
+    def data(self, index, role):
+        if index.isValid():
+            if role == Qt.DisplayRole:
+                col = index.column()
+                item = self._data[index.row()][col]
+                formatString = self._format[col]
+                return formatString.format(item)
+
+    def getData(self):
+        return self._data
+
+    def getHeaders(self):
+        return self._headers
+
+    def rowCount(self, index):
+        #return len(self._data.values)
+        return len(self._data)
+
+    def columnCount(self, index):
+        #return self._data.columns.size
+        return len(self._data[0])
+
+    def headerData(self, section, orientation, role):
+        if role == QtCore.Qt.DisplayRole:
+            if orientation == QtCore.Qt.Horizontal:
+                return self._headers[section]
+
+    def sort(self, Ncol, order):
+        """Sort table by given column number."""
+        self.layoutAboutToBeChanged.emit()
+        #self._data = self._data.sort_values(self._headers[Ncol], ascending=order == Qt.AscendingOrder)
+        if order == Qt.AscendingOrder:
+            self._data.sort(key= lambda tup:tup[Ncol])
+        else:
+            self._data.sort(key= lambda tup:tup[Ncol], reverse=True)
+        self.layoutChanged.emit()
+
+
+class IonTableModel(AbstractTableModel):
+    def __init__(self, data, precRegion, maxQual, maxScore):
+        super(IonTableModel, self).__init__(data, ('{:10.5f}','{:2d}', '{:12d}', '','{:4.2f}', '{:6.1f}', '{:4.2f}',
+               '{:4.1f}', ''), ('m/z','z','intensity','fragment','error /ppm', 'S/N','quality', 'score', 'comment'))
+        self._precRegion = precRegion
+        self._maxQual = maxQual
+        self._maxScore = maxScore
+
+    """def flags(self, index):
+        return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable"""
+
+    def data(self, index, role):
+        if index.isValid():
+            if role == Qt.DisplayRole:
+                col = index.column()
+                item = self._data[index.row()][col]
+                formatString = self._format[col]
+                if col == 3 or col == 8:
+                    return item
+                if col == 2 :
+                    if item >= 10 ** 13:
+                        lg10 = str(int(log10(item) + 1))
+                        formatString = '{:' + lg10 + 'd}'
+                    return formatString.format(item)
+                return formatString.format(item)
+        if role == Qt.TextAlignmentRole:
+            if index.column() == 3 or index.column() == 8:
+                return Qt.AlignLeft
+            else:
+                return Qt.AlignRight
+        if role == Qt.FontRole:
+            if index.column() == 8:
+                font = QtGui.QFont()
+                font.setPointSize(10)
+                return font
+        if role == Qt.ForegroundRole:
+            col = index.column()
+            item = self._data[index.row()][col]
+            if col == 0:
+                if self._precRegion[0]<item<self._precRegion[1]:
+                    return QtGui.QColor('red')
+            if col == 6:
+                if item > self._maxQual:
+                    return QtGui.QColor('red')
+            if col == 7:
+                if item > self._maxScore:
+                    return QtGui.QColor('red')
+
+    def getHashOfRow(self, rowIndex):
+        return (self._data[rowIndex][3],self._data[rowIndex][1])
+
+    def getRow(self, rowIndex):
+        return self._data[rowIndex]
+
+    def addData(self, newRow):
+        self._data.append(newRow)
+
+    def removeData(self, indexToRemove):
+        #self.removeRow(indexToRemove)
+        del self._data[indexToRemove]
+
+    def updateData(self, newRow):
+        for i, row in enumerate(self._data):
+            if row[1]==newRow[1] and row[3]==newRow[3]:
+                self._data[i] = newRow
+                break

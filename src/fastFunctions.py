@@ -1,6 +1,5 @@
 import math
 from numba import njit
-from numba.typed import List
 import numpy as np
 
 @njit
@@ -113,14 +112,14 @@ def calculateNuclFineStructure(isotopePeak, isotopeTable):
     :param isotopeTable: 2D numpy array
     :return: fine structure [(mass,percentage)]
     '''
-    maxValues = []
-    for i in range(10):
+    maxValues = getMaxValues(isotopePeak, isotopeTable)
+    """for i in range(10):
         if isotopePeak>isotopeTable[i]['nr']:
             maxValues.append(isotopeTable[i]['nr'])
         else:
             maxValues.append(isotopePeak)
     if isotopePeak > 0:
-        isotopeTable[1]['nrIso'] = isotopePeak
+        isotopeTable[1]['nrIso'] = isotopePeak"""
     massI, propI = calculatePercentage(isotopeTable)
     fineStructure = [(massI, propI)]
     for i13C in list(range(maxValues[1]))[::-1]:
@@ -138,6 +137,18 @@ def calculateNuclFineStructure(isotopePeak, isotopeTable):
 
 
 @njit
+def getMaxValues(isotopePeak, isotopeTable):
+    maxValues = []
+    for i in range(len(isotopeTable)):
+        if isotopePeak>isotopeTable[i]['nr']:
+            maxValues.append(isotopeTable[i]['nr'])
+        else:
+            maxValues.append(isotopePeak)
+    if isotopePeak > 0:
+        isotopeTable[1]['nrIso'] = isotopePeak
+    return maxValues
+
+@njit
 def calculatePeptFineStructure(isotopePeak, isotopeTable):
     '''
     Calculates isotopic fine structure of isotope peak for elemental composition CHNOS (proteins)
@@ -146,14 +157,15 @@ def calculatePeptFineStructure(isotopePeak, isotopeTable):
     :return: fine structure [(mass,percentage)]
     '''
     #print(isotopeTable)
-    maxValues = []
+    maxValues = getMaxValues(isotopePeak, isotopeTable)
+    """maxValues = []
     for i in range(12):
         if isotopePeak>isotopeTable[i]['nr']:
             maxValues.append(isotopeTable[i]['nr'])
         else:
             maxValues.append(isotopePeak)
     if isotopePeak > 0:
-        isotopeTable[1]['nrIso'] = isotopePeak
+        isotopeTable[1]['nrIso'] = isotopePeak"""
     massI, propI = calculatePercentage(isotopeTable)
     fineStructure = [(massI, propI)]
     for i13C in list(range(maxValues[1]))[::-1]:
@@ -186,6 +198,7 @@ def setIsotopeTable(isotopeTable):
     return isotopeTable
 
 
+
 @njit
 def calculateFineStructure(isotopePeak, isotopeTable):
     '''
@@ -194,7 +207,7 @@ def calculateFineStructure(isotopePeak, isotopeTable):
     :param isotopeTable: 2D numpy array
     :return: fine structure [(mass,percentage)]
     '''
-    fineStructure = List()
+    fineStructure = [(0.,0.)]
     for iFirst in list(range(isotopePeak + 1))[::-1]:
         isotopeTable[1]['nrIso'] = iFirst
         if iFirst == isotopePeak:
@@ -203,6 +216,7 @@ def calculateFineStructure(isotopePeak, isotopeTable):
         else:
             fineStructure = loopThroughIsotopes(isotopePeak, isotopeTable, fineStructure, 3)
     return fineStructure[1:]
+
 
 
 @njit
@@ -230,4 +244,51 @@ def loopThroughIsotopes(isotopePeak, isotopeTable, fineStructure, index):
             isotopeTable[index]['nrIso'] = i
             loopThroughIsotopes(isotopePeak, isotopeTable, fineStructure, index + 1)
     return fineStructure
+
+
+"""@njit
+def calculateFineStructure(isotopePeak, isotopeTable):
+    '''
+    Calculates isotopic fine structure of isotope peak for molecules with a general elemental composition
+    :param isotopePeak: number of isotope peak (M+x), int
+    :param isotopeTable: 2D numpy array
+    :return: fine structure [(mass,percentage)]
+    '''
+    global maxValues
+    maxValues = getMaxValues(isotopePeak, isotopeTable)
+    fineStructure = [(0.,0.)]
+    for iFirst in list(range(isotopePeak + 1))[::-1]:
+        isotopeTable[1]['nrIso'] = iFirst
+        if iFirst == isotopePeak:
+            massI, propI = calculatePercentage(isotopeTable)
+            fineStructure.append((massI,propI))
+        else:
+            fineStructure = loopThroughIsotopes(isotopePeak, isotopeTable, fineStructure, maxValues, 3)
+    return fineStructure[1:]
+
+@njit
+def loopThroughIsotopes(isotopePeak, isotopeTable, fineStructure, maxValues, index):
+    '''
+    Loops through molecular formula and calculates isotopic fine structure (recursive function)
+    :param isotopePeak: number of isotope peak (M+x), int
+    :param isotopeTable: 2D numpy array
+    :param fineStructure: isotopic fineStructure (list)
+    :param index: running index of corresponding element
+    :return: fineStructure [(mass,percentage)]
+    '''
+    if (np.sum(isotopeTable['nrIso']*isotopeTable['M+']) == isotopePeak):
+        massI, propI = calculatePercentage(isotopeTable)
+        fineStructure.append((massI, propI))
+        return fineStructure
+    elif index < len(isotopeTable):
+        while (isotopeTable[index]['M+'] == 0):
+            index+=1
+            if index >= len(isotopeTable):
+                return fineStructure
+        for i in range(int((maxValues[index] + isotopeTable[index]['M+']) / isotopeTable[index]['M+'])):
+            '''if i>isotopeTable[index]['nr']:
+                break'''
+            isotopeTable[index]['nrIso'] = i
+            loopThroughIsotopes(isotopePeak, isotopeTable, fineStructure, maxValues, index + 1)
+    return fineStructure"""
 

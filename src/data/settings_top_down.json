@@ -1,1 +1,1 @@
-"{\n   \"sequName\": \"rre2\",\n   \"charge\": 0,\n   \"fragmentation\": \"RNA_CAD\",\n   \"modifications\": \"CMCT\",\n   \"nrMod\": 1,\n   \"spectralData\": \"\",\n   \"noiseLimit\": 0.0,\n   \"fragLib\": \"\",\n   \"output\": \"\"\n}"
+"{\n   \"sequName\": \"ubiquitin\",\n   \"charge\": 11,\n   \"fragmentation\": \"Protein_ECD\",\n   \"modifications\": \"-\",\n   \"nrMod\": 0,\n   \"spectralData\": \"/Users/eva-maria/Data_exchange_folder/SAUSAGE_beta1/Spectral_data/top-down/Ubiquitin_ECD_000006_M2_M4_G040_m050.txt\",\n   \"noiseLimit\": 2500000.0,\n   \"fragLib\": \"\"\n}"

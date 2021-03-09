@@ -47,6 +47,8 @@ class IsotopePatternReader(object):
             i=0
             for i,row in enumerate(reader):
                 #print(row)
+                if len(row) < 3:
+                    continue
                 if counter == 0:
                     name = row[0]
                     counter = 1
@@ -70,7 +72,7 @@ class IsotopePatternReader(object):
         return fragmentLibrary
 
     def checkEquality(self, fragment, savedPattern):
-        newPattern = fragment.formula.calculateTestIsotopePattern(2)
+        newPattern = fragment.formula.calcIsotopePatternSlowly(2)
         for i in range(2):
             if newPattern[i]['m/z'] - savedPattern[i]['m/z'] > 10 ** (-6):
                 raise UnvalidIsotopePatternException(fragment.getName(), "mass incorrect " +

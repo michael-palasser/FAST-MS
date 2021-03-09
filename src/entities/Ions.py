@@ -3,12 +3,9 @@ Created on 3 Jul 2020
 
 @author: michael
 '''
-import math
-import os
+from math import exp
 
-import numpy as np
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
-from src import path
 
 noiseLimit = ConfigurationHandlerFactory.getTD_SettingHandler().get('noiseLimit')
 
@@ -34,6 +31,23 @@ class Fragment(object):
         self.isotopePattern = None
         self.radicals = radicals
 
+
+    def getType(self):
+        return self.type
+    def getNumber(self):
+        return self.number
+    def getModification(self):
+        return self.modification
+    def getFormula(self):
+        return self.formula
+    def getSequence(self):
+        return self.modification
+    def getIsotopePattern(self):
+        return self.isotopePattern
+    def getRadicals(self):
+        return self.radicals
+
+
     def getName(self):
         if self.number == 0:
             return self.type + self.modification
@@ -47,7 +61,7 @@ class Fragment(object):
         Defines number of peaks to be searched for in first step of findPeaks function in SpectrumHandler
         :return: number of peaks
         '''
-        abundances = self.isotopePattern['relAb'] / self.isotopePattern[0]['relAb']
+        abundances = self.isotopePattern['calcInt'] / self.isotopePattern[0]['calcInt']
         if len(abundances) < 3:
             return 1
         elif abundances[2] > 0.6:
@@ -62,7 +76,7 @@ class FragmentIon(Fragment):
     charged fragment
     '''
 
-    def __init__(self, fragment, charge, isotopePattern, noise):
+    def __init__(self, fragment, monoisotopic, charge, isotopePattern, noise):
         '''
         Constructor
         :param fragment: Type Fragment
@@ -73,6 +87,7 @@ class FragmentIon(Fragment):
         '''
         super().__init__(fragment.type, fragment.number, fragment.modification,
                          fragment.formula, fragment.sequence, fragment.radicals,)
+        self.monoisotopicRaw = monoisotopic
         self.charge = charge
         self.isotopePattern = isotopePattern
         self.intensity = 0
@@ -82,6 +97,15 @@ class FragmentIon(Fragment):
         self.noise = noise
         self.comment = ""
 
+    def getIntensity(self):
+        return round(self.intensity)
+
+    def setRemaining(self, intensity, error, quality, comment):
+        self.intensity = intensity
+        self.error = error
+        self.quality = quality
+        self.comment = comment
+        self.getScore()
 
     def toString(self):
         return str(round(self.getMonoisotopic(), 5)) + "\t\t" + str(self.charge) + "\t" + str(
@@ -89,15 +113,15 @@ class FragmentIon(Fragment):
                str(round(self.error, 2)) + "\t\t" + str(round(self.quality, 2)) #+ "\t" + self.comment
 
     def getMonoisotopic(self):
-        #return 500.
-        return np.min(self.isotopePattern['m/z_theo']) * (1 + self.error * 10 ** (-6))  # np.min(self.isotopePattern['m/z'])
+        #return np.min(self.isotopePattern['m/z_theo']) * (1 + self.error * 10 ** (-6))  # np.min(self.isotopePattern['m/z'])
+        return self.monoisotopicRaw * (1 + self.error * 10 ** (-6))
 
     def getScore(self):
         if self.quality > 1.5:
             print('warning:', round(self.quality, 2), self.getName())
             self.score = 10 ** 6
         else:
-            self.score = math.exp(10 * self.quality) / 20 * self.quality * self.intensity / noiseLimit
+            self.score = exp(10 * self.quality) / 20 * self.quality * self.intensity / noiseLimit
         return self.score
 
     def getSignalToNoise(self):
@@ -118,11 +142,44 @@ class FragmentIon(Fragment):
                 '{:3.2f}'.format(round(self.error,2)),
                 '{:6.1f}'.format(round(self.getSignalToNoise(),1)),
                 '{:3.2f}'.format(round(self.quality,2))]"""
-        """return [round(self.getMonoisotopic(),5), self.charge, round(self.intensity), self.getName(), round(self.error,2),
-                round(self.getSignalToNoise(),1), round(self.quality,2)]"""
-        return [500, self.charge, round(self.intensity), self.getName(), round(self.error,2),
-                round(self.getSignalToNoise(),1), round(self.quality,2)]
+        return [round(self.getMonoisotopic(),5), self.charge, int(round(self.intensity)), self.getName(), round(self.error,2),
+                round(self.getSignalToNoise(),1), round(self.quality,2)]#"""
 
+    def getId(self):
+        return self.getName()+', '+str(self.charge)
+
+    def getMoreValues(self):
+        return [round(self.getMonoisotopic(),5), self.charge, round(self.intensity), self.getName(), round(self.error,2),
+                round(self.getSignalToNoise(),1), round(self.quality,2), round(self.getScore(),1),self.comment]
+
+    def getPeaks(self):
+        peaks = []
+        for i, peak in enumerate(self.isotopePattern):
+            peaks.append((peak['m/z'], self.charge, round(peak['calcInt']), peak['error'], peak['used']))
+            #indizes.append(i)
+        return peaks #pd.DataFrame(data=peaks, columns=['mz', 'z', 'int', 'name', 'error', 'used'])
+
+    def getPeakValues(self):
+        peaks = []
+        for i, peak in enumerate(self.isotopePattern):
+            peaks.append([round(peak['m/z'],5), round(peak['relAb']), round(peak['calcInt']), round(peak['error'],2),
+                         peak['used']])
+        return peaks
+
+    def toStorage(self):
+        return [self.type, self.number, self.modification, self.formula, self.sequence, self.radicals,
+               self.monoisotopicRaw, self.charge, int(round(self.noise)), int(round(self.intensity)),
+                float(self.error), self.quality, self.comment]
+    '''def fromStorage(self):
+        return [self.type, self.number, self.modification, self.formula, self.sequence, self.radicals,
+               self.monoisotopicRaw, self.charge, self.noise, self.intensity,
+                self.error, self.quality, self.comment]'''
+
+    def peaksToStorage(self):
+        peaks = []
+        for i, peak in enumerate(self.isotopePattern):
+            peaks.append([peak['m/z'], round(peak['relAb']), round(peak['calcInt']), float(peak['error']), int(peak['used'])])
+        return peaks
 
 class IntactIon(object):
     def __init__(self, name, modification, mz,theoMz, charge, intensity, nrOfModifications):

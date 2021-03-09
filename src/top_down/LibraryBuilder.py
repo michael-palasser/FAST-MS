@@ -3,18 +3,11 @@ Created on 21 Jul 2020
 
 @author: michael
 '''
-import re
+from re import search as reSearch
 from multiprocessing import Pool
 
 from src.MolecularFormula import MolecularFormula
-from src.data.Constants import E_MASS
-from src.entities.GeneralEntities import BuildingBlock
 from src.entities.Ions import Fragment
-from src.entities.IonTemplates import FragItem, ModifiedItem, PrecursorItem
-from src.Services import SequenceService, MoleculeService, FragmentIonService, ModificationService
-
-
-
 
 
 class FragmentLibraryBuilder(object):
@@ -22,7 +15,7 @@ class FragmentLibraryBuilder(object):
     Creates library for top-down fragments
     '''
 
-    def __init__(self, sequName, fragmentation, modificationPattern, maxMod):
+    def __init__(self, properties, maxMod):
         '''
         Constructor
         :param precName: name of precursor (String)
@@ -36,18 +29,14 @@ class FragmentLibraryBuilder(object):
         __fragmentLibrary: list of all fragments
         radicalDict: list of fragments which contain radicals
         '''
-        self.__sequence = SequenceService().get(sequName)
-        #self.sequenceList = self.__sequence.getSequenceList()
-        self.__molecule = MoleculeService().getPatternWithObjects(self.__sequence.getMolecule(), BuildingBlock)
-        #self.__monomers = MoleculeService().getItemDict(self.__sequence.getMolecule())
-        self.__fragmentation = FragmentIonService().getPatternWithObjects(fragmentation, FragItem)
-        self.__modifPattern = ModificationService().getPatternWithObjects(modificationPattern, ModifiedItem)
+        self.__sequence = properties.getSequence()
+        self.__molecule = properties.getMolecule()
+        self.__fragmentation = properties.getFragmentation()
+        self.__modifPattern = properties.getModification()
         self.__maxMod = maxMod
         self.__fragmentLibrary = list()
         self.__precursor = None
 
-    def getSequence(self):
-        return self.__sequence
 
     def getFragmentLibrary(self):
         return self.__fragmentLibrary
@@ -55,14 +44,8 @@ class FragmentLibraryBuilder(object):
     def getPrecursor(self):
         return self.__precursor
 
-    def getModification(self):
-        return self.__modifPattern.getModification()
-
     def setFragmentLibrary(self, patternReader):
         self.__fragmentLibrary = patternReader.addIsotopePatternFromFile(self.__fragmentLibrary)
-
-    def getMolecule(self):
-        return self.__molecule
 
     def buildSimpleLadder(self, sequ):
         '''
@@ -72,14 +55,14 @@ class FragmentLibraryBuilder(object):
         '''
         simpleLadder = list()
         length = 1
-        sumFormula = MolecularFormula(dict())
-        monomers = self.__molecule.getMonomerDict()
+        formula = MolecularFormula(dict())
+        monomers = self.__molecule.getBBDict()
         for link in sequ:
             if link not in monomers.keys():
                 print("problem at", length)
                 raise Exception(link)
-            sumFormula = sumFormula.addFormula(monomers[link].getFormula())
-            simpleLadder.append((sequ[:length],sumFormula))
+            formula = formula.addFormula(monomers[link].getFormula())
+            simpleLadder.append((sequ[:length],formula))
             length += 1
         return simpleLadder
 
@@ -126,14 +109,16 @@ class FragmentLibraryBuilder(object):
             if len(linkSequ) == len(self.__sequence.getSequenceList()):
                 continue
             for template in fragTemplates:
-                templateName = template.getName()
+                #templateName = template.getName()
+                species, rest = self.processTemplateName(template.getName())
                 templateRadicals = template.getRadicals()
-                if self.checkForProlines(templateName[0],linkSequ, basicLadder):
+                #if self.checkForProlines(templateName[0],linkSequ, basicLadder):
+                if self.checkForProlines(species,linkSequ, basicLadder):
                     continue
                 formula = linkFormula.addFormula(template.getFormula())
                 if self.checkForResidue(template.getResidue(), linkSequ):
                     if (not formula.checkForNegativeValues()) and template.enabled():
-                        ladder.append(Fragment(templateName[0], len(linkSequ), templateName[1:], formula, linkSequ,
+                        ladder.append(Fragment(species, len(linkSequ), rest, formula, linkSequ,
                                                templateRadicals))
                         for nrMod in range(1, self.__maxMod + 1):
                             for modif in self.__modifPattern.getItems():
@@ -142,15 +127,23 @@ class FragmentLibraryBuilder(object):
                                     formula = linkFormula.addFormula(template.getFormula(),
                                                     MolecularFormula(modif.getFormula()).multiplyFormula(nrMod).formulaDict)
                                     if self.checkForResidue(modif.getResidue(), linkSequ) and not formula.checkForNegativeValues()\
-                                            and ((modifName+templateName[1:]) not in self.__modifPattern.getExcluded()):
+                                            and ((modifName+rest) not in self.__modifPattern.getExcluded()):
                                             #Constructor: type, number, modification, loss, formula
                                             if self.__maxMod > 1:
                                                 modifName = modifName[0]+str(nrMod)+modifName[1:]
-                                            newFragment = Fragment(templateName[0],len(linkSequ),modifName+templateName[1:],
+                                            newFragment = Fragment(species,len(linkSequ),modifName+rest,
                                                            formula, linkSequ, templateRadicals+modif.getRadicals())
                                             ladder.append(newFragment)
         return ladder
 
+
+    @staticmethod
+    def processTemplateName(templName):
+        search = reSearch(r"([+,-])",templName)
+        if search == None:
+            return templName, ""
+        #print('hey',templName[0:search.start()], templName[search.start():])
+        return templName[0:search.start()], templName[search.start():]
 
 
     #ToDo: adducts
@@ -163,13 +156,18 @@ class FragmentLibraryBuilder(object):
         precursorFragments = []
         sequence = self.__sequence.getSequenceList()
         sequenceName = self.__sequence.getName()
-        precName = "+" + self.__modifPattern.getModification()
-        if self.__maxMod > 1:
+        species, precName = self.processTemplateName(self.__fragmentation.getPrecursor())
+        if self.__maxMod == 1:
+            precName = "+" + self.__modifPattern.getModification()
+        elif self.__maxMod > 1:
             precName = "+" +  str(self.__maxMod) + self.__modifPattern.getModification()
+        #return
         basicFormula = simpleFormula.addFormula(self.__molecule.getFormula())
         for precTemplate in self.__fragmentation.getItems2():
             if precTemplate.enabled():
-                templateName = precTemplate.getName()
+                #templateName = precTemplate.getName()
+                species, templateName = self.processTemplateName(precTemplate.getName())
+                #print(species, templateName)
                 tempFormula = basicFormula.addFormula(precTemplate.getFormula())
                 templateRadicals = precTemplate.getRadicals()
                 newFragment = Fragment(sequenceName, 0, templateName, tempFormula, sequence, templateRadicals)
@@ -189,6 +187,7 @@ class FragmentLibraryBuilder(object):
                             precursorFragments.append(newFragment)
                             if (name == precName):  #ToDo: check no Modification
                                 self.__precursor = newFragment
+        #[print(frag.getName(),frag.getRadicals()) for frag in precursorFragments]
         return precursorFragments
     
 
@@ -203,9 +202,12 @@ class FragmentLibraryBuilder(object):
                 print(elem)
         sequence = self.__sequence.getSequenceList()
         forwardFragments = self.createFragmentLadder(self.buildSimpleLadder(sequence), self.__fragmentation.getFragTemplates(1))
+        print('hey')
         SimpleLadderBack = self.buildSimpleLadder(sequence[::-1])
         backwardFragments = self.createFragmentLadder(SimpleLadderBack, self.__fragmentation.getFragTemplates(-1))
         precursorFragments = self.addPrecursor(SimpleLadderBack[len(sequence) - 1][1])
+        #for frag in precursorFragments:
+        #    print(frag.getName(),frag.formula.toString())
         self.__fragmentLibrary = forwardFragments + backwardFragments + precursorFragments
         self.__fragmentLibrary.sort(key=lambda obj:(obj.type , obj.number))
         #for fragment in self.__fragmentLibrary:
@@ -227,7 +229,6 @@ class FragmentLibraryBuilder(object):
             criticalLength = 60
         if len(self.__sequence.getSequenceList())<criticalLength: #flag == 0:
             for fragment in self.__fragmentLibrary:
-                print(fragment.getName(), fragment.formula.formulaDict)
                 fragment.isotopePattern = fragment.formula.calculateIsotopePattern()
                 #if fragment.type in self.radicalDict:
                 #fragment.isotopePattern['mass'] -= fragment.radicals * (E_MASS)
@@ -247,7 +248,7 @@ class FragmentLibraryBuilder(object):
         return fragment
 
 
-    def getChargedModifications(self):
+    """def getChargedModifications(self):
         '''
         Finds and returns charged modifications
         :return: dict of chargedModifications (modification:charge)
@@ -258,6 +259,7 @@ class FragmentLibraryBuilder(object):
                 chargedModifications[modification.getName()] = modification.getZEffect()
         return chargedModifications
 
+    
     def getImportantModifications(self):
         '''
         Finds and returns modifications where the occupancy should be calculated
@@ -273,4 +275,18 @@ class FragmentLibraryBuilder(object):
         fragItemDict = dict()
         for fragTemplate in self.__fragmentation.getItems():
             fragItemDict[fragTemplate.getName()] = fragTemplate
-        return fragItemDict
+        return fragItemDict"""
+
+    #ToDo
+    """def selectFragmentsByDir(self, fragDict, dir):
+        forwardFrags = [fragTemplate.getName() for fragTemplate in self.__fragmentation.getItems()
+                            if fragTemplate.getDirection()==dir]
+        return {key:val for key,val in fragDict.items() if key in forwardFrags}"""
+
+
+    '''def getFragmentsByDir(self, dir):
+        return [fragTemplate.getName() for fragTemplate in self.__fragmentation.getItems()
+                            if fragTemplate.getDirection()==dir]
+
+    def filterByDir(self, fragDict, dir):
+        return {key: val for key, val in fragDict.items() if key in self.getFragmentsByDir(dir)}'''

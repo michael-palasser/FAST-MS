@@ -4,7 +4,7 @@ Created on 13 Aug 2020
 @author: michael
 '''
 import xlsxwriter
-import numpy as np
+from numpy import isnan
 from datetime import datetime
 
 
@@ -30,43 +30,55 @@ class BasicExcelWriter(object):
 
 
     def writePercentage(self,row,col, val):
-        if (val != None) and (not np.isnan(val)):
+        if (val != None) and (not isnan(val)):
             self.worksheet1.write(row, col, val, self.percentFormat)
 
 
-    def writeOccupancies(self, row, sequence, percentageDict):
+    def writeOccupancies(self, row, sequence, percentageDict, *args):
         self.worksheet1.write(row, 0, "Occupancies: /%")
         row+=1
         self.worksheet1.write(row, 0, "base'")
         self.worksheet1.write_column(row+1,0, sequence)
-        self.worksheet1.write(row, 1, "#5'")
+        self.worksheet1.write(row, 1, "#5'/N-term.")
         self.worksheet1.write_column(row+1,1, list(range(1,len(sequence)+1)))
         col=2
+        if args and args[1]:
+            forwFrags = args[0]
+            backFrags = args[1]
+        else:
+            forwFrags = ['a', 'b', 'c', 'd']
+            backFrags = ['w', 'x', 'y', 'z']
         for key in sorted(list(percentageDict.keys())):
             currentRow = row
             self.worksheet1.write(currentRow, col, key)
             currentRow += 1
             for i in range(len(sequence)):
-                if key[0] in ['w', 'x', 'y', 'z']:
+                if key in backFrags:
                     val = percentageDict[key][len(sequence)-i-2]
-                else:
+                elif key in forwFrags:
                     val = percentageDict[key][i]
+                else:
+                    raise Exception("Unknown Direction of Fragment:",key)
                 if val != None:
                     self.writePercentage(currentRow, col, val)
                 currentRow += 1
             col+=1
-        self.worksheet1.write(row, col, "#3'")
+        self.worksheet1.write(row, col, "#3'/C-term.")
         self.worksheet1.write_column(row+1,col, reversed(list(range(1,len(sequence)))))
-        self.addChart(row,percentageDict, sequence)
+        self.addChart(row,percentageDict, sequence,backFrags)
         return row+len(sequence)
 
 
-    def addChart(self, row,percentageDict,sequence):
+    def addChart(self, row,percentageDict,sequence, backwardFrags):
         chart = self.workbook.add_chart({'type':'line'})
         lastRow = row + len(sequence)
         col = 2
+        '''if args and args[0]:
+            backwardFrags = args[0]
+        else:
+            backwardFrags = ['w', 'x', 'y', 'z']'''
         for key in sorted(list(percentageDict.keys())):
-            if key[0] in ['w', 'x', 'y', 'z']:
+            if key in backwardFrags:
                 chart.add_series({
                     'name': ['analysis', row, col],
                     'categories': ['analysis', row+1, 1, lastRow, 1],
@@ -86,7 +98,7 @@ class BasicExcelWriter(object):
             col+=1
         chart.set_size({'width': len(sequence) * 20 + 100, 'height': 400})
         chart.set_title({'name': 'Occupancies'})
-        chart.set_x_axis({'name': 'Sequence',
+        chart.set_x_axis({'name': 'cleavage site',
                            'name_font': {'size': 13},
                            'position_axis': 'on_tick',
                            'num_font': {'size': 10}, })
@@ -127,21 +139,52 @@ class ExcelWriter(BasicExcelWriter):
         self.worksheet4 = self.workbook.add_worksheet('deleted ions')
         self.worksheet5 = self.workbook.add_worksheet('ions before remodelling')
         self.worksheet6 = self.workbook.add_worksheet('molecular formulas')
+        self.worksheet7 = self.workbook.add_worksheet('log')
         self.format2digit = self.workbook.add_format({'num_format': '0.00'})
         self.format5digit = self.workbook.add_format({'num_format': '0.00000'})
 
+    def toExcel(self, analyser, intensityModeller, properties, fragmentLibrary, settings, spectrumHandler, logString):
+        try: #Todo: to ExcelWriter
+            #percentages = list()
+            self.writeAnalysis({"spectral file:": settings['spectralData'], 'max. m/z:':spectrumHandler.getUpperBound()},
+                                      analyser.getModificationLoss(),
+                                      analyser.calculateRelAbundanceOfSpecies(),
+                                      properties.getSequenceList(),
+                                      analyser.calculatePercentages(self.configs['interestingIons']),
+                                      properties.getFragmentsByDir(1), properties.getFragmentsByDir(-1))
+            #self.analyser.createPlot(__maxMod)
+            precursorRegion = intensityModeller.getPrecRegion(settings['sequName'], abs(settings['charge']))
+            self.writeIons(self.worksheet2, intensityModeller.getObservedIons().values(),
+                                  precursorRegion)
+            self.writePeaks(self.worksheet3, 0, 0, intensityModeller.getObservedIons().values())
+            row = self.writeIons(self.worksheet4, self.sortByName(intensityModeller.getDeletedIons().values()),
+                                 precursorRegion)
+            self.writePeaks(self.worksheet4, row + 3, 0, self.sortByName(intensityModeller.getDeletedIons().values()))
+            self.writeIons(self.worksheet5, self.sortByName(intensityModeller.getRemodelledIons()), precursorRegion)
+            self.writeSumFormulas(fragmentLibrary, spectrumHandler.searchedChargeStates)
+            self.writeLogFile(logString)
+        finally:
+            self.closeWorkbook()
+
+    @staticmethod
+    def sortByName(ionList):
+        # return sorted(ionList,key=lambda obj:(obj.type ,obj.number))
+        return sorted(ionList, key=lambda obj: (obj.getName(), obj.charge))
+
+
 
     def writeGeneralParameters(self, row, generalParam):
-        for line in generalParam:
-            self.worksheet1.write(row,0, line[0])
-            self.worksheet1.write(row,1, line[1])
-            row +=1
         date = datetime.now().strftime("%d/%m/%Y %H:%M")
-        self.worksheet1.write(1,1,date)
+        self.worksheet1.write_row(row, 0,("Time:",date))
+        row=1
+        print(generalParam)
+        for key,val in generalParam.items():
+            self.worksheet1.write_row(row, 0, (key,val))
+            row +=1
         return row+2
 
 
-    def writeAnalysis(self, generalParam, modLoss, relAbundanceOfSpecies,sequence, percentages):
+    def writeAnalysis(self, generalParam, modLoss, relAbundanceOfSpecies,sequence, percentages, forwFrags, backFrags):
         row = self.writeGeneralParameters(0, generalParam)
         row+=1
         self.worksheet1.write(row,0,("analysis:"))
@@ -150,9 +193,10 @@ class ExcelWriter(BasicExcelWriter):
             self.worksheet1.write(row,0,'modification_loss:')
             self.worksheet1.write(row,1,modLoss,self.percentFormat)
             row +=1
+        row +=1
         row = self.writeAbundancesOfSpecies(row,relAbundanceOfSpecies)
         if modLoss != None:
-            self.writeOccupancies(row, sequence, percentages)
+            self.writeOccupancies(row, sequence, percentages, forwFrags, backFrags)
 
 
     def writeIon(self,worksheet, row,ion):
@@ -228,3 +272,12 @@ class ExcelWriter(BasicExcelWriter):
             else:
                 itemString += ", " + str(item)
         return itemString
+
+
+    def writeLogFile(self, log):
+        #self.worksheet7.write(0, 0, "Configurations:")
+        for i, line in enumerate(log.split('\n')):
+            col = 0
+            if line.startswith('\t'):
+                col =1
+            self.worksheet7.write(i, col, line)

@@ -14,7 +14,7 @@ from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QInputDialog
 
 from src import path
-from src.views.StartDialogs import SpectrumComparatorStartDialog
+from src.gui.StartDialogs import SpectrumComparatorStartDialog
 
 
 def removeEmptyElements(rawList):

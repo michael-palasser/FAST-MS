@@ -13,7 +13,8 @@ class UnvalidInputException(Exception):
         self.message = message
 
     def __str__(self):
-        return(repr("Invalid Input: " + self.element + ", " + self.message))
+        return(repr("Unvalid Input: " + self.element + ", " + self.message))
+
 
 
 class UnvalidIsotopePatternException(Exception):
@@ -23,3 +24,8 @@ class UnvalidIsotopePatternException(Exception):
 
     def __str__(self):
         return(repr("Stored Isotope Pattern is deprecated: " + self.fragment + " " + self.message))
+
+
+class CanceledException(Exception):
+    def __init__(self, message):
+        self.message = message

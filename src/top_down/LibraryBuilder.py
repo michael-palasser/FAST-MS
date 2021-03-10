@@ -202,7 +202,6 @@ class FragmentLibraryBuilder(object):
                 print(elem)
         sequence = self.__sequence.getSequenceList()
         forwardFragments = self.createFragmentLadder(self.buildSimpleLadder(sequence), self.__fragmentation.getFragTemplates(1))
-        print('hey')
         SimpleLadderBack = self.buildSimpleLadder(sequence[::-1])
         backwardFragments = self.createFragmentLadder(SimpleLadderBack, self.__fragmentation.getFragTemplates(-1))
         precursorFragments = self.addPrecursor(SimpleLadderBack[len(sequence) - 1][1])

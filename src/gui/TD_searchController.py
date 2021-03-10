@@ -192,9 +192,9 @@ class TD_MainController(object):
 
     def setUpUi(self, parent):
         self.mainWindow = QtWidgets.QMainWindow(parent)
-        self.mainWindow.setObjectName("Results")
         self._translate = QtCore.QCoreApplication.translate
-        self.mainWindow.setWindowTitle(self._translate(self.mainWindow.objectName(), self.mainWindow.objectName()))
+        self.mainWindow.setWindowTitle(self._translate(self.mainWindow.objectName(),
+                                                       'Results:  '+os.path.split(self.settings['spectralData'])[-1]))
         self.centralwidget = QtWidgets.QWidget(self.mainWindow)
         self.verticalLayout = QtWidgets.QVBoxLayout(self.centralwidget)
         # self.verticalLayout.addWidget(self.tabWidget)
@@ -463,6 +463,7 @@ class TD_MainController(object):
                                                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
         if choice == QtWidgets.QMessageBox.Yes:
             self.mainWindow.close()
+            self._logFileView.close()
 
     def showRemodelledIons(self):
         self._remView = QtWidgets.QWidget()
@@ -512,7 +513,7 @@ class TD_MainController(object):
 
     def showOccupancyPlot(self):
         self._analyser.setIons(list(self._intensityModeller.getObservedIons().values()))
-        percentageDict = self._analyser.calculatePercentages(self.configs['interestingIons'])
+        percentageDict = self._analyser.calculatePercentages(self.configs.get('interestingIons'))
         if percentageDict == None:
             dlg = QtWidgets.QMessageBox(parent=self.mainWindow, title='Unvalid Request',
                         text='It is not possible to calculate occupancies for an unmodified molecule.',
@@ -531,7 +532,7 @@ class TD_MainController(object):
 
     def showChargeDistrPlot(self, reduced):
         self._analyser.setIons(list(self._intensityModeller.getObservedIons().values()))
-        chargeDict, minMaxCharges = self._analyser.getAvCharges(self.configs['interestingIons'], reduced)
+        chargeDict, minMaxCharges = self._analyser.getAvCharges(self.configs.get('interestingIons'), reduced)
         plotFactory1 = PlotFactory(self.mainWindow)
         #plotFactory2 = PlotFactory(self.mainWindow)
         forwardVals = self._propStorage.filterByDir(chargeDict,1)

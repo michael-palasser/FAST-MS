@@ -228,6 +228,8 @@ class SpectrumHandler(object):
         probableZ -= fragment.radicals
         tolerance = configs['zTolerance']
         lowZ, highZ = 1, self.__charge
+        if fragment.number == 0:
+            highZ = abs(self.__settings['charge'])
         zEffect = (precModCharge - self.getModCharge(fragment)) * self.__sprayMode
         if (probableZ-tolerance + zEffect)> lowZ:
             lowZ = round(probableZ-tolerance + zEffect)

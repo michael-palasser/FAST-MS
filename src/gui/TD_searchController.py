@@ -215,6 +215,7 @@ class TD_MainController(object):
         self.menubar = QtWidgets.QMenuBar(self.mainWindow)
         self.mainWindow.setMenuBar(self.menubar)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 340, 22))
+        self._actions = dict()
         self.createMenu("File", {'Save': self.saveAnalysis, 'Export': self.export,
                                  'Close': self.close}, ['', '', ''], ["Ctrl+S", '', "Ctrl+Q"])
         self.createMenu("Edit", {'Repeat ovl. modelling': self.repeatModellingOverlaps},
@@ -230,6 +231,8 @@ class TD_MainController(object):
                  'Show av. charge as a function of sequence pos. (Calculated with Int./z values)',
                  'Show sequence coverage', 'Show original values of overlapping ions', 'Show Protocol'],
                 ['',"", "", '', '', '', ''])
+        if self.settings['modifications'] == '-':
+            self._actions['Occupancy-Plot'].setDisabled(True)
 
     def createMenu(self, name, options, tooltips, shortcuts):
         menu = QtWidgets.QMenu(self.menubar)
@@ -247,6 +250,7 @@ class TD_MainController(object):
             #menuActions[option] = action
             menu.addAction(action)
             pos -= 1
+            self._actions[option] = action
         self.menubar.addAction(menu.menuAction())
         return menu#, menuActions
 
@@ -514,13 +518,12 @@ class TD_MainController(object):
     def showOccupancyPlot(self):
         self._analyser.setIons(list(self._intensityModeller.getObservedIons().values()))
         percentageDict = self._analyser.calculatePercentages(self.configs.get('interestingIons'))
-        if percentageDict == None:
-            dlg = QtWidgets.QMessageBox(parent=self.mainWindow, title='Unvalid Request',
+        '''if percentageDict == None:
+            dlg = QtWidgets.QMessageBox(self.mainWindow, title='Unvalid Request',
                         text='It is not possible to calculate occupancies for an unmodified molecule.',
                         icon=QtWidgets.QMessageBox.Information, buttons=QtWidgets.QMessageBox.Ok)
             if dlg == QtWidgets.QMessageBox.Ok:
-                return
-
+                return'''
         plotFactory = PlotFactory(self.mainWindow)
         forwardVals = self._propStorage.filterByDir(percentageDict,1)
         backwardVals = self._propStorage.filterByDir(percentageDict,-1)

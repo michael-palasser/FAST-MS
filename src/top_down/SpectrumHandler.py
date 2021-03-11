@@ -5,6 +5,8 @@ Created on 27 Jul 2020
 '''
 from math import exp
 from re import findall
+from subprocess import call
+
 import numpy as np
 import copy
 from scipy.constants import R
@@ -95,6 +97,10 @@ class SpectrumHandler(object):
                 try:
                     spectralList.append((float(line[0]),float(line[1])))
                 except ValueError:
+                    try:
+                        call(['open', self.__settings['spectralData']])
+                    except:
+                        pass
                     raise UnvalidInputException('Problem with format in spectral data', '  '.join(line) +' (line '+str(i)+
                                                 ') Format must be  "m/z    Int." !')
         return np.array(spectralList)

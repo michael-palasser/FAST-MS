@@ -19,16 +19,19 @@ class IsotopePatternReader(object):
         return self.__file
 
     def findFile(self, settings):
-        sequName, fragmentation, nrMod, modifications = settings[0], settings[1], settings[2], settings[3],
-        if modifications == "" or nrMod == "0":
-            self.__file = os.path.join(path, 'Fragment_lists', '_'.join((sequName, fragmentation) + '.csv'))
+        if len(settings) == 1:
+            file = settings[0]
+            if not file[-4:] == '.csv':
+                file += '.csv'
+            self.__file = os.path.join(path, 'Fragment_lists',file)
         else:
-            self.__file = os.path.join(path, 'Fragment_lists', '_'.join((sequName, fragmentation, str(nrMod), modifications +
-                                                                      '.csv')))
-        if os.path.isfile(self.__file):
-            return True
-        else:
-            return False
+            sequName, fragmentation, nrMod, modifications = settings[0], settings[1], settings[2], settings[3],
+            if modifications == "-" or nrMod == "0":
+                self.__file = os.path.join(path, 'Fragment_lists', '_'.join((sequName, fragmentation) + '.csv'))
+            else:
+                self.__file = os.path.join(path, 'Fragment_lists', '_'.join((sequName, fragmentation, str(nrMod),
+                                                                             modifications+'.csv')))
+        return os.path.isfile(self.__file)
 
 
     def addIsotopePatternFromFile(self, fragmentLibrary):

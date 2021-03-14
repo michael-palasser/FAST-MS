@@ -29,7 +29,7 @@ class AbstractSimpleEditorController(ABC):
         self.centralwidget = QtWidgets.QWidget(self.mainWindow)
 
         self.mainWindow.setCentralWidget(self.centralwidget)'''
-        self.centralwidget = self.mainWindow.centralwidget()
+        self.centralwidget = self.mainWindow.centralwidget
         self.formLayout = QtWidgets.QFormLayout(self.centralwidget)
         self.formLayout.setFieldGrowthPolicy(QtWidgets.QFormLayout.ExpandingFieldsGrow)
         #self.mainWindow.setStatusBar(QtWidgets.QStatusBar(self.mainWindow))
@@ -110,6 +110,7 @@ class AbstractSimpleEditorController(ABC):
         return tableWidget
 
     def save(self, *args):
+        print('args_simple',args)
         try:
             self.pattern = self.service.save(args[0])
         except UnvalidInputException as e:
@@ -366,8 +367,8 @@ class MoleculeEditorController(AbstractEditorController):
 
     def save(self, *args):
         id = self.pattern.getId()
-        if args and args[0]:
-            id = args[0]
+        if args and args[0] == None:
+            id = None
         super(MoleculeEditorController, self).save(Makromolecule(self.widgets["name"].text(), self.widgets["gain"].text(),
                                    self.widgets["loss"].text(), self.readTable(self.table, self.service.getBoolVals()), id))
 
@@ -393,9 +394,11 @@ class ElementEditorController(AbstractEditorController):
         self.mainWindow.show()
 
     def save(self, *args):
+        print('args', args)
         id = self.pattern.getId()
-        if args and args[0]:
-            id = args[0]
+        if args and args[0] == None:
+            id = None
+            print(id)
         super(ElementEditorController, self).save(Element(self.widgets["name"].text(),
                                           self.readTable(self.table, self.service.getBoolVals()), id))
 
@@ -435,8 +438,8 @@ class FragmentEditorController(AbstractEditorControllerWithTabs):
 
     def save(self, *args):
         id = self.pattern.getId()
-        if args and args[0]:
-            id = args[0]
+        if args and args[0] == None:
+            id = None
         super(FragmentEditorController, self).save(FragmentationPattern(self.widgets["name"].text(),
                                                                         self.widgets['precursor'].currentText(),
                             self.readTable(self.table1, self.service.getBoolVals()[0]),
@@ -493,8 +496,8 @@ class ModificationEditorController(AbstractEditorControllerWithTabs):
 
     def save(self, *args):
         id = self.pattern.getId()
-        if args and args[0]:
-            id = args[0]
+        if args and args[0] == None:
+            id = None
         super(ModificationEditorController, self).save(ModificationPattern(self.widgets["name"].text(),
                        self.widgets["modification"].text(), self.readTable(self.table1, self.service.getBoolVals()[0]),
                                        self.readTable(self.table2, self.service.getBoolVals()[1]), id))
@@ -514,8 +517,8 @@ class IntactIonEditorController(AbstractEditorController):
 
     def save(self, *args):
         id = self.pattern.getId()
-        if args and args[0]:
-            id = args[0]
+        if args and args[0] == None:
+            id = None
         super(IntactIonEditorController, self).save(IntactPattern(self.widgets["name"].text(),
                                                       self.readTable(self.table, self.service.getBoolVals()), id))
 

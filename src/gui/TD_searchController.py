@@ -111,8 +111,11 @@ class TD_MainController(object):
         """read existing ion-list file or create new one"""
         libraryImported = False
         patternReader = IsotopePatternReader()
-        if (patternReader.findFile([self.settings[setting] for setting in ['sequName','fragmentation', 'nrMod',
-                                                                            'modifications']])):
+        if self.settings['fragLib'] != '':
+            settings = [self.settings['fragLib']]
+        else:
+            settings = [self.settings[setting] for setting in ['sequName','fragmentation', 'nrMod', 'modifications']]
+        if patternReader.findFile(settings):
             print("\n********** Importing list of isotope patterns from:", patternReader.getFile(), "**********")
             try:
                 self.libraryBuilder.setFragmentLibrary(patternReader)

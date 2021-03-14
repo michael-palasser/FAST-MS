@@ -29,14 +29,14 @@ with open(file, 'r') as f:
                 d[row[0]] = [val]
             else:
                 d[row[0]].append(val)
-        if row[2] != '':
+        '''if row[2] != '':
             val = processVal(row[2])
             if row[3] not in d.keys():
                 d[row[3]] = [val]
             else:
-                d[row[3]].append(val)
+                d[row[3]].append(val)'''
 
 for key,vals in d.items():
-    av = np.average(np.array([float(val) for val in vals if float(val) >= 0]))
-    print(key, '\t', av)
+    newVals = np.array([float(val) for val in vals if float(val) >= 0])
+    print(key, '\t', np.average(newVals), '\t', np.std(newVals))
 

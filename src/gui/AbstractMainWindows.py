@@ -5,9 +5,9 @@ class AbstractMainWindow(QtWidgets.QMainWindow):
     def __init__(self, parent, title):
         super(AbstractMainWindow, self).__init__(parent)
         self._translate = QtCore.QCoreApplication.translate
-        self.mainWindow.setWindowTitle(self._translate(self.objectName(), title))
-        self.centralwidget = QtWidgets.QWidget(self.mainWindow)
-        self.mainWindow.setCentralWidget(self.centralwidget)
+        self.setWindowTitle(self._translate(self.objectName(), title))
+        self.centralwidget = QtWidgets.QWidget(self)
+        self.setCentralWidget(self.centralwidget)
 
     def updateComboBox(self, comboBox, newOptions):
         toAdjust = comboBox.count() - len(newOptions)

@@ -147,11 +147,11 @@ class ExcelWriter(BasicExcelWriter):
         try: #Todo: to ExcelWriter
             #percentages = list()
             self.writeAnalysis({"spectral file:": settings['spectralData'], 'max. m/z:':spectrumHandler.getUpperBound()},
-                                      analyser.getModificationLoss(),
-                                      analyser.calculateRelAbundanceOfSpecies(),
-                                      properties.getSequenceList(),
-                                      analyser.calculatePercentages(self.configs['interestingIons']),
-                                      properties.getFragmentsByDir(1), properties.getFragmentsByDir(-1))
+                               analyser.getModificationLoss(),
+                               analyser.calculateRelAbundanceOfSpecies(),
+                               properties.getSequenceList(),
+                               analyser.calculatePercentages(self.configs['interestingIons'], properties.getUnimportantModifs()),
+                               properties.getFragmentsByDir(1), properties.getFragmentsByDir(-1))
             #self.analyser.createPlot(__maxMod)
             precursorRegion = intensityModeller.getPrecRegion(settings['sequName'], abs(settings['charge']))
             self.writeIons(self.worksheet2, intensityModeller.getObservedIons().values(),

@@ -50,12 +50,17 @@ class Analyser(object):
         return 1 - modifiedSum / totalSum
 
 
-    def calculatePercentages(self, interestingIons):
+    def calculatePercentages(self, interestingIons, *args):
+        print('args', args)
         if self._modification == "":
             return None
         temp = dict()
         for ion in self._ions:
             if ion.type in interestingIons:
+                if args:
+                    if len([mod for mod in args[0] if mod in ion.modification])>0:
+                        print('not', ion.getName())
+                        continue
                 if ion.type not in temp.keys():
                     temp[ion.type] = np.zeros((len(self._sequence), 3))
                 if self._modification in ion.getModification():

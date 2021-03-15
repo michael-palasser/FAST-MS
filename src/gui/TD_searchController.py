@@ -59,6 +59,7 @@ class TD_MainController(object):
                                                 self.settings['modifications'])
             self._logFile = LogFile(self.settings, self.configs, self._propStorage)
             self.saved = False
+            self._savedName = ''
             try:
                 if self.search() == 0:
                     self.setUpUi(parent)
@@ -74,6 +75,7 @@ class TD_MainController(object):
                 self.settings, observedIons, delIons, remIons, searchedZStates, logFile = \
                     searchService.getSearch(dialog.getName())
                 self._logFile = LogFile(logFile)
+                self._savedName = dialog.getName()
                 if not os.path.isfile(self.settings['spectralData']):
                     dlg = OpenSpectralDataDlg(parent)
                     if dlg.exec_() and not dlg.canceled:
@@ -520,7 +522,8 @@ class TD_MainController(object):
 
     def showOccupancyPlot(self):
         self._analyser.setIons(list(self._intensityModeller.getObservedIons().values()))
-        percentageDict = self._analyser.calculatePercentages(self.configs.get('interestingIons'))
+        percentageDict = self._analyser.calculatePercentages(self.configs.get('interestingIons'),
+                                                             self._propStorage.getUnimportantModifs())
         '''if percentageDict == None:
             dlg = QtWidgets.QMessageBox(self.mainWindow, title='Unvalid Request',
                         text='It is not possible to calculate occupancies for an unmodified molecule.',
@@ -560,6 +563,7 @@ class TD_MainController(object):
         while True:
             name, ok = QtWidgets.QInputDialog.getText(self.mainWindow, 'Save Analysis', 'Enter the name: ')
             if ok:
+                self._savedName = name
                 if name in names:
                     choice = QtWidgets.QMessageBox.question(self.mainWindow, "Overwriting",
                                 "There is already a saved analysis with name: "+name+"\nDo you want to overwrite it?",

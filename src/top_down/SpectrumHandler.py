@@ -208,10 +208,13 @@ class SpectrumHandler(object):
     def getModCharge(self, fragment):
         modCharge = 0
         for mod, charge in self.__properties.getChargedModifications().items():
+            print(mod, charge)
             if mod in fragment.modification:
                 nrMod = 1
                 if len(findall(r"(\d+)"+mod, fragment.modification)) > 0:
                     nrMod = int(findall(r"(\d+)"+mod, fragment.modification)[0])
+                print(modCharge, charge, nrMod, self.__sprayMode)
+                print(type(modCharge), type(charge), type(nrMod), type(self.__sprayMode))
                 modCharge += charge * nrMod * self.__sprayMode
         return modCharge
 

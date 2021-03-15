@@ -35,6 +35,7 @@ class FragmentLibraryBuilder(object):
         self.__modifPattern = properties.getModification()
         self.__maxMod = maxMod
         self.__fragmentLibrary = list()
+        #self.__importantModifications = set()
         self.__precursor = None
 
 
@@ -133,6 +134,8 @@ class FragmentLibraryBuilder(object):
                                                 modifName = modifName[0]+str(nrMod)+modifName[1:]
                                             newFragment = Fragment(species,len(linkSequ),modifName+rest,
                                                            formula, linkSequ, templateRadicals+modif.getRadicals())
+                                            '''if modif.getCalcOccupancy():
+                                                self.__importantModifications.add(modifName+rest)'''
                                             ladder.append(newFragment)
         return ladder
 
@@ -259,7 +262,7 @@ class FragmentLibraryBuilder(object):
         return chargedModifications
 
     
-    def getImportantModifications(self):
+    def getUnimportantModifs(self):
         '''
         Finds and returns modifications where the occupancy should be calculated
         :return: dict of chargedModifications (modification:charge)

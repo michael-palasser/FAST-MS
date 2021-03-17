@@ -70,6 +70,9 @@ class Analyser(object):
                 else:
                     temp[ion.type][ion.number - 1] += \
                         np.array([ion.getRelAbundance(),0,0])
+        for key,vals in temp.items():
+            print('sequ.\t',key+'_free\t', key+'+'+self._modification)
+            [print(str(i+1), '\t',val[0]-val[1], '\t', val[1]) for i,val in enumerate(vals)]
         return self.calculateProportions(temp)#dict()
         '''for key,arr in temp.items():
             for row in arr:

@@ -373,8 +373,8 @@ class IntensityModeller(object):
         del oldDict[hash]
 
     def getAdjacentIons(self, ionHash):
-        monoisotopicDict = {ion.isotopePattern['m/z'][0]: key for key, ion in self._correctedIons.items()}
-        monoisotopics = np.array(sorted(list(monoisotopicDict.keys())))
+        #sortedIons = sorted(list(self._correctedIons.values()), key=lambda ion: ion.isotopePattern['m/z'][0])
+        monoisotopics = np.array([ion.isotopePattern['m/z'][0] for ion in self._correctedIons.values()])
         distance = 100
         flag = 0
         if ionHash not in self._correctedIons.keys():
@@ -384,12 +384,10 @@ class IntensityModeller(object):
         while True:
             monoisotopics = monoisotopics[np.where(abs(monoisotopics - median) < distance)]
             if len(monoisotopics) < 20:
-                adjacentIons = [self._correctedIons[monoisotopicDict[mono]] for mono in monoisotopics]
+                adjacentIons = [ion for ion in self._correctedIons.values() if abs(ion.isotopePattern['m/z'][0] - median)<distance]
                 if flag == 1:
                     adjacentIons.append(ion)
-                    return sorted(adjacentIons, key=lambda obj:obj.isotopePattern['m/z'][0]), median-distance, median+distance
-                else:
-                    return adjacentIons, median-distance, median+distance
+                return sorted(adjacentIons, key=lambda obj:obj.isotopePattern['m/z'][0]), median-distance, median+distance
             elif len(monoisotopics) < 30:
                 distance /= 1.5
             else:

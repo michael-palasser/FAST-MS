@@ -43,10 +43,10 @@ class FragmentationPattern(PatternWithItems):
     def toString(self):
         string = ''
         for item in self._items:
-            string += '\n\t' + ', '.join(item.toString())
+            string += '\n\t' + '\t'.join(item.toString())
         string += '\n\t-Precursor-Fragments:'
         for item in self.__items2:
-            string += '\n\t' + ', '.join(item.toString())
+            string += '\n\t' + '\t'.join(item.toString())
         return string
 
 
@@ -102,7 +102,7 @@ class ModificationPattern(PatternWithItems):
     def toString(self):
         string = self.__modification
         for item in self._items:
-            string += '\n\t' + ', '.join(item.toString())
+            string += '\n\t' + '\t'.join(item.toString())
         string += '\n\t-Excluded:\n\t' + ', '.join([tup[0] for tup in self.__items2])
         return string
 

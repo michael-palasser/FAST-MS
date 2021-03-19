@@ -51,7 +51,6 @@ class Analyser(object):
 
 
     def calculatePercentages(self, interestingIons, *args):
-        print('args', args)
         if self._modification == "":
             return None
         temp = dict()
@@ -67,21 +66,16 @@ class Analyser(object):
                     temp[ion.type][ion.number - 1] += \
                         np.array([ion.getRelAbundance(),
                                   ion.getRelAbundance() * int(self.getNrOfModifications(ion.getModification())), 0])
+                    print('\t', ion.getName(), ion.getRelAbundance()*int(self.getNrOfModifications(ion.getModification())), 'mod')
                 else:
                     temp[ion.type][ion.number - 1] += \
                         np.array([ion.getRelAbundance(),0,0])
+                    print('\t', ion.getName(), ion.getRelAbundance())
         for key,vals in temp.items():
             print('sequ.\t',key+'_free\t', key+'+'+self._modification)
             [print(str(i+1), '\t',val[0]-val[1], '\t', val[1]) for i,val in enumerate(vals)]
         return self.calculateProportions(temp)#dict()
-        '''for key,arr in temp.items():
-            for row in arr:
-                if row[0]!=0:
-                    row[2] = row[1]/row[0]
-                else:
-                    row[2] = None
-            percentageDict[key] = arr[:, 2]
-        return percentageDict'''
+
 
     def getNrOfModifications(self, modificationString):
         nrOfModif = 1

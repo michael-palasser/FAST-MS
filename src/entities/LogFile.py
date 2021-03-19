@@ -12,12 +12,16 @@ class LogFile(object):
 
     def start(self, settings, configurations, searchProperties):
         self._logString += '\n* Settings:\n'
-        self._logString += ''.join(['\t%s: %s\n' % (key, val) for (key, val) in settings.items()])
+        self._logString += ''.join(['\t%s:\t%s\n' % (key, val) for (key, val) in settings.items()])
         self._logString += '* Configurations:\n'
-        self._logString += ''.join(['\t%s: %s\n' % (key, val) for (key, val) in configurations.items()])
+        self._logString += ''.join(['\t%s:\t%s\n' % (key, val) for (key, val) in configurations.items()])
         self._logString += '* Sequence:\n\t' + ', '.join(searchProperties.getSequenceList())
         self._logString += '\n* Fragmentation:' + searchProperties.getFragmentation().toString()
         self._logString += '\n* Modification: ' + searchProperties.getModification().toString()
+
+    def searchFinished(self):
+        self._logString += '\n* Search finished: '+ datetime.now().strftime("%d/%m/%Y %H:%M") + '\n'
+
 
     def ionToString(self, ion):
         return ion.getName() + ', ' + str(ion.charge)

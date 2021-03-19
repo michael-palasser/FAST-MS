@@ -88,6 +88,7 @@ class IntensityModeller(object):
                 if np.all(ion.isotopePattern['relAb'][noOutliers] == 0):
                     print("deleted:", ion.getName(), ion.charge, ion.intensity, round(ion.quality, 2))
                     if ion.comment != "noise,":
+                        print(ion.isotopePattern, ion.quality)
                         ion.comment = "qual.,"
                     if self.getHash(ion) not in self._deletedIons.keys():
                         self._deletedIons[self.getHash(ion)] = ion
@@ -111,6 +112,7 @@ class IntensityModeller(object):
 
 
     def modelIon(self, ion):
+        print(ion.getName(),ion.isotopePattern)
         noOutliers = np.where(ion.isotopePattern['used'])
         ion.error = np.average(ion.isotopePattern['error'][np.where(ion.isotopePattern['relAb'][noOutliers] != 0)])
         solution, ion.intensity, gValue, outliers = \
@@ -161,7 +163,7 @@ class IntensityModeller(object):
 
     def deleteSameMonoisotopics(self, ions):
         for ion in ions:
-            self.deleteIon(self.getHash(ion), ",mono.,")
+            self.deleteIon(self.getHash(ion), "mono.,")
 
     def deleteIon(self, ionHash, comment):
         self._correctedIons[ionHash].comment += comment
@@ -284,15 +286,16 @@ class IntensityModeller(object):
             while True:
                 equ_matrix, undeletedIons = self.setUpEquMatrix(pattern,spectr_peaks,del_ions+manDel)
                 #print(equ_matrix)
-                solution = minimize(self.fun_sum_square,np.ones(len(undeletedIons)),equ_matrix)
+                bnds = len(undeletedIons)*[(0.,None)]
+                solution = minimize(self.fun_sum_square,np.ones(len(undeletedIons)),equ_matrix, bounds=bnds)
                 del_so_far = len(del_ions)
                 for ion, val in zip(undeletedIons, solution.x):
                     overlapThreshold = self._configs['overlapThreshold']
-                    if 'man.undel.' in self._correctedIons[ion].comment:
+                    if 'man.undel,.' in self._correctedIons[ion].comment:
                         overlapThreshold = 0
                     if val * len(undeletedIons) < overlapThreshold:
                         self._remodelledIons.append(deepcopy(self._correctedIons[ion]))
-                        self._correctedIons[ion].comment += ("low," + str(round(val, 2)))
+                        self._correctedIons[ion].comment += ("low:" + str(round(val, 2))+',')
                         factor=0
                         if val > 0:
                             factor = val
@@ -314,7 +317,7 @@ class IntensityModeller(object):
                         else:
                             factor = 1.05
                             print("  ", ion, " not remodeled (val=", round(val,2), ")")
-                            self._correctedIons[ion].comment += ("high," + str(round(val, 2)))
+                            self._correctedIons[ion].comment += ("high," + str(round(val, 2)) + ',')
                         self._remodelledIons.append(deepcopy(self._correctedIons[ion]))
                         self._correctedIons[ion].isotopePattern['calcInt'] *= factor
                         self._correctedIons[ion].intensity *= factor
@@ -331,7 +334,7 @@ class IntensityModeller(object):
             print('')
 
 
-    def getIndexToDelete(self, overlapPattern):
+    '''def getIndexToDelete(self, overlapPattern):
         print("Complicated Overlap pattern1: Do you want to delete an ion before modelling?")
         print('index\t m/z\t\t\tz\tI\t\t\tfragment\t\terror /ppm\tquality')
         count = 1
@@ -356,7 +359,7 @@ class IntensityModeller(object):
                 except:
                     print("non valid input")
                     continue
-        return indexToDelete
+        return indexToDelete'''
 
     def switchIon(self, ionToDelete):
         hash = self.getHash(ionToDelete)

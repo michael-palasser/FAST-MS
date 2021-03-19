@@ -20,6 +20,9 @@ class Makromolecule(PatternWithItems):
         return AbstractItem2.stringToFormula(self.__loss, formula, -1)
 
     def getBBDict(self):
+        '''
+        :return  {name:BuildingBlock}
+        '''
         itemDict = dict()
         for item in self._items:
             if isinstance(item, BuildingBlock):
@@ -57,10 +60,9 @@ class BuildingBlock(AbstractItem1):
 class Element(PatternWithItems):
     def __init__(self, name, isotopes, id):
         """
-
-        :param name:
-        :param isotopes: vorerst 2D list, dann (ToDo) 2D numpy array
-        :param id:
+        :param (str) name:
+        :param (list) isotopes: list of isotope values (tuples) or Isotope - objects:
+        :param (int) id:
         """
         super(Element, self).__init__(name, isotopes, id)
 
@@ -72,9 +74,9 @@ class Isotope(object):
     def __init__(self, nucNr, mass, relAb):
         """
 
-        :param nucNr: number of nucleons
-        :param mass:
-        :param relAb:
+        :param (int) nucNr: number of nucleons
+        :param (float) mass: mass of isotope
+        :param (float) relAb: relative abundance of isotope
         """
         self.__nucNr = nucNr
         #self.__isoNr = isoNr
@@ -102,10 +104,10 @@ class Isotope(object):
 class Sequence(AbstractPattern):
     def __init__(self, name, sequenceString, molecule, id):
         """
-        :param name: String
-        :param sequenceList: String
-        :param molecule: String (RNA, DNA, P)
-        :param pse: String (which periodic table should be applied)
+        :param (str) name
+        :param (str) sequenceString: sequence-string
+        :param (str) molecule: RNA, DNA, P or other self defined macromolecule
+        :param (int) id
         """
         super(Sequence, self).__init__(name, id)
         self.__sequenceString = sequenceString
@@ -119,4 +121,8 @@ class Sequence(AbstractPattern):
         return self.__molecule
 
     def getSequenceList(self):
+        '''
+        Converts sequence string to list of building blocks (strings)
+        :return list of str
+        '''
         return findall('[A-Z][^A-Z]*', self.__sequenceString)

@@ -103,4 +103,15 @@ class ExportDialog(AbstractDialog):
     def getFilename(self):
         return self.widgets['name'].text()
 
+class SaveSearchDialog(AbstractDialog):
+    def __init__(self, text):
+        super(SaveSearchDialog, self).__init__(parent=None,title='Save Analysis')
+        formLayout = self.makeFormLayout(self)
+        self._lineEdit = QtWidgets.QLineEdit(self)
+        self._lineEdit.setText(text)
+        index = self.fill(self, formLayout, ("Enter Name:",), {'name':(self._lineEdit, 'Enter the name')})
+        formLayout.setWidget(index+1, QtWidgets.QFormLayout.SpanningRole, self.buttonBox)
+        self.show()
 
+    def getText(self):
+        return self._lineEdit.text()

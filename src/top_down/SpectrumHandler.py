@@ -281,12 +281,8 @@ class SpectrumHandler(object):
                                               < getErrorLimit(self.__spectrum[:, 0]))
                         spectralPeak = self.getCorrectPeak(self.__spectrum[searchMask], theoreticalPeaks[i])
                         sumInt += spectralPeak[1]
-                        """if fragment.getName() == 'c16':
-                            print('c16:',theoreticalPeaks[i]['m/z'])"""
                         foundMainPeaks.append(spectralPeak)
                         sumIntTheo += theoreticalPeaks[i]['calcInt']
-                    """if fragment.getName() == 'c16':
-                        print('c16:',sumInt)"""
                     if sumInt > 0:
                         noise = self.calculateNoise(theoreticalPeaks[0]['m/z'], 4)
                         #print('\twent through',round(noise))
@@ -295,16 +291,13 @@ class SpectrumHandler(object):
                                               configs['thresholdFactor'] / (sumInt/sumIntTheo))
                         '''inNoise = np.where(theoreticalPeaks['calcInt'] <= noise*
                                            configs['thresholdFactor'] / (sumInt/sumIntTheo))'''
-                        if theoreticalPeaks[notInNoise].size != 0:
+                        if theoreticalPeaks[notInNoise].size > len(foundMainPeaks):
                             foundPeaks = list()
                             #find other isotope Peaks
                             for theoPeak in theoreticalPeaks[notInNoise]:
                                 searchMask = np.where(abs(self.calculateError(self.__spectrum[:, 0], theoPeak['m/z']))
                                                       < (getErrorLimit(self.__spectrum[:, 0]) + configs['errorTolerance']))
                                 foundPeaks.append(self.getCorrectPeak(self.__spectrum[searchMask], theoPeak))
-
-                            """for theoPeak in theoreticalPeaks[inNoise]:
-                                foundPeaks.append((theoPeak['m/z'],0,theoPeak['m/z'],theoPeak['calcInt'],0,1))"""
                             foundPeaksArr = np.sort(np.array(foundPeaks, dtype=self.peaksArrType),order=['m/z'])
                             if not np.all(foundPeaksArr['relAb']==0):
                                 self.foundIons.append(FragmentIon(fragment, np.min(theoreticalPeaks['m/z']), z, foundPeaksArr, noise))
@@ -315,6 +308,13 @@ class SpectrumHandler(object):
                                         print("\t",np.around(peak['m/z'],4),"\t",peak['relAb'])
                             else:
                                 self.addToDeletedIons(fragment, foundMainPeaks, noise, np.min(theoreticalPeaks['m/z']), z)
+                        elif theoreticalPeaks[notInNoise].size > 0:
+                            foundMainPeaksArr = np.sort(np.array(foundMainPeaks,dtype=self.peaksArrType),order=['m/z'])
+                            self.foundIons.append(FragmentIon(fragment, np.min(theoreticalPeaks['m/z']), z,
+                                                              foundMainPeaksArr, noise))
+                            for peak in foundMainPeaksArr:
+                                if peak['relAb']>0:
+                                    print("\t",np.around(peak['m/z'],4),"\t",peak['relAb'])
                         else:
                             """for theoPeak in theoreticalPeaks[inNoise]:
                                 foundMainPeaks.append((theoPeak['m/z'],0,theoPeak['m/z'],theoPeak['relAb'],0,1))"""

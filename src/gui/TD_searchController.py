@@ -33,7 +33,7 @@ from src.gui.ResultView import IonTableModel
 from src.gui.PlotTables import PlotTableView
 from src.gui.PeakViews import PeakView, SimplePeakView
 from src.gui.SequencePlots import PlotFactory
-from src.gui.SimpleDialogs import ExportDialog, SelectSearchDlg, OpenSpectralDataDlg
+from src.gui.SimpleDialogs import ExportDialog, SelectSearchDlg, OpenSpectralDataDlg, SaveSearchDialog
 #from src.gui.ParameterDialogs import TDStartDialog
 from src.gui.StartDialogs import TDStartDialog
 from src.gui.SpectrumView import SpectrumView
@@ -59,7 +59,7 @@ class TD_MainController(object):
                                                 self.settings['modifications'])
             self._logFile = LogFile(self.settings, self.configs, self._propStorage)
             self.saved = False
-            self._savedName = ''
+            self._savedName = os.path.split(self.settings['spectralData'])[-1][:-4]
             try:
                 if self.search() == 0:
                     self.setUpUi(parent)
@@ -395,7 +395,7 @@ class TD_MainController(object):
     def repeatModellingOverlaps(self):
         self._logFile.repeatModelling()
         self.saved = False
-        self._intensityModeller.findOverlaps(20)
+        self._intensityModeller.findOverlaps(1000)
         self.verticalLayout.removeWidget(self.tabWidget)
         self.tabWidget = QtWidgets.QTabWidget(self.centralwidget)
         self.fillUi()
@@ -430,14 +430,24 @@ class TD_MainController(object):
             output = os.path.join(outputPath, filename)
             excelWriter = ExcelWriter(output, self.configs)
             self._analyser.setIons(list(self._intensityModeller.getObservedIons().values()))
-            excelWriter.toExcel(self._analyser, self._intensityModeller, self._propStorage,
-                                self.libraryBuilder.getFragmentLibrary(), self.settings, self.spectrumHandler,
-                                self._logFile.toString())
-            print("********** saved in:", output, "**********\n")
             try:
-                subprocess.call(['open', output])
-            except:
-                pass
+                excelWriter.toExcel(self._analyser, self._intensityModeller, self._propStorage,
+                                    self.libraryBuilder.getFragmentLibrary(), self.settings, self.spectrumHandler,
+                                    self._logFile.toString())
+                print("********** saved in:", output, "**********\n")
+                try:
+                    subprocess.call(['open', output])
+                except:
+                    pass
+            except KeyError as e:
+                print(e.__str__(), 'not found')
+                dlg = QtWidgets.QMessageBox(QtWidgets.QMessageBox.Information, 'Inaccurate Fragment List',
+                                            e.__str__()+ ' not found\n'+
+                                        'The fragmentation pattern or the modification pattern was altered. '
+                                        'Please change the corresponding values to the original ones (see logfile) and '
+                                        'reload the analysis.', QtWidgets.QMessageBox.Ok, self.mainWindow, )
+                if dlg.exec_() and dlg == QtWidgets.QMessageBox.Ok:
+                    return
             #else:
             #    self.dumb()
 
@@ -550,7 +560,6 @@ class TD_MainController(object):
         backwardLimits = self._propStorage.filterByDir(minMaxCharges,-1)
         plotFactory1.showChargePlot(self._propStorage.getSequenceList(), forwardVals, backwardVals,
                                     self.settings['charge'], forwardLimits, backwardLimits)
-
         self.chargeView = PlotTableView(self._analyser.toTable(forwardVals.values(), backwardVals.values()),
                                        list(chargeDict.keys()), 'Av. Charge per Fragment', 1)
         '''plotFactory2.showChargePlot(self.libraryBuilder.getSequenceList(),
@@ -561,12 +570,13 @@ class TD_MainController(object):
         searchService = SearchService()
         names = searchService.getAllSearchNames()
         while True:
-            name, ok = QtWidgets.QInputDialog.getText(self.mainWindow, 'Save Analysis', 'Enter the name: ')
-            if ok:
-                self._savedName = name
-                if name in names:
+            dlg = SaveSearchDialog(self._savedName)
+            #name, ok = QtWidgets.QInputDialog.getText(self.mainWindow, 'Save Analysis', 'Enter the name: ')
+            if dlg.exec_() and dlg.ok:
+                self._savedName = dlg.getText()
+                if self._savedName in names:
                     choice = QtWidgets.QMessageBox.question(self.mainWindow, "Overwriting",
-                                "There is already a saved analysis with name: "+name+"\nDo you want to overwrite it?",
+                                "There is already a saved analysis with name: "+self._savedName+"\nDo you want to overwrite it?",
                                                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
                     if choice == QtWidgets.QMessageBox.Yes:
                         break
@@ -574,12 +584,12 @@ class TD_MainController(object):
                     break
             else:
                 return
-        print('Saving analysis', name)
-        self._logFile.save()
-        searchService.saveSearch(name, self.settings, self._intensityModeller.getObservedIons().values(),
+        print('Saving analysis', self._savedName)
+        searchService.saveSearch(self._savedName, self.settings, self._intensityModeller.getObservedIons().values(),
                                  self._intensityModeller.getDeletedIons().values(),
                                  self._intensityModeller.getRemodelledIons(),
                                  self.spectrumHandler.searchedChargeStates, self._logFile)
+        self._logFile.save()
         self.saved = True
         print('done')
         self._logFileView.update()

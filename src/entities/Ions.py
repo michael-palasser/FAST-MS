@@ -17,11 +17,11 @@ class Fragment(object):
     def __init__(self, type, number, modification, formula, sequence, radicals):
         '''
         Constructor
-        :param type: typically a, b, c, d, w, x, y or z (String)
-        :param number: number in sequenceList (int)
-        :param modification: +modification, +ligands and -loss (String)
-        :param formula: Type MolecularFormula
-        :param sequence: list of sequenceList of fragment
+        :param (str) type: typically a, b, c, d, w, x, y or z
+        :param (int) number: length of fragment-sequence
+        :param (str) modification: +modification, +ligands and -loss (String)
+        :param (MolecularFormula) formula: MolecularFormula
+        :param (list of str) sequence: list of building blocks
         '''
         self.type = type
         self.number = number
@@ -79,8 +79,8 @@ class FragmentIon(Fragment):
     def __init__(self, fragment, monoisotopic, charge, isotopePattern, noise):
         '''
         Constructor
-        :param fragment: Type Fragment
-        :param charge: int
+        :param (Fragment) fragment
+        :param (int) charge: abs of ion charge
         #ToDo: isotopePattern not compatible with Fragment isotope Pattern
         :param isotopePattern: structured numpy-array: [m/z, intensity, m/z_theo, calcInt, error (ppm), used (for modelling)]
         :param noise: noise level in the m/z area of the ion, calculated by calculateNoise function in SpectrumHandler

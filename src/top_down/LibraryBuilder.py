@@ -79,18 +79,18 @@ class FragmentLibraryBuilder(object):
         return (residue == '') or (residue == '-') or (residue in sequence)
 
 
-    def checkForProlines(self, type, sequ, basicLadder):
+    def checkForProlines(self, type, sequ, nextBB):
         '''
         No c- and z-fragments after a proline in sequenceList. Function checks if last amino acid is proline.
         :param type: fragment type of fragment
         :param sequ: sequenceList of fragment
-        :param basicLadder: fragment ladder of a basic fragment type (see function buildSimpleLadder)
+        :param nextBB: next building block in sequence
         :return: 1 for c- or z-fragments of proteins if last amino acid in sequenceList is a proline, else: 0
         '''
         if self.__sequence.getMolecule() == 'Protein':
-            if type == 'c' and sequ[-1] == 'P':  # ToDo: Hydroxyproline etc.
+            if type == 'c' and nextBB == 'P':  # ToDo: Hydroxyproline etc.
                 return 1
-            elif type == 'z' and basicLadder[len(sequ)][0][-1] == 'P':
+            elif type == 'z' and sequ[-1]  == 'P':
                 return 1
         return 0
 
@@ -103,18 +103,19 @@ class FragmentLibraryBuilder(object):
         :return: ladder (list of Fragments)
         '''
         ladder = list()
+        sequLength = len(self.__sequence.getSequenceList())
         for link in basicLadder:
             #precursor ion handled later
             linkSequ = link[0]
             linkFormula = link[1]
-            if len(linkSequ) == len(self.__sequence.getSequenceList()):
+            if len(linkSequ) == sequLength:
                 continue
             for template in fragTemplates:
                 #templateName = template.getName()
                 species, rest = self.processTemplateName(template.getName())
                 templateRadicals = template.getRadicals()
                 #if self.checkForProlines(templateName[0],linkSequ, basicLadder):
-                if self.checkForProlines(species,linkSequ, basicLadder):
+                if self.checkForProlines(species,linkSequ, basicLadder[len(linkSequ)][0][-1]):
                     continue
                 formula = linkFormula.addFormula(template.getFormula())
                 if self.checkForResidue(template.getResidue(), linkSequ):

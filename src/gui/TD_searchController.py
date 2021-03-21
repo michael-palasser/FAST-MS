@@ -17,8 +17,8 @@ from PyQt5.QtWidgets import QAbstractItemView
 
 from src import path
 from src.Exceptions import UnvalidIsotopePatternException, UnvalidInputException
-from src.entities.LogFile import LogFile
-from src.gui.LogFileView import LogFileView
+from src.entities.Info import Info
+from src.gui.InfoView import InfoView
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.repositories.IsotopePatternRepository import IsotopePatternReader
 from src.top_down.Analyser import Analyser
@@ -57,7 +57,7 @@ class TD_MainController(object):
             self.configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
             self._propStorage = PropertyStorage(self.settings['sequName'], self.settings['fragmentation'],
                                                 self.settings['modifications'])
-            self._logFile = LogFile(self.settings, self.configs, self._propStorage)
+            self._infoWindow = Info(self.settings, self.configs, self._propStorage)
             self.saved = False
             self._savedName = os.path.split(self.settings['spectralData'])[-1][:-4]
             try:
@@ -74,7 +74,7 @@ class TD_MainController(object):
                 self.configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
                 self.settings, observedIons, delIons, remIons, searchedZStates, logFile = \
                     searchService.getSearch(dialog.getName())
-                self._logFile = LogFile(logFile)
+                self._infoWindow = Info(logFile)
                 self._savedName = dialog.getName()
                 if not os.path.isfile(self.settings['spectralData']):
                     dlg = OpenSpectralDataDlg(parent)
@@ -172,7 +172,7 @@ class TD_MainController(object):
             view.exec_()
             if view and not view.canceled:
                 dumpList = view.getDumplist()
-                [self._logFile.deleteMonoisotopic(ion) for ion in dumpList]
+                [self._infoWindow.deleteMonoisotopic(ion) for ion in dumpList]
                 self._intensityModeller.deleteSameMonoisotopics(dumpList)
             else:
                 return 1
@@ -186,7 +186,7 @@ class TD_MainController(object):
             view.exec_()
             if view and not view.canceled:
                 dumpList = view.getDumplist()
-                [self._logFile.deleteIon(ion) for ion in dumpList]
+                [self._infoWindow.deleteIon(ion) for ion in dumpList]
                 self._intensityModeller.remodelComplexPatterns(complexPatterns, dumpList)
             else:
                 return 1
@@ -205,6 +205,7 @@ class TD_MainController(object):
         # self.verticalLayout.addWidget(self.tabWidget)
         self.mainWindow.setCentralWidget(self.centralwidget)
         self.tabWidget = QtWidgets.QTabWidget(self.centralwidget)
+        self._infoView = InfoView(None, self._infoWindow)
         self.createMenuBar()
         self.tables = []
         for data, name in zip((self._intensityModeller.getObservedIons(), self._intensityModeller.getDeletedIons()),
@@ -213,7 +214,6 @@ class TD_MainController(object):
             self.makeTabWidget(data, name)
         self.verticalLayout.addWidget(self.tabWidget)
         self.mainWindow.resize(1000, 900)
-        self._logFileView = LogFileView(None, self._logFile)
         self.mainWindow.show()
 
     def createMenuBar(self):
@@ -230,7 +230,7 @@ class TD_MainController(object):
                  'Charge-Plot': lambda: self.showChargeDistrPlot(False),
                  'Reduced Charge-Plot':lambda: self.showChargeDistrPlot(True),
                  'Sequence Coverage': self.dumb, 'Original Values':self.showRemodelledIons,
-                 'Log File':self.showLogFile},
+                 'Info File':self._infoView.show},
                 ['Show lists of observed and deleted ions' ,'Show occupancies as a function of sequence pos.',
                  'Show av. charge as a function of sequence pos. (Calculated with Int. values)',
                  'Show av. charge as a function of sequence pos. (Calculated with Int./z values)',
@@ -355,10 +355,10 @@ class TD_MainController(object):
                                         QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
             if choice == QtWidgets.QMessageBox.Yes:
                 if mode ==0:
-                    self._logFile.deleteIon(selectedIon)
+                    self._infoWindow.deleteIon(selectedIon)
                 else:
-                    self._logFile.restoreIon(selectedIon)
-                self._logFileView.update()
+                    self._infoWindow.restoreIon(selectedIon)
+                self._infoView.update()
                 self.saved = False
                 self._intensityModeller.switchIon(selectedIon)
                 table.model().removeData(selectedRow)
@@ -381,8 +381,8 @@ class TD_MainController(object):
                                                     "Please confirm to change the values of ion: " + oldIon.getId(),
                                                     QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
             if choice == QtWidgets.QMessageBox.Ok:
-                self._logFile.changeIon(oldIon,newIon)
-                self._logFileView.update()
+                self._infoWindow.changeIon(oldIon, newIon)
+                self._infoView.update()
                 self.saved = False
                 self._intensityModeller.addRemodelledIon(oldIon)
                 newIon.comment += 'man.mod.'
@@ -393,7 +393,7 @@ class TD_MainController(object):
 
 
     def repeatModellingOverlaps(self):
-        self._logFile.repeatModelling()
+        self._infoWindow.repeatModelling()
         self.saved = False
         self._intensityModeller.findOverlaps(1000)
         self.verticalLayout.removeWidget(self.tabWidget)
@@ -417,7 +417,7 @@ class TD_MainController(object):
                 output = self.settings['spectralData'][0:-4] + '_out' + '.xlsx'
             if filename[-5:]!= 'xlsx':
                 filename+='xlsx'"""
-            self._logFile.export()
+            self._infoWindow.export()
             #self.toExcel(dlg.getDir(),dlg.getFilename())
             outputPath, filename = dlg.getDir(), dlg.getFilename()
             if filename == '':
@@ -433,7 +433,7 @@ class TD_MainController(object):
             try:
                 excelWriter.toExcel(self._analyser, self._intensityModeller, self._propStorage,
                                     self.libraryBuilder.getFragmentLibrary(), self.settings, self.spectrumHandler,
-                                    self._logFile.toString())
+                                    self._infoWindow.toString())
                 print("********** saved in:", output, "**********\n")
                 try:
                     subprocess.call(['open', output])
@@ -444,7 +444,7 @@ class TD_MainController(object):
                 dlg = QtWidgets.QMessageBox(QtWidgets.QMessageBox.Information, 'Inaccurate Fragment List',
                                             e.__str__()+ ' not found\n'+
                                         'The fragmentation pattern or the modification pattern was altered. '
-                                        'Please change the corresponding values to the original ones (see logfile) and '
+                                        'Please change the corresponding values to the original ones (see info file) and '
                                         'reload the analysis.', QtWidgets.QMessageBox.Ok, self.mainWindow, )
                 if dlg.exec_() and dlg == QtWidgets.QMessageBox.Ok:
                     return
@@ -466,7 +466,7 @@ class TD_MainController(object):
         self._analyser.setIons(list(self._intensityModeller.getObservedIons().values()))
         excelWriter.toExcel(self._analyser, self._intensityModeller, self._propStorage,
                             self.libraryBuilder.getFragmentLibrary(), self.settings, self.spectrumHandler,
-                            self._logFile.toString())
+                            self._infoWindow.toString())
         print("********** saved in:", output, "**********\n")
         try:
             subprocess.call(['open',output])
@@ -482,7 +482,7 @@ class TD_MainController(object):
                                                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
         if choice == QtWidgets.QMessageBox.Yes:
             self.mainWindow.close()
-            self._logFileView.close()
+            self._infoView.close()
 
     def showRemodelledIons(self):
         self._remView = QtWidgets.QWidget()
@@ -527,8 +527,8 @@ class TD_MainController(object):
             df=pd.DataFrame(data=table.model().getData(), columns=table.model().getHeaders())
             df.to_clipboard(index=False,header=True)
 
-    def showLogFile(self):
-        self._logFileView.show()
+    '''def showLogFile(self):
+        self._infoView.show()'''
 
     def showOccupancyPlot(self):
         self._analyser.setIons(list(self._intensityModeller.getObservedIons().values()))
@@ -588,8 +588,8 @@ class TD_MainController(object):
         searchService.saveSearch(self._savedName, self.settings, self._intensityModeller.getObservedIons().values(),
                                  self._intensityModeller.getDeletedIons().values(),
                                  self._intensityModeller.getRemodelledIons(),
-                                 self.spectrumHandler.searchedChargeStates, self._logFile)
-        self._logFile.save()
+                                 self.spectrumHandler.searchedChargeStates, self._infoWindow)
+        self._infoWindow.save()
         self.saved = True
         print('done')
-        self._logFileView.update()
+        self._infoView.update()

@@ -47,7 +47,6 @@ class Fragment(object):
     def getRadicals(self):
         return self.radicals
 
-
     def getName(self):
         if self.number == 0:
             return self.type + self.modification
@@ -75,15 +74,13 @@ class FragmentIon(Fragment):
     '''
     charged fragment
     '''
-
     def __init__(self, fragment, monoisotopic, charge, isotopePattern, noise):
         '''
         Constructor
         :param (Fragment) fragment
         :param (int) charge: abs of ion charge
-        #ToDo: isotopePattern not compatible with Fragment isotope Pattern
-        :param isotopePattern: structured numpy-array: [m/z, intensity, m/z_theo, calcInt, error (ppm), used (for modelling)]
-        :param noise: noise level in the m/z area of the ion, calculated by calculateNoise function in SpectrumHandler
+        :param (ndarray) isotopePattern: structured numpy-array: [m/z, intensity, m/z_theo, calcInt, error (ppm), used (for modelling)]
+        :param (float) noise: noise level in the m/z area of the ion, calculated by calculateNoise function in SpectrumHandler
         '''
         super().__init__(fragment.type, fragment.number, fragment.modification,
                          fragment.formula, fragment.sequence, fragment.radicals,)
@@ -101,6 +98,14 @@ class FragmentIon(Fragment):
         return round(self.intensity)
 
     def setRemaining(self, intensity, error, quality, comment):
+        '''
+        Setter method for all values which are not already set by the constructor
+        :param (float) intensity:
+        :param (float) error:
+        :param (float) quality:
+        :param (str) comment:
+        :return: None
+        '''
         self.intensity = intensity
         self.error = error
         self.quality = quality
@@ -108,11 +113,19 @@ class FragmentIon(Fragment):
         self.getScore()
 
     def toString(self):
+        '''
+        For printing purposes
+        :return: str
+        '''
         return str(round(self.getMonoisotopic(), 5)) + "\t\t" + str(self.charge) + "\t" + str(
             round(self.intensity)) + "\t" + '{:12}'.format(self.getName()) + "\t" + \
                str(round(self.error, 2)) + "\t\t" + str(round(self.quality, 2)) #+ "\t" + self.comment
 
     def getMonoisotopic(self):
+        '''
+        Calculates the (observed) monoisotopic m/z from the theoretical and the error of the ion
+        :return:
+        '''
         #return np.min(self.isotopePattern['m/z_theo']) * (1 + self.error * 10 ** (-6))  # np.min(self.isotopePattern['m/z'])
         return self.monoisotopicRaw * (1 + self.error * 10 ** (-6))
 
@@ -131,17 +144,9 @@ class FragmentIon(Fragment):
         return self.intensity / self.charge
 
     def getValues(self):
-        """formatInt = '{:12d}'
-        if self.intensity >= 10 ** 13:
-            lg10 = str(int(math.log10(self.intensity) + 1))
-            formatInt = '{:' + lg10 + 'd}'
-        return ['{:4.5f}'.format(round(self.getMonoisotopic(),5)),
-                '{:2d}'.format(self.charge),
-                formatInt.format(round(self.intensity)),
-                self.getName(),
-                '{:3.2f}'.format(round(self.error,2)),
-                '{:6.1f}'.format(round(self.getSignalToNoise(),1)),
-                '{:3.2f}'.format(round(self.quality,2))]"""
+        '''
+        Getter of ion values for IonTableWidget
+        '''
         return [round(self.getMonoisotopic(),5), self.charge, int(round(self.intensity)), self.getName(), round(self.error,2),
                 round(self.getSignalToNoise(),1), round(self.quality,2)]#"""
 
@@ -149,15 +154,17 @@ class FragmentIon(Fragment):
         return self.getName()+', '+str(self.charge)
 
     def getMoreValues(self):
-        return [round(self.getMonoisotopic(),5), self.charge, round(self.intensity), self.getName(), round(self.error,2),
-                round(self.getSignalToNoise(),1), round(self.quality,2), round(self.getScore(),1),self.comment]
+        '''
+        Getter of ion values
+        '''
+        return self.getValues()+[round(self.getScore(),1),self.comment]
 
-    def getPeaks(self):
+    '''def getPeaks(self):
         peaks = []
         for i, peak in enumerate(self.isotopePattern):
             peaks.append((peak['m/z'], self.charge, round(peak['calcInt']), peak['error'], peak['used']))
             #indizes.append(i)
-        return peaks #pd.DataFrame(data=peaks, columns=['mz', 'z', 'int', 'name', 'error', 'used'])
+        return peaks''' #pd.DataFrame(data=peaks, columns=['mz', 'z', 'int', 'name', 'error', 'used'])
 
     def getPeakValues(self):
         peaks = []

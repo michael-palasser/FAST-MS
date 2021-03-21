@@ -27,7 +27,7 @@ class IsotopePatternReader(object):
         else:
             sequName, fragmentation, nrMod, modifications = settings[0], settings[1], settings[2], settings[3],
             if modifications == "-" or nrMod == "0":
-                self.__file = os.path.join(path, 'Fragment_lists', '_'.join((sequName, fragmentation) + '.csv'))
+                self.__file = os.path.join(path, 'Fragment_lists', '_'.join((sequName, fragmentation + '.csv')))
             else:
                 self.__file = os.path.join(path, 'Fragment_lists', '_'.join((sequName, fragmentation, str(nrMod),
                                                                              modifications+'.csv')))

@@ -115,7 +115,7 @@ class SearchRepository(AbstractRepository):
         self.insertItems(searchId, search.getIons(), 0)
         self.insertItems(searchId, search.getDeletedIons(), 1)
         self.insertItems(searchId, search.getIons(), 2)
-        self.createItem('logs', (search.getLogFile().toString(),searchId))
+        self.createItem('logs', (search.getInfo().toString(), searchId))
         [self.createItem('chargeStates', [frag,zList, searchId]) for frag,zList in search.getSearchedZStates().items()]
 
     """def create(self, vals):

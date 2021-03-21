@@ -5,22 +5,10 @@ class FragmentationPattern(PatternWithItems):
     def __init__(self, name, precursor, fragmentTypes, precursorFragments, id):
         super(FragmentationPattern, self).__init__(name, fragmentTypes,id)
         self.__precursor = precursor
-        #self.__initGain = gain
-        #self.__initLoss = loss
         self.__items2 = precursorFragments
 
     def getPrecursor(self):
         return self.__precursor
-
-    '''def getInitGain(self):
-        return self.__initGain
-
-    def getInitLoss(self):
-        return self.__initLoss'''
-
-    '''def getFormula(self):
-        formulaDict = AbstractItem2.stringToFormula(self.__initGain, dict(), 1)
-        return AbstractItem2.stringToFormula(self.__initLoss, formulaDict, -1)'''
 
     def getItems2(self):
         return self.__items2
@@ -28,8 +16,6 @@ class FragmentationPattern(PatternWithItems):
     def setItems2(self, items):
         self.__items2 = items
 
-    """def getAttributes(self):
-        return self._name, self.__initGain, self.__initLoss"""
 
     def getFragTemplates(self, direction):
         fragTemplates = []
@@ -54,16 +40,6 @@ class PrecursorItem(AbstractItem3):
     def __init__(self, item):
         super(PrecursorItem, self).__init__(name=item[0], gain=item[1], loss=item[2],
                                             residue=item[3], radicals=item[4], enabled=item[5])
-
-    '''def check(self, elements, monomeres):
-        for key in self.getFormula().keys():
-            if key not in elements:
-                raise UnvalidInputException(self.getName(), "Element: " + key + " unknown")
-        # self._residue = residue  unchecked!
-        try:
-            self._radicals = int(self._radicals)
-        except ValueError:
-            raise UnvalidInputException(self.getName(), "Number required: " + str(self._radicals))'''
 
 
 class FragItem(AbstractItem3):
@@ -126,23 +102,10 @@ class ModifiedItem(AbstractItem3):
         return parentVals[0:-1]+[str(self.__zEffect), str(self.__calcOccupancy), parentVals[-1]]
 
 
-
 class IntactPattern(PatternWithItems):
     def __init__(self,  name, items, id):
         super(IntactPattern, self).__init__(name, items, id)
-        '''self.__initGain = gain
-        self.__initLoss = loss'''
 
-    '''def getInitGain(self):
-        return self.__initGain
-
-    def getInitLoss(self):
-        return self.__initLoss'''
-
-    '''def getFormula(self):
-        formulaDict = AbstractItem2.stringToFormula(self.__initGain, dict(), 1)
-        return AbstractItem2.stringToFormula(self.__initLoss, formulaDict, -1)
-'''
 
 class IntactModification(AbstractItem2):
     def __init__(self, item):

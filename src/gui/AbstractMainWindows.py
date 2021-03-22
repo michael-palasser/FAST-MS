@@ -27,7 +27,7 @@ class AbstractMainWindow(QtWidgets.QMainWindow):
         button.setText(self._translate(self.objectName(), name))
         button.clicked.connect(fun)
 
-    def createMenuBar(self, options):
+    def createMenuBar(self):
         self.menubar = QtWidgets.QMenuBar(self)
         self.setMenuBar(self.menubar)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 340, 22))
@@ -41,7 +41,7 @@ class AbstractMainWindow(QtWidgets.QMainWindow):
         pos = len(options)
         for option, vals in options.items():
             function, tooltip, shortcut = vals
-            if pos == separatorPosition:
+            if separatorPosition != None and pos == separatorPosition:
                 menu.addSeparator()
             action = QtWidgets.QAction(self)
             action.setText(self._translate(self.objectName(),option))

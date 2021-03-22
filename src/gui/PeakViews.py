@@ -95,7 +95,7 @@ class PeakView(QtWidgets.QMainWindow):
         super(PeakView, self).__init__(parent)
         self._ion = copy.deepcopy(ion)
         self._translate = QtCore.QCoreApplication.translate
-        self.setWindowTitle(self._translate(self.objectName(), ion.getName()+', '+str(ion.charge)))
+        self.setWindowTitle(self._translate(self.objectName(), ion.getName()+', '+str(ion.getCharge())))
         #self.centralwidget = QtWidgets.QWidget(self)
         self.setCentralWidget(QtWidgets.QWidget(self))
         self._verticalLayout = QtWidgets.QVBoxLayout(self.centralWidget())
@@ -140,7 +140,7 @@ class PeakView(QtWidgets.QMainWindow):
     def modelIon(self):
         vals = self._peakTable.readTable()
         newIon = self.model(copy.deepcopy(self._ion),vals)
-        if self._ion.intensity != newIon.intensity:
+        if self._ion.getIntensity() != newIon.getIntensity():
             self._ion = newIon
             self._peakTable.setPeaks(self._ion.getPeakValues())
             self._verticalLayout.removeWidget(self._ionTable)

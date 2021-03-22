@@ -1,6 +1,6 @@
 
 class Search(object):
-    #def __init__(self, name, date, sequName, charge, fragmentation, nrMod, spectralData, noise, lib, ions, id):
+    #def __init__(self, name, date, sequName, _charge, fragmentation, nrMod, spectralData, noise, lib, ions, id):
     def __init__(self, vals, ions, deletedIons, remIons, searchedZStates, info):
         self._name = vals[1]
         self._date = vals[2]

@@ -2,7 +2,14 @@ from datetime import datetime
 
 
 class Info(object):
+    '''
+    class which stores informations of user inputs
+    '''
     def __init__(self, *args):
+        '''
+        :param args: new analysis: ((dict) settings, (dict) configurations, (PropertyStorage) searchProperty)
+                    loaded analysis: ((str) infoString)
+        '''
         if len(args)==3:
             self._infoString = 'Analysis: ' + datetime.now().strftime("%d/%m/%Y %H:%M") + '\n'
             self.start(args[0], args[1], args[2])
@@ -24,7 +31,7 @@ class Info(object):
 
 
     def ionToString(self, ion):
-        return ion.getName() + ', ' + str(ion.charge)
+        return ion.getName() + ', ' + str(ion.getCharge())
 
     def deleteMonoisotopic(self, ion):
         self._infoString += '\n* del (mono) ' + self.ionToString(ion)
@@ -36,8 +43,11 @@ class Info(object):
         self._infoString += '\n* restore ' + self.ionToString(ion)
 
     def changeIon(self, origIon, newIon):
+        '''
+        if the intensity of an ion is manually changed
+        '''
         self._infoString += '\n* changing ' + self.ionToString(origIon) + \
-                ';   old Int.: ' + str(round(origIon.intensity)) + ', new: ' + str(round(newIon.intensity))
+                ';   old Int.: ' + str(round(origIon.getIntensity())) + ', new: ' + str(round(newIon.getIntensity()))
         count = 1
         for oldPeak, newPeak in zip(origIon.getPeakValues(), newIon.getPeakValues()):
             self._infoString += '\n\t' + str(count) + '   old: ' + ', '.join([str(val) for val in oldPeak]) + \

@@ -56,7 +56,7 @@ def run(mainWindow):
                 else:
                     modif = ""
                 newIon = FragmentIon(Fragment(species, number, modif, dict(), [], 0), ion['m/z'], ion['z'], np.zeros(1), 0)
-                newIon.intensity = ion['intensity']
+                newIon.setIntensity(ion['intensity'])
                 ionList.append(newIon)
 
             """Analysis and Output"""

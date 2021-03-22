@@ -41,7 +41,7 @@ from src.gui.SpectrumView import SpectrumView
 
 def sortIonsByName(ionList):
     #return sorted(ionList,key=lambda obj:(obj.type ,obj.number))
-    return sorted(ionList, key=lambda obj: (obj.getName(), obj.charge))
+    return sorted(ionList, key=lambda obj: (obj.getName(), obj.getCharge()))
 
 
 
@@ -57,7 +57,7 @@ class TD_MainController(object):
             self.configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
             self._propStorage = PropertyStorage(self.settings['sequName'], self.settings['fragmentation'],
                                                 self.settings['modifications'])
-            self._infoWindow = Info(self.settings, self.configs, self._propStorage)
+            self._info = Info(self.settings, self.configs, self._propStorage)
             self.saved = False
             self._savedName = os.path.split(self.settings['spectralData'])[-1][:-4]
             try:
@@ -74,7 +74,7 @@ class TD_MainController(object):
                 self.configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
                 self.settings, observedIons, delIons, remIons, searchedZStates, logFile = \
                     searchService.getSearch(dialog.getName())
-                self._infoWindow = Info(logFile)
+                self._info = Info(logFile)
                 self._savedName = dialog.getName()
                 if not os.path.isfile(self.settings['spectralData']):
                     dlg = OpenSpectralDataDlg(parent)
@@ -85,8 +85,7 @@ class TD_MainController(object):
                 self.libraryBuilder = FragmentLibraryBuilder(self._propStorage, self.settings['nrMod'])
                 self.libraryBuilder.createFragmentLibrary()
 
-                self.spectrumHandler = SpectrumHandler(self.settings['spectralData'], self._propStorage,
-                                                       self.libraryBuilder.getPrecursor(), self.settings)
+                self.spectrumHandler = SpectrumHandler(self._propStorage, self.libraryBuilder.getPrecursor(), self.settings)
                 self.spectrumHandler.setSearchedChargeStates(searchedZStates)
                 self._intensityModeller = IntensityModeller(self.configs)
                 self._intensityModeller.setIonLists(observedIons, delIons, remIons)
@@ -144,8 +143,7 @@ class TD_MainController(object):
             return 1
         #spectralFile = os.path.join(path, 'Spectral_data','top-down', self.settings['spectralData'])
         print("\n********** Importing spectral pattern from:", self.settings['spectralData'], "**********")
-        self.spectrumHandler = SpectrumHandler(self.settings['spectralData'], self._propStorage,
-                                               self.libraryBuilder.getPrecursor(), self.settings)
+        self.spectrumHandler = SpectrumHandler(self._propStorage, self.libraryBuilder.getPrecursor(), self.settings)
 
         """Finding fragments"""
         print("\n********** Search for spectrum **********")
@@ -172,7 +170,7 @@ class TD_MainController(object):
             view.exec_()
             if view and not view.canceled:
                 dumpList = view.getDumplist()
-                [self._infoWindow.deleteMonoisotopic(ion) for ion in dumpList]
+                [self._info.deleteMonoisotopic(ion) for ion in dumpList]
                 self._intensityModeller.deleteSameMonoisotopics(dumpList)
             else:
                 return 1
@@ -186,7 +184,7 @@ class TD_MainController(object):
             view.exec_()
             if view and not view.canceled:
                 dumpList = view.getDumplist()
-                [self._infoWindow.deleteIon(ion) for ion in dumpList]
+                [self._info.deleteIon(ion) for ion in dumpList]
                 self._intensityModeller.remodelComplexPatterns(complexPatterns, dumpList)
             else:
                 return 1
@@ -205,7 +203,7 @@ class TD_MainController(object):
         # self.verticalLayout.addWidget(self.tabWidget)
         self.mainWindow.setCentralWidget(self.centralwidget)
         self.tabWidget = QtWidgets.QTabWidget(self.centralwidget)
-        self._infoView = InfoView(None, self._infoWindow)
+        self._infoView = InfoView(None, self._info)
         self.createMenuBar()
         self.tables = []
         for data, name in zip((self._intensityModeller.getObservedIons(), self._intensityModeller.getDeletedIons()),
@@ -338,8 +336,9 @@ class TD_MainController(object):
             ajacentIons, minLimit, maxLimit  = self._intensityModeller.getAdjacentIons(selectedHash)
             #minWindow, maxWindow, maxY = self._intensityModeller.getLimits(ajacentIons)
             peaks = self.spectrumHandler.getSpectrum(minLimit-1, maxLimit+1)
-            spectrumView = SpectrumView(None, peaks, ajacentIons, np.min(selectedIon.isotopePattern['m/z']),
-                                np.max(selectedIon.isotopePattern['m/z']), np.max(selectedIon.isotopePattern['relAb']))
+            spectrumView = SpectrumView(None, peaks, ajacentIons, np.min(selectedIon.getIsotopePattern()['m/z']),
+                                np.max(selectedIon.getIsotopePattern()['m/z']),
+                                        np.max(selectedIon.getIsotopePattern()['relAb']))
         elif action == peakAction:
             #global peakview
             PeakView(self.mainWindow, selectedIon, self._intensityModeller.remodelSingleIon, self.saveSingleIon)
@@ -355,9 +354,9 @@ class TD_MainController(object):
                                         QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
             if choice == QtWidgets.QMessageBox.Yes:
                 if mode ==0:
-                    self._infoWindow.deleteIon(selectedIon)
+                    self._info.deleteIon(selectedIon)
                 else:
-                    self._infoWindow.restoreIon(selectedIon)
+                    self._info.restoreIon(selectedIon)
                 self._infoView.update()
                 self.saved = False
                 self._intensityModeller.switchIon(selectedIon)
@@ -381,19 +380,19 @@ class TD_MainController(object):
                                                     "Please confirm to change the values of ion: " + oldIon.getId(),
                                                     QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
             if choice == QtWidgets.QMessageBox.Ok:
-                self._infoWindow.changeIon(oldIon, newIon)
+                self._info.changeIon(oldIon, newIon)
                 self._infoView.update()
                 self.saved = False
                 self._intensityModeller.addRemodelledIon(oldIon)
-                newIon.comment += 'man.mod.'
+                newIon.addComment('man.mod.')
                 ionDict[newIonHash] = newIon
                 self.tables[index].model().updateData(newIon.getMoreValues())
-                print('Saved', newIon.getName(),',', newIon.charge)
+                print('Saved', newIon.getId())
 
 
 
     def repeatModellingOverlaps(self):
-        self._infoWindow.repeatModelling()
+        self._info.repeatModelling()
         self.saved = False
         self._intensityModeller.findOverlaps(1000)
         self.verticalLayout.removeWidget(self.tabWidget)
@@ -417,7 +416,7 @@ class TD_MainController(object):
                 output = self.settings['spectralData'][0:-4] + '_out' + '.xlsx'
             if filename[-5:]!= 'xlsx':
                 filename+='xlsx'"""
-            self._infoWindow.export()
+            self._info.export()
             #self.toExcel(dlg.getDir(),dlg.getFilename())
             outputPath, filename = dlg.getDir(), dlg.getFilename()
             if filename == '':
@@ -433,7 +432,7 @@ class TD_MainController(object):
             try:
                 excelWriter.toExcel(self._analyser, self._intensityModeller, self._propStorage,
                                     self.libraryBuilder.getFragmentLibrary(), self.settings, self.spectrumHandler,
-                                    self._infoWindow.toString())
+                                    self._info.toString())
                 print("********** saved in:", output, "**********\n")
                 try:
                     subprocess.call(['open', output])
@@ -466,7 +465,7 @@ class TD_MainController(object):
         self._analyser.setIons(list(self._intensityModeller.getObservedIons().values()))
         excelWriter.toExcel(self._analyser, self._intensityModeller, self._propStorage,
                             self.libraryBuilder.getFragmentLibrary(), self.settings, self.spectrumHandler,
-                            self._infoWindow.toString())
+                            self._info.toString())
         print("********** saved in:", output, "**********\n")
         try:
             subprocess.call(['open',output])
@@ -515,8 +514,8 @@ class TD_MainController(object):
             ajacentIons, minLimit, maxLimit  = self._intensityModeller.getAdjacentIons(selectedHash)
             ajacentIons = [ion for ion in ajacentIons if self._intensityModeller.getHash(ion)!=selectedHash]
             peaks = self.spectrumHandler.getSpectrum(minLimit-1, maxLimit+1)
-            view = SpectrumView(None, peaks, [selectedIon]+ajacentIons, np.min(selectedIon.isotopePattern['m/z']),
-                                np.max(selectedIon.isotopePattern['m/z']), np.max(selectedIon.isotopePattern['relAb']))
+            view = SpectrumView(None, peaks, [selectedIon]+ajacentIons, np.min(selectedIon.getIsotopePattern()['m/z']),
+                                np.max(selectedIon.getIsotopePattern()['m/z']), np.max(selectedIon.getIsotopePattern()['relAb']))
         elif action == peakAction:
             #PeakView(self.mainWindow, selectedIon, self._intensityModeller.remodelSingleIon, self.saveSingleIon)
             SimplePeakView(self.mainWindow, selectedIon)
@@ -585,11 +584,11 @@ class TD_MainController(object):
             else:
                 return
         print('Saving analysis', self._savedName)
+        self._info.save()
         searchService.saveSearch(self._savedName, self.settings, self._intensityModeller.getObservedIons().values(),
                                  self._intensityModeller.getDeletedIons().values(),
                                  self._intensityModeller.getRemodelledIons(),
-                                 self.spectrumHandler.searchedChargeStates, self._infoWindow)
-        self._infoWindow.save()
+                                 self.spectrumHandler.searchedChargeStates, self._info)
         self.saved = True
         print('done')
         self._infoView.update()

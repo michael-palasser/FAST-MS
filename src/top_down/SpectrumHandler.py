@@ -35,7 +35,7 @@ class SpectrumHandler(object):
     acidicAA = {'D': 10, 'E': 10,
                 'H': 0.9, 'R': 0.5, 'K': 0.5, }
 
-    def __init__(self, filePath, properties, precursor, settings):
+    def __init__(self, properties, precursor, settings):
         '''
         Constructor
         :param molecule: RNA/DNA/P (String)
@@ -48,6 +48,7 @@ class SpectrumHandler(object):
         self.__properties = properties
         self.__settings = settings
         self.__sprayMode = 1
+        print(settings)
         if self.__settings['charge'] < 0:
             self.__sprayMode = -1
         self.__upperBound=0
@@ -56,7 +57,7 @@ class SpectrumHandler(object):
         print(self.__charge, self.precursor.getName(), self.precursor.getRadicals())
         self.normalizationFactor = None
 
-        self.addSpectrum(filePath)
+        self.addSpectrum(self.__settings['spectralData'])
         self.foundIons = list()
         self.ionsInNoise = list()
         self.searchedChargeStates = dict()
@@ -186,7 +187,7 @@ class SpectrumHandler(object):
     def getNormalizationFactor(self):
         molecule = self.__properties.getMolecule().getName()
         if molecule in ['RNA', 'DNA'] and self.__sprayMode == -1:
-            return self.__charge / self.precursor.formula.formulaDict['P']
+            return self.__charge / self.precursor.getFormula().formulaDict['P']
             #return self.__charge / len(self.__sequList)
         #elif molecule == 'Protein' and self.__sprayMode == 1:
          #   return self.__charge / self.getChargeScore(self.__sequList)
@@ -209,10 +210,10 @@ class SpectrumHandler(object):
         modCharge = 0
         for mod, charge in self.__properties.getChargedModifications().items():
             print(mod, charge)
-            if mod in fragment.modification:
+            if mod in fragment.getModification():
                 nrMod = 1
-                if len(findall(r"(\d+)"+mod, fragment.modification)) > 0:
-                    nrMod = int(findall(r"(\d+)"+mod, fragment.modification)[0])
+                if len(findall(r"(\d+)"+mod, fragment.getModification())) > 0:
+                    nrMod = int(findall(r"(\d+)"+mod, fragment.getModification())[0])
                 print(modCharge, charge, nrMod, self.__sprayMode)
                 print(type(modCharge), type(charge), type(nrMod), type(self.__sprayMode))
                 modCharge += charge * nrMod * self.__sprayMode
@@ -223,21 +224,21 @@ class SpectrumHandler(object):
         molecule = self.__properties.getMolecule().getName()
         if molecule in ['RNA' ,'DNA'] and self.__sprayMode == -1:
             #probableZ = (fragment.number-1) * self.normalizationFactor
-            probableZ = fragment.formula.formulaDict['P']* self.normalizationFactor
-            if fragment.formula.formulaDict['P'] == 0:
+            probableZ = fragment.getFormula().formulaDict['P']* self.normalizationFactor
+            if fragment.getFormula().formulaDict['P'] == 0:
                 return None
             #probableZ = fragment.formula.formulaDict['P'] * self.normalizationFactor
         elif molecule == 'Protein':
             #probableZ = self.getChargeScore(fragment) * self.normalizationFactor
-            probableZ = len(fragment.sequence) * self.normalizationFactor
+            probableZ = len(fragment.getSequence()) * self.normalizationFactor
         elif molecule in ['RNA' ,'DNA'] and self.__sprayMode == 1:
             probableZ = len(self.__sequList) * self.normalizationFactor
         else:
             probableZ = len(self.__sequList) * self.normalizationFactor
-        probableZ -= fragment.radicals
+        probableZ -= fragment.getRadicals()
         tolerance = configs['zTolerance']
         lowZ, highZ = 1, self.__charge
-        if fragment.number == 0:
+        if fragment.getNumber() == 0:
             highZ = abs(self.__settings['charge'])
         zEffect = (precModCharge - self.getModCharge(fragment)) * self.__sprayMode
         if (probableZ-tolerance + zEffect)> lowZ:
@@ -259,17 +260,17 @@ class SpectrumHandler(object):
         self.normalizationFactor = self.getNormalizationFactor()
         for fragment in fragmentLibrary:
             self.searchedChargeStates[fragment.getName()] = []
-            fragment.isotopePattern = np.sort(fragment.isotopePattern, order='calcInt')[::-1]
+            fragment.setIsotopePattern(np.sort(fragment.getIsotopePattern(), order='calcInt')[::-1])
             zRange = self.getSearchParameters(fragment,precModCharge)
             peakQuantitiy = fragment.getNumberOfHighestIsotopes()
             if zRange == None:
                 continue
             for z in zRange:
-                theoreticalPeaks = copy.deepcopy(fragment.isotopePattern)
+                theoreticalPeaks = copy.deepcopy(fragment.getIsotopePattern())
                 #if self.__settings['dissociation'] in ['ECD', 'EDD', 'ETD'] and fragment.number == 0:
                 #    theoreticalPeaks['mass'] += ((self.protonMass-self.eMass) * (self.__charge - z))
                     #print("heeeeee\n",fragment.getName(),z, theoreticalPeaks['mass'])
-                theoreticalPeaks['m/z'] = self.getMz(theoreticalPeaks['m/z'], z * self.__sprayMode, fragment.radicals)
+                theoreticalPeaks['m/z'] = self.getMz(theoreticalPeaks['m/z'], z * self.__sprayMode, fragment.getRadicals())
                 if (configs['lowerBound'] < theoreticalPeaks[0]['m/z'] < self.__upperBound):
                     self.searchedChargeStates[fragment.getName()].append(z)
                     #make a guess of the ion abundance based on number in range
@@ -324,7 +325,7 @@ class SpectrumHandler(object):
     def addToDeletedIons(self, fragment, foundMainPeaks, noise, monoisotopic, z):
         foundMainPeaksArr = np.sort(np.array(foundMainPeaks, dtype=self.peaksArrType), order=['m/z'])
         noiseIon = FragmentIon(fragment, monoisotopic, z, foundMainPeaksArr, noise)
-        noiseIon.comment = 'noise,'
+        noiseIon.addComment('noise')
         self.ionsInNoise.append(noiseIon)
 
     def getCorrectPeak(self, foundIsotopePeaks, theoPeak):

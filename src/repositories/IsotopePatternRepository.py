@@ -67,15 +67,17 @@ class IsotopePatternReader(object):
             if i < 1:
                 raise UnvalidIsotopePatternException("", "no data in file")
             isotopePatternDict[name] = np.array(isotopePattern, dtype=[('m/z',np.float64),('calcInt', np.float64)])
+        print('Checking correctness of fragment library')
         for fragment in fragmentLibrary:
             if fragment.getName() not in isotopePatternDict:
                 raise UnvalidIsotopePatternException(fragment.getName(),"not found in file")
             self.checkEquality(fragment, isotopePatternDict[fragment.getName()])
-            fragment.isotopePattern = isotopePatternDict[fragment.getName()]
+            fragment.setIsotopePattern(isotopePatternDict[fragment.getName()])
+        print('done')
         return fragmentLibrary
 
     def checkEquality(self, fragment, savedPattern):
-        newPattern = fragment.formula.calcIsotopePatternSlowly(2)
+        newPattern = fragment.getFormula().calcIsotopePatternSlowly(2)
         for i in range(2):
             if newPattern[i]['m/z'] - savedPattern[i]['m/z'] > 10 ** (-6):
                 raise UnvalidIsotopePatternException(fragment.getName(), "mass incorrect " +
@@ -100,7 +102,7 @@ class IsotopePatternReader(object):
             f_writer.writeheader()
             for fragment in fragmentLibrary:
                 counter = 0  # for new rows
-                for isotope in fragment.isotopePattern:
+                for isotope in fragment.getIsotopePattern():
                     if counter == 0:
                         #if M_max < isotope[0]:
                             #M_max = isotope[0]

@@ -4,7 +4,7 @@ Created on 20 Oct 2020
 @author: michael
 '''
 
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QAction
+from PyQt5.QtWidgets import QApplication, QPushButton, QAction
 
 from src.gui.IsotopePatternView import IsotopePatternView
 from src.gui.EditorController import *
@@ -17,15 +17,42 @@ from src.intact.Main import run as IntactIonsSearch
 from src.gui.TD_searchController import TD_MainController
 
 
-class Window(QMainWindow):
+class Window(AbstractMainWindow):
     def __init__(self):
-        super(Window, self).__init__()
-        self.setWindowTitle('SAUSAGE')
-        mainMenu = self.menuBar()
-        self.tdMenu = mainMenu.addMenu('&Top-Down Tools')
-        self.tdEditMenu = mainMenu.addMenu('&Top-Down Configurations')
-        self.esiMenu = mainMenu.addMenu('&Other Tools')
-        self.dataEdit = mainMenu.addMenu('&Edit data')
+        super(Window, self).__init__(None, 'SAUSAGE')
+        #self.setWindowTitle('SAUSAGE')
+        #self.menubar = QtWidgets.QMenuBar(self)
+        #self.setMenuBar(self.menubar)
+        #self.menubar.setGeometry(QtCore.QRect(0, 0, 340, 22))
+        self.createMenuBar()
+        self.createMenu('Top-Down Tools',
+                        {'Analyse Spectrum':
+                             (lambda:TD_MainController(self, True), 'Starts analysis of top-down spectrum', None),
+                         'Load Analysis':
+                             (lambda:TD_MainController(self, False), 'Loads an old analysis', None),
+                         'Calc. Abundances':
+                             (lambda: modellingTool(self), 'Calculates relative abundances of an ion list', None),
+                         'Calculate Occupancies':
+                             (lambda: occupancyRecalculator(self), 'Calculates occupancies of a given ion list', None),
+                         'Compare Analysis':
+                             (lambda: spectrumComparator(self), 'Compares the ion lists of multiple spectra', None)},
+                        None)
+        self.createMenu('Top-Down Configurations',
+                        {'Edit Parameters':(self.editTopDownConfig, 'Edit configurations', None),
+                         'Edit Fragments':(lambda: self.editData(FragmentEditorController), 'Edit fragment patterns', None),
+                         'Edit Modifications':
+                             (lambda: self.editData(ModificationEditorController), 'Edit modification/ligand patterns',
+                              None)}, None)
+        self.createMenu('Other Tools', {'Analyse Intact Ions': (lambda: self.editData(IntactIonsSearch),
+                                                 'Starts analysis of spectrum with unfragmented ions', None),
+                         'Edit Intact Ions': (lambda: self.editData(IntactIonsSearch), 'Edit Intact Ions', None),
+                         'Isotope Pattern Tool':
+                             (lambda: IsotopePatternView(self), 'Calculates the isotope pattern of an ion', None)},None)
+        self.createMenu('Edit data',
+                        {'Elements': (lambda: self.editData(ElementEditorController), 'Edit element table', None),
+                         'Molecules': (lambda: self.editData(MoleculeEditorController), 'Edit Molecular Properties', None),
+                         'Sequences': (lambda: self.editData(SequenceEditorController), 'Edit stored sequences', None)},
+                        None)
         self.move(200,200)
         # self.setWindowIcon(QIcon('pic.png'))
         self.home()
@@ -41,34 +68,6 @@ class Window(QMainWindow):
 
 
     def home(self):
-        self.addActionToStatusBar(self.tdMenu, 'Analyse Spectrum',
-                              'Starts analysis of top-down spectrum', lambda:TD_MainController(self, True))
-        self.addActionToStatusBar(self.tdMenu, 'Load Analysis',
-                              'Loads an old analysis', lambda:TD_MainController(self, False))
-        self.addActionToStatusBar(self.tdMenu, 'Calc. Abundances',
-                              'Calculates relative abundances of an ion list', lambda: modellingTool(self))
-        self.addActionToStatusBar(self.tdMenu, 'Calculate Occupancies',
-                              'Calculates occupancies of a given ion list', lambda: occupancyRecalculator(self))
-        self.addActionToStatusBar(self.tdMenu, 'Compare Analysis',
-                              'Compares the ion lists of multiple spectra', lambda: spectrumComparator(self))
-        self.addActionToStatusBar(self.tdEditMenu, 'Edit Parameters',
-                              'Edit configurations',self.editTopDownConfig)
-        self.addActionToStatusBar(self.tdEditMenu, 'Edit Fragments',
-                              'Edit fragment patterns', lambda:self.editData(FragmentEditorController))
-        self.addActionToStatusBar(self.tdEditMenu, 'Edit Modifications',
-                              'Edit modification/ligand patterns',lambda:self.editData(ModificationEditorController))
-        self.addActionToStatusBar(self.esiMenu, 'Analyse Intact Ions',
-                              'Starts analysis of spectrum with unfragmented ions', lambda:self.editData(IntactIonsSearch))
-        self.addActionToStatusBar(self.esiMenu, 'Edit Intact Ions',
-                              'Edit Intact Ions', lambda:self.editData(IntactIonEditorController))
-        self.addActionToStatusBar(self.esiMenu, 'Isotope Pattern Tool',
-                                  'Calculates the isotope pattern of an ion', lambda: IsotopePatternView(self))
-        self.addActionToStatusBar(self.dataEdit, 'Elements','Edit element table ',
-                              lambda:self.editData(ElementEditorController))
-        self.addActionToStatusBar(self.dataEdit, 'Molecules','Edit Molecular Properties',
-                              lambda:self.editData(MoleculeEditorController))
-        self.addActionToStatusBar(self.dataEdit, 'Sequences','Edit stored sequences',
-                              lambda:self.editData(SequenceEditorController))
         xPos = self.createButton('Analyse top-down\nspectrum','Starts analysis of top-down spectrum',40,
                               lambda:TD_MainController(self, True))
         xPos = self.createButton('Analyse spectrum\nof intact molecule', 'Starts analysis of normal intact spectrum',

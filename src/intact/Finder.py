@@ -127,12 +127,13 @@ class Finder(object):
                 errorList = list()
                 print('new Limit',limit)
                 for ion in ionList:
-                    calibratedX = self.fun_parabola(ion.mz, solution[0], solution[1], solution[2])
-                    print(abs(self.calculateError(calibratedX, ion.theoMz)))
-                    if abs(self.calculateError(calibratedX, ion.theoMz)) < limit:
-                        y.append(ion.theoMz)
-                        x.append(ion.mz)
-                        errorList.append(abs(self.calculateError(calibratedX, ion.theoMz)))
+                    calibratedX = self.fun_parabola(ion.getMz(), solution[0], solution[1], solution[2])
+                    theoMz = ion.getTheoMz()
+                    print(abs(self.calculateError(calibratedX, theoMz)))
+                    if abs(self.calculateError(calibratedX, theoMz)) < limit:
+                        y.append(theoMz)
+                        x.append(ion.getMz())
+                        errorList.append(abs(self.calculateError(calibratedX, theoMz)))
                 solution, pcov = curve_fit(self.fun_parabola, np.array(x), np.array(y))
                 limit -= 10
                 if np.average(np.array(errorList)) < 2.5:

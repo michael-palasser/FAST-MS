@@ -212,7 +212,7 @@ class FragmentLibraryBuilder(object):
         #for frag in precursorFragments:
         #    print(frag.getName(),frag.formula.toString())
         self.__fragmentLibrary = forwardFragments + backwardFragments + precursorFragments
-        self.__fragmentLibrary.sort(key=lambda obj:(obj.type , obj.number))
+        self.__fragmentLibrary.sort(key=lambda obj:(obj.getType() , obj.getNumber()))
         #for fragment in self.__fragmentLibrary:
             #print(fragment.getName(), fragment.formula.toString())
 
@@ -232,19 +232,19 @@ class FragmentLibraryBuilder(object):
             criticalLength = 60
         if len(self.__sequence.getSequenceList())<criticalLength: #flag == 0:
             for fragment in self.__fragmentLibrary:
-                fragment.isotopePattern = fragment.formula.calculateIsotopePattern()
+                fragment.setIsotopePattern(fragment.getFormula().calculateIsotopePattern())
                 #if fragment.type in self.radicalDict:
                 #fragment.isotopePattern['mass'] -= fragment.radicals * (E_MASS)
                 print(fragment.getName())
         else:
             p = Pool()
             updatedFragmentLibrary = p.map(self.calculateParallel, self.__fragmentLibrary)
-            self.__fragmentLibrary = sorted(updatedFragmentLibrary, key=lambda obj:(obj.type , obj.number))
+            self.__fragmentLibrary = sorted(updatedFragmentLibrary, key=lambda obj:(obj.getType() , obj.getNumber()))
         return self.__fragmentLibrary
 
 
     def calculateParallel(self, fragment):
-        fragment.isotopePattern = fragment.formula.calculateIsotopePattern()
+        fragment.setIsotopePattern(fragment.getFormula().calculateIsotopePattern())
         #if fragment.type in self.radicalDict:
         #fragment.isotopePattern['mass'] -= fragment.radicals * E_MASS
         print(fragment.getName())

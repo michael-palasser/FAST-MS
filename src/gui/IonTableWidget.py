@@ -98,7 +98,7 @@ class IonTableWidget(QTableWidget):
 
     def getIon(self, row):
         for ion in self._ions:
-            if ion.getName() == self.item(row, 3).text() and ion.charge == int(self.item(row, 1).text()):
+            if ion.getName() == self.item(row, 3).text() and ion.getCharge() == int(self.item(row, 1).text()):
                 return ion
 
 

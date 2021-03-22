@@ -245,7 +245,7 @@ class Ui_configDialog(object):
         self.manualDeletion.setStatusTip(_translate("configDialog", "if overlap-pattern1 contains more ions, user is asked to manually delete ions"))
         self.searchIntensityBox.setTitle(_translate("configDialog", "ion search and modelling"))
         self.outlierLimit.setStatusTip(_translate("configDialog", "ions which have a higher value are highlighted"))
-        self.label_31.setText(_translate("configDialog", "charge tolerance"))
+        self.label_31.setText(_translate("configDialog", "_charge tolerance"))
         self.zTolerance.setStatusTip(_translate("configDialog", "isotope peaks with higher values are not used for intensity modelling"))
         self.label_32.setText(_translate("configDialog", "outlier peak threshold"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_4), _translate("configDialog", "thresholds 2"))

@@ -37,15 +37,15 @@ class SearchService(object):
             self._rep.createSearch(search)
 
     def ionFromDB(self, ion):
-        ion.sequence = ion.sequence.split(',')
-        ion.formula = MolecularFormula(AbstractItem1.stringToFormula2(ion.formula, {}, 1))
+        ion.setSequence(ion.getSequence().split(','))
+        ion.setFormula(MolecularFormula(AbstractItem1.stringToFormula2(ion.getFormula(), {}, 1)))
         return ion
 
     def ionToDB(self, ion):
         #print(ion.getName(), ion.formula)
         processedIon = deepcopy(ion)
-        processedIon.sequence = ','.join(ion.sequence)
-        processedIon.formula = ion.formula.toString()
+        processedIon.setSequence(','.join(ion.getSequence()))
+        processedIon.setFormula(ion.getFormula().toString())
         return processedIon
 
     def deleteSearch(self, name):

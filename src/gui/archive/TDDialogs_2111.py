@@ -110,13 +110,13 @@ class TDStartDialog(AbstractDialog):
         self.gridLayout = QtWidgets.QGridLayout(self.layoutWidget)
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
 
-        self.createLabels(self.layoutWidget, ("sequenceList name", "charge", "modification", "spectral pattern",
+        self.createLabels(self.layoutWidget, ("sequenceList name", "_charge", "modification", "spectral pattern",
                                               "noise threshold (x10^6)", "spray mode", "dissociation"))
         self.createWidget(QtWidgets.QLineEdit(self.layoutWidget),0, "sequName",
                                           "name of sequenceList")
-        self.createWidget(QtWidgets.QSpinBox(self.layoutWidget), 1, "charge",
-                                        "charge of precursor ion")
-        self.widgets['charge'].setValue(2)
+        self.createWidget(QtWidgets.QSpinBox(self.layoutWidget), 1, "_charge",
+                                        "_charge of precursor ion")
+        self.widgets['_charge'].setValue(2)
         self.createWidget(QtWidgets.QLineEdit(self.layoutWidget), 2, "modification","modification of precursor ion")
         self.createWidget(QtWidgets.QLineEdit(self.layoutWidget), 3, "spectralData",
                                               "name of the file with spectral peaks (txt or csv format)")
@@ -417,7 +417,7 @@ class TD_configurationDialog(AbstractDialog):
         self.manualDeletion.setToolTip(_translate("configDialog", "if overlap-pattern1 contains more ions, user is asked to manually delete ions"))
         self.searchIntensityBox.setTitle(_translate("configDialog", "ion search and modelling"))
         self.outlierLimit.setToolTip(_translate("configDialog", "ions which have a higher value are highlighted"))
-        self.label_31.setText(_translate("configDialog", "charge tolerance"))
+        self.label_31.setText(_translate("configDialog", "_charge tolerance"))
         self.zTolerance.setToolTip(_translate("configDialog", "isotope peaks with higher values are not used for intensity modelling"))
         self.label_32.setText(_translate("configDialog", "outlier peak threshold"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.threshold2Tab), _translate("configDialog", "thresholds 2"))

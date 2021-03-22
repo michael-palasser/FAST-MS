@@ -62,8 +62,8 @@ class IsotopePatternService(object):
             fragment = Fragment('-',0,'',MolecularFormula(self.checkFormula(inputString)),[],radicals)
         else:
             fragment = self.getFormula(mode, inputString, args[0], args[1], args[2], args[3], args[4])
-        if fragment.formula != self._formula:
-            self._formula = fragment.formula
+        if fragment.getFormula() != self._formula:
+            self._formula = fragment.getFormula()
             #self._fragment = fragment
             if self._formula.calcIsotopePatternSlowly(1)['m/z'][0]>6000:
                 self._isotopePattern = self._formula.calculateIsotopePattern()
@@ -78,7 +78,7 @@ class IsotopePatternService(object):
             peaks.append((row['m/z'],0,round(row['calcInt']),1))
         peaks = np.array(peaks, dtype=self._peakDtype)
         self._ion = FragmentIon(fragment, np.min(peaks['m/z']), charge, peaks,0)
-        self._ion.quality = 0
+        self._ion.setQuality(0)
         return self._ion, self._neutralMass
 
     def checkFormula(self,formulaString):
@@ -127,5 +127,6 @@ class IsotopePatternService(object):
         peakArr = np.array(peaks, dtype=self._peakDtype)
         if np.all(peakArr['relAb']==0):
             raise UnvalidInputException('All Intensities = 0', '')
-        self._ion.isotopePattern, self._ion.intensity, self._ion.quality =  self._intensityModeller.modelSimply(peakArr)
+        isotopePattern, intensity, quality =  self._intensityModeller.modelSimply(peakArr)
+        self._ion.setIsoIntQual(isotopePattern, intensity, quality)
         return self._ion

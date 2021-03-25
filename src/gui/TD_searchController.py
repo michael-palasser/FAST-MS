@@ -194,6 +194,7 @@ class TD_MainController(object):
         return 0
 
     def setUpUi(self, parent):
+        self._openWindows = []
         self.mainWindow = QtWidgets.QMainWindow(parent)
         self._translate = QtCore.QCoreApplication.translate
         self.mainWindow.setWindowTitle(self._translate(self.mainWindow.objectName(),
@@ -208,7 +209,6 @@ class TD_MainController(object):
         self.tables = []
         for data, name in zip((self._intensityModeller.getObservedIons(), self._intensityModeller.getDeletedIons()),
                                ('Observed Ions', 'Deleted Ions')):
-            print('data', data)
             self.makeTabWidget(data, name)
         self.verticalLayout.addWidget(self.tabWidget)
         self.mainWindow.resize(1000, 900)
@@ -339,9 +339,10 @@ class TD_MainController(object):
             spectrumView = SpectrumView(None, peaks, ajacentIons, np.min(selectedIon.getIsotopePattern()['m/z']),
                                 np.max(selectedIon.getIsotopePattern()['m/z']),
                                         np.max(selectedIon.getIsotopePattern()['relAb']))
+            self._openWindows.append(spectrumView)
         elif action == peakAction:
             #global peakview
-            PeakView(self.mainWindow, selectedIon, self._intensityModeller.remodelSingleIon, self.saveSingleIon)
+            self._openWindows.append(PeakView(self.mainWindow, selectedIon, self._intensityModeller.remodelSingleIon, self.saveSingleIon))
         elif action == copyRowAction:
             df=pd.DataFrame(data=[table.model().getRow(selectedRow)], columns=table.model().getHeaders())
             df.to_clipboard(index=False,header=True)
@@ -396,6 +397,8 @@ class TD_MainController(object):
         self.saved = False
         self._intensityModeller.findOverlaps(1000)
         self.verticalLayout.removeWidget(self.tabWidget)
+        self.tabWidget.hide()
+        del self.tabWidget
         self.tabWidget = QtWidgets.QTabWidget(self.centralwidget)
         self.fillUi()
 
@@ -410,14 +413,7 @@ class TD_MainController(object):
         dlg = ExportDialog(self.mainWindow)
         dlg.exec_()
         if dlg and not dlg.canceled:
-            #if dlg.getFormat() == 'xlsx':
-            """filename = dlg.getFilename()
-            if filename == '':
-                output = self.settings['spectralData'][0:-4] + '_out' + '.xlsx'
-            if filename[-5:]!= 'xlsx':
-                filename+='xlsx'"""
             self._info.export()
-            #self.toExcel(dlg.getDir(),dlg.getFilename())
             outputPath, filename = dlg.getDir(), dlg.getFilename()
             if filename == '':
                 inputFileName = os.path.split(self.settings['spectralData'])[-1]
@@ -447,30 +443,7 @@ class TD_MainController(object):
                                         'reload the analysis.', QtWidgets.QMessageBox.Ok, self.mainWindow, )
                 if dlg.exec_() and dlg == QtWidgets.QMessageBox.Ok:
                     return
-            #else:
-            #    self.dumb()
 
-
-    '''def toExcel(self, outputPath, filename): #ToDo
-        """output"""
-        if filename == '':
-            inputFileName = os.path.split(self.settings['spectralData'])[-1]
-            filename = inputFileName[0:-4] + '_out' + '.xlsx'
-        elif filename[-5:] != '.xlsx':
-            filename += '.xlsx'
-        if outputPath == '':
-            outputPath = os.path.join(path, 'Spectral_data','top-down')
-        output = os.path.join(outputPath, filename)
-        excelWriter = ExcelWriter(output, self.configs)
-        self._analyser.setIons(list(self._intensityModeller.getObservedIons().values()))
-        excelWriter.toExcel(self._analyser, self._intensityModeller, self._propStorage,
-                            self.libraryBuilder.getFragmentLibrary(), self.settings, self.spectrumHandler,
-                            self._info.toString())
-        print("********** saved in:", output, "**********\n")
-        try:
-            subprocess.call(['open',output])
-        except:
-            pass'''
 
     def close(self):
         message = ''
@@ -480,21 +453,23 @@ class TD_MainController(object):
                                                 message + "Do you really want to close the search?",
                                                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
         if choice == QtWidgets.QMessageBox.Yes:
+            [w.close() for w in self._openWindows]
             self.mainWindow.close()
             self._infoView.close()
 
     def showRemodelledIons(self):
-        self._remView = QtWidgets.QWidget()
+        remView = QtWidgets.QWidget()
         #title = 'Original Values of Overlapping Ions'
-        self._remView._translate = QtCore.QCoreApplication.translate
-        self._remView.setWindowTitle(self._translate(self._remView.objectName(), 'Original Values of Overlapping Ions'))
+        remView._translate = QtCore.QCoreApplication.translate
+        remView.setWindowTitle(self._translate(remView.objectName(), 'Original Values of Overlapping Ions'))
         ions = self._intensityModeller.getRemodelledIons()
-        verticalLayout = QtWidgets.QVBoxLayout(self._remView)
-        scrollArea, table = self.makeScrollArea(self._remView, [ion.getMoreValues() for ion in ions], self.showRedOptions)
+        verticalLayout = QtWidgets.QVBoxLayout(remView)
+        scrollArea, table = self.makeScrollArea(remView, [ion.getMoreValues() for ion in ions], self.showRedOptions)
         table.customContextMenuRequested['QPoint'].connect(partial(self.showRedOptions, table))
         verticalLayout.addWidget(scrollArea)
-        self._remView.resize(1000, 750)
-        self._remView.show()
+        remView.resize(1000, 750)
+        self._openWindows.append(remView)
+        remView.show()
 
     def showRedOptions(self, table, pos):
         menu = QtWidgets.QMenu()
@@ -516,9 +491,10 @@ class TD_MainController(object):
             peaks = self.spectrumHandler.getSpectrum(minLimit-1, maxLimit+1)
             view = SpectrumView(None, peaks, [selectedIon]+ajacentIons, np.min(selectedIon.getIsotopePattern()['m/z']),
                                 np.max(selectedIon.getIsotopePattern()['m/z']), np.max(selectedIon.getIsotopePattern()['relAb']))
+            self._openWindows.append(view)
         elif action == peakAction:
             #PeakView(self.mainWindow, selectedIon, self._intensityModeller.remodelSingleIon, self.saveSingleIon)
-            SimplePeakView(self.mainWindow, selectedIon)
+            self._openWindows.append(SimplePeakView(self.mainWindow, selectedIon))
         elif action == copyRowAction:
             df=pd.DataFrame(data=[table.model().getRow(selectedRow)], columns=table.model().getHeaders())
             df.to_clipboard(index=False,header=True)
@@ -544,8 +520,9 @@ class TD_MainController(object):
         backwardVals = self._propStorage.filterByDir(percentageDict,-1)
         plotFactory.showOccupancyPlot(self._propStorage.getSequenceList(), forwardVals, backwardVals,
                                       self.settings['nrMod'])
-        self.occupView = PlotTableView(self._analyser.toTable(forwardVals.values(), backwardVals.values()),
+        occupView = PlotTableView(self._analyser.toTable(forwardVals.values(), backwardVals.values()),
                                        list(percentageDict.keys()), 'Occupancies', 3)
+        self._openWindows.append(occupView)
 
 
     def showChargeDistrPlot(self, reduced):
@@ -559,8 +536,9 @@ class TD_MainController(object):
         backwardLimits = self._propStorage.filterByDir(minMaxCharges,-1)
         plotFactory1.showChargePlot(self._propStorage.getSequenceList(), forwardVals, backwardVals,
                                     self.settings['charge'], forwardLimits, backwardLimits)
-        self.chargeView = PlotTableView(self._analyser.toTable(forwardVals.values(), backwardVals.values()),
+        chargeView = PlotTableView(self._analyser.toTable(forwardVals.values(), backwardVals.values()),
                                        list(chargeDict.keys()), 'Av. Charge per Fragment', 1)
+        self._openWindows.append(chargeView)
         '''plotFactory2.showChargePlot(self.libraryBuilder.getSequenceList(),
                                       self.libraryBuilder.filterByDir(redChargeDict,1),
                                       self.libraryBuilder.filterByDir(redChargeDict,-1),self.settings['charge'])'''

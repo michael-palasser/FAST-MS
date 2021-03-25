@@ -153,13 +153,13 @@ class ExcelWriter(BasicExcelWriter):
                                analyser.calculatePercentages(self.configs['interestingIons'], properties.getUnimportantModifs()),
                                properties.getFragmentsByDir(1), properties.getFragmentsByDir(-1))
             #self.analyser.createPlot(__maxMod)
+            observedIons = self.sortByName(intensityModeller.getObservedIons().values())
+            deletedIons = self.sortByName(intensityModeller.getDeletedIons().values())
             precursorRegion = intensityModeller.getPrecRegion(settings['sequName'], abs(settings['charge']))
-            self.writeIons(self.worksheet2, intensityModeller.getObservedIons().values(),
-                                  precursorRegion)
-            self.writePeaks(self.worksheet3, 0, 0, intensityModeller.getObservedIons().values())
-            row = self.writeIons(self.worksheet4, self.sortByName(intensityModeller.getDeletedIons().values()),
-                                 precursorRegion)
-            self.writePeaks(self.worksheet4, row + 3, 0, self.sortByName(intensityModeller.getDeletedIons().values()))
+            self.writeIons(self.worksheet2, observedIons,precursorRegion)
+            self.writePeaks(self.worksheet3, 0, 0, observedIons)
+            row = self.writeIons(self.worksheet4, deletedIons,precursorRegion)
+            self.writePeaks(self.worksheet4, row + 3, 0, deletedIons)
             self.writeIons(self.worksheet5, self.sortByName(intensityModeller.getRemodelledIons()), precursorRegion)
             self.writeSumFormulas(fragmentLibrary, spectrumHandler.searchedChargeStates)
             self.writeInfos(infoString)

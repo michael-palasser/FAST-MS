@@ -106,9 +106,9 @@ class TD_configurationDialog(DialogWithTabs):
                                                  "set it lower to search for more isotope peaks")})
         #self.searchIntensityBox = QtWidgets.QGroupBox(self.threshold2Tab)
         self.searchIntensityBox = self.fillBox(self.threshold2Tab, "ion search and modelling",
-                            ("_charge tolerance", "outlier peak threshold"),
+                            ("charge tolerance", "outlier peak threshold"),
                             {"zTolerance": (QtWidgets.QDoubleSpinBox(),
-                              "ions with _charge states between the calculated _charge +/- threshold are searched for"),
+                              "ions with charge states between the calculated charge +/- threshold are searched for"),
                              "outlierLimit": (QtWidgets.QDoubleSpinBox(),
                               "isotope peaks with higher values are not used for intensity modelling")})
         #self.remodellingBox = QtWidgets.QGroupBox(self.threshold2Tab)

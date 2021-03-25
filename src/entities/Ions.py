@@ -110,9 +110,9 @@ class FragmentIon(Fragment):
         return self._charge
 
     def getIntensity(self):
-        return round(self._intensity)
+        return self._intensity
     def setIntensity(self, intensity):
-        self._intensity =intensity
+        self._intensity = int(round(intensity))
 
     def getError(self):
         return self._error
@@ -141,7 +141,7 @@ class FragmentIon(Fragment):
     def getComment(self):
         return self._comment
     def addComment(self, comment):
-        self._comment += ',' + comment
+        self._comment += comment + ','
 
     def setRemaining(self, intensity, error, quality, comment):
         '''
@@ -152,14 +152,14 @@ class FragmentIon(Fragment):
         :param (str) comment:
         :return: None
         '''
-        self._intensity = intensity
+        self._intensity = int(intensity)
         self._error = error
         self.setQuality(quality)
         self._comment = comment
 
     def setIsoIntQual(self, isotopePattern, intensity, quality):
         self._isotopePattern = isotopePattern
-        self._intensity = intensity
+        self._intensity = int(round(intensity))
         self._quality = quality
 
     def toString(self):

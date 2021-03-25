@@ -126,7 +126,6 @@ class IsoPatternIon(IonTableWidget):
                         formatString = '{:' + lg10 + 'd}'
                     newItem.setData(QtCore.Qt.DisplayRole, formatString.format(item))
                 else:
-                    print(j, item,  formats[j])
                     newItem.setData(QtCore.Qt.DisplayRole, formats[j].format(item))
                     newItem.setFlags(QtCore.Qt.ItemIsEnabled)
             self.setItem(row, j, newItem)

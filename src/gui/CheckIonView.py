@@ -204,7 +204,6 @@ class CheckOverlapsView(AbstractIonView):
     def accept(self):
         for table in self._tables:
             self._dumpList += table.getDumpList()
-        print(self._dumpList)
         super(CheckOverlapsView, self).accept()
 
 
@@ -256,7 +255,6 @@ class CheckMonoisotopicOverlapView(AbstractIonView):
             for ion in pattern.values():
                 if ion not in ionsToKeep:
                     self._dumpList.append(ion)
-        print(self._dumpList)
         super(CheckMonoisotopicOverlapView, self).accept()
 
 

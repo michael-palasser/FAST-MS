@@ -100,7 +100,7 @@ class IntensityModeller(object):
                     solution, intensity, gValue, outliers = self.modelDistribution(isoPattern['relAb'][noOutliers],
                                                                                    isoPattern['calcInt'][noOutliers],
                                                                                    isoPattern['m/z'][noOutliers])
-                    correctedIon.setIntensity(intensity)
+                    correctedIon.setIntensity(np.sum(isoPattern['calcInt'] * solution.x))
                     #isoPattern['calcInt'] = correctedIon.getIsotopePattern()['calcInt'] * solution.x
                     correctedIon.setIsotopePatternPart('calcInt',correctedIon.getIsotopePattern()['calcInt']*solution.x)
             correctedIon.setQuality(solution.fun**(0.5) / correctedIon.getIntensity())
@@ -119,7 +119,7 @@ class IntensityModeller(object):
         solution, intensity, gValue, outliers = \
             self.modelDistribution(ion.getIsotopePattern()['relAb'][noOutliers], ion.getIsotopePattern()['calcInt'][noOutliers],
                                    ion.getIsotopePattern()['m/z'][noOutliers])
-        ion.setIntensity(intensity)
+        ion.setIntensity(np.sum(ion.getIsotopePattern()['calcInt'] * solution.x))
         #ion.isotopePattern['calcInt'] = ion.isotopePattern['calcInt'] * solution.x
         ion.setIsotopePatternPart('calcInt',ion.getIsotopePattern()['calcInt']*solution.x)
         if ion.getIntensity() != 0:
@@ -224,7 +224,7 @@ class IntensityModeller(object):
                 for ion2 in pattern:
                     if ion2 != ion1:
                         comment += (str(ion2[0]) +"_"+ str(ion2[1]) + ",")
-                self._correctedIons[ion1].addComment(comment[:-1] + "],")
+                self._correctedIons[ion1].addComment(comment[:-1] + "]")
 
 
     """for remodelling"""

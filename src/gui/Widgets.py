@@ -18,6 +18,7 @@ class OpenFileWidget(QtWidgets.QWidget):
         self.pushButton.setIcon(QtGui.QIcon('open.png'))
         self.pushButton.setIconSize(QtCore.QSize(26,26))
         self.pushButton.setMaximumSize(26,26)
+        #self.pushButton.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum))
         #self.pushButton.setGeometry(QtCore.QRect(250, yPos, 26, 26))
         #_translate = QtCore.QCoreApplication.translate
         #self.pushButton.setText(_translate(self.objectName(), "O"))

@@ -19,16 +19,19 @@ class IsotopePatternReader(object):
         return self.__file
 
     def findFile(self, settings):
-        sequName, fragmentation, nrMod, modifications = settings[0], settings[1], settings[2], settings[3],
-        if modifications == "" or nrMod == "0":
-            self.__file = os.path.join(path, 'Fragment_lists', '_'.join((sequName, fragmentation) + '.csv'))
+        if len(settings) == 1:
+            file = settings[0]
+            if not file[-4:] == '.csv':
+                file += '.csv'
+            self.__file = os.path.join(path, 'Fragment_lists',file)
         else:
-            self.__file = os.path.join(path, 'Fragment_lists', '_'.join((sequName, fragmentation, str(nrMod), modifications +
-                                                                      '.csv')))
-        if os.path.isfile(self.__file):
-            return True
-        else:
-            return False
+            sequName, fragmentation, nrMod, modifications = settings[0], settings[1], settings[2], settings[3],
+            if modifications == "-" or nrMod == "0":
+                self.__file = os.path.join(path, 'Fragment_lists', '_'.join((sequName, fragmentation + '.csv')))
+            else:
+                self.__file = os.path.join(path, 'Fragment_lists', '_'.join((sequName, fragmentation, str(nrMod),
+                                                                             modifications+'.csv')))
+        return os.path.isfile(self.__file)
 
 
     def addIsotopePatternFromFile(self, fragmentLibrary):
@@ -64,15 +67,17 @@ class IsotopePatternReader(object):
             if i < 1:
                 raise UnvalidIsotopePatternException("", "no data in file")
             isotopePatternDict[name] = np.array(isotopePattern, dtype=[('m/z',np.float64),('calcInt', np.float64)])
+        print('Checking correctness of fragment library')
         for fragment in fragmentLibrary:
             if fragment.getName() not in isotopePatternDict:
                 raise UnvalidIsotopePatternException(fragment.getName(),"not found in file")
             self.checkEquality(fragment, isotopePatternDict[fragment.getName()])
-            fragment.isotopePattern = isotopePatternDict[fragment.getName()]
+            fragment.setIsotopePattern(isotopePatternDict[fragment.getName()])
+        print('done')
         return fragmentLibrary
 
     def checkEquality(self, fragment, savedPattern):
-        newPattern = fragment.formula.calcIsotopePatternSlowly(2)
+        newPattern = fragment.getFormula().calcIsotopePatternSlowly(2)
         for i in range(2):
             if newPattern[i]['m/z'] - savedPattern[i]['m/z'] > 10 ** (-6):
                 raise UnvalidIsotopePatternException(fragment.getName(), "mass incorrect " +
@@ -97,7 +102,7 @@ class IsotopePatternReader(object):
             f_writer.writeheader()
             for fragment in fragmentLibrary:
                 counter = 0  # for new rows
-                for isotope in fragment.isotopePattern:
+                for isotope in fragment.getIsotopePattern():
                     if counter == 0:
                         #if M_max < isotope[0]:
                             #M_max = isotope[0]

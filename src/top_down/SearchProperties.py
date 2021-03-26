@@ -40,21 +40,20 @@ class PropertyStorage(object):
         '''
         chargedModifications = dict()
         for modification in self.__modifPattern.getItems():
-            if modification.getZEffect() != 0:
+            if modification.getZEffect() != 0 and modification.getZEffect() != '-':
                 chargedModifications[modification.getName()] = modification.getZEffect()
-
         return chargedModifications
 
-    def getImportantModifications(self):
+    def getUnimportantModifs(self):
         '''
         Finds and returns modifications where the occupancy should be calculated
         :return: dict of chargedModifications (modification:charge)
         '''
-        importantModifications = []
+        unimportantModifications = []
         for modification in self.__modifPattern.getItems():
-            if modification.getCalcOccupancy() == True:
-                importantModifications.append(modification.getName())
-        return importantModifications
+            if not modification.getCalcOccupancy():
+                unimportantModifications.append(modification.getName())
+        return unimportantModifications
 
     def getFragItemDict(self):
         fragItemDict = dict()

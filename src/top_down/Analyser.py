@@ -27,11 +27,11 @@ class Analyser(object):
         """for type in fragmentList:
             relAbundanceOfSpecies[type] = 0"""
         for ion in self._ions:
-            if (ion.score < 5) or (ion.quality<0.3) or (ion.number == 0):
-                if ion.type not in relAbundanceOfSpecies.keys():
-                    relAbundanceOfSpecies[ion.type] = ion.getRelAbundance()
+            if (ion.getScore() < 5) or (ion.getQuality()<0.3) or (ion.getNumber() == 0):
+                if ion.getType() not in relAbundanceOfSpecies.keys():
+                    relAbundanceOfSpecies[ion.getType()] = ion.getRelAbundance()
                 else:
-                    relAbundanceOfSpecies[ion.type] += ion.getRelAbundance()
+                    relAbundanceOfSpecies[ion.getType()] += ion.getRelAbundance()
                 totalSum += ion.getRelAbundance()
         for species in relAbundanceOfSpecies:
             relAbundanceOfSpecies[species] /= totalSum
@@ -43,37 +43,39 @@ class Analyser(object):
         modifiedSum = 0
         totalSum = 0
         for ion in self._ions:
-            if (ion.number==0): #(ion.charge == self._precCharge) and
+            if (ion.getNumber()==0): #(ion._charge == self._precCharge) and
                 if self._modification in ion.getModification():
                     modifiedSum += ion.getRelAbundance()
                 totalSum += ion.getRelAbundance()
         return 1 - modifiedSum / totalSum
 
 
-    def calculatePercentages(self, interestingIons):
+    def calculatePercentages(self, interestingIons, *args):
         if self._modification == "":
             return None
         temp = dict()
         for ion in self._ions:
-            if ion.type in interestingIons:
-                if ion.type not in temp.keys():
-                    temp[ion.type] = np.zeros((len(self._sequence), 3))
+            if ion.getType() in interestingIons:
+                if args:
+                    if len([mod for mod in args[0] if mod in ion.getModification()])>0:
+                        print('not', ion.getName())
+                        continue
+                if ion.getType() not in temp.keys():
+                    temp[ion.getType()] = np.zeros((len(self._sequence), 3))
                 if self._modification in ion.getModification():
-                    temp[ion.type][ion.number - 1] += \
+                    temp[ion.getType()][ion.getNumber() - 1] += \
                         np.array([ion.getRelAbundance(),
                                   ion.getRelAbundance() * int(self.getNrOfModifications(ion.getModification())), 0])
+                    print('\t', ion.getName(), ion.getRelAbundance()*int(self.getNrOfModifications(ion.getModification())), 'mod')
                 else:
-                    temp[ion.type][ion.number - 1] += \
+                    temp[ion.getType()][ion.getNumber() - 1] += \
                         np.array([ion.getRelAbundance(),0,0])
+                    print('\t', ion.getName(), ion.getRelAbundance())
+        for key,vals in temp.items():
+            print('sequ.\t',key+'_free\t', key+'+'+self._modification)
+            [print(str(i+1), '\t',val[0]-val[1], '\t', val[1]) for i,val in enumerate(vals)]
         return self.calculateProportions(temp)#dict()
-        '''for key,arr in temp.items():
-            for row in arr:
-                if row[0]!=0:
-                    row[2] = row[1]/row[0]
-                else:
-                    row[2] = None
-            percentageDict[key] = arr[:, 2]
-        return percentageDict'''
+
 
     def getNrOfModifications(self, modificationString):
         nrOfModif = 1
@@ -99,18 +101,19 @@ class Analyser(object):
         #redTemp = dict()
         chargeDict = dict()
         for ion in self._ions:
-            if ion.type in interestingIons:
-                if ion.type not in temp.keys():
-                    temp[ion.type] = np.zeros((len(self._sequence), 3))
+            if ion.getType() in interestingIons:
+                if ion.getType() not in temp.keys():
+                    temp[ion.getType()] = np.zeros((len(self._sequence), 3))
                     #chargeDict[ion.type] = len(self._sequence)*[[]]
-                    chargeDict[ion.type] = [[] for i in range(len(self._sequence))]
+                    chargeDict[ion.getType()] = [[] for i in range(len(self._sequence))]
                     #redTemp[ion.type] = np.zeros((len(self._sequence), 3))
-                chargeDict[ion.type][ion.number - 1].append(ion.charge)
+                charge = ion.getCharge()
+                chargeDict[ion.getType()][ion.getNumber() - 1].append(charge)
                 if reduced:
-                    temp[ion.type][ion.number - 1] += \
-                                        np.array([ion.getRelAbundance(),ion.getRelAbundance() * ion.charge, 0])
+                    temp[ion.getType()][ion.getNumber() - 1] += \
+                                        np.array([ion.getRelAbundance(),ion.getRelAbundance() * charge, 0])
                 else:
-                    temp[ion.type][ion.number - 1] += np.array([ion.intensity, ion.intensity * ion.charge, 0])
+                    temp[ion.getType()][ion.getNumber() - 1] += np.array([ion.getIntensity(), ion.getIntensity() * charge, 0])
         avCharges = self.calculateProportions(temp)
         minMaxChargeDict = dict()
         for key,vals in chargeDict.items():

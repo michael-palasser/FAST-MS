@@ -5,9 +5,9 @@ class AbstractMainWindow(QtWidgets.QMainWindow):
     def __init__(self, parent, title):
         super(AbstractMainWindow, self).__init__(parent)
         self._translate = QtCore.QCoreApplication.translate
-        self.mainWindow.setWindowTitle(self._translate(self.objectName(), title))
-        self.centralwidget = QtWidgets.QWidget(self.mainWindow)
-        self.mainWindow.setCentralWidget(self.centralwidget)
+        self.setWindowTitle(self._translate(self.objectName(), title))
+        self.centralwidget = QtWidgets.QWidget(self)
+        self.setCentralWidget(self.centralwidget)
 
     def updateComboBox(self, comboBox, newOptions):
         toAdjust = comboBox.count() - len(newOptions)
@@ -26,3 +26,32 @@ class AbstractMainWindow(QtWidgets.QMainWindow):
         #self._defaultButton.setMinimumSize(QtCore.QSize(113, 0))
         button.setText(self._translate(self.objectName(), name))
         button.clicked.connect(fun)
+
+    def createMenuBar(self):
+        self.menubar = QtWidgets.QMenuBar(self)
+        self.setMenuBar(self.menubar)
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 340, 22))
+        #self.fileMenu, self.fileMenuActions = self.createMenu("File", options, 3)
+
+
+    def createMenu(self, name, options, separatorPosition):
+        menu = QtWidgets.QMenu(self.menubar)
+        menu.setTitle(self._translate(self.objectName(), name))
+        menuActions = dict()
+        pos = len(options)
+        for option, vals in options.items():
+            function, tooltip, shortcut = vals
+            if separatorPosition != None and pos == separatorPosition:
+                menu.addSeparator()
+            action = QtWidgets.QAction(self)
+            action.setText(self._translate(self.objectName(),option))
+            if tooltip != None:
+                action.setToolTip(tooltip)
+            if shortcut != None:
+                action.setShortcut(shortcut)
+            action.triggered.connect(function)
+            menuActions[option] = action
+            menu.addAction(action)
+            pos -= 1
+        self.menubar.addAction(menu.menuAction())
+        return menu, menuActions

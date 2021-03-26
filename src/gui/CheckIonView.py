@@ -81,7 +81,7 @@ class AbstractIonView(QtWidgets.QDialog):
 
     @staticmethod
     def hash(ion):
-        return (ion.getName(),ion.charge)
+        return ion.getHash()
 
     def setUpUi(self, title):
         self.verticalLayout = QtWidgets.QVBoxLayout(self)
@@ -168,9 +168,10 @@ class AbstractIonView(QtWidgets.QDialog):
         maxLimit = 0
         YLimit = 0
         for ion in ions:
-            minMz = np.min(ion.isotopePattern['m/z'])
-            maxMz = np.max(ion.isotopePattern['m/z'])
-            maxY = np.max(ion.isotopePattern['relAb'])
+            isoPattern = ion.getIsotopePattern()
+            minMz = np.min(isoPattern['m/z'])
+            maxMz = np.max(isoPattern['m/z'])
+            maxY = np.max(isoPattern['relAb'])
             if minLimit > minMz:
                 minLimit = minMz
             if maxLimit < maxMz:
@@ -203,7 +204,6 @@ class CheckOverlapsView(AbstractIonView):
     def accept(self):
         for table in self._tables:
             self._dumpList += table.getDumpList()
-        print(self._dumpList)
         super(CheckOverlapsView, self).accept()
 
 
@@ -232,7 +232,7 @@ class CheckMonoisotopicOverlapView(AbstractIonView):
     def makeComboBox(self, pattern, yPos):
         options = []
         for ion in pattern:
-            key = ion.getName()+",    " + str(ion.charge)
+            key = ion.getName()+",    " + str(ion.getCharge())
             options.append(key)
             self.optionDict[key] = ion
         comboBox = QtWidgets.QComboBox(self.contents)
@@ -255,7 +255,6 @@ class CheckMonoisotopicOverlapView(AbstractIonView):
             for ion in pattern.values():
                 if ion not in ionsToKeep:
                     self._dumpList.append(ion)
-        print(self._dumpList)
         super(CheckMonoisotopicOverlapView, self).accept()
 
 

@@ -46,7 +46,7 @@ class TDStartDialog(StartDialog):
         self.widgets['noiseLimit'].setMinimum(0.01)
         self.widgets['modifications'].currentTextChanged.connect(self.changeNrOfMods)
         #self.buttonBox.setGeometry(QtCore.QRect(210, yPos+20, 164, 32))
-        #self.widgets['charge'].setValue(2)
+        #self.widgets['_charge'].setValue(2)
         if self.configHandler.getAll() != None:
             try:
                 self.widgets["fragmentation"].setCurrentText(self.configHandler.get('fragmentation'))

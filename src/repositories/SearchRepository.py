@@ -115,7 +115,7 @@ class SearchRepository(AbstractRepository):
         self.insertItems(searchId, search.getIons(), 0)
         self.insertItems(searchId, search.getDeletedIons(), 1)
         self.insertItems(searchId, search.getIons(), 2)
-        self.createItem('logs', (search.getLogFile().toString(),searchId))
+        self.createItem('logs', (search.getInfo().toString(), searchId))
         [self.createItem('chargeStates', [frag,zList, searchId]) for frag,zList in search.getSearchedZStates().items()]
 
     """def create(self, vals):
@@ -155,10 +155,11 @@ class SearchRepository(AbstractRepository):
     def updateSearch(self, search):
         searchId = self.get('name', search.getName())[0]
         self.update(search.getVals() + [searchId])
-        self.deleteIons(searchId)
+        self.deleteDependentTables(searchId)
         self.insertItems(searchId, search.getIons(), 0)
         self.insertItems(searchId, search.getDeletedIons(), 1)
         self.insertItems(searchId, search.getIons(), 2)
+        self.createItem('logs', (search.getInfo().toString(), searchId))
 
     '''def update(self, vals): #ToDo
         """
@@ -173,13 +174,14 @@ class SearchRepository(AbstractRepository):
         self._conn.commit()'''
 
 
-    def deleteIons(self, searchId):
+    def deleteDependentTables(self, searchId):
         cur = self._conn.cursor()
         for ion in self.getItems(searchId, 'ions'):
             cur.execute("DELETE FROM peaks WHERE parentId=?", (ion[0],))
         cur.execute("DELETE FROM ions WHERE parentId=?", (searchId,))
+        cur.execute("DELETE FROM logs WHERE parentId=?", (searchId,))
         self._conn.commit()
 
     def delete(self, searchName):
         #id = super(AbstractRepositoryWith2Items, self).delete(name)
-        self.deleteIons(super(SearchRepository, self).delete(searchName))
+        self.deleteDependentTables(super(SearchRepository, self).delete(searchName))

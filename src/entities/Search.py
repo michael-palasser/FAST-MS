@@ -1,7 +1,7 @@
 
 class Search(object):
-    #def __init__(self, name, date, sequName, charge, fragmentation, nrMod, spectralData, noise, lib, ions, id):
-    def __init__(self, vals, ions, deletedIons, remIons, searchedZStates, logFile):
+    #def __init__(self, name, date, sequName, _charge, fragmentation, nrMod, spectralData, noise, lib, ions, id):
+    def __init__(self, vals, ions, deletedIons, remIons, searchedZStates, info):
         self._name = vals[1]
         self._date = vals[2]
         self._sequName = vals[3]
@@ -16,7 +16,7 @@ class Search(object):
         self._deletedIons = deletedIons
         self._remIons = remIons
         self._searchedZStates = searchedZStates
-        self._logFile = logFile
+        self._info = info
         print(self.getVals())
         print(self.getSettings())
 
@@ -42,8 +42,8 @@ class Search(object):
     def getSearchedZStates(self):
         return self._searchedZStates
 
-    def getLogFile(self):
-        return self._logFile
+    def getInfo(self):
+        return self._info
 
     def getSettings(self):
         return {'sequName': self._sequName, 'charge': self._charge, 'fragmentation': self._fragmentation,

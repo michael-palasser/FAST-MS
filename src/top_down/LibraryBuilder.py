@@ -35,6 +35,7 @@ class FragmentLibraryBuilder(object):
         self.__modifPattern = properties.getModification()
         self.__maxMod = maxMod
         self.__fragmentLibrary = list()
+        #self.__importantModifications = set()
         self.__precursor = None
 
 
@@ -78,18 +79,18 @@ class FragmentLibraryBuilder(object):
         return (residue == '') or (residue == '-') or (residue in sequence)
 
 
-    def checkForProlines(self, type, sequ, basicLadder):
+    def checkForProlines(self, type, sequ, nextBB):
         '''
         No c- and z-fragments after a proline in sequenceList. Function checks if last amino acid is proline.
         :param type: fragment type of fragment
         :param sequ: sequenceList of fragment
-        :param basicLadder: fragment ladder of a basic fragment type (see function buildSimpleLadder)
+        :param nextBB: next building block in sequence
         :return: 1 for c- or z-fragments of proteins if last amino acid in sequenceList is a proline, else: 0
         '''
         if self.__sequence.getMolecule() == 'Protein':
-            if type == 'c' and sequ[-1] == 'P':  # ToDo: Hydroxyproline etc.
+            if type == 'c' and nextBB == 'P':  # ToDo: Hydroxyproline etc.
                 return 1
-            elif type == 'z' and basicLadder[len(sequ)][0][-1] == 'P':
+            elif type == 'z' and sequ[-1]  == 'P':
                 return 1
         return 0
 
@@ -102,18 +103,19 @@ class FragmentLibraryBuilder(object):
         :return: ladder (list of Fragments)
         '''
         ladder = list()
+        sequLength = len(self.__sequence.getSequenceList())
         for link in basicLadder:
             #precursor ion handled later
             linkSequ = link[0]
             linkFormula = link[1]
-            if len(linkSequ) == len(self.__sequence.getSequenceList()):
+            if len(linkSequ) == sequLength:
                 continue
             for template in fragTemplates:
                 #templateName = template.getName()
                 species, rest = self.processTemplateName(template.getName())
                 templateRadicals = template.getRadicals()
                 #if self.checkForProlines(templateName[0],linkSequ, basicLadder):
-                if self.checkForProlines(species,linkSequ, basicLadder):
+                if self.checkForProlines(species,linkSequ, basicLadder[len(linkSequ)][0][-1]):
                     continue
                 formula = linkFormula.addFormula(template.getFormula())
                 if self.checkForResidue(template.getResidue(), linkSequ):
@@ -133,6 +135,8 @@ class FragmentLibraryBuilder(object):
                                                 modifName = modifName[0]+str(nrMod)+modifName[1:]
                                             newFragment = Fragment(species,len(linkSequ),modifName+rest,
                                                            formula, linkSequ, templateRadicals+modif.getRadicals())
+                                            '''if modif.getCalcOccupancy():
+                                                self.__importantModifications.add(modifName+rest)'''
                                             ladder.append(newFragment)
         return ladder
 
@@ -202,14 +206,13 @@ class FragmentLibraryBuilder(object):
                 print(elem)
         sequence = self.__sequence.getSequenceList()
         forwardFragments = self.createFragmentLadder(self.buildSimpleLadder(sequence), self.__fragmentation.getFragTemplates(1))
-        print('hey')
         SimpleLadderBack = self.buildSimpleLadder(sequence[::-1])
         backwardFragments = self.createFragmentLadder(SimpleLadderBack, self.__fragmentation.getFragTemplates(-1))
         precursorFragments = self.addPrecursor(SimpleLadderBack[len(sequence) - 1][1])
         #for frag in precursorFragments:
         #    print(frag.getName(),frag.formula.toString())
         self.__fragmentLibrary = forwardFragments + backwardFragments + precursorFragments
-        self.__fragmentLibrary.sort(key=lambda obj:(obj.type , obj.number))
+        self.__fragmentLibrary.sort(key=lambda obj:(obj.getType() , obj.getNumber()))
         #for fragment in self.__fragmentLibrary:
             #print(fragment.getName(), fragment.formula.toString())
 
@@ -229,19 +232,19 @@ class FragmentLibraryBuilder(object):
             criticalLength = 60
         if len(self.__sequence.getSequenceList())<criticalLength: #flag == 0:
             for fragment in self.__fragmentLibrary:
-                fragment.isotopePattern = fragment.formula.calculateIsotopePattern()
+                fragment.setIsotopePattern(fragment.getFormula().calculateIsotopePattern())
                 #if fragment.type in self.radicalDict:
                 #fragment.isotopePattern['mass'] -= fragment.radicals * (E_MASS)
                 print(fragment.getName())
         else:
             p = Pool()
             updatedFragmentLibrary = p.map(self.calculateParallel, self.__fragmentLibrary)
-            self.__fragmentLibrary = sorted(updatedFragmentLibrary, key=lambda obj:(obj.type , obj.number))
+            self.__fragmentLibrary = sorted(updatedFragmentLibrary, key=lambda obj:(obj.getType() , obj.getNumber()))
         return self.__fragmentLibrary
 
 
     def calculateParallel(self, fragment):
-        fragment.isotopePattern = fragment.formula.calculateIsotopePattern()
+        fragment.setIsotopePattern(fragment.getFormula().calculateIsotopePattern())
         #if fragment.type in self.radicalDict:
         #fragment.isotopePattern['mass'] -= fragment.radicals * E_MASS
         print(fragment.getName())
@@ -260,7 +263,7 @@ class FragmentLibraryBuilder(object):
         return chargedModifications
 
     
-    def getImportantModifications(self):
+    def getUnimportantModifs(self):
         '''
         Finds and returns modifications where the occupancy should be calculated
         :return: dict of chargedModifications (modification:charge)

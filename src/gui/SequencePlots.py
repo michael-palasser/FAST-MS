@@ -70,7 +70,7 @@ class PlotFactory(object):
 
     def formatForCharges(self):
         self.p.setWindowTitle('Charge Distribution')
-        yLabel = 'average charge '
+        yLabel = 'average _charge '
         styles = {"black": "#f00", "font-size": "18px"}
         self.p.setLabel('left', yLabel+','.join(self._forwardVals.keys()), **styles)
         self.p.setLabel('right', yLabel+','.join(self._backwardVals.keys()), **styles)

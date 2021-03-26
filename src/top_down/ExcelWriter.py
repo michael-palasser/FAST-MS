@@ -139,37 +139,37 @@ class ExcelWriter(BasicExcelWriter):
         self.worksheet4 = self.workbook.add_worksheet('deleted ions')
         self.worksheet5 = self.workbook.add_worksheet('ions before remodelling')
         self.worksheet6 = self.workbook.add_worksheet('molecular formulas')
-        self.worksheet7 = self.workbook.add_worksheet('log')
+        self.worksheet7 = self.workbook.add_worksheet('info')
         self.format2digit = self.workbook.add_format({'num_format': '0.00'})
         self.format5digit = self.workbook.add_format({'num_format': '0.00000'})
 
-    def toExcel(self, analyser, intensityModeller, properties, fragmentLibrary, settings, spectrumHandler, logString):
+    def toExcel(self, analyser, intensityModeller, properties, fragmentLibrary, settings, spectrumHandler, infoString):
         try: #Todo: to ExcelWriter
             #percentages = list()
             self.writeAnalysis({"spectral file:": settings['spectralData'], 'max. m/z:':spectrumHandler.getUpperBound()},
-                                      analyser.getModificationLoss(),
-                                      analyser.calculateRelAbundanceOfSpecies(),
-                                      properties.getSequenceList(),
-                                      analyser.calculatePercentages(self.configs['interestingIons']),
-                                      properties.getFragmentsByDir(1), properties.getFragmentsByDir(-1))
+                               analyser.getModificationLoss(),
+                               analyser.calculateRelAbundanceOfSpecies(),
+                               properties.getSequenceList(),
+                               analyser.calculatePercentages(self.configs['interestingIons'], properties.getUnimportantModifs()),
+                               properties.getFragmentsByDir(1), properties.getFragmentsByDir(-1))
             #self.analyser.createPlot(__maxMod)
+            observedIons = self.sortByName(intensityModeller.getObservedIons().values())
+            deletedIons = self.sortByName(intensityModeller.getDeletedIons().values())
             precursorRegion = intensityModeller.getPrecRegion(settings['sequName'], abs(settings['charge']))
-            self.writeIons(self.worksheet2, intensityModeller.getObservedIons().values(),
-                                  precursorRegion)
-            self.writePeaks(self.worksheet3, 0, 0, intensityModeller.getObservedIons().values())
-            row = self.writeIons(self.worksheet4, self.sortByName(intensityModeller.getDeletedIons().values()),
-                                 precursorRegion)
-            self.writePeaks(self.worksheet4, row + 3, 0, self.sortByName(intensityModeller.getDeletedIons().values()))
+            self.writeIons(self.worksheet2, observedIons,precursorRegion)
+            self.writePeaks(self.worksheet3, 0, 0, observedIons)
+            row = self.writeIons(self.worksheet4, deletedIons,precursorRegion)
+            self.writePeaks(self.worksheet4, row + 3, 0, deletedIons)
             self.writeIons(self.worksheet5, self.sortByName(intensityModeller.getRemodelledIons()), precursorRegion)
             self.writeSumFormulas(fragmentLibrary, spectrumHandler.searchedChargeStates)
-            self.writeLogFile(logString)
+            self.writeInfos(infoString)
         finally:
             self.closeWorkbook()
 
     @staticmethod
     def sortByName(ionList):
         # return sorted(ionList,key=lambda obj:(obj.type ,obj.number))
-        return sorted(ionList, key=lambda obj: (obj.getName(), obj.charge))
+        return sorted(ionList, key=lambda obj: (obj.getName(), obj.getCharge()))
 
 
 
@@ -201,15 +201,15 @@ class ExcelWriter(BasicExcelWriter):
 
     def writeIon(self,worksheet, row,ion):
         worksheet.write(row, 0, ion.getMonoisotopic(), self.format5digit)
-        worksheet.write(row, 1, ion.charge)
-        worksheet.write(row, 2, round(ion.intensity))
+        worksheet.write(row, 1, ion.getCharge())
+        worksheet.write(row, 2, round(ion.getIntensity()))
         worksheet.write(row, 3, ion.getName())
-        worksheet.write(row, 4, round(ion.error,3), self.format2digit)
+        worksheet.write(row, 4, round(ion.getError(),3), self.format2digit)
         worksheet.write(row, 5, round(ion.getSignalToNoise(),3), self.format2digit)
-        worksheet.write(row, 6, round(ion.quality,3), self.format2digit)
-        worksheet.write(row, 7, ion.formula.toString())
-        worksheet.write(row, 8, round(ion.score,3), self.format2digit)
-        worksheet.write(row, 9, ion.comment)
+        worksheet.write(row, 6, round(ion.getQuality(),3), self.format2digit)
+        worksheet.write(row, 7, ion.getFormula().toString())
+        worksheet.write(row, 8, round(ion.getScore(),3), self.format2digit)
+        worksheet.write(row, 9, ion.getComment())
         return row+1
 
 
@@ -241,10 +241,10 @@ class ExcelWriter(BasicExcelWriter):
         worksheet.write_row(row,col,('m/z','z','intensity','fragment','error','used'))
         row += 1
         for ion in ionList:
-            if ion.type in self.configs['interestingIons']:
-                for peak in ion.isotopePattern:
+            if ion.getType() in self.configs['interestingIons']:
+                for peak in ion.getIsotopePattern():
                     worksheet.write(row,col,peak['m/z'],self.format5digit)
-                    worksheet.write(row,col+1,ion.charge)
+                    worksheet.write(row,col+1,ion.getCharge())
                     worksheet.write(row,col+2,int(round(peak['calcInt'])))
                     worksheet.write(row,col+3,ion.getName())
                     worksheet.write(row,col+4,peak['error'],self.format2digit)
@@ -257,9 +257,9 @@ class ExcelWriter(BasicExcelWriter):
         self.worksheet6.write_row(0,0,('name','formula','searched charge st.'))
         row =1
         for fragment in listOfFragments:
-            if fragment.type in self.configs['interestingIons']:
+            if fragment.getType() in self.configs['interestingIons']:
                 self.worksheet6.write(row,0,fragment.getName())
-                self.worksheet6.write(row, 1, fragment.formula.toString())
+                self.worksheet6.write(row, 1, fragment.getFormula().toString())
                 self.worksheet6.write(row, 2, self.listToString(chargeStates[fragment.getName()]))
                 row+=1
 
@@ -274,9 +274,9 @@ class ExcelWriter(BasicExcelWriter):
         return itemString
 
 
-    def writeLogFile(self, log):
+    def writeInfos(self, info):
         #self.worksheet7.write(0, 0, "Configurations:")
-        for i, line in enumerate(log.split('\n')):
+        for i, line in enumerate(info.split('\n')):
             col = 0
             if line.startswith('\t'):
                 col =1

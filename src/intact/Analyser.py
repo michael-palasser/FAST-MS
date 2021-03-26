@@ -25,16 +25,17 @@ class IntactAnalyser(object):
             errorSum = 0
             notCounted = 0
             for ion in ionList:
-                sumInt += ion.intensity
+                sumInt += ion.getIntensity()
                 if abs(ion.calculateError()) < 30:
                     errorSum += ion.calculateError()
                 else:
                     notCounted += 1
-                chargeSum += ion.charge *ion.intensity
-                if ion.charge < self.minCharge:
-                    self.minCharge = ion.charge
-                if ion.charge > self.maxCharge:
-                    self.maxCharge = ion.charge
+                chargeSum += ion.getCharge() *ion.getIntensity()
+                charge = ion.getCharge()
+                if charge < self.minCharge:
+                    self.minCharge = charge
+                if charge > self.maxCharge:
+                    self.maxCharge = charge
             averageCharges.append(chargeSum/sumInt)
             averageErrors.append(errorSum/(len(ionList)-notCounted))
         return averageCharges, averageErrors
@@ -44,12 +45,12 @@ class IntactAnalyser(object):
         for ionList in self.ionLists:
             averageModificationPerZ = dict()
             for ion in ionList:
-                if ion.charge in averageModificationPerZ:
-                    averageModificationPerZ[ion.charge] += np.array([float(ion.nrOfModifications) * ion.intensity,
-                                                                     ion.intensity])
+                charge = ion.getCharge()
+                intensity = ion.getIntensity()
+                if charge in averageModificationPerZ:
+                    averageModificationPerZ[charge] += np.array([float(ion.getNrOfModifications()) * intensity, intensity])
                 else:
-                    averageModificationPerZ[ion.charge] = np.array([float(ion.nrOfModifications) * ion.intensity,
-                                                                    ion.intensity])
+                    averageModificationPerZ[charge] = np.array([float(ion.getNrOfModifications()) * intensity, intensity])
             for z,val in averageModificationPerZ.items():
                 averageModificationPerZ[z] = val[0]/val[1]  #ToDo: check if robust
             averageModifications.append(averageModificationPerZ)
@@ -68,10 +69,10 @@ class IntactAnalyser(object):
             modifications = dict()
             intensitiesPerCharge = self.makeChargeArray()
             for ion in ionList:
-                if ion.modification not in modifications:
-                    modifications[ion.modification] = self.makeChargeArray()
-                modifications[ion.modification][ion.charge-self.minCharge][1] = ion.intensity
-                intensitiesPerCharge[ion.charge-self.minCharge][1] += ion.intensity
+                if ion.getModification() not in modifications:
+                    modifications[ion.getModification()] = self.makeChargeArray()
+                modifications[ion.getModification()][ion.getCharge()-self.minCharge][1] = ion.getIntensity()
+                intensitiesPerCharge[ion.getCharge()-self.minCharge][1] += ion.getIntensity()
             nonZero = np.where(intensitiesPerCharge[:,1] != 0)
             dataLength = len(intensitiesPerCharge[nonZero])
             #averageOfModifications = dict()
@@ -90,5 +91,5 @@ class IntactAnalyser(object):
     def getIonList(self):
         returnedLists = list()
         for ionList in self.ionLists:
-            returnedLists.append(sorted(ionList,key=lambda obj:obj.mz))
+            returnedLists.append(sorted(ionList,key=lambda obj:obj.getMz()))
         return returnedLists

@@ -24,11 +24,9 @@ class AbstractPattern(ABC):
 class PatternWithItems(AbstractPattern):
     def __init__(self, name, items, id):
         """
-
-        :param name:
-        :param items: either list of Item objects for AbstractLibraryBuilder or 2D list for views
-        :param id:
-        :param integerVals:
+        :param (str) name:
+        :param (list) items: either list of Item objects for AbstractLibraryBuilder or 2D list for views
+        :param (int) id:
         """
         super(PatternWithItems, self).__init__(name, id)
         self._items = items  # list of dict of values
@@ -38,57 +36,6 @@ class PatternWithItems(AbstractPattern):
 
     def setItems(self, items):
         self._items = items
-
-    """def setItems(self, items):
-        formatedItems = list()
-        for i, row in enumerate(items):
-            formatedRow = []
-            for j, val in enumerate(items):
-                try:
-                    if j in self._integerVals:
-                        formatedRow.append(int(val))
-                    elif (j == 1) or (j == 2):
-                        # ToDo: Ueberpruefen ob Formel passt: alle keys in PeriodicTable
-                        # AbstractItem2.stringToFormula(val, dict(),1)
-                        formatedRow.append(val)
-                except ValueError:
-                    raise Exception(
-                        "Invalid Input in row " + str(i) + ", column " + str(j) + ". Input must be an integer!")
-                else:
-                    formatedRow.append(val)
-            formatedItems.append(formatedRow)
-        self._items = formatedItems"""
-
-    """def getItemsAsList(self):
-
-
-        :return: dict of lists (lists = columns)
-
-        itemDict = dict()
-        # _itemDict = {"Name":[], "Gain":[], "Loss":[], "NrOfMod":[], "enabled":[]}
-        for item in self._items:
-            for key, val in item.items():
-                if key not in itemDict.keys():
-                    itemDict[key] = [val]
-                else:
-                    itemDict[key].append(val)
-        return itemDict"""
-
-    """def getItemsAsList(self):
-
-        :return: dict
-        of
-        lists(lists=columns)
-
-        itemDict = dict()
-        # _itemDict = {"Name":[], "Gain":[], "Loss":[], "NrOfMod":[], "enabled":[]}
-        for item in self._items:
-            for key, val in item.items():
-                if key not in itemDict.keys():
-                    itemDict[key] = [val]
-                else:
-                    itemDict[key].append(val)
-        return itemDict"""
 
 
 class AbstractItem1(ABC):
@@ -100,6 +47,13 @@ class AbstractItem1(ABC):
 
     @staticmethod
     def stringToFormula(formulaString, formulaDict, sign):
+        '''
+        Converts the a formula from string (can contain parenthesis) to dict
+        :param (str) formulaString: string to be converted
+        :param (dict) formulaDict: initial formula dictionary
+        :param (int) sign: +1 to add new formula to initial or -1 to subtract
+        :return (dict): new formula dictionary
+        '''
         #everything in parenthesis
         beginIndizes = [m.start() for m in re.finditer('\(', formulaString)]
         endIndizes = [m.start() for m in re.finditer('\)', formulaString)]
@@ -123,45 +77,15 @@ class AbstractItem1(ABC):
         return formulaDict
 
 
-        '''if ')' in formulaString:
-            print('yes')
-        if ('(' in formulaString) and (')' in formulaString):
-            print(re.findall('\)[^A-Z]',formulaString))
-            for form,nrStr in zip(re.findall('\(.*?\)',formulaString), re.findall('\)[^A-Z]',formulaString)):
-                nr=1
-                if len(nrStr)>1:
-                    nr = int(nrStr[1:])
-                temp = {key:val*nr for key,val in AbstractItem1.stringToFormula2(form[1:-1], {}, sign).items()}
-                for element, number in temp.items():
-                    if element in formulaDict.keys():
-                        formulaDict[element] += number
-                    else:
-                        formulaDict[element] = number
-            #everything outside parenthesis
-            print(formulaDict)
-            for subString in formulaString.split('('):
-                if subString !='':
-                    if not ')' in subString:
-                        formulaDict = AbstractItem1.stringToFormula2(subString,formulaDict,sign)
-                    else:
-                        subI2 = subString.split(')')
-                        match = re.match(r"([0-9]+)([a-z]+)", subI2[1], re.I)  # re.I: ignore case: ?
-                        if match:
-                            formulaDict = AbstractItem1.stringToFormula2(match.group(2),formulaDict,sign)
-                        elif not subI2[1].isnumeric():
-                            formulaDict = AbstractItem1.stringToFormula2(subI2[1],formulaDict,sign)
-        else:
-            formulaDict = AbstractItem1.stringToFormula2(formulaString, formulaDict, sign)
-        return formulaDict'''
 
     @staticmethod
     def stringToFormula2(formulaString, formulaDict, sign):
         '''
         Converts a String to a formula - dict and adds or subtracts it to or from an original formula
-        :param formulaString: String which should be converted to a formula
-        :param formulaDict: "old" formula (dictionary)
-        :param sign: +1 or -1 for addition or subtraction of formula to or from formulaDict
-        :return: new formula (dict)
+        :param (str) formulaString: String which should be converted to a formula
+        :param (dict) formulaDict: "old" formula
+        :param (int) sign: +1 or -1 for addition or subtraction of formula to or from formulaDict
+        :return (dict): new formula
         '''
         if formulaString == "" or formulaString == "-":
             return formulaDict
@@ -182,7 +106,12 @@ class AbstractItem1(ABC):
 
     @staticmethod
     def addToDict(dict1,dict2):
-        print('adding', dict1,dict2)
+        '''
+        Adds the values of one dict to another dict
+        :param (dict) dict1:
+        :param (dict) dict2:
+        :return (dict): "sum" dict
+        '''
         for element, number in dict2.items():
             if element in dict1.keys():
                 dict1[element] += number
@@ -213,6 +142,7 @@ class AbstractItem2(AbstractItem1, ABC):
     def getFormula(self):
         formulaDict = self.stringToFormula(self._gain, dict(), 1)
         return self.stringToFormula(self._loss, formulaDict, -1)
+
 
 class AbstractItem3(AbstractItem2):
     def __init__(self, name, gain, loss, residue, radicals, enabled):

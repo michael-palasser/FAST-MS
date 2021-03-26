@@ -65,8 +65,9 @@ class AbstractServiceForPatterns(AbstractService, ABC):
         elementRep = PeriodicTableRepository()
         elements = elementRep.getAllPatternNames()
         self.checkFormatOfItems(pattern.getItems(), elements, self.repository.getIntegers())
+        print('id', pattern.getId())
+        self.checkIfUnique(pattern)
         if pattern.getId() == None:
-            self.checkIfUnique(pattern)
             self.repository.createPattern(pattern)
         else:
             self.repository.updatePattern(pattern)
@@ -74,7 +75,8 @@ class AbstractServiceForPatterns(AbstractService, ABC):
 
     def checkIfUnique(self, pattern):
         if pattern.getName() in self.repository.getAllPatternNames():
-            raise UnvalidInputException(pattern.getName(), "Name must be unique!")
+            if pattern.getId() != self.repository.getPattern(pattern.getName()).getId():
+                raise UnvalidInputException(pattern.getName(), "Name must be unique!")
 
     def checkFormatOfItems(self, items, *args):
         if len(items)<1:
@@ -131,10 +133,12 @@ class PeriodicTableService(AbstractServiceForPatterns):
         return Element("", 2*[["", "", ""]], None)
 
     def save(self, pattern):
+        print('id', pattern.getId())
         self.checkName(pattern.getName())
         self.checkFormatOfItems(pattern.getItems(),None, self.repository.getIntegers())
+        self.checkIfUnique(pattern)
+        print('id', pattern.getId())
         if pattern.getId() == None:
-            self.checkIfUnique(pattern)
             self.repository.createPattern(pattern)
         else:
             self.repository.updatePattern(pattern)

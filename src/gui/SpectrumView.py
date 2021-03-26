@@ -115,17 +115,17 @@ class AbstractSpectrumView(QtWidgets.QWidget):
                 markerIndex += 1
                 if markerIndex == len(markers):
                     markerIndex = 0
-            scatter = pg.ScatterPlotItem(x=ion.isotopePattern['m/z'], y=ion.isotopePattern['calcInt'],
+            scatter = pg.ScatterPlotItem(x=ion.getIsotopePattern()['m/z'], y=ion.getIsotopePattern()['calcInt'],
                                          symbol=markers[markerIndex],
                                          pen =pg.mkPen(color=colours[colourIndex], width=2),
                                          brush=(50,50,200,50), size=10, pxMode=True) #Todo resize"""
-            maxMz = np.sort(ion.isotopePattern, order='calcInt')[::-1]['m/z'][0]
-            noise.append((maxMz, ion.noise))
+            maxMz = np.sort(ion.getIsotopePattern(), order='calcInt')[::-1]['m/z'][0]
+            noise.append((maxMz, ion.getNoise()))
             """scatter = pg.ScatterPlotItem(x=self.ions[ion][:,0], y=self.ions[ion][:,1], symbol=markers[markerIndex],
                                          pen =pg.mkPen(color=colours[colourIndex], width=2),
                                          brush=(50,50,200,50), size=10, pxMode=True) #Todo resize"""
             self.graphWidget.addItem(scatter)
-            self.legend.addItem(scatter, ion.getName() + ', ' + str(ion.charge))
+            self.legend.addItem(scatter, ion.getId())
             colourIndex += 1
             #self.graphWidget.plot(ion[:,0], ion[:,1], symbol='o', symbolSize=30, symbolBrush=('b'))
         noise = np.array(noise)

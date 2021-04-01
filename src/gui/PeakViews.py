@@ -210,6 +210,7 @@ class GeneralPeakWidget(QtWidgets.QTableWidget):
             df=pd.DataFrame(data=self._peaks, columns=self.headers)
             df['int. (spectrum)']= self._peaks['relAb']
             df['int. (calc.)']= self._peaks['calcInt']
+            df['error /ppm']= self._peaks['error']
             df.to_clipboard(index=False,header=True)
 
     def readTable(self):

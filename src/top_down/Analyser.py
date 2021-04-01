@@ -58,7 +58,7 @@ class Analyser(object):
             if ion.getType() in interestingIons:
                 if args:
                     if len([mod for mod in args[0] if mod in ion.getModification()])>0:
-                        print('not', ion.getName())
+                        #print('not', ion.getName())
                         continue
                 if ion.getType() not in temp.keys():
                     temp[ion.getType()] = np.zeros((len(self._sequence), 3))
@@ -66,11 +66,11 @@ class Analyser(object):
                     temp[ion.getType()][ion.getNumber() - 1] += \
                         np.array([ion.getRelAbundance(),
                                   ion.getRelAbundance() * int(self.getNrOfModifications(ion.getModification())), 0])
-                    print('\t', ion.getName(), ion.getRelAbundance()*int(self.getNrOfModifications(ion.getModification())), 'mod')
+                    #print('\t', ion.getName(), ion.getRelAbundance()*int(self.getNrOfModifications(ion.getModification())), 'mod')
                 else:
                     temp[ion.getType()][ion.getNumber() - 1] += \
                         np.array([ion.getRelAbundance(),0,0])
-                    print('\t', ion.getName(), ion.getRelAbundance())
+                    #print('\t', ion.getName(), ion.getRelAbundance())
         for key,vals in temp.items():
             print('sequ.\t',key+'_free\t', key+'+'+self._modification)
             [print(str(i+1), '\t',val[0]-val[1], '\t', val[1]) for i,val in enumerate(vals)]

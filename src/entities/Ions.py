@@ -4,6 +4,7 @@ Created on 3 Jul 2020
 @author: michael
 '''
 from math import exp
+from numpy import array, dtype
 
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 
@@ -214,11 +215,12 @@ class FragmentIon(Fragment):
         return peaks''' #pd.DataFrame(data=peaks, columns=['mz', 'z', 'int', 'name', 'error', 'used'])
 
     def getPeakValues(self):
-        peaks = []
+        '''peaks = []
         for i, peak in enumerate(self._isotopePattern):
             peaks.append([round(peak['m/z'],5), round(peak['relAb']), round(peak['calcInt']), round(peak['error'],2),
                          peak['used']])
-        return peaks
+        print(self._isotopePattern, self._isotopePattern.dtype)'''
+        return self._isotopePattern
 
     def toStorage(self):
         return [self._type, self._number, self._modification, self._formula, self._sequence, self._radicals,

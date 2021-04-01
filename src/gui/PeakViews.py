@@ -31,6 +31,7 @@ class PeakTableModel(AbstractTableModel):
                 #print(item)
                 formatString = self._format[col]
                 if col == 1 or col ==2:
+                    item = int(round(item))
                     if item >= 10 ** 12:
                         lg10 = str(int(log10(item) + 1))
                         formatString = '{:' + lg10 + 'd}'
@@ -178,6 +179,7 @@ class GeneralPeakWidget(QtWidgets.QTableWidget):
                 newItem.setTextAlignment(QtCore.Qt.AlignRight)
                 if j == 1 or j==2:
                     formatString = self._format[2]
+                    item = int(round(item))
                     if item >= 10 ** 12:
                         lg10 = str(int(log10(item) + 1))
                         formatString = '{:' + lg10 + 'd}'

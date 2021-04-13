@@ -317,10 +317,13 @@ class IntensityModeller(object):
                     for ion, val in zip(undeletedIons,solution.x):
                         if val < 1.05:  # no outlier calculation during remodelling --> results can be higher than without remodelling
                             factor = val
-                        else:
+                        elif 'high' not in ion.getComment():
                             factor = 1.05
                             print("  ", ion, " not remodeled (val=", round(val,2), ")")
                             self._correctedIons[ion].addComment("high," + str(round(val, 2)) + ',')
+                        else:
+                            factor = 1
+                            print("  ", ion, " not remodeled (val=", round(val,2), ")")
                         self._remodelledIons.append(deepcopy(self._correctedIons[ion]))
                         self._correctedIons[ion].setIsotopePatternPart('calcInt',
                             self._correctedIons[ion].getIsotopePattern()['calcInt'] * factor)

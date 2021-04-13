@@ -450,7 +450,7 @@ class TD_MainController(object):
         if self.saved == False:
             message = 'Warning: Unsaved Results\n'
         choice = QtWidgets.QMessageBox.question(self.mainWindow, 'Close Search',
-                                                message + "Do you really want to close the search?",
+                                                message + "Do you really want to close the analysis?",
                                                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
         if choice == QtWidgets.QMessageBox.Yes:
             [w.close() for w in self._openWindows]

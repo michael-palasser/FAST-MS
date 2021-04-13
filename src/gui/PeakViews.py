@@ -212,6 +212,7 @@ class GeneralPeakWidget(QtWidgets.QTableWidget):
             df['int. (calc.)']= self._peaks['calcInt']
             df['error /ppm']= self._peaks['error']
             df.to_clipboard(index=False,header=True)
+            print(df)
 
     def readTable(self):
         itemList = []
@@ -248,3 +249,14 @@ class IsoPatternPeakWidget(GeneralPeakWidget):
             except ValueError:
                 raise UnvalidInputException('Intensities must be numbers',self.item(row, 1).text())
         return itemList
+
+    def showOptions(self, table, pos):
+        menu = QtWidgets.QMenu()
+        copyAction = menu.addAction("Copy Table")
+        action = menu.exec_(table.viewport().mapToGlobal(pos))
+        if action == copyAction:
+            #peaks.astype(float)
+            df=pd.DataFrame(data=self._peaks, columns=self.headers)
+            df['int. (spectrum)']= self._peaks['relAb']
+            df['int. (calc.)']= self._peaks['calcInt']
+            df.to_clipboard(index=False,header=True)

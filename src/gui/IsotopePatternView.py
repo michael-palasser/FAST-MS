@@ -218,10 +218,11 @@ class IsotopePatternView(QtWidgets.QMainWindow):
         #self.peakTable.show()
 
     def restartView(self, ion, neutralMass):
-        self.spectrumView.hide()
+        self.updateSpectrumView(ion)
+        '''self.spectrumView.hide()
         del self.spectrumView
         self.spectrumView = TheoSpectrumView(self.centralwidget, ion.getIsotopePattern(), 365)
-        self.spectrumView.setGeometry(QtCore.QRect(250, 50, 365, 300))
+        self.spectrumView.setGeometry(QtCore.QRect(250, 50, 365, 300))'''
         #self.spectrumView.setGeometry(QtCore.QRect(250, 50, 350, 280))
         self.peakTable.hide()
         self._ionTable.hide()
@@ -243,6 +244,15 @@ class IsotopePatternView(QtWidgets.QMainWindow):
         hight = self.makePeakTable(ion.getIsotopePattern())
         #self._vertLayout.insertWidget(5, self.peakTable)
         self.resize(615, 420 + hight + 30)
+
+    def updateSpectrumView(self, ion):
+        print(self.spectrumView)
+        self.spectrumView.hide()
+        del self.spectrumView
+        isotopePattern = self._controller.getIsotopePattern(ion)
+        print(isotopePattern)
+        self.spectrumView = TheoSpectrumView(self.centralwidget, isotopePattern, 365)
+        self.spectrumView.setGeometry(QtCore.QRect(250, 50, 365, 300))
 
     #def getIonVals(self, ion, neutralMass):
     #    return (ion.isotopePattern['m/z'][0], abs(ion._charge), self._intensity, "-", 0., ion.formula, neutralMass)

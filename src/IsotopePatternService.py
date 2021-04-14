@@ -130,3 +130,7 @@ class IsotopePatternService(object):
         isotopePattern, intensity, quality =  self._intensityModeller.modelSimply(peakArr)
         self._ion.setIsoIntQual(isotopePattern, intensity, quality)
         return self._ion
+
+    def getIsotopePattern(self, ion):
+        isotopePattern = ion.getIsotopePattern()
+        return isotopePattern[np.where(isotopePattern['used'])]

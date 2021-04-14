@@ -154,6 +154,8 @@ class AbstractItem3(AbstractItem2):
         return self._residue
 
     def getRadicals(self):
+        if self._radicals =='-' or self._radicals == '':
+            return 0
         return self._radicals
 
     def toString(self):

@@ -133,6 +133,7 @@ class FragmentLibraryBuilder(object):
                                             #Constructor: type, number, modification, loss, formula
                                             if self.__maxMod > 1:
                                                 modifName = modifName[0]+str(nrMod)+modifName[1:]
+                                            #print(templateRadicals,modif.getRadicals())
                                             newFragment = Fragment(species,len(linkSequ),modifName+rest,
                                                            formula, linkSequ, templateRadicals+modif.getRadicals())
                                             '''if modif.getCalcOccupancy():

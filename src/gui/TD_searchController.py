@@ -144,7 +144,6 @@ class TD_MainController(object):
         #spectralFile = os.path.join(path, 'Spectral_data','top-down', self.settings['spectralData'])
         print("\n********** Importing spectral pattern from:", self.settings['spectralData'], "**********")
         self.spectrumHandler = SpectrumHandler(self._propStorage, self.libraryBuilder.getPrecursor(), self.settings)
-
         """Finding fragments"""
         print("\n********** Search for spectrum **********")
         start = time.time()
@@ -190,6 +189,7 @@ class TD_MainController(object):
                 return 1
         self._analyser = Analyser(None, self._propStorage.getSequenceList(),
                                  self.settings['charge'], self._propStorage.getModificationName())
+        self._info.searchFinished(self.spectrumHandler.getUpperBound())
         print("done")
         return 0
 

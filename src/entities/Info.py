@@ -26,8 +26,10 @@ class Info(object):
         self._infoString += '\n* Fragmentation:' + searchProperties.getFragmentation().toString()
         self._infoString += '\n* Modification: ' + searchProperties.getModification().toString()
 
-    def searchFinished(self):
-        self._infoString += '\n* Search finished: ' + datetime.now().strftime("%d/%m/%Y %H:%M") + '\n'
+
+    def searchFinished(self, mz):
+        self._infoString += '\n* Search finished: ' + datetime.now().strftime("%d/%m/%Y %H:%M") +\
+                            ';\tmax m/z: '+str(mz) + '\n'
 
 
     def ionToString(self, ion):
@@ -40,13 +42,13 @@ class Info(object):
         self._infoString += '\n* del ' + self.ionToString(ion)
 
     def restoreIon(self, ion):
-        self._infoString += '\n* restore ' + self.ionToString(ion)
+        self._infoString += '\n* restored ' + self.ionToString(ion)
 
     def changeIon(self, origIon, newIon):
         '''
         if the intensity of an ion is manually changed
         '''
-        self._infoString += '\n* changing ' + self.ionToString(origIon) + \
+        self._infoString += '\n* changed ' + self.ionToString(origIon) + \
                 ';   old Int.: ' + str(round(origIon.getIntensity())) + ', new: ' + str(round(newIon.getIntensity()))
         count = 1
         for oldPeak, newPeak in zip(origIon.getPeakValues(), newIon.getPeakValues()):
@@ -55,13 +57,13 @@ class Info(object):
             count += 1
 
     def repeatModelling(self):
-        self._infoString += '\n* Repeat modelling overlaps'
+        self._infoString += '\n* Repeated modelling overlaps'
 
     def export(self):
-        self._infoString += '\n* Export to Excel: ' + datetime.now().strftime("%d/%m/%Y %H:%M")
+        self._infoString += '\n* Exported to Excel: ' + datetime.now().strftime("%d/%m/%Y %H:%M")
 
     def save(self):
-        self._infoString += '\n* Save Analysis: ' + datetime.now().strftime("%d/%m/%Y %H:%M")
+        self._infoString += '\n* Saved Analysis: ' + datetime.now().strftime("%d/%m/%Y %H:%M")
 
     def load(self):
         self._infoString += '\n\n* Load Analysis: ' + datetime.now().strftime("%d/%m/%Y %H:%M")

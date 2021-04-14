@@ -317,7 +317,7 @@ class IntensityModeller(object):
                     for ion, val in zip(undeletedIons,solution.x):
                         if val < 1.05:  # no outlier calculation during remodelling --> results can be higher than without remodelling
                             factor = val
-                        elif 'high' not in ion.getComment():
+                        elif 'high' not in self._correctedIons[ion].getComment():
                             factor = 1.05
                             print("  ", ion, " not remodeled (val=", round(val,2), ")")
                             self._correctedIons[ion].addComment("high," + str(round(val, 2)) + ',')

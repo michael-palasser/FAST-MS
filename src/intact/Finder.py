@@ -12,9 +12,13 @@ protonMass = 1.00727647
 
 class Finder(object):
     '''
-
+    Responsible for assigning ions
     '''
     def __init__(self, theoValues, configHandler):
+        '''
+        :param theoValues: (dict) ions (name:formula)
+        :param configHandler: (ConfigHandler) configurationHandler for intact ions
+        '''
         self.theoValues = theoValues
         self.mode = 1
         if configHandler.get('sprayMode') == 'negative':
@@ -24,6 +28,10 @@ class Finder(object):
         self.foundIons = list()
 
     def readData(self,file):
+        '''
+        reads txt files containing ion data
+        :param file: opened txt file
+        '''
         spectrum = list()
         for line in file:
             line = line.rstrip()
@@ -51,10 +59,24 @@ class Finder(object):
         return (value - theoValue) / theoValue * 10 ** 6
 
     def getErrorLimit(self,k, d, mz):
+        '''
+        calculates error threshold in ppm
+        :param (float) k: slope of error threshold
+        :param (float) d: intercept of error threshold
+        :param (float) mz: corresponding (theoretical) m/z
+        :return: (float) threshold
+        '''
         return k / 1000 * mz + d
 
 
-    def findIons(self, k, d, flag):
+    def findIons(self, k, d, flag=False):
+        '''
+
+        :param (float) k: slope of error threshold
+        :param (float) d: intercept of error threshold
+        :param (bool) flag: if set, errors in ion list in txt file (+/- 1 Da) are taken in account
+        :return: (list of lists) ions
+        '''
         ionLists = list()
         for spectrum in self.data:
             ions = list()
@@ -72,7 +94,7 @@ class Finder(object):
                             ions.append(Ion(self.configHandler.get('sequName'),modif,spectrum[mask]['m/z'][0],self.getMz(mass,z),
                                             spectrum[mask]['z'][0],spectrum[mask]['relAb'][0],val[1]))
 
-                        elif (flag == 1):
+                        elif flag:
                             if len(mask[0]) == 0:
                                 mask = np.where(
                                     (abs(self.calculateError(spectrum['m/z'], self.getMz(mass+1.00266, z)))
@@ -111,14 +133,25 @@ class Finder(object):
 
     @staticmethod
     def fun_parabola(x,a,b,c):
+        '''
+        Quadratic calibration function
+        :param x: m/z
+        :param a:
+        :param b:
+        :param c:
+        :return: calibration function
+        '''
         return a * x**2 + b * x + c
 
 
     def calibrate(self):
+        '''
+        Calibrates spectrum
+        '''
         calibrationValues = list()
         count = 1
         errorLimit = self.configHandler.get('errorLimitCalib')
-        for ionList in self.findIons(0, errorLimit, 0):
+        for ionList in self.findIons(0, errorLimit):
             limit = errorLimit
             solution = [0,1,0]
             while limit >=10 :

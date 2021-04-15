@@ -58,7 +58,7 @@ class PeakTableModel(AbstractTableModel):
 class SimplePeakView(QtWidgets.QWidget):
     def __init__(self, parent, ion):
         super().__init__(parent)
-        self._peaks = ion.getPeakValues()
+        self._peaks = ion.getIsotopePattern()
         model = PeakTableModel(self._peaks)
         # self.proxyModel = QSortFilterProxyModel()
         # self.proxyModel.setSourceModel(model)
@@ -100,7 +100,7 @@ class PeakView(QtWidgets.QMainWindow):
         self.setCentralWidget(QtWidgets.QWidget(self))
         self._verticalLayout = QtWidgets.QVBoxLayout(self.centralWidget())
         self._ionTable = IonTableWidget(self.centralWidget(),(self._ion,),30)
-        self._peakTable = PeakWidget(self.centralWidget(), self._ion.getPeakValues())
+        self._peakTable = PeakWidget(self.centralWidget(), self._ion.getIsotopePattern())
         self.model = model
         self.save = save
         buttonWidget = QtWidgets.QWidget(self.centralWidget())
@@ -142,7 +142,7 @@ class PeakView(QtWidgets.QMainWindow):
         newIon = self.model(copy.deepcopy(self._ion),vals)
         if self._ion.getIntensity() != newIon.getIntensity():
             self._ion = newIon
-            self._peakTable.setPeaks(self._ion.getPeakValues())
+            self._peakTable.setPeaks(self._ion.getIsotopePattern())
             self._verticalLayout.removeWidget(self._ionTable)
             del self._ionTable
             self._ionTable =  IonTableWidget(self.centralWidget(),(self._ion,),30)

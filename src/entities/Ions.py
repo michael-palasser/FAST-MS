@@ -55,6 +55,11 @@ class Fragment(object):
     def setIsotopePattern(self, isotopePattern):
         self._isotopePattern = isotopePattern
     def setIsotopePatternPart(self, col, vals):
+        '''
+        Sets only 1 column of the isotope pattern
+        :param col: index of column
+        :param vals: values
+        '''
         self._isotopePattern[col] = vals
 
     def getRadicals(self):
@@ -214,15 +219,19 @@ class FragmentIon(Fragment):
             #indizes.append(i)
         return peaks''' #pd.DataFrame(data=peaks, columns=['mz', 'z', 'int', 'name', 'error', 'used'])
 
-    def getPeakValues(self):
-        '''peaks = []
+    '''def getPeakValues(self):
+        peaks = []
         for i, peak in enumerate(self._isotopePattern):
             peaks.append([round(peak['m/z'],5), round(peak['relAb']), round(peak['calcInt']), round(peak['error'],2),
                          peak['used']])
-        print(self._isotopePattern, self._isotopePattern.dtype)'''
-        return self._isotopePattern
+        print(self._isotopePattern, self._isotopePattern.dtype)
+        return self._isotopePattern'''
 
     def toStorage(self):
+        '''
+        To save an ion in database
+        :return: list of values
+        '''
         return [self._type, self._number, self._modification, self._formula, self._sequence, self._radicals,
                 self._monoisotopicRaw, self._charge, int(round(self._noise)), int(round(self._intensity)),
                 float(self._error), self._quality, self._comment]
@@ -232,6 +241,10 @@ class FragmentIon(Fragment):
                 self.error, self.quality, self._comment]'''
 
     def peaksToStorage(self):
+        '''
+        To save peaks in database
+        :return: 2d list of peak values
+        '''
         peaks = []
         for i, peak in enumerate(self._isotopePattern):
             peaks.append([peak['m/z'], round(peak['relAb']), round(peak['calcInt']), float(peak['error']), int(peak['used'])])

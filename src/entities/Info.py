@@ -51,7 +51,7 @@ class Info(object):
         self._infoString += '\n* changed ' + self.ionToString(origIon) + \
                 ';   old Int.: ' + str(round(origIon.getIntensity())) + ', new: ' + str(round(newIon.getIntensity()))
         count = 1
-        for oldPeak, newPeak in zip(origIon.getPeakValues(), newIon.getPeakValues()):
+        for oldPeak, newPeak in zip(origIon.getIsotopePattern(), newIon.getIsotopePattern()):
             self._infoString += '\n\t' + str(count) + '   old: ' + ', '.join([str(val) for val in oldPeak]) + \
                                '\tnew: ' + ', '.join([str(val) for val in newPeak])
             count += 1

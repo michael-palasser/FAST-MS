@@ -315,6 +315,7 @@ class TD_MainController(object):
         menu = QtWidgets.QMenu()
         showAction = menu.addAction("Show in Spectrum")
         peakAction = menu.addAction("Show Peaks")
+        formulaAction = menu.addAction("Get Formula")
         copyRowAction = menu.addAction("Copy Row")
         copyTableAction = menu.addAction("Copy Table")
         actionStrings = ["Delete", "Restore"]
@@ -343,6 +344,10 @@ class TD_MainController(object):
         elif action == peakAction:
             #global peakview
             self._openWindows.append(PeakView(self.mainWindow, selectedIon, self._intensityModeller.remodelSingleIon, self.saveSingleIon))
+        elif action == formulaAction:
+            text = 'Ion:\t' + selectedIon.getName()+\
+                   '\n\nFormula:\t'+selectedIon.getFormula().toString()
+            QtWidgets.QMessageBox.information(self.mainWindow, selectedIon.getName(), text, QtWidgets.QMessageBox.Ok)
         elif action == copyRowAction:
             df=pd.DataFrame(data=[table.model().getRow(selectedRow)], columns=table.model().getHeaders())
             df.to_clipboard(index=False,header=True)
@@ -475,6 +480,7 @@ class TD_MainController(object):
         menu = QtWidgets.QMenu()
         showAction = menu.addAction("Show in Spectrum")
         peakAction = menu.addAction("Show Peaks")
+        formulaAction = menu.addAction("Get Formula")
         copyRowAction = menu.addAction("Copy Row")
         copyTableAction = menu.addAction("Copy Table")
         action = menu.exec_(table.viewport().mapToGlobal(pos))
@@ -495,6 +501,10 @@ class TD_MainController(object):
         elif action == peakAction:
             #PeakView(self.mainWindow, selectedIon, self._intensityModeller.remodelSingleIon, self.saveSingleIon)
             self._openWindows.append(SimplePeakView(self.mainWindow, selectedIon))
+        elif action == formulaAction:
+            text = 'Ion:\t' + selectedIon.getName()+\
+                   '\n\nFormula:\t'+selectedIon.getFormula().toString()
+            QtWidgets.QMessageBox.information(self.mainWindow, selectedIon.getName(), text, QtWidgets.QMessageBox.Ok)
         elif action == copyRowAction:
             df=pd.DataFrame(data=[table.model().getRow(selectedRow)], columns=table.model().getHeaders())
             df.to_clipboard(index=False,header=True)

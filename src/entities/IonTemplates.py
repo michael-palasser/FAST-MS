@@ -18,6 +18,11 @@ class FragmentationPattern(PatternWithItems):
 
 
     def getFragTemplates(self, direction):
+        '''
+        Returns FragItems for a given direction
+        :param direction: 1 for forward or -1 for backward
+        :return: (list) of FragItems
+        '''
         fragTemplates = []
         for item in self._items:
             if not isinstance(item, FragItem):

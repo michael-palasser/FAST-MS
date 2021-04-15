@@ -37,7 +37,7 @@ def run():
 
     """find __spectrum"""
     print("\n********** finding __spectrum **********")
-    analyser = IntactAnalyser(finder.findIons(configHandler.get('k'), configHandler.get('d'), 1))
+    analyser = IntactAnalyser(finder.findIons(configHandler.get('k'), configHandler.get('d'), True))
 
     """output"""
     print("\n********** output **********")

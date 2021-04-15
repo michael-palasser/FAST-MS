@@ -8,15 +8,22 @@ import numpy as np
 
 class IntactAnalyser(object):
     '''
-
+    Responsible for analysing observed ion lists
     '''
     def __init__(self,ionLists):
+        '''
+        :param (list of list) ionLists: list of lists of IntactIons
+        '''
         self.ionLists = ionLists
         self.minCharge = 250
         self.maxCharge = 0
 
     def calculateAvChargeAndError(self):
-        '''value changed if reduced intensities are used'''
+        '''
+        Calculates average charges and errors of each spectrum
+        :return: lists (floats)
+        '''
+        #value changed if reduced intensities are used
         averageCharges = list()
         averageErrors = list()
         for ionList in self.ionLists:
@@ -41,6 +48,10 @@ class IntactAnalyser(object):
         return averageCharges, averageErrors
 
     def calculateAverageModification(self):
+        '''
+        Calculates average numbers of modifications for each charge of each spectrum
+        :return: list of dicts
+        '''
         averageModifications = list()
         for ionList in self.ionLists:
             averageModificationPerZ = dict()
@@ -57,12 +68,20 @@ class IntactAnalyser(object):
         return averageModifications
 
     def makeChargeArray(self):
+        '''
+        Makes an array filled with observed charges
+        :return: (array) [(charge, 0)]
+        '''
         arr = np.zeros((self.maxCharge - self.minCharge + 1, 2))
         for i in range(self.maxCharge - self.minCharge + 1):
             arr[i][0] = self.minCharge + i
         return arr
 
     def calculateModifications(self):
+        '''
+        Calculates the abundance of each modification for each charge state in each spectrum
+        :return: (list of dicts) list of dicts {(str) modification: array([charge, percentage])}
+        '''
         modificationsInSpectra = list()
         #avOfModInSpectra = list()
         for ionList in self.ionLists:
@@ -89,6 +108,10 @@ class IntactAnalyser(object):
         return modificationsInSpectra
 
     def getIonList(self):
+        '''
+        Returns ionLists with sorted ions
+        :return: (list of list of IntactIon)
+        '''
         returnedLists = list()
         for ionList in self.ionLists:
             returnedLists.append(sorted(ionList,key=lambda obj:obj.getMz()))

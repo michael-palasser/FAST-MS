@@ -17,17 +17,11 @@ class FragmentLibraryBuilder(object):
 
     def __init__(self, properties, maxMod):
         '''
-        Constructor
-        :param precName: name of precursor (String)
-        :param __sequence: sequenceList (list)
-        :param molecule: RNA / DNA ? P (String)
-        :param modification: modification of precursor
-        :param maxMod: number of modifications on precursor
-        forwardDict: dict of forward-fragments types (keys) and formulas
-        backwardDict: dict of backward-fragments types (keys) and formulas
-        removeList: list of fragments which should be removed
-        __fragmentLibrary: list of all fragments
-        radicalDict: list of fragments which contain radicals
+        :type properties: PropertyStorage
+        :param properties: propertyStorage of search
+        :param (int) maxMod: number of modifications on precursor
+        fragmentLibrary: list of all fragments
+        precursor: Precursor fragment (type Fragment)
         '''
         self.__sequence = properties.getSequence()
         self.__molecule = properties.getMolecule()
@@ -51,8 +45,8 @@ class FragmentLibraryBuilder(object):
     def buildSimpleLadder(self, sequ):
         '''
         Builds a sequenceList ladder of a basic fragment type
-        :param sequ: sequenceList of precursor (list) (either from 5' or 3')
-        :return: the ladder (dict: key=sequenceList(list), val=formula(MolecularFormula))
+        :param (list) sequ: sequenceList of precursor either from 5' or 3')
+        :return: (dict) the ladder (key=sequenceList(list), val=formula(MolecularFormula))
         '''
         simpleLadder = list()
         length = 1
@@ -72,35 +66,36 @@ class FragmentLibraryBuilder(object):
     def checkForResidue(residue, sequence):
         '''
         Checks if sequenceList contains a corresponding residue for residue-specific fragments
-        :param residue: String
-        :param sequence: list
-        :return: boolean
+        :param (str) residue:
+        :param (list) sequence:
+        :return: (bool)
         '''
         return (residue == '') or (residue == '-') or (residue in sequence)
 
 
     def checkForProlines(self, type, sequ, nextBB):
         '''
-        No c- and z-fragments after a proline in sequenceList. Function checks if last amino acid is proline.
-        :param type: fragment type of fragment
-        :param sequ: sequenceList of fragment
-        :param nextBB: next building block in sequence
-        :return: 1 for c- or z-fragments of proteins if last amino acid in sequenceList is a proline, else: 0
+        No c- and z-fragments at proline. Function checks if corresponding amino acid is proline.
+        :param (str) type: fragment type of fragment
+        :param (list) sequ: sequenceList of fragment
+        :param (str) nextBB: next building block in sequence
+        :return: (bool) True for c- or z-fragments of proteins if corresponding amino acid is a proline, else: False
         '''
         if self.__sequence.getMolecule() == 'Protein':
             if type == 'c' and nextBB == 'P':  # ToDo: Hydroxyproline etc.
-                return 1
+                return True
             elif type == 'z' and sequ[-1]  == 'P':
-                return 1
-        return 0
+                return True
+        return False
 
 
     def createFragmentLadder(self, basicLadder, fragTemplates):
         '''
         Creates a fragment ladder
-        :param basicLadder: fragment ladder of a basic fragment type (see function buildSimpleLadder)
-        :param fragTemplates: corresponding fragment dictionary (self.forwardDict, self.backwardDict)
-        :return: ladder (list of Fragments)
+        :param (list) basicLadder: fragment ladder of a basic fragment type (see function buildSimpleLadder)
+        :type fragTemplates: FragItem
+        :param fragTemplates: corresponding fragmenttemplate
+        :return: (list) ladder (list of Fragment-objects)
         '''
         ladder = list()
         sequLength = len(self.__sequence.getSequenceList())
@@ -144,6 +139,11 @@ class FragmentLibraryBuilder(object):
 
     @staticmethod
     def processTemplateName(templName):
+        '''
+        Splits the name of a template into species and modification
+        :param (str) templName:
+        :return: (tuple) species, modification
+        '''
         search = reSearch(r"([+,-])",templName)
         if search == None:
             return templName, ""
@@ -151,12 +151,12 @@ class FragmentLibraryBuilder(object):
         return templName[0:search.start()], templName[search.start():]
 
 
-    #ToDo: adducts
     def addPrecursor(self, simpleFormula):
         '''
         Calculates molecular formulas of precursor ions
-        :param basicFormula: template to calculate formula of precursor
-        :return: precursorFragments (list of Fragments)
+        :type simpleFormula: MolecularFormula
+        :param simpleFormula: template to calculate formula of precursor
+        :return: (list) precursorFragments (list of Fragments)
         '''
         precursorFragments = []
         sequence = self.__sequence.getSequenceList()
@@ -199,7 +199,6 @@ class FragmentLibraryBuilder(object):
     def createFragmentLibrary(self):
         '''
         Creates the final fragment library (list of Fragments). Stored in self.__fragmentLibrary
-        :return: void
         '''
         if len(self.__modifPattern.getExcluded())>0:
             print('These nrOfModifications are excluded:')
@@ -220,22 +219,19 @@ class FragmentLibraryBuilder(object):
 
     def addNewIsotopePattern(self):
         '''
-        Calls calculateIsotopePattern() function (class MolecularFormula) and subtracts electron mass if fragment contains radicals
-        :return: void
+        Calls calculateIsotopePattern() function (class MolecularFormula) and subtracts electron mass if fragment
+        contains radicals. Calculation is parallelized if length of (precursor) sequence is longer than criticalLength
         '''
         """factor = 1
         if self.__sequence.getMolecule() == 'Protein':
             factor = 0.5
         if len(self.__sequence.getSequenceList()*factor<25):"""
-        #if len(self.__fragmentLibrary)<800:
         criticalLength = 30
         if self.__sequence.getMolecule() == 'Protein':
             criticalLength = 60
         if len(self.__sequence.getSequenceList())<criticalLength: #flag == 0:
             for fragment in self.__fragmentLibrary:
                 fragment.setIsotopePattern(fragment.getFormula().calculateIsotopePattern())
-                #if fragment.type in self.radicalDict:
-                #fragment.isotopePattern['mass'] -= fragment.radicals * (E_MASS)
                 print(fragment.getName())
         else:
             p = Pool()
@@ -245,52 +241,13 @@ class FragmentLibraryBuilder(object):
 
 
     def calculateParallel(self, fragment):
+        '''
+        Calculates the isotope pattern
+        :type fragment: Fragment
+        :param fragment: fragment without isotopePattern
+        :return: (Fragment) fragment with isotopePattern
+        '''
         fragment.setIsotopePattern(fragment.getFormula().calculateIsotopePattern())
-        #if fragment.type in self.radicalDict:
-        #fragment.isotopePattern['mass'] -= fragment.radicals * E_MASS
         print(fragment.getName())
         return fragment
 
-
-    """def getChargedModifications(self):
-        '''
-        Finds and returns charged modifications
-        :return: dict of chargedModifications (modification:charge)
-        '''
-        chargedModifications = dict()
-        for modification in self.__modifPattern.getItems():
-            if modification.getZEffect() != 0:
-                chargedModifications[modification.getName()] = modification.getZEffect()
-        return chargedModifications
-
-    
-    def getUnimportantModifs(self):
-        '''
-        Finds and returns modifications where the occupancy should be calculated
-        :return: dict of chargedModifications (modification:charge)
-        '''
-        importantModifications = []
-        for modification in self.__modifPattern.getItems():
-            if modification.getCalcOccupancy() == True:
-                importantModifications.append(modification.getName())
-        return importantModifications
-
-    def getFragItemDict(self):
-        fragItemDict = dict()
-        for fragTemplate in self.__fragmentation.getItems():
-            fragItemDict[fragTemplate.getName()] = fragTemplate
-        return fragItemDict"""
-
-    #ToDo
-    """def selectFragmentsByDir(self, fragDict, dir):
-        forwardFrags = [fragTemplate.getName() for fragTemplate in self.__fragmentation.getItems()
-                            if fragTemplate.getDirection()==dir]
-        return {key:val for key,val in fragDict.items() if key in forwardFrags}"""
-
-
-    '''def getFragmentsByDir(self, dir):
-        return [fragTemplate.getName() for fragTemplate in self.__fragmentation.getItems()
-                            if fragTemplate.getDirection()==dir]
-
-    def filterByDir(self, fragDict, dir):
-        return {key: val for key, val in fragDict.items() if key in self.getFragmentsByDir(dir)}'''

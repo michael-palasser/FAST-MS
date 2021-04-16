@@ -55,9 +55,9 @@ class AbstractRepository(ABC):
     def get(self, property, value):
         """
 
-        :param property: Searched attribute (String)
+        :param (str) property: Searched attribute
         :param value: expected value of property
-        :return:
+        :return: (list)
         """
         cur = self._conn.cursor()
         sql = 'SELECT * FROM ' + self._mainTable + ' WHERE ' + property + '=?'
@@ -84,9 +84,8 @@ class AbstractRepository(ABC):
 
     def update(self, vals): #ToDo
         """
-
+        Updates (main) attribute
         :param vals: new attributes, last attribute must be id
-        :return:
         """
         #print(vals)
         #print(vals[0])
@@ -98,6 +97,10 @@ class AbstractRepository(ABC):
 
 
     def delete(self, name):
+        '''
+        :param (str) name:
+        :return: id of deleted species
+        '''
         cur = self._conn.cursor()
         cur.execute('SELECT id FROM ' + self._mainTable+ ' WHERE name=?', (name,))
         id = cur.fetchall()[0]

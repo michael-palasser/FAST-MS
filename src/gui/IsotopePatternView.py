@@ -1,6 +1,6 @@
 from PyQt5 import QtWidgets, QtCore
 
-from src.IsotopePatternService import IsotopePatternService
+from src.top_down.IsotopePatternService import IsotopePatternService
 from src.Services import *
 from src.gui.IonTableWidget import IsoPatternIon
 from src.gui.PeakViews import IsoPatternPeakWidget

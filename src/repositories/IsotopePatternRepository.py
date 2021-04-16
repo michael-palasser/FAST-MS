@@ -38,7 +38,7 @@ class IsotopePatternReader(object):
         '''
         Reads and processes isotope patterns from existing file
         :param file: file with istope patterns (in folder Fragment_lists)
-        :return: void
+        :return: (list) fragmentLibrary
         '''
         isotopePatternDict = dict()
         #print(self.__file)
@@ -77,6 +77,13 @@ class IsotopePatternReader(object):
         return fragmentLibrary
 
     def checkEquality(self, fragment, savedPattern):
+        '''
+        Checks if stored isotope pattern is correct
+        :type fragment: Fragment
+        :param (Fragment) fragment: freshly created Fragment
+        :param savedPattern: isotope pattern from file
+        :raises UnvalidIsotopePatternException if not equal
+        '''
         newPattern = fragment.getFormula().calcIsotopePatternSlowly(2)
         for i in range(2):
             if newPattern[i]['m/z'] - savedPattern[i]['m/z'] > 10 ** (-6):
@@ -91,8 +98,7 @@ class IsotopePatternReader(object):
     def saveIsotopePattern(self, fragmentLibrary):
         '''
         Saves calculated isotope patterns to a file
-        :param file: csv-file in folder Fragment_lists
-        :return: void
+        :param (list) fragmentLibrary: list of Fragment objects
         '''
         np.set_printoptions(suppress=True)
         #M_max = 0

@@ -37,11 +37,12 @@ class SpectrumHandler(object):
 
     def __init__(self, properties, precursor, settings):
         '''
-        Constructor
-        :param molecule: RNA/DNA/P (String)
-        :param sequence: sequential list of monomers
-        :param fragmentLibrary: list of fragments from AbstractLibraryBuilder
-        :param chargedModifications: output of getChargedModifications()-fct (AbstractLibraryBuilder): dict
+        Constructor, also processes spectrum
+        :param properties: propertyStorage of search
+        :type properties: PropertyStorage
+        :param precursor: precursor Fragment
+        :type precursor: Fragment
+        :param (dict) settings: search settings
         '''
 
         self.__sequList = properties.getSequenceList()
@@ -66,6 +67,11 @@ class SpectrumHandler(object):
                              ('calcInt', np.float64), ('error', np.float32), ('used', np.bool_)])
 
     def getSpectrum(self, *args):
+        '''
+        Returns either full or part of spectrum (peak list)
+        :param (tuple of float) args: if args (lowerbound, upperbound), just part of the spectrum is returned
+        :return: (ndarray(dtype=float, ndim=2)) spectrum
+        '''
         if args and args[1]:
             return self.__spectrum[np.where((self.__spectrum[:, 0] > args[0]) & (self.__spectrum[:, 0] < args[1]))]
         return self.__spectrum
@@ -73,8 +79,11 @@ class SpectrumHandler(object):
     def getUpperBound(self):
         return self.__upperBound
 
-
     def addSpectrum(self,filePath):
+        '''
+        Add spectrum from file
+        :param (str) filePath: path of txt or csv file
+        '''
         with open(filePath, mode='r') as f:
             if filePath[-4:] == '.csv':
                 self.__spectrum = self.addSpectrumFromCsv(f)
@@ -83,12 +92,20 @@ class SpectrumHandler(object):
         self.resizeSpectrum()
 
     def addSpectrumFromCsv(self, file):
+        '''
+        :param file: opended csv-file
+        :return: (ndarray(dtype=float, ndim=2)) [(m/z, int)]
+        '''
         try:
             return np.loadtxt(file, delimiter=',', skiprows=1, usecols=[0, 2])
         except IndexError:
             return np.loadtxt(file, delimiter=';', skiprows=1, usecols=[0, 2])
 
     def addSpectrumFromTxt(self, file):
+        '''
+        :param file: opended txt-file
+        :return: (ndarray(dtype=float, ndim=2)) [(m/z, int)]
+        '''
         spectralList = list()
         for i,line in enumerate(file):
             if line.startswith("m/z"):
@@ -107,13 +124,21 @@ class SpectrumHandler(object):
         return np.array(spectralList)
 
     def resizeSpectrum(self):
-        #self.precMz = self.getMz(self.precursor.formula.calculateMonoIsotopic(), self.__charge, self.precursor.radicals)
+        '''
+        Truncates spectrum
+        '''
         self.__spectrum = self.__spectrum[np.where(self.__spectrum[:, 0] < (self.findUpperBound() + 10))]
         print("\nmax m/z:", self.__upperBound)
 
     @staticmethod
     def getMz(mass, z, radicals):
-        #print(z ,mass/z + self.protonMass*self.mode)
+        '''
+        Calculates m/z
+        :param (float) mass:
+        :param (int) z:
+        :param (int) radicals:
+        :return: (float) m/z
+        '''
         if z != 0:
             return abs(mass/z + protMass) + radicals*(eMass + protMass)/z
         else:
@@ -121,6 +146,10 @@ class SpectrumHandler(object):
 
 
     def findUpperBound(self):
+        '''
+        Finds the highest m/z in spectrum where non-noise peaks occur
+        :return: (int) m/z (upperBound)
+        '''
         print("\n********** Finding upper bound m/z - Window in spectralFile containing fragments ********** ")
         windowSize = configs['upperBoundWindowSize']
         currentMz = configs['minUpperBound']
@@ -128,13 +157,13 @@ class SpectrumHandler(object):
         peaksHigherThanNoise = list()
         while currentMz < 2500:
             noise = self.calculateNoise(currentMz,windowSize)
-            currentWindow = self.returnArrayInWindow(self.__spectrum, currentMz, windowSize)
+            currentWindow = self.getPeaksInWindow(self.__spectrum, currentMz, windowSize)
             peaksHigherThanNoise.append((currentMz, currentWindow[np.where(currentWindow > (noise * 5))].size))
             currentMz += 1
         peaksHigherThanNoise = np.array(peaksHigherThanNoise)
         windowSize, currentMz = 100 , 1200
         while currentMz < 2500:
-            currentWindow = self.returnArrayInWindow(peaksHigherThanNoise, currentMz, windowSize)
+            currentWindow = self.getPeaksInWindow(peaksHigherThanNoise, currentMz, windowSize)
             sumInt = np.sum(currentWindow[:, 1])
             print(currentMz, sumInt)
             if sumInt < 5:
@@ -148,10 +177,19 @@ class SpectrumHandler(object):
         return currentMz
 
     def calculateNoise(self, point, windowSize):
+        '''
+        Calculates the noise within a certain window in the spectrum
+        Noise is calculated by averaging the lowest peaks within window multiplied by a factor (0.67).
+        Lowest peaks are filtered by iteratively filtering out peaks with intensities higher than average+tolerance
+        If the number of peaks is below a threshold, the user indicated noise level is used
+        :param (float) point: m/z (median)
+        :param (float) windowSize: window: [point-windowSize/2, point+windowSize/2]
+        :return: (float) noise
+        '''
         noise = self.__settings['noiseLimit']
-        currentWindow = self.returnArrayInWindow(self.__spectrum, point, windowSize)
+        currentWindow = self.getPeaksInWindow(self.__spectrum, point, windowSize)
         if currentWindow[:, 1].size < 11:
-            currentWindow = self.returnArrayInWindow(self.__spectrum, point, windowSize*2)
+            currentWindow = self.getPeaksInWindow(self.__spectrum, point, windowSize * 2)
         if currentWindow[:,1].size > 10:     #parameter
             peakInt = currentWindow[:, 1]
             avPeakInt = np.average(peakInt)
@@ -175,9 +213,16 @@ class SpectrumHandler(object):
         return noise*0.6
 
     @staticmethod
-    def returnArrayInWindow(array, point, windowSize):
-        spectralWindowIndex = np.where(abs(array[:, 0] - point) < (windowSize / 2))
-        return array[spectralWindowIndex]
+    def getPeaksInWindow(allPeaks, point, windowSize):
+        '''
+        Returns all peaks within a given m/z window
+        :param (ndarray(dtype=float, ndim=2)) allPeaks: spectral peaks
+        :param (float) point: m/z (median)
+        :param (float) windowSize: window: [point-windowSize/2, point+windowSize/2]
+        :return: (ndarray(dtype=float, ndim=2)) peaks within window
+        '''
+        spectralWindowIndex = np.where(abs(allPeaks[:, 0] - point) < (windowSize / 2))
+        return allPeaks[spectralWindowIndex]
 
 
     @staticmethod
@@ -185,6 +230,10 @@ class SpectrumHandler(object):
         return (value - theoValue) / theoValue * 10 ** 6
 
     def getNormalizationFactor(self):
+        '''
+        Calculates factor to normalise charge to number of precursor charges
+        :return: (float) normalisation factor
+        '''
         molecule = self.__properties.getMolecule().getName()
         if molecule in ['RNA', 'DNA'] and self.__sprayMode == -1:
             return self.__charge / self.precursor.getFormula().formulaDict['P']
@@ -196,7 +245,7 @@ class SpectrumHandler(object):
         else:
             return self.__charge  / len(self.__sequList)#self.getChargeScore(self.__sequList)
 
-    def getChargeScore(self, fragment): #ToDo
+    def getChargeScore(self, fragment): #ToDo: For proteins, currently not use
         chargeDict = self.__properties.getGPBsOfBBs(self.__sprayMode)
         score = 0
         """if self.__properties.getFragmentation()[fragment.type].getDirection() == 1 and self.__sprayMode== 1:
@@ -207,6 +256,12 @@ class SpectrumHandler(object):
         return score
 
     def getModCharge(self, fragment):
+        '''
+        Calculates the charge altering effect by the modification of a fragment
+        :param fragment: concerning fragment
+        :type fragment: Fragment
+        :return: (float) charge shift
+        '''
         modCharge = 0
         for mod, charge in self.__properties.getChargedModifications().items():
             print(mod, charge)
@@ -220,13 +275,21 @@ class SpectrumHandler(object):
         return modCharge
 
     #ToDo: Test SearchParameters, Proteins!, Parameters
-    def getSearchParameters(self, fragment,precModCharge):
+    def getSearchParameters(self, fragment, precModCharge):
+        '''
+        Calculates the most probable charge (z) for a given fragment and returns a range of this z +/- a tolerance
+        The charge is calculated using the number of phosphates (RNA/DNA) or using the length of the sequence (proteins)
+        :param fragment: corresponding fragment
+        :type fragment: Fragment
+        :param (float) precModCharge: charge effect of precursor modification
+        :return: (generator) range between lowest possible z and highest possible z
+        '''
         molecule = self.__properties.getMolecule().getName()
         if molecule in ['RNA' ,'DNA'] and self.__sprayMode == -1:
             #probableZ = (fragment.number-1) * self.normalizationFactor
             probableZ = fragment.getFormula().formulaDict['P']* self.normalizationFactor
             if fragment.getFormula().formulaDict['P'] == 0:
-                return None
+                return range(0,0)
             #probableZ = fragment.formula.formulaDict['P'] * self.normalizationFactor
         elif molecule == 'Protein':
             #probableZ = self.getChargeScore(fragment) * self.normalizationFactor
@@ -251,10 +314,11 @@ class SpectrumHandler(object):
 
     #ToDo: Refactor
     def findPeaks(self, fragmentLibrary):
-        """finds fragments and isotope distribution; parameters:
-        low_limit  ... peaks with a lower m/z will be neglected
-        high_limit ... peaks with a higher m/z will be neglected
-        peakQuantitiy ... how many isotope peaks are used for basic calculation of pattern1 (highest peakQuantitiy used)"""
+        '''
+        Assigns peaks in spectrum to isotope peaks of an ion
+
+        :param (list) fragmentLibrary: list of Fragment-objects
+        '''
         np.set_printoptions(suppress=True)
         precModCharge = self.getModCharge(self.precursor)
         self.normalizationFactor = self.getNormalizationFactor()
@@ -263,8 +327,8 @@ class SpectrumHandler(object):
             fragment.setIsotopePattern(np.sort(fragment.getIsotopePattern(), order='calcInt')[::-1])
             zRange = self.getSearchParameters(fragment,precModCharge)
             peakQuantitiy = fragment.getNumberOfHighestIsotopes()
-            if zRange == None:
-                continue
+            #if zRange == None:
+            #    continue
             for z in zRange:
                 theoreticalPeaks = copy.deepcopy(fragment.getIsotopePattern())
                 #if self.__settings['dissociation'] in ['ECD', 'EDD', 'ETD'] and fragment.number == 0:

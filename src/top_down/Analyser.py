@@ -4,7 +4,6 @@ Created on 10 Aug 2020
 @author: michael
 '''
 import numpy as np
-from math import isnan
 
 class Analyser(object):
     '''

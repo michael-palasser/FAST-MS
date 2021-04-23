@@ -153,10 +153,11 @@ class TD_MainController(object):
         self._intensityModeller = IntensityModeller(self.configs)
         start = time.time()
         print("\n********** Calculating relative abundances **********")
-        for ion in self.spectrumHandler.foundIons:
+        for ion in self.spectrumHandler.getFoundIons():
             self._intensityModeller.processIons(ion)
-        for ion in self.spectrumHandler.ionsInNoise:
+        for ion in self.spectrumHandler._ionsInNoise:
             self._intensityModeller.processNoiseIons(ion)
+        self.spectrumHandler.emptyLists()
         print("\ndone\nexecution time: ", round((time.time() - start) / 60, 3), "min\n")
 
         """Handle spectrum with same monoisotopic peak and charge"""
@@ -176,7 +177,7 @@ class TD_MainController(object):
 
         """remodelling overlaps"""
         print("\n********** Re-modelling overlaps **********")
-        complexPatterns = self._intensityModeller.findOverlaps()
+        complexPatterns = self._intensityModeller.remodelOverlaps()
         if len(complexPatterns) > 0:
             view = CheckOverlapsView(complexPatterns, self.spectrumHandler.getSpectrum())
             print("User Input requested")
@@ -373,7 +374,7 @@ class TD_MainController(object):
 
 
     def saveSingleIon(self, newIon):
-        newIonHash = self._intensityModeller.getHash(newIon)
+        newIonHash = newIon.getHash()
         if newIonHash in self._intensityModeller.getObservedIons():
             ionDict = self._intensityModeller.getObservedIons()
             index = 0
@@ -400,7 +401,7 @@ class TD_MainController(object):
     def repeatModellingOverlaps(self):
         self._info.repeatModelling()
         self.saved = False
-        self._intensityModeller.findOverlaps(1000)
+        self._intensityModeller.remodelOverlaps(True)
         self.verticalLayout.removeWidget(self.tabWidget)
         self.tabWidget.hide()
         del self.tabWidget
@@ -493,7 +494,7 @@ class TD_MainController(object):
         if action == showAction:
             global view
             ajacentIons, minLimit, maxLimit  = self._intensityModeller.getAdjacentIons(selectedHash)
-            ajacentIons = [ion for ion in ajacentIons if self._intensityModeller.getHash(ion)!=selectedHash]
+            ajacentIons = [ion for ion in ajacentIons if ion.getHash()!=selectedHash]
             peaks = self.spectrumHandler.getSpectrum(minLimit-1, maxLimit+1)
             view = SpectrumView(None, peaks, [selectedIon]+ajacentIons, np.min(selectedIon.getIsotopePattern()['m/z']),
                                 np.max(selectedIon.getIsotopePattern()['m/z']), np.max(selectedIon.getIsotopePattern()['relAb']))
@@ -576,7 +577,7 @@ class TD_MainController(object):
         searchService.saveSearch(self._savedName, self.settings, self._intensityModeller.getObservedIons().values(),
                                  self._intensityModeller.getDeletedIons().values(),
                                  self._intensityModeller.getRemodelledIons(),
-                                 self.spectrumHandler.searchedChargeStates, self._info)
+                                 self.spectrumHandler.getSearchedChargeStates(), self._info)
         self.saved = True
         print('done')
         self._infoView.update()

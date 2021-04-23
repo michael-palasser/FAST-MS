@@ -161,7 +161,7 @@ class ExcelWriter(BasicExcelWriter):
             row = self.writeIons(self.worksheet4, deletedIons,precursorRegion)
             self.writePeaks(self.worksheet4, row + 3, 0, deletedIons)
             self.writeIons(self.worksheet5, self.sortByName(intensityModeller.getRemodelledIons()), precursorRegion)
-            self.writeSumFormulas(fragmentLibrary, spectrumHandler.searchedChargeStates)
+            self.writeSumFormulas(fragmentLibrary, spectrumHandler.getSearchedChargeStates())
             self.writeInfos(infoString)
         finally:
             self.closeWorkbook()

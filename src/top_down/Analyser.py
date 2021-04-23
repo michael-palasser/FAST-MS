@@ -16,7 +16,6 @@ class Analyser(object):
         self._modification = modification
         #self._percentageDict = dict()
 
-
     def setIons(self, ions):
         self._ions = ions
 

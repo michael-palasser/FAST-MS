@@ -518,7 +518,7 @@ class TD_MainController(object):
 
     def showOccupancyPlot(self):
         self._analyser.setIons(list(self._intensityModeller.getObservedIons().values()))
-        percentageDict = self._analyser.calculatePercentages(self.configs.get('interestingIons'),
+        percentageDict = self._analyser.calculateOccupancies(self.configs.get('interestingIons'),
                                                              self._propStorage.getUnimportantModifs())
         '''if percentageDict == None:
             dlg = QtWidgets.QMessageBox(self.mainWindow, title='Unvalid Request',
@@ -538,7 +538,7 @@ class TD_MainController(object):
 
     def showChargeDistrPlot(self, reduced):
         self._analyser.setIons(list(self._intensityModeller.getObservedIons().values()))
-        chargeDict, minMaxCharges = self._analyser.getAvCharges(self.configs.get('interestingIons'), reduced)
+        chargeDict, minMaxCharges = self._analyser.analyseCharges(self.configs.get('interestingIons'), reduced)
         plotFactory1 = PlotFactory(self.mainWindow)
         #plotFactory2 = PlotFactory(self.mainWindow)
         forwardVals = self._propStorage.filterByDir(chargeDict,1)

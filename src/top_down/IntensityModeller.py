@@ -537,7 +537,7 @@ class IntensityModeller(object):
         :param (ndarray, dtype = [float, float, float, bool]) peakArray: input array (m/z, relAb (spectral),
             calcInt (theo.), used)
         :return: (tuple[ndarray(dtype=[float, float, float, bool]), float, float]) output array (with modelled calcInt),
-            summed intensity, quality of the fit ()
+            summed intensity, quality of the fit
         '''
         noOutliers = np.where(peakArray['used'])
         solution, outliers = \

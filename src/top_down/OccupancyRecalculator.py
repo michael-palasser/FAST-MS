@@ -65,7 +65,7 @@ def run(mainWindow):
             date = datetime.now().strftime("%d/%m/%Y %H:%M")
             excelWriter.worksheet1.write(0,0,date)
             row = excelWriter.writeAbundancesOfSpecies(2, analyser.calculateRelAbundanceOfSpecies())
-            excelWriter.writeOccupancies(row,sequence,analyser.calculatePercentages(speciesList))
+            excelWriter.writeOccupancies(row, sequence, analyser.calculateOccupancies(speciesList))
             excelWriter.closeWorkbook()
             try:
                 subprocess.call(['open', os.path.join(path, "Spectral_data","Occupancies_out.xlsx")])

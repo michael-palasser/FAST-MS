@@ -150,7 +150,7 @@ class ExcelWriter(BasicExcelWriter):
                                analyser.getModificationLoss(),
                                analyser.calculateRelAbundanceOfSpecies(),
                                properties.getSequenceList(),
-                               analyser.calculatePercentages(self.configs['interestingIons'], properties.getUnimportantModifs()),
+                               analyser.calculateOccupancies(self.configs['interestingIons'], properties.getUnimportantModifs()),
                                properties.getFragmentsByDir(1), properties.getFragmentsByDir(-1))
             #self.analyser.createPlot(__maxMod)
             observedIons = self.sortByName(intensityModeller.getObservedIons().values())

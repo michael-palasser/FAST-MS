@@ -28,7 +28,7 @@ class Analyser(object):
     def calculateRelAbundanceOfSpecies(self):
         '''
         Calculates relative abundances of all fragment types including the precursor ion
-        :return: (dict[str:float]) relative fragment type abundances {type:abundance}
+        :return: (dict[str,float]) relative fragment type abundances {type:abundance}
         '''
         relAbundanceOfSpecies = dict()
         totalSum = 0
@@ -67,7 +67,7 @@ class Analyser(object):
         Calculates the modified proportion for each fragment
         :param (list of str) interestingIons: fragment types which should be analysed
         :param (list of str) args: list of modifications which should not be used for the calculation (optional)
-        :return: (dict[str:ndarray[float]]) dictionary {fragment type: proportions [fragment number x proportion]}
+        :return: (dict[str,ndarray[float]]) dictionary {fragment type: proportions [fragment number x proportion]}
             of modified proportions for every (interesting) fragment type
         '''
         if self._modification == "":
@@ -112,9 +112,9 @@ class Analyser(object):
     def calculateProportions(self, tempDict):
         '''
         Calculates the proportion of the interesting value (col 2)
-        :param (dict[str:ndarray(dtype=[float,float,float])]) tempDict: dict {fragment type: array} with array columns:
+        :param (dict[str,ndarray(dtype=[float,float,float])]) tempDict: dict {fragment type: array} with array columns:
             summed values, interesting values, 0
-        :return: (dict[str:ndarray(dtype=[float,float,float])]) dict {fragment type: array} with array columns:
+        :return: (dict[str,ndarray(dtype=[float,float,float])]) dict {fragment type: array} with array columns:
             summed values, interesting values, interesting proportion
         '''
         proportions = dict()

@@ -15,7 +15,7 @@ class IntensityModeller(object):
     '''
     def __init__(self, configurations):
         '''
-        :param (dict) configurations: configurations
+        :param (dict[str,Any]) configurations: configurations
         '''
         self._configs = configurations
         self._correctedIons = dict()
@@ -495,7 +495,7 @@ class IntensityModeller(object):
         '''
         Returns the m/z range of the isotope peaks of list of ions and the intensity of the highest isotope peak
         :param (list of FragmentIon) ions: list of ions
-        :return: tuple[float, float, float] lowest m/z, highest m/z, intensity of the highest (spectral) isotope peak
+        :return: tuple[float,float,float] lowest m/z, highest m/z, intensity of the highest (spectral) isotope peak
         '''
         limits = np.array([(np.min(ion.getIsotopePattern()['m/z']), np.max(ion.getIsotopePattern()['m/z']),
                             np.max(ion.getIsotopePattern()['relAb'])) for ion in ions])
@@ -507,7 +507,7 @@ class IntensityModeller(object):
         Returns the m/z area where precursor ions occur
         :param precName: name of the sequence
         :param precCharge: charge of the precursor
-        :return: (tuple[float, float]) lowest m/z, m/z of precursor +70/precCharge (to include cationic adducts)
+        :return: (tuple[float,float]) lowest m/z, m/z of precursor +70/precCharge (to include cationic adducts)
         '''
         precursorList = list()
         for ion in self._correctedIons.values():

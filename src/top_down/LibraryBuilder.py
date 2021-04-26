@@ -46,7 +46,7 @@ class FragmentLibraryBuilder(object):
         '''
         Builds a sequenceList ladder of a basic fragment type
         :param (list) sequ: sequenceList of precursor either from 5' or 3')
-        :return: (dict) the ladder (key=sequenceList(list), val=formula(MolecularFormula))
+        :return: (dict[list[str],MolecularFormula]) the ladder (key=sequenceList(list), val=formula(MolecularFormula))
         '''
         simpleLadder = list()
         length = 1

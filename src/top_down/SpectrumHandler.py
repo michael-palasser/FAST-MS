@@ -42,7 +42,7 @@ class SpectrumHandler(object):
         :type properties: PropertyStorage
         :param precursor: precursor Fragment
         :type precursor: Fragment
-        :param (dict) settings: search settings
+        :param (dict[str,Any]) settings: search settings
         '''
 
         self.__sequList = properties.getSequenceList()

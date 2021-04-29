@@ -26,6 +26,12 @@ def readCsv(file):
 
 
 def run(mainWindow):
+    '''
+    Calculates modification/ligand occupancies of a given ion list.
+    Input: csv file
+    Output: xlsx file
+    :param (PyQt5.QtWidgets.QMainWindow | Any) mainWindow: Qt parent
+    '''
     service = SequenceService()
     dlg = OccupancyRecalcStartDialog(mainWindow, service.getAllSequenceNames())
     dlg.exec_()

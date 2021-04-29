@@ -113,7 +113,7 @@ class AbstractSimpleEditorController(ABC):
         print('args_simple',args)
         try:
             self.pattern = self.service.save(args[0])
-        except UnvalidInputException as e:
+        except InvalidInputException as e:
             traceback.print_exc()
             QtWidgets.QMessageBox.warning(self.mainWindow, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
 
@@ -369,8 +369,8 @@ class MoleculeEditorController(AbstractEditorController):
         id = self.pattern.getId()
         if args and args[0] == None:
             id = None
-        super(MoleculeEditorController, self).save(Makromolecule(self.widgets["name"].text(), self.widgets["gain"].text(),
-                                   self.widgets["loss"].text(), self.readTable(self.table, self.service.getBoolVals()), id))
+        super(MoleculeEditorController, self).save(Macromolecule(self.widgets["name"].text(), self.widgets["gain"].text(),
+                                                                 self.widgets["loss"].text(), self.readTable(self.table, self.service.getBoolVals()), id))
 
     def openAgain(self, *args):
         super(MoleculeEditorController, self).openAgain()

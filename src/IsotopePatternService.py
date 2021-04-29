@@ -2,7 +2,7 @@ import copy
 
 import numpy as np
 
-from src.Exceptions import UnvalidInputException
+from src.Exceptions import InvalidInputException
 from src.MolecularFormula import MolecularFormula
 from src.Services import MoleculeService, FragmentIonService, ModificationService, PeriodicTableService
 from src.entities.AbstractEntities import AbstractItem1
@@ -84,11 +84,11 @@ class IsotopePatternService(object):
     def checkFormula(self,formulaString):
         formula = AbstractItem1.stringToFormula(formulaString,{},1)
         if formula == {}:
-            raise UnvalidInputException(formulaString, ", Unvalid format")
+            raise InvalidInputException(formulaString, ", Unvalid format")
         for key in formula.keys():
             if key not in self._elements:
                 print("Element: " + key + " unknown")
-                raise UnvalidInputException(formulaString, ", Element: " + key + " unknown")
+                raise InvalidInputException(formulaString, ", Element: " + key + " unknown")
         return formula
 
     def getFormula(self, molecule, sequString, fragmentationName, fragTemplName, modifPatternName, modifName, nrMod):
@@ -126,7 +126,7 @@ class IsotopePatternService(object):
     def model(self, peaks):
         peakArr = np.array(peaks, dtype=self._peakDtype)
         if np.all(peakArr['relAb']==0):
-            raise UnvalidInputException('All Intensities = 0', '')
+            raise InvalidInputException('All Intensities = 0', '')
         isotopePattern, intensity, quality =  self._intensityModeller.modelSimply(peakArr)
         self._ion.setIsoIntQual(isotopePattern, intensity, quality)
         return self._ion

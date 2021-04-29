@@ -7,7 +7,7 @@ from os.path import join
 import numpy as np
 
 from src import path
-from src.Exceptions import UnvalidIsotopePatternException
+from src.Exceptions import InvalidIsotopePatternException
 
 
 class IsotopePatternReader(object):
@@ -63,14 +63,14 @@ class IsotopePatternReader(object):
                     isotopePattern.append((row[1], row[2]))
                 except IndexError:
                     print(row)
-                    raise UnvalidIsotopePatternException(row, " incorrect")
+                    raise InvalidIsotopePatternException(row, " incorrect")
             if i < 1:
-                raise UnvalidIsotopePatternException("", "no data in file")
+                raise InvalidIsotopePatternException("", "no data in file")
             isotopePatternDict[name] = np.array(isotopePattern, dtype=[('m/z',np.float64),('calcInt', np.float64)])
         print('Checking correctness of fragment library')
         for fragment in fragmentLibrary:
             if fragment.getName() not in isotopePatternDict:
-                raise UnvalidIsotopePatternException(fragment.getName(),"not found in file")
+                raise InvalidIsotopePatternException(fragment.getName(), "not found in file")
             self.checkEquality(fragment, isotopePatternDict[fragment.getName()])
             fragment.setIsotopePattern(isotopePatternDict[fragment.getName()])
         print('done')
@@ -82,17 +82,17 @@ class IsotopePatternReader(object):
         :type fragment: Fragment
         :param (Fragment) fragment: freshly created Fragment
         :param savedPattern: isotope pattern from file
-        :raises UnvalidIsotopePatternException if not equal
+        :raises InvalidIsotopePatternException if not equal
         '''
         newPattern = fragment.getFormula().calcIsotopePatternSlowly(2)
         for i in range(2):
             if newPattern[i]['m/z'] - savedPattern[i]['m/z'] > 10 ** (-6):
-                raise UnvalidIsotopePatternException(fragment.getName(), "mass incorrect " +
-                     str(newPattern[i]['m/z']) + " != " + str(savedPattern[i]['m/z']))
+                raise InvalidIsotopePatternException(fragment.getName(), "mass incorrect " +
+                                                     str(newPattern[i]['m/z']) + " != " + str(savedPattern[i]['m/z']))
             if newPattern[i]['calcInt'] - savedPattern[i]['calcInt'] > 10 ** (-6):
                 print(newPattern)
-                raise UnvalidIsotopePatternException(fragment.getName(), '('+str(i)+") relative Abundance incorrect " +
-                     str(newPattern[i]['calcInt']) + " != " + str(savedPattern[i]['calcInt']))
+                raise InvalidIsotopePatternException(fragment.getName(), '(' + str(i) + ") relative Abundance incorrect " +
+                                                     str(newPattern[i]['calcInt']) + " != " + str(savedPattern[i]['calcInt']))
 
 
     def saveIsotopePattern(self, fragmentLibrary):

@@ -9,11 +9,10 @@ from xlsxwriter.utility import xl_rowcol_to_cell
 
 class IntactExcelWriter(object):
     '''
-    Responsible for output of intact ion search
+    Responsible for output of intact ion search to xlsx file
     '''
     def __init__(self, file):
         '''
-
         :param (str) file: path of xlsx output file
         '''
         self.workbook = xlsxwriter.Workbook(file)
@@ -25,8 +24,8 @@ class IntactExcelWriter(object):
 
     def writeParameters(self, parameters):
         '''
-        :param (dict) parameters: {(str) name: value}
-        :return:
+        Writes all user defined parameters to xlsx file
+        :param (dict[str,Any]) parameters: {(str) name: value}
         '''
         self.worksheet1.write(self.row,0,'parameters:')
         self.row += 1
@@ -38,7 +37,8 @@ class IntactExcelWriter(object):
 
     def writeIons(self, listOfIons):
         '''
-        :param (list of Ion) listOfIons: list of Ion objects
+        Writes list of observed ion of one spectrum to xlsx file
+        :param (list[IntactIon]) listOfIons: list of Ion objects
         '''
         self.worksheet1.write(self.row,0,'observed __spectrum:')
         row = self.row+1
@@ -52,6 +52,7 @@ class IntactExcelWriter(object):
 
     def writeAvChargeAndError(self, averageCharge, avError):
         '''
+        Writes av. charge and av. error of one spectrum to xlsx file
         :param (float) averageCharge: average charge in a spectrum
         :param (float) avError:  average ppm error in a spectrum
         '''
@@ -63,7 +64,8 @@ class IntactExcelWriter(object):
 
     def writeAverageMod(self, avModifPerCharge):
         '''
-        :param (dict) avModifPerCharge: {(int) charge: (float) av. modification}
+        Writes av. modifications per charge of one spectrum to xlsx file
+        :param (dict[int,float]) avModifPerCharge: {charge: av. modification}
         '''
         self.worksheet1.write(self.row,self.col,'av. number of modifications:')
         self.worksheet1.write_row(self.row+1,self.col,['z','value'])
@@ -81,7 +83,9 @@ class IntactExcelWriter(object):
 
     def writeModifications(self, modifications):
         '''
-        :param (dict) modifications: {(str) modification: (ndarray [charge,percentage]) }
+        Writes the percentages of each modification for each charge state in one spectrum to xlsx file
+        :param (dict[str,ndarray(dtype=[int,float])]) modifications:
+            {modification: 2D array of [(charge,percentage)]}
         '''
         self.percentFormat = self.workbook.add_format({'num_format': '0.0%'})
         self.worksheet1.write(self.row,self.col,'modifications:')
@@ -111,13 +115,14 @@ class IntactExcelWriter(object):
 
     def writeAnalysis(self, parameters, listsOfIons, avCharges,avErrors,avModifPerCharges, modificationsInSpectra):
         '''
-        writes analysis to xlsx file
-        :param (dict) parameters: {(str) name: value}
-        :param (list of list) listsOfIons: list of list of Ion objects
-        :param (list of float) avCharges: average charge in a spectrum
-        :param (list of float) avErrors:  average ppm error in a spectrum
-        :param (list of dict) avModifPerCharges: {(int) charge: (float) av. modification}: {(int) charge: (float) av. modification}avModifPerCharges:
-        :param (list of dict) modificationsInSpectra: list of {(str) modification: (ndarray [charge,percentage]) }
+        Writes the analysis to xlsx file
+        :param (dict[str,Any]) parameters: {name: value}
+        :param (list[list[IntactIon]]) listsOfIons: observed ions for each spectrum
+        :param (list[float]) avCharges: average charges in each spectrum
+        :param (list[float]) avErrors: average ppm error in each spectrum
+        :param (list[dict[int,float]]) avModifPerCharges: av. modifications {charge: av. modification} in each spectrum
+        :param (list[dict[str,ndarray(dtype=[int,float])]]) modificationsInSpectra:
+            {modification: 2D array of [(charge,percentage)])} for each spectrum
         '''
         self.writeParameters(parameters)
         for i in range(len(avCharges)):

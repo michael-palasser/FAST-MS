@@ -1,7 +1,7 @@
 from abc import ABC
 
-from src.Exceptions import UnvalidInputException
-from src.entities.GeneralEntities import Makromolecule, Element, BuildingBlock
+from src.Exceptions import InvalidInputException
+from src.entities.GeneralEntities import Macromolecule, Element, BuildingBlock
 from src.repositories.TD_Repositories import *
 from src.repositories.MoleculeRepository import MoleculeRepository
 from src.repositories.PeriodicTableRepository import PeriodicTableRepository
@@ -37,14 +37,14 @@ class AbstractService(ABC):
         for i,val in enumerate(item):
             if val == "" and i in self.necessaryValues:
                 print(i, item[i])
-                raise UnvalidInputException(item[0], "No empty values allowed")
+                raise InvalidInputException(item[0], "No empty values allowed")
             if i in integers:
                 if val == '':
                     val = 0
                 try:
                     float(val)
                 except ValueError:
-                    raise UnvalidInputException(item[0], "Number required, Column: " + str(i) + ", " +val)
+                    raise InvalidInputException(item[0], "Number required, Column: " + str(i) + ", " + val)
 
 
 class AbstractServiceForPatterns(AbstractService, ABC):
@@ -76,22 +76,22 @@ class AbstractServiceForPatterns(AbstractService, ABC):
     def checkIfUnique(self, pattern):
         if pattern.getName() in self.repository.getAllPatternNames():
             if pattern.getId() != self.repository.getPattern(pattern.getName()).getId():
-                raise UnvalidInputException(pattern.getName(), "Name must be unique!")
+                raise InvalidInputException(pattern.getName(), "Name must be unique!")
 
     def checkFormatOfItems(self, items, *args):
         if len(items)<1:
-            raise UnvalidInputException('',"Values empty")
+            raise InvalidInputException('', "Values empty")
         elements = args[0]
         integers = args[1]
         for item in items:
             formula = self.getFormula(item)
             if formula != None:
                 #if (len(formula) < 1 and (item[]:
-                #    raise UnvalidInputException(item[0], "molecular formula unvalid")
+                #    raise InvalidInputException(item[0], "molecular formula unvalid")
                 for key in formula.keys():
                     if key not in elements:
                         print(item, ", Element: "+ key + " unknown")
-                        raise UnvalidInputException(item[0], "Element: " + key + " unknown")
+                        raise InvalidInputException(item[0], "Element: " + key + " unknown")
             self.checkFormatOfItem(item,integers)
 
     def getFormula(self, item):
@@ -114,7 +114,7 @@ class AbstractServiceForPatterns(AbstractService, ABC):
 
     def checkName(self, name):
         if (name == '') or (name[0].islower()) or (len(name) > 1 and any(x.isupper() for x in name[1:])):
-            raise UnvalidInputException(name, "First Letter must be uppercase, all other letters must be lowercase!")
+            raise InvalidInputException(name, "First Letter must be uppercase, all other letters must be lowercase!")
 
 
     def restart(self):
@@ -147,7 +147,7 @@ class PeriodicTableService(AbstractServiceForPatterns):
     def checkName(self, name):
         super(PeriodicTableService, self).checkName(name)
         if any(char.isdigit() for char in name):
-            raise UnvalidInputException(name, "Element name must not contain numbers!")
+            raise InvalidInputException(name, "Element name must not contain numbers!")
 
     def getFormula(self, item):
         return None
@@ -158,7 +158,7 @@ class PeriodicTableService(AbstractServiceForPatterns):
                 if val in self.repository.getIntegers():
                     float(val)
             except ValueError:
-                raise UnvalidInputException(item[0], "Number required: " + val)'''
+                raise InvalidInputException(item[0], "Number required: " + val)'''
 
     def getElements(self, elements):
         """elementDict = dict()
@@ -175,7 +175,7 @@ class MoleculeService(AbstractServiceForPatterns):
         super(MoleculeService, self).__init__(MoleculeRepository(), (0,1))
 
     def makeNew(self):
-        return Makromolecule("", "", "", 10*[["", "", 0.,0.]], None)
+        return Macromolecule("", "", "", 10 * [["", "", 0., 0.]], None)
 
     def getFormula(self, item):
         return BuildingBlock(item).getFormula()
@@ -185,7 +185,7 @@ class MoleculeService(AbstractServiceForPatterns):
         elements = elementRep.getAllPatternNames()
         for key in pattern.getFormula().keys():
             if key not in elements:
-                raise UnvalidInputException(pattern.getName(), "Element: " + key + " unknown")
+                raise InvalidInputException(pattern.getName(), "Element: " + key + " unknown")
         [self.checkName(bb[0]) for bb in pattern.getItems()]
         self.checkFormatOfItems(pattern.getItems(),elements, self.repository.getIntegers())
         pattern = super(MoleculeService, self).save(pattern)
@@ -194,7 +194,7 @@ class MoleculeService(AbstractServiceForPatterns):
 
     '''def checkName(self, name):
         if (name[0].islower() or (len(name) > 1 and any(x.isupper() for x in name[1:]))):
-            raise UnvalidInputException(name, "First Letter must be uppercase, all other letters must be lowercase!")'''
+            raise InvalidInputException(name, "First Letter must be uppercase, all other letters must be lowercase!")'''
 
     """def getItemDict(self, name):
         itemDict = dict()
@@ -228,13 +228,13 @@ class SequenceService(AbstractService):
         molecules = moleculeRepository.getAllPatternNames()
         for sequence in sequences:
             """if sequenceList.getMolecule() not in molecules:
-                raise UnvalidInputException(sequenceList.getName(),sequenceList.getMolecule()+" unknown")
+                raise InvalidInputException(sequenceList.getName(),sequenceList.getMolecule()+" unknown")
             monomereNames = [item[0] for item in moleculeRepository.getPattern(sequenceList.getMolecule()).getItems()]
             for link in sequenceList.getSequenceList():
                 if link not in monomereNames:
-                    raise UnvalidInputException(sequenceList.getName(),"Problem in Sequence: "+ link + " unknown")"""
+                    raise InvalidInputException(sequenceList.getName(),"Problem in Sequence: "+ link + " unknown")"""
             if sequence.getMolecule() not in moleculeRepository.getAllPatternNames():
-                raise UnvalidInputException(sequence.getName(), "Molecule " + sequence.getMolecule()+' unknown')
+                raise InvalidInputException(sequence.getName(), "Molecule " + sequence.getMolecule() + ' unknown')
             self.checkFormatOfItem(sequence, molecules,
                             [mon[0] for mon in moleculeRepository.getPattern(sequence.getMolecule()).getItems()])
             if sequence.getName() in savedNames:
@@ -246,13 +246,13 @@ class SequenceService(AbstractService):
     def checkFormatOfItem(self, item, *args):
         molecules, monomereNames = args[0], args[1]
         if item.getMolecule() not in molecules:
-            raise UnvalidInputException(item.getName(), item.getMolecule() + " unknown")
+            raise InvalidInputException(item.getName(), item.getMolecule() + " unknown")
         sequList = item.getSequenceList()
         if len(sequList)<1:
-            raise UnvalidInputException(item.getName(), "Problem with Sequence: Format incorrect")
+            raise InvalidInputException(item.getName(), "Problem with Sequence: Format incorrect")
         for link in item.getSequenceList():
             if link not in monomereNames:
-                raise UnvalidInputException(item.getName(), "Problem in Sequence: " + link + " unknown")
+                raise InvalidInputException(item.getName(), "Problem in Sequence: " + link + " unknown")
 
 
 class FragmentIonService(AbstractServiceForPatterns):
@@ -271,13 +271,13 @@ class FragmentIonService(AbstractServiceForPatterns):
         for item in pattern.getItems():
             print(item[5])
             if int(item[5]) not in [1,-1]:
-                raise UnvalidInputException(item, "Direction must be 1 or -1 and not " + str(item[5]))
+                raise InvalidInputException(item, "Direction must be 1 or -1 and not " + str(item[5]))
         self.checkFormatOfItems(pattern.getItems2(), elements, self.repository.getIntegers()[1])
         if pattern.getPrecursor() not in [item[0] for item in pattern.getItems2() if item[5]]==1:
-            raise UnvalidInputException(pattern.getPrecursor(), 'Precursor not found or not enabled')
+            raise InvalidInputException(pattern.getPrecursor(), 'Precursor not found or not enabled')
         """for key in pattern.getFormula().keys():
             if key not in elements:
-                raise UnvalidInputException(pattern.getName(), "Element: "+ key + " unknown")"""
+                raise InvalidInputException(pattern.getName(), "Element: "+ key + " unknown")"""
         pattern = super(FragmentIonService, self).save(pattern)
         elementRep.close()
         return pattern
@@ -357,7 +357,7 @@ class IntactIonService(AbstractServiceForPatterns):
         elements = PeriodicTableRepository().getAllPatternNames()
         for key in pattern.getFormula().keys():
             if key not in elements:
-                raise UnvalidInputException(pattern.getName(), "Element: " + key + " unknown")
+                raise InvalidInputException(pattern.getName(), "Element: " + key + " unknown")
         pattern = super(IntactIonService, self).save(pattern)
         elementRep.close()
         return pattern'''

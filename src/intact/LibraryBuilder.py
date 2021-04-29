@@ -29,7 +29,7 @@ class IntactLibraryBuilder(object):
     def createLibrary(self):
         '''
         creates a library of modified ions
-        :return: (dict) ions (name:formula)
+        :return: (dict[str,MolecularFormula]) library of formulas {name:formula}
         '''
         unmodFormula = self.getUnmodifiedFormula()
         library = {"" : (unmodFormula.calculateMonoIsotopic(),0)}
@@ -43,7 +43,7 @@ class IntactLibraryBuilder(object):
 
     def getUnmodifiedFormula(self):
         '''
-
+        Calculates molecular formula of unmodified intact ion
         :return: (MolecularFormula) formula of unmodified intact ion
         '''
         formula = MolecularFormula(self._molecule.getFormula())

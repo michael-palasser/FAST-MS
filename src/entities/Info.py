@@ -3,7 +3,7 @@ from datetime import datetime
 
 class Info(object):
     '''
-    class which stores informations of user inputs
+    class which stores informations about user inputs
     '''
     def __init__(self, *args):
         '''
@@ -46,7 +46,9 @@ class Info(object):
 
     def changeIon(self, origIon, newIon):
         '''
-        if the intensity of an ion is manually changed
+        Logs manual changes of intensity
+        :param (FragmentIon) origIon: original ion
+        :param (FragmentIon) newIon: ion with changed values
         '''
         self._infoString += '\n* changed ' + self.ionToString(origIon) + \
                 ';   old Int.: ' + str(round(origIon.getIntensity())) + ', new: ' + str(round(newIon.getIntensity()))

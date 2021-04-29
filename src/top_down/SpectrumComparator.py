@@ -33,6 +33,10 @@ def deHash(hash):
     return (name,z)
 
 def run(mainWindow):
+    '''
+    Compares several top-down MS ion lists and writes the result to a xlsx file
+    :param (PyQt5.QtWidgets.QMainWindow | Any) mainWindow: Qt parent
+    '''
     #spectralFiles = ['0107.txt','0707.txt','0807.txt','0907.txt']
     """while True:
         fileName = input('Enter file name: ')

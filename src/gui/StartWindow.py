@@ -107,7 +107,7 @@ class Window(AbstractMainWindow):
             controller()
         except CanceledException:
             pass
-        '''except UnvalidInputException:
+        '''except InvalidInputException:
             traceback.print_exc()
             print('hey')
             QtWidgets.QMessageBox.warning(self, "Problem occured", traceback.format_exc(), QtWidgets.QMessageBox.Ok)'''

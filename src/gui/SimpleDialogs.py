@@ -2,7 +2,7 @@ from PyQt5 import QtWidgets
 from os.path import join, isdir
 
 from src import path
-from src.Exceptions import UnvalidInputException
+from src.Exceptions import InvalidInputException
 from src.gui.AbstractDialogs import AbstractDialog
 from src.gui.Widgets import OpenFileWidget
 
@@ -91,7 +91,7 @@ class ExportDialog(AbstractDialog):
     def accept(self):
         dir = self.widgets['dir'].text()
         if (dir != '') and not isdir(dir):
-            raise UnvalidInputException(self.widgets['dir'].text(), "not found")
+            raise InvalidInputException(self.widgets['dir'].text(), "not found")
         super(ExportDialog, self).accept()
 
     '''def getFormat(self):

@@ -11,6 +11,10 @@ from src import path
 
 
 def main(mainWindow):
+    '''
+    Models a theroretical isotope pattern to given peak intensities. Input and output are txt file
+    :param (PyQt5.QtWidgets.QMainWindow | Any) mainWindow: Qt parent
+    '''
     inputFile = os.path.join(path, 'Spectral_data','model_input.txt')
     subprocess.call(['open', inputFile])
     start = QtWidgets.QMessageBox.question(mainWindow, 'Modelling Isotope Patterns ',

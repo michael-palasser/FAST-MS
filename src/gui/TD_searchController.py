@@ -16,13 +16,13 @@ from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QAbstractItemView
 
 from src import path
-from src.Exceptions import UnvalidIsotopePatternException, UnvalidInputException
+from src.Exceptions import InvalidIsotopePatternException, InvalidInputException
 from src.entities.Info import Info
 from src.gui.InfoView import InfoView
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.repositories.IsotopePatternRepository import IsotopePatternReader
 from src.top_down.Analyser import Analyser
-from src.top_down.SearchProperties import PropertyStorage
+from src.entities.SearchProperties import PropertyStorage
 from src.top_down.LibraryBuilder import FragmentLibraryBuilder
 from src.top_down.SearchService import SearchService
 from src.top_down.SpectrumHandler import SpectrumHandler
@@ -63,7 +63,7 @@ class TD_MainController(object):
             try:
                 if self.search() == 0:
                     self.setUpUi(parent)
-            except UnvalidInputException as e:
+            except InvalidInputException as e:
                 traceback.print_exc()
                 QtWidgets.QMessageBox.warning(None, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
         else:
@@ -122,7 +122,7 @@ class TD_MainController(object):
                 self.libraryBuilder.setFragmentLibrary(patternReader)
                 libraryImported = True
                 print("done")
-            except UnvalidIsotopePatternException:
+            except InvalidIsotopePatternException:
                 traceback.print_exc()
                 choice = QtWidgets.QMessageBox.question(None, "Problem with importing list of isotope patterns",
                         "Imported Fragment Library from " + patternReader.getFile() + " incomplete\n"

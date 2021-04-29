@@ -13,7 +13,7 @@ from scipy.constants import R
 
 from scipy.constants import electron_mass, proton_mass, N_A
 
-from src.Exceptions import UnvalidInputException
+from src.Exceptions import InvalidInputException
 from src.entities.Ions import FragmentIon
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 
@@ -131,7 +131,7 @@ class SpectrumHandler(object):
                         call(['open', self.__settings['spectralData']])
                     except:
                         pass
-                    raise UnvalidInputException('Problem with format in spectral data', '  '.join(line) +' (line '+str(i)+
+                    raise InvalidInputException('Problem with format in spectral data', '  '.join(line) + ' (line ' + str(i) +
                                                 ') Format must be  "m/z    Int." !')
         return np.array(spectralList)
 

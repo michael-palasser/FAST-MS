@@ -1,6 +1,6 @@
 from os.path import join
 
-from src.entities.GeneralEntities import Makromolecule, BuildingBlock
+from src.entities.GeneralEntities import Macromolecule, BuildingBlock
 from src.repositories.AbstractRepositories import AbstractRepositoryWithItems
 
 
@@ -43,8 +43,8 @@ class MoleculeRepository(AbstractRepositoryWithItems):
 
     def getPattern(self, name):
         pattern = self.get('name', name)
-        return Makromolecule(pattern[1], pattern[2], pattern[3], self.getItems(pattern[0],
-                                               [key for key in self._itemDict.keys()][0]), pattern[0])
+        return Macromolecule(pattern[1], pattern[2], pattern[3], self.getItems(pattern[0],
+                                                                               [key for key in self._itemDict.keys()][0]), pattern[0])
 
     def getItems(self,patternId, table):
         listOfItems = list()

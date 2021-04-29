@@ -26,6 +26,12 @@ def readCsv(file):
 
 
 def run(mainWindow):
+    '''
+    Calculates modification/ligand occupancies of a given ion list thereby neglecting base losses.
+    Input: csv file
+    Output: xlsx file
+    :param (PyQt5.QtWidgets.QMainWindow | Any) mainWindow: Qt parent
+    '''
     service = SequenceService()
     sequenceName = 'neoRibo'
     sequence = service.get(sequenceName).getSequenceList()

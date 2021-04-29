@@ -194,7 +194,7 @@ class IsotopePatternView(QtWidgets.QMainWindow):
                                 self.inputForm.text(), charge, int(self.radicals.text()), self._intensity,
                                 self.fragmentationBox.currentText(), self.fragmentBox.currentText(),
                                 self.modPatternBox.currentText(), self.modifBox.currentText(), self.nrOfMods.value())
-        except UnvalidInputException as e:
+        except InvalidInputException as e:
             QtWidgets.QMessageBox.warning(self, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
             return
         self.restartView(ion, neutralMass)
@@ -292,7 +292,7 @@ class IsotopePatternView(QtWidgets.QMainWindow):
         try:
             ion = self._controller.model(peaks)
             self._intensity = round(ion.getIntensity())
-        except UnvalidInputException as e:
+        except InvalidInputException as e:
             QtWidgets.QMessageBox.warning(self, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
             return
         #ionVals = list(self._ionTable.getIon(0))

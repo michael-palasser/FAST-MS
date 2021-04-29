@@ -5,7 +5,7 @@ from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QMessageBox
 
 from src import path
-from src.Exceptions import UnvalidInputException
+from src.Exceptions import InvalidInputException
 from src.Services import SequenceService
 from src.gui.Widgets import OpenFileWidget
 
@@ -171,14 +171,14 @@ class StartDialog(AbstractDialog):
             newSettings['spectralData'] += '.txt'
         try:
             newSettings = self.checkValues(newSettings)
-        except UnvalidInputException as e:
+        except InvalidInputException as e:
             traceback.print_exc()
             QMessageBox.warning(self, "Problem occured", e.__str__(), QMessageBox.Ok)
         return newSettings
 
     def checkValues(self, configs, *args):
         if configs['sequName'] not in SequenceService().getAllSequenceNames():
-            raise UnvalidInputException(configs['sequName'], "not found")
+            raise InvalidInputException(configs['sequName'], "not found")
         if self.checkSpectralDataFile(args[0], configs['spectralData']):
             configs['spectralData'] = join(path, 'Spectral_data', args[0], configs['spectralData'])
         return configs
@@ -191,7 +191,7 @@ class StartDialog(AbstractDialog):
             if isfile(spectralDataPath):
                 return True
             else:
-                raise UnvalidInputException(spectralDataPath, "not found")
+                raise InvalidInputException(spectralDataPath, "not found")
         return False
 
 

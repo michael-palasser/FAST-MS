@@ -6,7 +6,7 @@ import pandas as pd
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import Qt
 
-from src.Exceptions import UnvalidInputException
+from src.Exceptions import InvalidInputException
 from src.gui.IonTableWidget import IonTableWidget
 from src.gui.ResultView import AbstractTableModel
 
@@ -247,7 +247,7 @@ class IsoPatternPeakWidget(GeneralPeakWidget):
                     intensity = int(self.item(row, 1).text())
                 itemList.append((intensity, int(self.item(row, 3).checkState()/2)==1, float(self.item(row, 0).text())))
             except ValueError:
-                raise UnvalidInputException('Intensities must be numbers',self.item(row, 1).text())
+                raise InvalidInputException('Intensities must be numbers', self.item(row, 1).text())
         return itemList
 
     def showOptions(self, table, pos):

@@ -2,7 +2,17 @@ from src.entities.AbstractEntities import PatternWithItems, AbstractItem2, Abstr
 
 
 class FragmentationPattern(PatternWithItems):
+    '''
+    Class to store top-down fragment templates (including precursor ions)
+    '''
     def __init__(self, name, precursor, fragmentTypes, precursorFragments, id):
+        '''
+        :param (str) name:
+        :param (PrecursorItem) precursor: precursor template
+        :param (list[FragItem] | list[tuple[str,str,str,str,int|str,int, int]]) fragmentTypes: list of fragment templates
+        :param (list[PrecursorItem] | list[tuple[str,str,str,str,int|str,int]]) precursorFragments: list of precursor templates
+        :param (int) id:
+        '''
         super(FragmentationPattern, self).__init__(name, fragmentTypes,id)
         self.__precursor = precursor
         self.__items2 = precursorFragments
@@ -20,8 +30,8 @@ class FragmentationPattern(PatternWithItems):
     def getFragTemplates(self, direction):
         '''
         Returns FragItems for a given direction
-        :param direction: 1 for forward or -1 for backward
-        :return: (list) of FragItems
+        :param (int) direction: 1 for forward or -1 for backward
+        :return: (list[FragItem]) filtered FragItems
         '''
         fragTemplates = []
         for item in self._items:
@@ -34,21 +44,41 @@ class FragmentationPattern(PatternWithItems):
     def toString(self):
         string = ''
         for item in self._items:
-            string += '\n\t' + '\t'.join(item.toString())
+            if isinstance(item, FragItem):
+                string += '\n\t' + '\t'.join(item.toString())
+            else:
+                string += '\n\t' + '\t'.join([str(val) for val in item])
         string += '\n\t-Precursor-Fragments:'
         for item in self.__items2:
-            string += '\n\t' + '\t'.join(item.toString())
+            if isinstance(item, PrecursorItem):
+                string += '\n\t' + '\t'.join(item.toString())
+            else:
+                string += '\n\t' + '\t'.join([str(val) for val in item])
         return string
 
 
 class PrecursorItem(AbstractItem3):
+    '''
+    Template for precursor species
+    '''
     def __init__(self, item):
+        '''
+        :param (tuple[str,str,str,str,int|str,int]) item: name, atomic gain, atomic loss, corresponding residue,
+            number of radicals, enabled
+        '''
         super(PrecursorItem, self).__init__(name=item[0], gain=item[1], loss=item[2],
                                             residue=item[3], radicals=item[4], enabled=item[5])
 
 
 class FragItem(AbstractItem3):
+    '''
+    Template for fragments
+    '''
     def __init__(self, item):
+        '''
+        :param (tuple[str,str,str,str,int|str,int, int]) item: name, atomic gain, atomic loss,
+            corresponding residue, number of radicals, direction of the fragment (+1 or -1), enabled
+        '''
         item = self.processItem(item)
         super(FragItem, self).__init__(name=item[0], gain=item[1], loss=item[2],
                                             residue=item[3], radicals=item[4], enabled=item[6])
@@ -63,7 +93,18 @@ class FragItem(AbstractItem3):
 
 
 class ModificationPattern(PatternWithItems):
+    '''
+    Class to store modification/ligand templates
+    '''
     def __init__(self, name, modification, listOfMod, exclusionList, id):
+        '''
+        :param (str) name: simple name for storage
+        :param (str) modification: name of prime modification
+        :param (list[ModifiedItem] | list[tuple[str,str,str,str,int|str,int|str, int, int]]) listOfMod:
+            list of modification templates
+        :param (list[tuple[str]]) exclusionList: list of modifications which should be ignored
+        :param (int) id:
+        '''
         super(ModificationPattern, self).__init__(name, listOfMod,id)
         self.__modification = modification
         self.__items2 = exclusionList
@@ -83,13 +124,24 @@ class ModificationPattern(PatternWithItems):
     def toString(self):
         string = self.__modification
         for item in self._items:
-            string += '\n\t' + '\t'.join(item.toString())
+            if isinstance(item, ModifiedItem):
+                string += '\n\t' + '\t'.join(item.toString())
+            else:
+                string += '\n\t' + '\t'.join([str(val) for val in item])
         string += '\n\t-Excluded:\n\t' + ', '.join([tup[0] for tup in self.__items2])
         return string
 
 
 class ModifiedItem(AbstractItem3):
+    '''
+    Template for modifications/ligands
+    '''
     def __init__(self, item):
+        '''
+        :param (tuple[str,str,str,str,int|str,int|str, int, int]) item: name, atomic gain, atomic loss,
+            corresponding residue, number of radicals, charge shifting effect by modification, flag if modification
+            should be ignored when calculating occupancy, enabled
+        '''
         item = self.processItem(item)
         super(ModifiedItem, self).__init__(name=item[0], gain=item[1], loss=item[2],
                                             residue=item[3], radicals=item[4], enabled=item[7])
@@ -108,12 +160,27 @@ class ModifiedItem(AbstractItem3):
 
 
 class IntactPattern(PatternWithItems):
+    '''
+    Class to store templates for intact ion search
+    '''
     def __init__(self,  name, items, id):
+        '''
+        :param (str) name:
+        :param (list[IntactModification] | list[tuple[str,str,str,int,int]]) items: list of modification templates
+        :param (int) id:
+        '''
         super(IntactPattern, self).__init__(name, items, id)
 
 
 class IntactModification(AbstractItem2):
+    '''
+
+    '''
     def __init__(self, item):
+        '''
+        :param (tuple[str,str,str,int,int]) item: name, atomic gain, atomic loss, nr. of modifications on object,
+            enabled
+        '''
         item = self.processItem(item)
         super(IntactModification, self).__init__(name=item[0], enabled=item[4], gain=item[1], loss=item[2])
         self._nrMod = item[3]

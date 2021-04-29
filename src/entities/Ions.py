@@ -4,7 +4,7 @@ Created on 3 Jul 2020
 @author: michael
 '''
 from math import exp
-from numpy import array, dtype
+#from numpy import array, dtype
 
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 
@@ -12,17 +12,16 @@ noiseLimit = ConfigurationHandlerFactory.getTD_SettingHandler().get('noiseLimit'
 
 class Fragment(object):
     '''
-    uncharged fragment
+    Uncharged fragment
     '''
 
     def __init__(self, type, number, modification, formula, sequence, radicals):
         '''
-        Constructor
         :param (str) type: typically a, b, c, d, w, x, y or z
         :param (int) number: length of fragment-sequence
-        :param (str) modification: +modification, +ligands and -loss (String)
+        :param (str) modification: +modification, +ligands and -loss
         :param (MolecularFormula) formula: MolecularFormula
-        :param (list of str) sequence: list of building blocks
+        :param (list [str]) sequence: list of building blocks
         '''
         self._type = type
         self._number = number
@@ -156,7 +155,6 @@ class FragmentIon(Fragment):
         :param (float) error:
         :param (float) quality:
         :param (str) comment:
-        :return: None
         '''
         self._intensity = int(intensity)
         self._error = error
@@ -171,7 +169,7 @@ class FragmentIon(Fragment):
     def toString(self):
         '''
         For printing purposes
-        :return: str
+        :return: (str)
         '''
         return str(round(self.getMonoisotopic(), 5)) + "\t\t" + str(self._charge) + "\t" + str(
             round(self._intensity)) + "\t" + '{:12}'.format(self.getName()) + "\t" + \
@@ -180,12 +178,10 @@ class FragmentIon(Fragment):
     def getMonoisotopic(self):
         '''
         Calculates the (observed) monoisotopic m/z from the theoretical and the error of the ion
-        :return:
+        :return: (float) monoisotopic m/z
         '''
         #return np.min(self.isotopePattern['m/z_theo']) * (1 + self.error * 10 ** (-6))  # np.min(self.isotopePattern['m/z'])
         return self._monoisotopicRaw * (1 + self._error * 10 ** (-6))
-
-
 
     def getSignalToNoise(self):
         return self._intensity / self._noise
@@ -253,7 +249,13 @@ class FragmentIon(Fragment):
 class IntactIon(object):
     def __init__(self, name, modification, mz,theoMz, charge, intensity, nrOfModifications):
         '''
-
+        :param (str) name: name of the ion
+        :param (str) modification: modification/ligand/loss
+        :param (float) mz: monoisotopic m/z
+        :param (float) theoMz: theoretical (calculated) m/z
+        :param (int) charge: charge
+        :param (float) intensity: intensity or relative abundance
+        :param (int) nrOfModifications: nr. of modifications on ion
         '''
         self._sequName = name
         self._modification = modification

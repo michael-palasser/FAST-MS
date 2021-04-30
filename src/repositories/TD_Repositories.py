@@ -1,10 +1,13 @@
-import sqlite3
+#import sqlite3
 from os.path import join
 
 from src.entities.IonTemplates import FragmentationPattern, FragItem, ModificationPattern, ModifiedItem
 from src.repositories.AbstractRepositories import AbstractRepositoryWith2Items
 
 class FragmentationRepository(AbstractRepositoryWith2Items):
+    '''
+    Repository for fragmentation patterns
+    '''
     def __init__(self):
         #self.__conn = sqlite3.connect(dbFile)
         super(FragmentationRepository, self).__init__(join('top_down.db'), 'fragPatterns',
@@ -45,21 +48,27 @@ class FragmentationRepository(AbstractRepositoryWith2Items):
 
     def createPattern(self, pattern):
         """
-        Function create() creates new pattern which is filled by insertIsotopes
-        :param modificationPattern:
-        :return:
+        Creates a new entry in the main table and subsidiary entries in the subtables
+        :param (FragmentationPattern) pattern: the object which should be stored within the database
         """
-        # try:
         patternId = self.create((pattern.getName(),pattern.getPrecursor()))
         self.insertItems(patternId, pattern.getItems(), 0)
         self.insertItems(patternId, pattern.getItems2(), 1)
 
     def updatePattern(self, pattern):
+        '''
+        Updates a parent entry and all subsidiary entries
+        :param (FragmentationPattern) pattern: object whose values should be updated in the database
+        '''
         self.update((pattern.getName(), pattern.getPrecursor(), pattern.getId()))
         super(FragmentationRepository, self).updatePattern(pattern)
 
 
     def getItemColumns(self):
+        '''
+        Returns the column names and corresponding tooltips for the user
+        :return: (dict[str,str]) dictionary of {column name: tooltip}
+        '''
         columns1 = super(FragmentationRepository, self).getItemColumns()
         columns1.update({'Residue': "If the species is dependent on the occurence of a specific residue within the "
                                     "sequenceList, enter the residue",
@@ -75,6 +84,11 @@ class FragmentationRepository(AbstractRepositoryWith2Items):
         return (columns1,columns2)
 
     def getPattern(self, name):
+        '''
+        Finds a fragmentation pattern entry with subsidiary entries by name
+        :param (str) name: name
+        :return: (FragmentationPattern) fragmentation pattern
+        '''
         pattern = self.get('name', name)
         listOfLists = self.getAllItems(pattern[0])
         try:
@@ -83,6 +97,12 @@ class FragmentationRepository(AbstractRepositoryWith2Items):
             return FragmentationPattern(pattern[1], 'Prec', listOfLists[0], listOfLists[1], pattern[0])
 
     def getAllItems(self, patternId):
+        '''
+        Returns all subsidiary entries of a parent entry
+        :param (int) patternId: parent id
+        :return: (list[list[str, str, str, str, int | str, int, int] | list[list[str, str, str, str, int | str, int]])
+            lists of fragment templates and precursor templates
+        '''
         keyList = [key for key in self._itemDict.keys()]
         listOfLists = []
         listOfItems = []
@@ -98,6 +118,9 @@ class FragmentationRepository(AbstractRepositoryWith2Items):
 
 
 class ModificationRepository(AbstractRepositoryWith2Items):
+    '''
+    Repository for modification patterns
+    '''
     def __init__(self):
         super(ModificationRepository, self).__init__('top_down.db', 'modPatterns',("name","modification"),
                             {'modItems':('name', 'gain', 'loss', 'residue', 'radicals', 'chargeEffect', 'calcOcc',
@@ -134,22 +157,28 @@ class ModificationRepository(AbstractRepositoryWith2Items):
 
     def createPattern(self, pattern):
         """
-        Function create() creates new pattern which is filled by insertIsotopes
-        :param modificationPattern:
-        :return:
+        Creates a new entry in the main table and subsidiary entries in the subtables
+        :param (ModificationPattern) pattern: the object which should be stored within the database
         """
-        # try:
         patternId = self.create((pattern.getName(), pattern.getModification()))
         self.insertItems(patternId, pattern.getItems(), 0)
         self.insertItems(patternId, pattern.getItems2(), 1)
 
 
     def updatePattern(self, pattern):
+        '''
+        Updates a parent entry and all subsidiary entries
+        :param (ModificationPattern) pattern: object whose values should be updated in the database
+        '''
         self.update((pattern.getName(), pattern.getModification(), pattern.getId()))
         super(ModificationRepository, self).updatePattern(pattern)
 
 
     def getItemColumns(self):
+        '''
+        Returns the column names and corresponding tooltips for the user
+        :return: (dict[str,str]) dictionary of {column name: tooltip}
+        '''
         columns = super(ModificationRepository, self).getItemColumns()
         columns.update({'Residue': "If the species is dependent on the occurence of a specific residue within the "
                                    "sequenceList, enter the residue", 'Radicals': "Enter the number of radicals",
@@ -161,11 +190,22 @@ class ModificationRepository(AbstractRepositoryWith2Items):
 
 
     def getPattern(self, name):
+        '''
+        Finds a modification pattern entry with subsidiary entries by name
+        :param (str) name: name
+        :return: (ModificationPattern) molecule
+        '''
         pattern = self.get('name', name)
         listOfLists = self.getAllItems(pattern[0])
         return ModificationPattern(pattern[1], pattern[2], listOfLists[0], listOfLists[1], pattern[0])
 
     def getAllItems(self, patternId):
+        '''
+        Returns all subsidiary entries of a parent entry
+        :param (int) patternId: parent id
+        :return: (list[list[str, str, str, str, int | str, int | str, int, int] | list[tuple[str]])
+            lists of modifications and excluded modifications
+        '''
         keyList = [key for key in self._itemDict.keys()]
         listOfLists = []
         #for table in self._itemDict.keys():

@@ -8,7 +8,7 @@ class FragmentationPattern(PatternWithItems):
     def __init__(self, name, precursor, fragmentTypes, precursorFragments, id):
         '''
         :param (str) name:
-        :param (PrecursorItem) precursor: precursor template
+        :param (str) precursor: precursor name
         :param (list[FragItem] | list[tuple[str,str,str,str,int|str,int, int]]) fragmentTypes: list of fragment templates
         :param (list[PrecursorItem] | list[tuple[str,str,str,str,int|str,int]]) precursorFragments: list of precursor templates
         :param (int) id:

@@ -10,6 +10,9 @@ from src.repositories.AbstractRepositories import AbstractRepositoryWithItems
 from os.path import join
 
 class IntactRepository(AbstractRepositoryWithItems):
+    '''
+    Repository for intact modification patterns
+    '''
     def __init__(self):
         super(IntactRepository, self).__init__(join('intact.db'), 'intactPatterns', ("name",),
                                                {"intactModItems":('name', 'gain', 'loss', 'nrMod','enabled', 'patternId')}, (3,), (4,))
@@ -33,16 +36,31 @@ class IntactRepository(AbstractRepositoryWithItems):
 
 
     def getItemColumns(self):
+        '''
+        Returns the column names and corresponding tooltips for the user
+        :return: (dict[str,str]) dictionary of {column name: tooltip}
+        '''
         return {'Name':"Enter \"+\"modification or \"-\"loss", 'Gain':"molecular formula to be added",
                 'Loss':"molecular formula to be subtracted", 'Nr.Mod.':"How often is species modified",
                 'Enabled':"Activate/Deactivate Species"}
 
 
     def getPattern(self, name):
+        '''
+        Finds an intact pattern entry with its intact modifications by name
+        :param (str) name: name
+        :return: (IntactPattern) intact pattern
+        '''
         pattern = self.get('name', name)
         return IntactPattern(pattern[1], self.getItems(pattern[0],[key for key in self._itemDict.keys()][0]), pattern[0])
 
     def getItems(self,patternId, table):
+        '''
+        Returns the subsidiary intact modification entries of a intact pattern entry
+        :param (int) patternId: parent id
+        :param (str) table: subtable which contains subsidiary entries
+        :return: (list[list[str,str,str,int,int]])
+        '''
         listOfItems = list()
         for item in super(IntactRepository, self).getItems(patternId, [key for key in self._itemDict.keys()][0]):
             listOfItems.append((item[1], item[2], item[3], item[4], item[5]) )
@@ -61,15 +79,18 @@ class IntactRepository(AbstractRepositoryWithItems):
 
     def createPattern(self, pattern):
         """
-        Function create() creates new pattern which is filled by insertIsotopes
-        :param modificationPattern:
-        :return:
+        Creates a new intact pattern entry in the main table and subsidiary entries in the subtable
+        :param (Any) pattern: the object which should be stored within the database
         """
         # try:
         patternId = self.create((pattern.getName(),))
         self.insertItems(patternId, pattern.getItems(), 0)
 
     def updatePattern(self, pattern):
+        '''
+        Updates an intact pattern entry and all subsidiary intact modification entries
+        :param (IntactPattern) pattern: updated IntactPattern object
+        '''
         self.update((pattern.getName(), pattern.getId()))
         self.deleteAllItems(pattern.getId())
         self.insertItems(pattern.getId(), pattern.getItems(), 0)

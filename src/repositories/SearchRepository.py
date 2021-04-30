@@ -1,4 +1,4 @@
-import sqlite3
+#import sqlite3
 import numpy as np
 
 from src.entities.Ions import FragmentIon, Fragment
@@ -7,7 +7,10 @@ from src.repositories.AbstractRepositories import AbstractRepository
 
 
 class SearchRepository(AbstractRepository):
-    def __init__(self, ):
+    '''
+    Repository for storing values of a top-down analysis
+    '''
+    def __init__(self):
         super(SearchRepository, self).__init__('search.db', 'searches',
                                                ('name', "date","sequName", "charge", "fragmentation", "modifications",
                                                 "nrMod", "spectralData", "noiseLimit", "fragLib"), (), ())
@@ -72,9 +75,18 @@ class SearchRepository(AbstractRepository):
                 "parentId" integer NOT NULL );""")
 
     def getAllNames(self):
+        '''
+        Returns the names of all stored sequences
+        :return: (list[str]) names
+        '''
         return [searchVals[1] for searchVals in self.getAll()]
 
     def getSearch(self, name):
+        '''
+        Finds a search by name
+        :param (str) name: name of the search
+        :return: (Search) search
+        '''
         searchVals = self.get('name', name)
         ions, delIons, remIons = [], [], []
         for ionVals in self.getItems(searchVals[0], 'ions'):
@@ -98,6 +110,12 @@ class SearchRepository(AbstractRepository):
 
 
     def getItems(self, parentId, table):
+        '''
+        Returns the subsidiary entries of a search
+        :param (int) parentId: id of the search
+        :param (str) table: corresponding subtable
+        :return: (list[Any]) subsidiary entries
+        '''
         #table = [key for key in self._itemDict.keys()][0]
         cur = self._conn.cursor()
         cur.execute("SELECT * FROM " + table + " WHERE parentId=?", (parentId,))
@@ -106,9 +124,8 @@ class SearchRepository(AbstractRepository):
 
     def createSearch(self, search):
         """
-        Function create() creates new pattern which is filled by insertIsotopes
-        :param modificationPattern:
-        :return:
+        Creates a new search entry and subsidiary entries in the subtables
+        :param (Search) search: new entry
         """
         #try:
         searchId = self.create(search.getVals())
@@ -137,12 +154,24 @@ class SearchRepository(AbstractRepository):
         return cur.lastrowid"""
 
     def insertItems(self, searchId, ions, status):
+        '''
+        Creates new ion and peak entries
+        :param (int) searchId: parent id of the search
+        :param (list[FragmentIon]) ions: list of ions
+        :param (int) status: 1 if ions were deleted, 0 otherwise
+        '''
         for ion in ions:
             ionId = self.createItem('ions', ion.toStorage() + [status, searchId])
             for peak in ion.peaksToStorage():
                 self.createItem('peaks', peak+[ionId])
 
     def createItem(self,table, attributes):
+        '''
+        Creates a subsidiary entry in a subtable
+        :param (str) table: target subtable
+        :param (list[Any] | tuple[Any]) attributes: attributes of the new entry
+        :return: (int) id of the created entry
+        '''
         cur = self._conn.cursor()
         sql = 'INSERT INTO ' + table + '(' + ', '.join(self._depTables[table]) + ''') 
                                       VALUES(''' + (len(self._depTables[table]) * '?,')[:-1] + ')'
@@ -153,6 +182,10 @@ class SearchRepository(AbstractRepository):
 
 
     def updateSearch(self, search):
+        '''
+        Updates a search entry and its subsidiary entries
+        :param (Search) search: updated search
+        '''
         searchId = self.get('name', search.getName())[0]
         self.update(search.getVals() + [searchId])
         self.deleteDependentTables(searchId)
@@ -175,6 +208,10 @@ class SearchRepository(AbstractRepository):
 
 
     def deleteDependentTables(self, searchId):
+        '''
+        Deletes all subsidiary entries of a search
+        :param (int) searchId: parent id of the search
+        '''
         cur = self._conn.cursor()
         for ion in self.getItems(searchId, 'ions'):
             cur.execute("DELETE FROM peaks WHERE parentId=?", (ion[0],))
@@ -183,5 +220,9 @@ class SearchRepository(AbstractRepository):
         self._conn.commit()
 
     def delete(self, searchName):
+        '''
+        Deletes a search by name
+        :param (str) searchName: name
+        '''
         #id = super(AbstractRepositoryWith2Items, self).delete(name)
         self.deleteDependentTables(super(SearchRepository, self).delete(searchName))

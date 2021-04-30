@@ -20,7 +20,7 @@ from src.Exceptions import InvalidIsotopePatternException, InvalidInputException
 from src.entities.Info import Info
 from src.gui.InfoView import InfoView
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
-from src.repositories.IsotopePatternRepository import IsotopePatternReader
+from src.repositories.IsotopePatternRepository import IsotopePatternRepository
 from src.top_down.Analyser import Analyser
 from src.entities.SearchProperties import PropertyStorage
 from src.top_down.LibraryBuilder import FragmentLibraryBuilder
@@ -111,7 +111,7 @@ class TD_MainController(object):
 
         """read existing ion-list file or create new one"""
         libraryImported = False
-        patternReader = IsotopePatternReader()
+        patternReader = IsotopePatternRepository()
         if self.settings['fragLib'] != '':
             settings = [self.settings['fragLib']]
         else:

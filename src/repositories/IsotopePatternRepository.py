@@ -1,8 +1,8 @@
 import csv
 import os
-import sqlite3
-import time
-from os.path import join
+#import sqlite3
+#import time
+#from os.path import join
 
 import numpy as np
 
@@ -10,15 +10,22 @@ from src import path
 from src.Exceptions import InvalidIsotopePatternException
 
 
-class IsotopePatternReader(object):
+class IsotopePatternRepository(object):
+    '''
+    Responsible for managing stored isotope patterns (csv-files)
+    '''
     def __init__(self):
         self.__file = None
-
 
     def getFile(self):
         return self.__file
 
     def findFile(self, settings):
+        '''
+        Checks if a isotope pattern file exists
+        :param (tuple[str,str,int,str]) settings: settings which are relevant for the filename
+        :return: (bool) True if file exists
+        '''
         if len(settings) == 1:
             file = settings[0]
             if not file[-4:] == '.csv':
@@ -37,8 +44,9 @@ class IsotopePatternReader(object):
     def addIsotopePatternFromFile(self, fragmentLibrary):
         '''
         Reads and processes isotope patterns from existing file
-        :param file: file with istope patterns (in folder Fragment_lists)
-        :return: (list) fragmentLibrary
+        :param (str) file: file with isotope patterns (in folder Fragment_lists)
+        :return: (list[]) fragmentLibrary #Todo
+        :raises InvalidIsotopePatternException: if stored isotope pattern does not match newly calculated one
         '''
         isotopePatternDict = dict()
         #print(self.__file)

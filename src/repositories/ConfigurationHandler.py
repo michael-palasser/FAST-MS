@@ -14,6 +14,9 @@ class ConfigHandler(object):
     Class that reads and writes configuration-files (json-format) and stores it as dictionary
     '''
     def __init__(self, configFile):
+        '''
+        :param (str) configFile: path of json file where configuration values are stored
+        '''
         #with openAgain(configFile, "w") as f:
          #   json.dump(json.dumps(parameters), f)
         self.configFile = configFile
@@ -26,15 +29,28 @@ class ConfigHandler(object):
             self.__parameters = dict()
 
     def get(self,key):
+        '''
+        Returns the corresponding value of the key
+        :param (str) key:
+        :return: (Any) value
+        '''
         if self.__parameters:
             return self.__parameters[key]
         raise Exception("Parameter",key, "does not exist")
 
     def write(self, parameters):
+        '''
+        Updates the configuration file
+        :param (dict[str,Any]) parameters: new configurations
+        '''
         with open(self.configFile, "w") as f:
             json.dump(json.dumps(parameters, indent=3), f)
 
     def getAll(self):
+        '''
+        Returns all parameters as a dictionary
+        :return: (dict[str,Any]) parameters
+        '''
         if self.__parameters:
             return self.__parameters
         print("Configuration file does not exist")
@@ -43,6 +59,9 @@ class ConfigHandler(object):
 dataPath = join(path, "src", "data")
 
 class ConfigurationHandlerFactory(object):
+    '''
+    Factory class which creates the appropriate ConfigHandler
+    '''
     @staticmethod
     def getTD_SettingHandler():
         return ConfigHandler(join(dataPath,"settings_top_down.json"))

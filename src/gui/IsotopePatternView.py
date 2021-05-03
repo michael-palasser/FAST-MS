@@ -1,6 +1,6 @@
 from PyQt5 import QtWidgets, QtCore
 
-from src.IsotopePatternService import IsotopePatternService
+from src.IsotopePatternLogics import IsotopePatternLogics
 from src.Services import *
 from src.gui.IonTableWidget import IsoPatternIon
 from src.gui.PeakViews import IsoPatternPeakWidget
@@ -10,7 +10,7 @@ from src.gui.SpectrumView import TheoSpectrumView
 class IsotopePatternView(QtWidgets.QMainWindow):
     def __init__(self, parent):
         super(IsotopePatternView, self).__init__(parent)
-        self._controller = IsotopePatternService()
+        self._controller = IsotopePatternLogics()
         self._fragmentationOpts = self._controller.getFragmentationNames()
         self._modifPatternOpts = self._controller.getModifPatternNames()
         self._intensity = 100

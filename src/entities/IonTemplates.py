@@ -9,9 +9,13 @@ class FragmentationPattern(PatternWithItems):
         '''
         :param (str) name:
         :param (str) precursor: precursor name
-        :param (list[FragItem] | list[tuple[str,str,str,str,int|str,int, int]]) fragmentTypes: list of fragment templates
-        :param (list[PrecursorItem] | list[tuple[str,str,str,str,int|str,int]]) precursorFragments: list of precursor templates
-        :param (int) id:
+        :type fragmentTypes: list[FragItem] | list[tuple[str,str,str,str,int|str,int, int] |
+            list[list[str,str,str,str,int|str,int, int]]
+        :param fragmentTypes: list of fragment templates
+        :type precursorFragments: list[PrecursorItem] | list[tuple[str,str,str,str,int|str,int]] |
+            list[list[str,str,str,str,int|str,int]]
+        :param precursorFragments: list of precursor templates
+        :param (int | None) id:
         '''
         super(FragmentationPattern, self).__init__(name, fragmentTypes,id)
         self.__precursor = precursor
@@ -76,8 +80,9 @@ class FragItem(AbstractItem3):
     '''
     def __init__(self, item):
         '''
-        :param (tuple[str,str,str,str,int|str,int, int]) item: name, atomic gain, atomic loss,
-            corresponding residue, number of radicals, direction of the fragment (+1 or -1), enabled
+        :param (tuple[str,str,str,str,int|str,int, int] | list[str,str,str,str,int|str,int, int]) item:
+            name, atomic gain, atomic loss, corresponding residue, number of radicals, direction of the fragment
+            (+1 or -1), enabled
         '''
         item = self.processItem(item)
         super(FragItem, self).__init__(name=item[0], gain=item[1], loss=item[2],
@@ -100,10 +105,11 @@ class ModificationPattern(PatternWithItems):
         '''
         :param (str) name: simple name for storage
         :param (str) modification: name of prime modification
-        :param (list[ModifiedItem] | list[tuple[str,str,str,str,int|str,int|str, int, int]]) listOfMod:
-            list of modification templates
-        :param (list[tuple[str]]) exclusionList: list of modifications which should be ignored
-        :param (int) id:
+        :type listOfMod: list[ModificationItem] | list[tuple[str,str,str,str,int|str,int|str, int, int] |
+            list[list[str,str,str,str,int|str,int|str, int, int]]
+        :param listOfMod: list of modification templates
+        :param (list[tuple[str]] | list[list[str]]) exclusionList: list of modifications which should be ignored
+        :param (int | None) id:
         '''
         super(ModificationPattern, self).__init__(name, listOfMod,id)
         self.__modification = modification
@@ -124,7 +130,7 @@ class ModificationPattern(PatternWithItems):
     def toString(self):
         string = self.__modification
         for item in self._items:
-            if isinstance(item, ModifiedItem):
+            if isinstance(item, ModificationItem):
                 string += '\n\t' + '\t'.join(item.toString())
             else:
                 string += '\n\t' + '\t'.join([str(val) for val in item])
@@ -132,7 +138,7 @@ class ModificationPattern(PatternWithItems):
         return string
 
 
-class ModifiedItem(AbstractItem3):
+class ModificationItem(AbstractItem3):
     '''
     Template for modifications/ligands
     '''
@@ -143,8 +149,8 @@ class ModifiedItem(AbstractItem3):
             should be ignored when calculating occupancy, enabled
         '''
         item = self.processItem(item)
-        super(ModifiedItem, self).__init__(name=item[0], gain=item[1], loss=item[2],
-                                            residue=item[3], radicals=item[4], enabled=item[7])
+        super(ModificationItem, self).__init__(name=item[0], gain=item[1], loss=item[2],
+                                               residue=item[3], radicals=item[4], enabled=item[7])
         self.__zEffect = item[5]
         self.__calcOccupancy = item[6]
 
@@ -155,7 +161,7 @@ class ModifiedItem(AbstractItem3):
         return self.__calcOccupancy
 
     def toString(self):
-        parentVals = super(ModifiedItem, self).toString()
+        parentVals = super(ModificationItem, self).toString()
         return parentVals[0:-1]+[str(self.__zEffect), str(self.__calcOccupancy), parentVals[-1]]
 
 
@@ -165,9 +171,10 @@ class IntactPattern(PatternWithItems):
     '''
     def __init__(self,  name, items, id):
         '''
-        :param (str) name:
-        :param (list[IntactModification] | list[tuple[str,str,str,int,int]]) items: list of modification templates
-        :param (int) id:
+        :param (str) name: name of the pattern
+        :type items: list[IntactModification] | list[tuple[str,str,str,int,int]] | list[list[str,str,str,int,int]]
+        :param items: list of modification templates
+        :param (int | None) id:
         '''
         super(IntactPattern, self).__init__(name, items, id)
 
@@ -178,8 +185,8 @@ class IntactModification(AbstractItem2):
     '''
     def __init__(self, item):
         '''
-        :param (tuple[str,str,str,int,int]) item: name, atomic gain, atomic loss, nr. of modifications on object,
-            enabled
+        :param (tuple[str,str,str,int,int] | list[str,str,str,int,int]) item: name, atomic gain, atomic loss,
+            nr. of modifications on object, enabled
         '''
         item = self.processItem(item)
         super(IntactModification, self).__init__(name=item[0], enabled=item[4], gain=item[1], loss=item[2])

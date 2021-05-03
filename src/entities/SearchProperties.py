@@ -1,11 +1,11 @@
-from src.Services import SequenceService, MoleculeService, FragmentIonService, ModificationService
+from src.Services import SequenceService, MoleculeService, FragmentationService, ModificationService
 from src.entities.GeneralEntities import BuildingBlock
-from src.entities.IonTemplates import FragItem, ModifiedItem
+from src.entities.IonTemplates import FragItem, ModificationItem
 
 
 class PropertyStorage(object):
     '''
-
+    Container class for storage of search properties (sequence, molecule, fragmentation pattern, modification pattern)
     '''
     def __init__(self, sequName,fragmentation, modificationPattern):
         '''
@@ -18,8 +18,8 @@ class PropertyStorage(object):
         # self.sequenceList = self.__sequence.getSequenceList()
         self.__molecule = MoleculeService().getPatternWithObjects(self.__sequence.getMolecule(), BuildingBlock)
         # self.__monomers = MoleculeService().getItemDict(self.__sequence.getMolecule())
-        self.__fragmentation = FragmentIonService().getPatternWithObjects(fragmentation, FragItem)
-        self.__modifPattern = ModificationService().getPatternWithObjects(modificationPattern, ModifiedItem)
+        self.__fragmentation = FragmentationService().getPatternWithObjects(fragmentation, FragItem)
+        self.__modifPattern = ModificationService().getPatternWithObjects(modificationPattern, ModificationItem)
 
     def getSequence(self):
         return self.__sequence

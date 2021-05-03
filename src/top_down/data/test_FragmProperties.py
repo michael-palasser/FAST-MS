@@ -5,14 +5,14 @@ from src.repositories.TD_Repositories import *
 
 pattern1 = FragmentationPattern("CAD_CMCT", "CMCT",
                                 [FragItem("a", 1, "", "H1O3P1", "", 0), FragItem("c", 1, "", "", "", 0)],
-                                [ModifiedItem("CMCT", 1, "C14H25N3O","","",0,0.5)], [])
+                                [ModificationItem("CMCT", 1, "C14H25N3O", "", "", 0, 0.5)], [])
 pattern2 = FragmentationPattern("CAD_CMCT", "CMCT",
                                 [FragItem("a", 0, "", "H1O3P1", "", 0), FragItem("c", 1, "", "", "", 0)],
-                                [ModifiedItem("CMCT", 1, "C14H25N3O","","",0,0.5)], [])
+                                [ModificationItem("CMCT", 1, "C14H25N3O", "", "", 0, 0.5)], [])
 
 pattern3 = FragmentationPattern("CAD_NMIA", "NMIA",
                                 [FragItem("a", 1, "", "H1O3P1", "", 0), FragItem("c", 1, "", "", "", 0)],
-                                [ModifiedItem("NMIA", 1, "C5H10N3O","","",0,0.5)], [])
+                                [ModificationItem("NMIA", 1, "C5H10N3O", "", "", 0, 0.5)], [])
 
 
 class TestFragmentationRepository(TestCase):

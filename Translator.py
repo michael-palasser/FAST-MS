@@ -157,7 +157,7 @@ def readFragmentations(file):
 
 
 def writeFragments(name, fragPath,precFrag):
-    service = FragmentIonService()
+    service = FragmentationService()
     try:
         with open(fragPath) as f:
             fragments = readFragmentations(f)
@@ -306,5 +306,5 @@ writeFragments("Protein_ECD",fragPath, prcFrags)
 
 #writeIntactModifs()
 
-#service = FragmentIonService()
+#service = FragmentationService()
 #service.restart()

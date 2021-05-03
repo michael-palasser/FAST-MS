@@ -425,7 +425,7 @@ class SequenceEditorController(AbstractSimpleEditorController):
 
 class FragmentEditorController(AbstractEditorControllerWithTabs):
     def __init__(self):
-        super(FragmentEditorController, self).__init__(FragmentIonService(), "Edit Fragments", "Fragment-Pattern")
+        super(FragmentEditorController, self).__init__(FragmentationService(), "Edit Fragments", "Fragment-Pattern")
         upperWidget = self.makeUpperWidget()
         precWidget = BoxUpdateWidget(self.centralwidget, [item[0] for item in self.pattern.getItems2()])
         precWidget.connectBtn(lambda : precWidget.updateBox(self.getPrecNames()))

@@ -6,7 +6,8 @@ class Search(object):
     #def __init__(self, name, date, sequName, _charge, fragmentation, nrMod, spectralData, noise, lib, ions, id):
     def __init__(self, vals, ions, deletedIons, remIons, searchedZStates, info):
         '''
-        :param (tuple[int, str, str, int, str, str, int, str, float, str]) vals: settings
+        :param (tuple[int, str, str, int, str, str, int, str, float, str] |
+            list[int, str, str, int, str, str, int, str, float, str]) vals: settings
         :param (list[FragmentIon]) ions: list of observed ions
         :param (list[FragmentIon]) deletedIons: list of deleted ions
         :param (list[FragmentIon]) remIons: list of remodelled ions

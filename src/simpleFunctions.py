@@ -1,6 +1,10 @@
+'''
+Module for calculating isotope patterns
+'''
+
 import math
-from numba import njit
-from numba.typed import List
+#from numba import njit
+#from numba.typed import List
 import numpy as np
 
 
@@ -12,8 +16,6 @@ def getByIndex(isotopeTable, index):
     :return: numpy array
     '''
     return isotopeTable[np.where(isotopeTable['index'] == index)]
-
-
 
 def logFact(x):
     '''
@@ -56,7 +58,6 @@ def multinomial(k, n, p):
         coeff -= logFact(k[i])
         rest *= p[i]**k[i]
     return math.exp(coeff) * rest
-
 
 
 def calculatePercentage(isotopeTable):
@@ -105,7 +106,6 @@ def calculatePercentage(isotopeTable):
     return massI,propI
 
 
-
 def calculateNuclFineStructure(isotopePeak, isotopeTable):
     '''
     Calculates isotopic fine structure of isotope peak for elemental composition CHNOP (RNA/DNA/proteins without S)
@@ -135,7 +135,6 @@ def calculateNuclFineStructure(isotopePeak, isotopeTable):
                             massI, propI = calculatePercentage(isotopeTable)
                             fineStructure.append((massI,propI))
     return fineStructure
-
 
 
 def calculatePeptFineStructure(isotopePeak, isotopeTable):
@@ -172,9 +171,6 @@ def calculatePeptFineStructure(isotopePeak, isotopeTable):
     return fineStructure
 
 
-
-
-
 def setIsotopeTable(isotopeTable):
     '''
     Resets the number of all isotopes to 0 in isotope table
@@ -184,8 +180,6 @@ def setIsotopeTable(isotopeTable):
     for isotope in isotopeTable:
         isotope['nrIso'] = 0
     return isotopeTable
-
-
 
 
 def calculateFineStructure(isotopePeak, isotopeTable):
@@ -204,8 +198,6 @@ def calculateFineStructure(isotopePeak, isotopeTable):
         else:
             fineStructure = loopThroughIsotopes(isotopePeak, isotopeTable, fineStructure, 3)
     return fineStructure[1:]
-
-
 
 
 def loopThroughIsotopes(isotopePeak, isotopeTable, fineStructure, index):

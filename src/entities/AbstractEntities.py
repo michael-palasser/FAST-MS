@@ -1,7 +1,11 @@
 import re
 from abc import ABC
 
-from src.Exceptions import InvalidInputException
+from src.FormulaFunctions import stringToFormula as MF_stringToFormula
+
+
+#from src.Exceptions import InvalidInputException
+
 
 
 class AbstractPattern(ABC):
@@ -48,6 +52,8 @@ class PatternWithItems(AbstractPattern):
     def setItems(self, items):
         self._items = items
 
+    def getFormula(self):
+        return dict()
 
 class AbstractItem1(ABC):
     '''
@@ -72,7 +78,7 @@ class AbstractItem1(ABC):
         :return (dict[str:int]): new formula dictionary
         '''
         #everything in parenthesis
-        beginIndizes = [m.start() for m in re.finditer('\(', formulaString)]
+        '''beginIndizes = [m.start() for m in re.finditer('\(', formulaString)]
         endIndizes = [m.start() for m in re.finditer('\)', formulaString)]
         if len(beginIndizes) != len(endIndizes):
             raise InvalidInputException(formulaString, 'Incorrect use of parenthesis')
@@ -90,12 +96,10 @@ class AbstractItem1(ABC):
                 temp = {key:val*nr for key,val in temp.items()}
             AbstractItem1.addToDict(formulaDict,temp)
             lastEnd = eI
-        formulaDict = AbstractItem1.stringToFormula2(formulaString[lastEnd:],formulaDict,sign)
-        return formulaDict
+        formulaDict = AbstractItem1.stringToFormula2(formulaString[lastEnd:],formulaDict,sign)'''
+        return MF_stringToFormula(formulaString, formulaDict, sign)
 
-
-
-    @staticmethod
+    """@staticmethod
     def stringToFormula2(formulaString, formulaDict, sign):
         '''
         Converts a String to a formula - dict and adds or subtracts it to or from an original formula
@@ -134,7 +138,7 @@ class AbstractItem1(ABC):
                 dict1[element] += number
             else:
                 dict1[element] = number
-        return dict1
+        return dict1"""
 
 
 class AbstractItem2(AbstractItem1, ABC):
@@ -177,7 +181,7 @@ class AbstractItem2(AbstractItem1, ABC):
 
 class AbstractItem3(AbstractItem2):
     '''
-    Parent class of FragItem, PrecursorItem, ModifiedItem
+    Parent class of FragItem, PrecursorItem, ModificationItem
     '''
     def __init__(self, name, gain, loss, residue, radicals, enabled):
         '''

@@ -13,6 +13,11 @@ from src.entities.Ions import Fragment
 class FragmentLibraryBuilder(object):
     '''
     Creates library for top-down fragments
+
+    Attributes:
+        fragmentLibrary: list of fragments
+            :type list[Fragment]
+        molecule:
     '''
 
     def __init__(self, properties, maxMod):

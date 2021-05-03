@@ -1,7 +1,7 @@
 #import sqlite3
 from os.path import join
 
-from src.entities.IonTemplates import FragmentationPattern, FragItem, ModificationPattern, ModifiedItem
+from src.entities.IonTemplates import FragmentationPattern, FragItem, ModificationPattern, ModificationItem
 from src.repositories.AbstractRepositories import AbstractRepositoryWith2Items
 
 class FragmentationRepository(AbstractRepositoryWith2Items):
@@ -229,8 +229,8 @@ class ModificationRepository(AbstractRepositoryWith2Items):
         #for table in self._itemDict.keys():
         listOfItems = []
         for item in super(ModificationRepository, self).getItems(patternId, keyList[0]):
-            #listOfItems.append(ModifiedItem(item[1], item[2], item[3], item[4], item[5], item[6], item[7], item[8]))
-            listOfItems.append(ModifiedItem(item))
+            #listOfItems.append(ModificationItem(item[1], item[2], item[3], item[4], item[5], item[6], item[7], item[8]))
+            listOfItems.append(ModificationItem(item))
         listOfItemLists.append(listOfItems)
         listOfItemLists += [item for item in self.getItems(patternId, keyList[1])]
         return listOfItemLists'''

@@ -43,9 +43,9 @@ class IsotopePatternRepository(object):
 
     def addIsotopePatternFromFile(self, fragmentLibrary):
         '''
-        Reads and processes isotope patterns from existing file
-        :param (str) file: file with isotope patterns (in folder Fragment_lists)
-        :return: (list[]) fragmentLibrary #Todo
+        Checks and imports isotope patterns from existing file
+        :param (list[Fragment]) fragmentLibrary: list of fragments without isotope patterns
+        :return: (list[Fragment]) list of fragments with isotope patterns from file
         :raises InvalidIsotopePatternException: if stored isotope pattern does not match newly calculated one
         '''
         isotopePatternDict = dict()
@@ -89,7 +89,7 @@ class IsotopePatternRepository(object):
         Checks if stored isotope pattern is correct
         :type fragment: Fragment
         :param (Fragment) fragment: freshly created Fragment
-        :param savedPattern: isotope pattern from file
+        :param (ndarray(dtype = [float,float])) savedPattern: isotope pattern from file
         :raises InvalidIsotopePatternException if not equal
         '''
         newPattern = fragment.getFormula().calcIsotopePatternSlowly(2)
@@ -106,7 +106,7 @@ class IsotopePatternRepository(object):
     def saveIsotopePattern(self, fragmentLibrary):
         '''
         Saves calculated isotope patterns to a file
-        :param (list) fragmentLibrary: list of Fragment objects
+        :param (list[Fragment]) fragmentLibrary: list of fragments (with calculated isotope pattern)
         '''
         np.set_printoptions(suppress=True)
         #M_max = 0

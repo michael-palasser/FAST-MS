@@ -5,15 +5,16 @@ from src.entities.AbstractEntities import PatternWithItems, AbstractItem1, Abstr
 
 class Macromolecule(PatternWithItems):
     '''
-    e.g. protein, RNA, DNA
+    Class which stores molecule properties. E.g. protein, RNA, DNA
     '''
     def __init__(self, name, moleculeGain, moleculeLoss, buildingBlocks, id):
         '''
         :param (str) name: name of macromolecule
         :param (str) moleculeGain: template of formula (gain)
         :param (str) moleculeLoss: template of formula (loss)
-        :param (list[tuple | BuildingBlock]) buildingBlocks: list of building blocks
-        :param (int) id: id of macromolecule
+        :param (list[tuple[str, str, float, float] | list[str, str, float, float] | BuildingBlock]) buildingBlocks:
+            list of building blocks
+        :param (int | None) id: id of macromolecule
         '''
         super(Macromolecule, self).__init__(name, buildingBlocks, id)
         self.__gain = moleculeGain
@@ -53,9 +54,8 @@ class BuildingBlock(AbstractItem1):
     #def __init__(self, name, formulaString, acidity):
     def __init__(self, item):
         '''
-
-        :param (list[str, str, float, float]) item: list of properties (name, formulaString, gas-phase basicity (gb) in
-            positive mode, gb in negative mode)
+        :param (list[str, str, float, float] | tuple[str, str, float, float]) item:
+            list of properties (name, formulaString, gas-phase basicity (gb) in positive mode, gb in negative mode)
         '''
         super(BuildingBlock, self).__init__(item[0])
         self.__formulaString = item[1]
@@ -84,8 +84,8 @@ class Element(PatternWithItems):
     def __init__(self, name, isotopes, id):
         """
         :param (str) name: name of element
-        :param (list[tuple[in, float, float] | Isotope]) isotopes: list of isotopes:
-        :param (int) id: id of element
+        :param (list[list[int, float, float] | list[tuple[int, float, float] | Isotope]) isotopes: list of isotopes:
+        :param (int | None) id: id of element
         """
         super(Element, self).__init__(name, isotopes, id)
 

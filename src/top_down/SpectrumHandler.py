@@ -248,7 +248,7 @@ class SpectrumHandler(object):
         '''
         molecule = self.__properties.getMolecule().getName()
         if molecule in ['RNA', 'DNA'] and self.__sprayMode == -1:
-            return self.__charge / self.precursor.getFormula().formulaDict['P']
+            return self.__charge / self.precursor.getFormula().getFormulaDict()['P']
             #return self.__charge / len(self.__sequList)
         #elif molecule == 'Protein' and self.__sprayMode == 1:
          #   return self.__charge / self.getChargeScore(self.__sequList)
@@ -299,8 +299,8 @@ class SpectrumHandler(object):
         molecule = self.__properties.getMolecule().getName()
         if molecule in ['RNA' ,'DNA'] and self.__sprayMode == -1:
             #probableZ = (fragment.number-1) * self._normalizationFactor
-            probableZ = fragment.getFormula().formulaDict['P']* self._normalizationFactor
-            if fragment.getFormula().formulaDict['P'] == 0:
+            probableZ = fragment.getFormula().getFormulaDict()['P']* self._normalizationFactor
+            if fragment.getFormula().getFormulaDict()['P'] == 0:
                 return range(0,0)
             #probableZ = fragment.formula.formulaDict['P'] * self._normalizationFactor
         elif molecule == 'Protein':

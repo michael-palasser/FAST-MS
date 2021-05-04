@@ -180,6 +180,7 @@ def getMaxValues(isotopePeak, isotopeTable):
             #maxValues[i] = maxVal
     if isotopePeak > 0:
         isotopeTable[1]['nrIso'] = isotopePeak
+    #print('maxValues',isotopePeak,maxValues)
     return maxValues
 
 @njit
@@ -208,15 +209,19 @@ def calculatePeptFineStructure(isotopePeak, isotopeTable):
         for i2H in range(maxValues[3] + 1):
             for i15N in range(maxValues[5] + 1):
                 for i17O in range(maxValues[7] + 1):
-                    for i18O in range(int((maxValues[8] + 2) / 2)):
+                    for i18O in range(int(maxValues[8] + 1)):
                         for i33S in range(maxValues[10] + 1):
-                            for i34S in range(int((maxValues[11] + 2) / 2)):
+                            for i34S in range(int(maxValues[11] +1)):
                                 if (i13C + i2H + i15N + i17O + 2 * i18O +i33S + 2*i34S == isotopePeak):
                                     nrIsoList= np.array([0.,i13C,0.,i2H,0.,i15N,0.,i17O,i18O,0.,i33S,i34S])
                                     for i in range(len(isotopeTable)):
                                         isotopeTable[i]['nrIso']=nrIsoList[i]
+                                    #print(isotopePeak, isotopeTable)
                                     massI, propI = calculatePercentage(isotopeTable)
                                     fineStructure.append((massI,propI))
+                                else:
+                                    #print('not',i13C + i2H + i15N + i17O + 2 * i18O +i33S + 2*i34S,i34S, isotopePeak)
+                                    pass
     return fineStructure
 
 

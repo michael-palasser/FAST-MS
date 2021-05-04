@@ -23,9 +23,12 @@ class MolecularFormula(object):
         '''
         if type(formula) == str:
             formula = stringToFormula(formula, {}, 1)
-        self.formulaDict = formula
-        self._periodicTable = periodicTableService.getElements(self.formulaDict.keys())
+        self._formulaDict = formula
+        self._periodicTable = periodicTableService.getElements(list(self._formulaDict.keys()))
 
+
+    def getFormulaDict(self):
+        return self._formulaDict
 
     def addFormula(self, *args):
         '''
@@ -33,7 +36,7 @@ class MolecularFormula(object):
         :param (dict[str,int]) args: formulas to be added
         :return: (MolecularFormula) new formula
         '''
-        newFormula = copy.deepcopy(self.formulaDict)
+        newFormula = copy.deepcopy(self._formulaDict)
         for addedFormula in args:
             for element, number in addedFormula.items():
                 if element in newFormula.keys():
@@ -49,7 +52,7 @@ class MolecularFormula(object):
         :param (dict[str,int]) args: subtrahend (dict)
         :return: (MolecularFormula) new formula
         '''
-        newFormula = copy.deepcopy(self.formulaDict)
+        newFormula = copy.deepcopy(self._formulaDict)
         for addedFormula in args:
             for element, number in addedFormula.items():
                 if element in newFormula.keys():
@@ -65,7 +68,7 @@ class MolecularFormula(object):
         :param (int) args: factor
         :return: (MolecularFormula) new formula
         '''
-        newFormula = copy.deepcopy(self.formulaDict)
+        newFormula = copy.deepcopy(self._formulaDict)
         for element, number in newFormula.items():
             newFormula[element] *= factor
         return MolecularFormula(newFormula)
@@ -75,7 +78,7 @@ class MolecularFormula(object):
         checks if one value of formulaDict is negative
         :return: (bool)
         '''
-        for val in self.formulaDict.values():
+        for val in self._formulaDict.values():
             if val < 0:
                 return True
         return False
@@ -87,12 +90,12 @@ class MolecularFormula(object):
         '''
         #returnedString = 'C' + str(self.formulaDict['C']) + 'H' + str(self.formulaDict['H'])
         returnedString = ''
-        for element in sorted(list(self.formulaDict.keys())):
+        for element in sorted(list(self._formulaDict.keys())):
             #if element in ['C','H']:
             #    continue
             #else:
-            if self.formulaDict[element] > 0:
-                returnedString += element + str(self.formulaDict[element])
+            if self._formulaDict[element] > 0:
+                returnedString += element + str(self._formulaDict[element])
         return returnedString
 
 
@@ -105,10 +108,10 @@ class MolecularFormula(object):
         prop = 1
         isoPeak=0
         isotope_pattern = list()
-        if self.formulaDict.keys() == {'C','H','N','O','P'}:
+        if self._formulaDict.keys() == {'C', 'H', 'N', 'O', 'P'}:
             calculate = calculateNuclFineStructure
             isotopeTable = self.makeNucIsotopeTable()
-        elif self.formulaDict.keys() == {'C', 'H', 'N', 'O', 'S'}:
+        elif self._formulaDict.keys() == {'C', 'H', 'N', 'O', 'S'}:
             calculate = calculatePeptFineStructure
             isotopeTable = self.makeProteinIsotopeTable()
         else:
@@ -121,6 +124,7 @@ class MolecularFormula(object):
             prop = np.sum(ultrafineStruct[:,1])
             M_iso = np.sum(ultrafineStruct[:,0]*ultrafineStruct[:,1])/prop
             isotope_pattern.append((M_iso,prop))
+            print(isoPeak, prop, prop/mostAbundant)
             isoPeak += 1
             if prop > mostAbundant:
                 mostAbundant = prop
@@ -144,7 +148,7 @@ class MolecularFormula(object):
             if elem in self._periodicTable:
                 mono = self._periodicTable[elem][0][0]
                 for isotope in self._periodicTable[elem]:
-                    isotopeTable.append((index, self.formulaDict[elem],0, isotope[2], isotope[1], isotope[0] - mono))
+                    isotopeTable.append((index, self._formulaDict[elem], 0, isotope[2], isotope[1], isotope[0] - mono))
         return np.array(isotopeTable,dtype = [('index',np.float64), ('nr',np.float64), ('nrIso',np.float64),
              ('relAb',np.float64), ('mass',np.float64), ('M+',np.float64)])
 
@@ -161,7 +165,7 @@ class MolecularFormula(object):
             if elem in self._periodicTable:
                 mono = self._periodicTable[elem][0][0]
                 for isotope in self._periodicTable[elem]:
-                    isotopeTable.append((index, self.formulaDict[elem],0, isotope[2], isotope[1], isotope[0] - mono))
+                    isotopeTable.append((index, self._formulaDict[elem], 0, isotope[2], isotope[1], isotope[0] - mono))
         return np.array(isotopeTable,dtype = [('index',np.float64), ('nr',np.float64), ('nrIso',np.float64),
              ('relAb',np.float64), ('mass',np.float64), ('M+',np.float64)])
 
@@ -177,8 +181,8 @@ class MolecularFormula(object):
         for index, elem in enumerate(sorted(list(self._periodicTable.keys()))):
             mono = self._periodicTable[elem][0][0]
             for isotope in self._periodicTable[elem]:
-                if self.formulaDict[elem] != 0:
-                    isotopeTable.append((index, self.formulaDict[elem], 0, isotope[2], isotope[1], isotope[0]-mono))
+                if self._formulaDict[elem] != 0:
+                    isotopeTable.append((index, self._formulaDict[elem], 0, isotope[2], isotope[1], isotope[0] - mono))
         isotopeTable = np.array(sorted(isotopeTable,key=lambda tup: tup[1], reverse=True)
                                 , dtype=[('index', np.float64), ('nr', np.float64), ('nrIso', np.float64),
                                          ('relAb', np.float64), ('mass', np.float64), ('M+', np.float64)])
@@ -208,7 +212,7 @@ class MolecularFormula(object):
         :return: (float) monoisotopic mass
         '''
         monoisotopic = 0
-        for elem,val in self.formulaDict.items():
+        for elem,val in self._formulaDict.items():
             #print(elem, val, self._periodicTable[elem][0][1])
             monoisotopic += val*self._periodicTable[elem][0][1]
             """arr = np.array(self._periodicTable[elem])
@@ -221,12 +225,12 @@ class MolecularFormula(object):
         Calculates isotope patterns based on molecular formulas without using the numba library
         :return: (ndarray(dtype=[float,float])) isotope pattern1 (structured numpy array: [(mass,relative Abundance)])
         '''
-        self._periodicTable = periodicTableService.getElements(self.formulaDict.keys())
+        self._periodicTable = periodicTableService.getElements(list(self._formulaDict.keys()))
         isotope_pattern = list()
-        if self.formulaDict.keys() == {'C','H','N','O','P'}:
+        if self._formulaDict.keys() == {'C', 'H', 'N', 'O', 'P'}:
             calculate = sf.calculateNuclFineStructure
             isotopeTable = self.makeNucIsotopeTable()
-        elif self.formulaDict.keys() == {'C', 'H', 'N', 'O', 'S'}:
+        elif self._formulaDict.keys() == {'C', 'H', 'N', 'O', 'S'}:
             calculate = sf.calculatePeptFineStructure
             isotopeTable = self.makeProteinIsotopeTable()
         else:

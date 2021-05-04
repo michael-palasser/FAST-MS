@@ -9,7 +9,6 @@ from src import path
 from os.path import join
 
 
-
 class AbstractRepository(ABC):
     '''
     Abstract parent class for SearchRepository, SequenceRepository and AbstractRepositoryWithItems

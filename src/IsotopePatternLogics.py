@@ -26,7 +26,7 @@ class IsotopePatternLogics(object):
         self._elements = PeriodicTableService().getAllPatternNames()
         self._molecules = self._moleculeService.getAllPatternNames()
         self._intensityModeller = IntensityModeller(ConfigurationHandlerFactory.getTD_ConfigHandler().getAll())
-        self._peakDtype = np.dtype([('m/z', np.float64), ('relAb', np.int32), ('calcInt', np.int32), ('used', np.bool_)])
+        self._peakDtype = np.dtype([('m/z', np.float64), ('relAb', np.int32), ('calcInt', np.float64), ('used', np.bool_)])
         #self._peakDtype = np.dtype([('m/z', float), ('relAb', float), ('calcInt', float), ('used', np.bool_)])
 
         self._formula = None
@@ -109,7 +109,7 @@ class IsotopePatternLogics(object):
         isotopePattern['m/z'] = SpectrumHandler.getMz(isotopePattern['m/z'],charge,radicals)
         peaks = []
         for row in isotopePattern:
-            peaks.append((row['m/z'],0,round(row['calcInt']),1))
+            peaks.append((row['m/z'],0,row['calcInt'],1))
         peaks = np.array(peaks, dtype=self._peakDtype)
         self._ion = FragmentIon(fragment, np.min(peaks['m/z']), charge, peaks,0)
         self._ion.setQuality(0)
@@ -179,7 +179,7 @@ class IsotopePatternLogics(object):
     def model(self, peaks):
         '''
         Calculates the intensity of the ion
-        :param (ndarray(dtype=[float,int,int,bool])) peaks: peaks (unfitted)
+        :param (ndarray(dtype=[float,int,float,bool])) peaks: peaks (unfitted)
         :return: (FragmentIon) ion with modelled intensity and isotope pattern
         '''
         peakArr = np.array(peaks, dtype=self._peakDtype)
@@ -194,7 +194,7 @@ class IsotopePatternLogics(object):
         '''
         Returns the peaks which are activated #ToDo
         :param (FragmentIon) ion: ion
-        :return: (ndarray(dtype=[float,int,int,bool])) activated peaks
+        :return: (ndarray(dtype=[float,int,float,bool])) activated peaks
         '''
         isotopePattern = ion.getIsotopePattern()
         return isotopePattern[np.where(isotopePattern['used'])]

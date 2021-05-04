@@ -127,7 +127,7 @@ class FragmentLibraryBuilder(object):
                                 if modif.enabled():
                                     modifName = modif.getName()
                                     formula = linkFormula.addFormula(template.getFormula(),
-                                                    MolecularFormula(modif.getFormula()).multiplyFormula(nrMod).formulaDict)
+                                                MolecularFormula(modif.getFormula()).multiplyFormula(nrMod).getFormulaDict())
                                     if self.checkForResidue(modif.getResidue(), linkSequ) and not formula.checkForNegativeValues()\
                                             and ((modifName+rest) not in self.__modifPattern.getExcluded()):
                                             #Constructor: type, number, modification, loss, formula
@@ -192,7 +192,7 @@ class FragmentLibraryBuilder(object):
                             if self.__maxMod > 1:
                                 name = modifName[0] + str(nrMod) + modifName[1:] + templateName
                             newFragment = Fragment(sequenceName, 0, name,tempFormula.addFormula(
-                                    MolecularFormula(modifTemplate.getFormula()).multiplyFormula(nrMod).formulaDict),
+                                    MolecularFormula(modifTemplate.getFormula()).multiplyFormula(nrMod).getFormulaDict()),
                                     sequence, templateRadicals+modifTemplate.getRadicals())
                             precursorFragments.append(newFragment)
                             if (name == precName):  #ToDo: check no Modification

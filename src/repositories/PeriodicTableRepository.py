@@ -5,7 +5,7 @@ Created on 29 Dec 2020
 '''
 from os.path import join
 
-from src.entities.GeneralEntities import Element, Isotope
+from src.entities.GeneralEntities import Element
 from src.repositories.AbstractRepositories import AbstractRepositoryWithItems
 
 

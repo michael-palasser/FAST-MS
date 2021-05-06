@@ -1,6 +1,7 @@
 from unittest import TestCase
 import numpy as np
-import random
+from random import randint
+from src.fastFunctions import getByIndex
 
 from src.MolecularFormula import MolecularFormula
 
@@ -36,7 +37,7 @@ class MolecularFormulaTest(TestCase):
 
 
     def testIsotopeTable(self, isotopeTable = None, values = None):
-        if isotopeTable != None:
+        if type(isotopeTable) != type(None) :
             self.assertEqual(len(isotopeTable), 9)
             self.assertEqual(len(isotopeTable[0]), 6)
             for row in isotopeTable:
@@ -72,6 +73,8 @@ class MolecularFormulaTest(TestCase):
             for j in range(len(nucIsotopeTable[0])):
                 self.assertAlmostEqual(nucIsotopeTable[i][j], protIsotopeTable[i][j])
                 self.assertAlmostEqual(nucIsotopeTable[i][j], uniIsotopeTable[i][j])
+        isotopeTable = MolecularFormula('C5H5N5O30P').makeIsotopeTable()
+        self.assertEqual(2, len(getByIndex(isotopeTable,0)))
 
     def test_calculate_mono_isotopic(self):
         self.assertAlmostEqual(1223.210776, RNA_formulaDummy.calculateMonoIsotopic(), delta=5 * 10 ** (-6))
@@ -81,19 +84,20 @@ class MolecularFormulaTest(TestCase):
         RNA_pattern = [(1223.2107777180972, 0.58545685),(1224.2134684, 0.28360589), (1225.21578726, 0.09861313),
                        (1226.21815597, 0.02558403), (1227.22044876, 0.00558521)]
         peptide_pattern = [(912.37596571, 0.59104661), (913.37869526, 0.26946771), (914.37874787, 0.1035717),
-                           (915.37972767, 0.02855243), (916.38103187, 0.00633815)]
+                           (915.37979107, 0.02834297), (916.38113847, 0.00624432)]
         uni_pattern = [(174.03917908, 0.92733003),(175.04099458,0.06836688),(176.04296025,0.00412072)]
         self.testIsotopePattern(RNA_pattern, RNA_formulaDummy.calculateIsotopePattern())
+        print(peptideFormulaDummy.calculateIsotopePattern())
         self.testIsotopePattern(peptide_pattern, peptideFormulaDummy.calculateIsotopePattern())
         self.testIsotopePattern(uni_pattern, uniFormulaDummy.calculateIsotopePattern())
-        '''for i in range(20):
-            molFormulaDummy_i = MolecularFormula({'C':random.randint(1,50), 'H':random.randint(1,100),
-                                                  'N':random.randint(1,50),'O':random.randint(1,50),
-                                                  'P':random.randint(0,2),'S':random.randint(0,2)})
+        for i in range(20):
+            molFormulaDummy_i = MolecularFormula({'C':randint(1,50), 'H':randint(1,100),
+                                                  'N':randint(1,50),'O':randint(1,50),
+                                                  'P':randint(0,2),'S':randint(0,2)})
             print(molFormulaDummy_i.getFormulaDict())
             calcIsotopePattern = molFormulaDummy_i.calculateIsotopePattern()
-            self.assertAlmostEqual(1.0,np.sum(calcIsotopePattern['calcInt']),delta=0.005)
-            self.assertTrue(np.sum(calcIsotopePattern['calcInt'])<1)'''
+            self.assertAlmostEqual(1.0,float(np.sum(calcIsotopePattern['calcInt'])),delta=0.005)
+            self.assertTrue(np.sum(calcIsotopePattern['calcInt'])<1)
 
 
     def testIsotopePattern(self, theoIsotopePattern=None, calcIsotopePattern=None):
@@ -105,7 +109,7 @@ class MolecularFormulaTest(TestCase):
             for i in range(len(theoIsotopePattern)):
                 self.assertAlmostEqual(theoIsotopePattern[i]['m/z'], calcIsotopePattern[i]['m/z'], delta=5*10**(-6))
                 self.assertAlmostEqual(theoIsotopePattern[i]['calcInt'], calcIsotopePattern[i]['calcInt'], delta=5*10**(-6))
-            self.assertAlmostEqual(1.0,np.sum(calcIsotopePattern['calcInt']),delta=0.005)
+            self.assertAlmostEqual(1.0,float(np.sum(calcIsotopePattern['calcInt'])),delta=0.005)
             self.assertTrue(np.sum(calcIsotopePattern['calcInt'])<1)
 
     '''def test_calc_isotope_pattern_slowly(self):

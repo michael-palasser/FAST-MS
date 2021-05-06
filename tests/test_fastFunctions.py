@@ -1,3 +1,4 @@
+from random import randint
 from unittest import TestCase
 import numpy as np
 import src.fastFunctions as f
@@ -96,10 +97,22 @@ class fastFunctions_Test(TestCase):
 
     def test_calculate_nucl_fine_structure(self):
         isotopeTable = MolecularFormula('C5H5N5OP').makeNucIsotopeTable()
-        #with more O: [1,4,11,58]
-        for i, nr in enumerate([1,4,10,40]):
+        for i, nr in enumerate([1,4,10,19]):
+            f.setIsotopeTable(isotopeTable)
             fineStructure = f.calculateNuclFineStructure(i, isotopeTable)
             self.assertEqual(nr,len(fineStructure))
+        nrs = [1,4,11,24]
+        for i in range(20):
+            molFormulaDummy_i = MolecularFormula({'C':randint(3,50), 'H':randint(3,150), 'N':randint(3,50),
+                                                  'O':randint(3,50), 'P':randint(0,10)})
+            isotopeTable = molFormulaDummy_i.makeNucIsotopeTable()
+            try:
+                for isoPeak,nr in enumerate(nrs):
+                    f.setIsotopeTable(isotopeTable)
+                    self.assertEqual(nr,len(f.calculateNuclFineStructure(isoPeak, isotopeTable)))
+            except AssertionError:
+                raise AssertionError(molFormulaDummy_i.getFormulaDict())
+
 
     def test_get_max_values(self):
         table1 = MolecularFormula('C5H5N5OP').makeNucIsotopeTable()
@@ -110,7 +123,22 @@ class fastFunctions_Test(TestCase):
             self.assertEqual(correct,val)
 
     def test_calculate_pept_fine_structure(self):
-        self.fail()
+        isotopeTable = MolecularFormula('C36H56N12O14S').makeProteinIsotopeTable()  #GCASDQHPV
+        for i, nr in enumerate([1,5,16,39]):
+            f.setIsotopeTable(isotopeTable)
+            fineStructure = f.calculatePeptFineStructure(i, isotopeTable)
+            self.assertEqual(nr,len(fineStructure))
+        nrs = [1,5,17,45]
+        for i in range(20):
+            molFormulaDummy_i = MolecularFormula({'C':randint(3,50), 'H':randint(3,100), 'N':randint(3,30),
+                                                  'O':randint(3,30), 'S':randint(3,5)})
+            isotopeTable = molFormulaDummy_i.makeProteinIsotopeTable()
+            try:
+                for isoPeak,nr in enumerate(nrs):
+                    f.setIsotopeTable(isotopeTable)
+                    self.assertEqual(nr,len(f.calculatePeptFineStructure(isoPeak, isotopeTable)))
+            except AssertionError:
+                raise AssertionError(molFormulaDummy_i.getFormulaDict())
 
     def test_set_isotope_table(self):
         newTable = f.setIsotopeTable(uni_table)
@@ -118,7 +146,34 @@ class fastFunctions_Test(TestCase):
             self.assertAlmostEqual(0,newTable['nrIso'][i])
 
     def test_calculate_fine_structure(self):
-        self.fail()
+        isotopeTable = MolecularFormula('C5H5N5OP').makeIsotopeTable()
+        for i, nr in enumerate([1,4,10,19]):
+            f.setIsotopeTable(isotopeTable)
+            fineStructure = f.calculateFineStructure(i, isotopeTable)
+            self.assertEqual(nr,len(fineStructure))
+
+        isotopeTable = MolecularFormula('C36H56N12O14S').makeIsotopeTable()  # GCASDQHPV
+        for i, nr in enumerate([1, 5, 16, 39]):
+            f.setIsotopeTable(isotopeTable)
+            fineStructure = f.calculateFineStructure(i, isotopeTable)
+            self.assertEqual(nr, len(fineStructure))
+        isotopeTable = MolecularFormula('C5H5N5ONa').makeIsotopeTable()
+        for i, nr in enumerate([1,4,10,19]):
+            f.setIsotopeTable(isotopeTable)
+            fineStructure = f.calculateFineStructure(i, isotopeTable)
+            self.assertEqual(nr,len(fineStructure))
+        nrs = [1,5,17,45]
+        for i in range(20):
+            molFormulaDummy_i = MolecularFormula({'C':randint(3,50), 'H':randint(3,100), 'N':randint(3,30),
+                                                  'O':randint(3,30), 'K':randint(3,5)})
+            isotopeTable = molFormulaDummy_i.makeIsotopeTable()
+            try:
+                for isoPeak,nr in enumerate(nrs):
+                    f.setIsotopeTable(isotopeTable)
+                    self.assertEqual(nr,len(f.calculateFineStructure(isoPeak, isotopeTable)))
+            except AssertionError:
+                raise AssertionError(molFormulaDummy_i.getFormulaDict())
 
     def test_loop_through_isotopes(self):
-        self.fail()
+        isotopeTable = MolecularFormula('C5H5N5OP').makeIsotopeTable()
+        self.assertEqual(2, len(f.loopThroughIsotopes(0, isotopeTable, [(0.,0.)],0)))

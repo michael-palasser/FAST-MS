@@ -189,7 +189,9 @@ class MolecularFormula(object):
         """isotopeTable = np.array(isotopeTable
                                 , dtype=[('index', np.float64), ('nr', np.float64), ('nrIso', np.float64),
                                          ('relAb', np.float64), ('mass', np.float64), ('M+', np.float64)])"""
-        if len(getByIndex(isotopeTable, 0)) != 2:
+        print('len',len(getByIndex(isotopeTable, isotopeTable['index'][0])),isotopeTable)
+        if len(getByIndex(isotopeTable, isotopeTable['index'][0])) != 2:
+            print('oh no', isotopeTable)
             match = None
             for isotope in isotopeTable:
                 if len(getByIndex(isotopeTable, isotope['index'])) == 2:
@@ -197,13 +199,14 @@ class MolecularFormula(object):
                     break
             isotopeTable = np.concatenate((getByIndex(isotopeTable, match['index']),
                                           isotopeTable[np.where(isotopeTable['index'] != match['index'])]))
-        index = -1
-        oldIndex = None
-        for row in isotopeTable:
-            if oldIndex != row['index']:
-                oldIndex = row['index']
-                index += 1
-            row['index'] = index
+            index = -1
+            oldIndex = None
+            for row in isotopeTable:
+                if oldIndex != row['index']:
+                    oldIndex = row['index']
+                    index += 1
+                row['index'] = index
+        print('hey ho', isotopeTable)
         return isotopeTable
 
     def calculateMonoIsotopic(self):

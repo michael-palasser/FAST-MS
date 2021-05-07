@@ -98,6 +98,11 @@ class MolecularFormula(object):
                 returnedString += element + str(self._formulaDict[element])
         return returnedString
 
+    def determineSystem(self, elements, theElements):
+        for elem in elements:
+            if elem not in theElements:
+                return False
+        return True
 
     def calculateIsotopePattern(self):
         '''
@@ -108,10 +113,11 @@ class MolecularFormula(object):
         prop = 1
         isoPeak=0
         isotope_pattern = list()
-        if self._formulaDict.keys() == {'C', 'H', 'N', 'O', 'P'}:
+        elements = [key for key,val in self._formulaDict.items() if val>0]
+        if self.determineSystem(elements, {'C', 'H', 'N', 'O', 'P'}):
             calculate = calculateNuclFineStructure
             isotopeTable = self.makeNucIsotopeTable()
-        elif self._formulaDict.keys() == {'C', 'H', 'N', 'O', 'S'}:
+        elif self.determineSystem(elements, {'C', 'H', 'N', 'O', 'S'}):
             calculate = calculatePeptFineStructure
             isotopeTable = self.makeProteinIsotopeTable()
         else:
@@ -124,7 +130,6 @@ class MolecularFormula(object):
             prop = np.sum(ultrafineStruct[:,1])
             M_iso = np.sum(ultrafineStruct[:,0]*ultrafineStruct[:,1])/prop
             isotope_pattern.append((M_iso,prop))
-            print(isoPeak, prop, prop/mostAbundant)
             isoPeak += 1
             if prop > mostAbundant:
                 mostAbundant = prop
@@ -178,20 +183,20 @@ class MolecularFormula(object):
             mass of isotope, nominal mass shift compared to isotope with lowest m/z)
         '''
         isotopeTable = list()
-        for index, elem in enumerate(sorted(list(self._periodicTable.keys()))):
+        elements = [elem for elem,val in self._periodicTable.items() if self._formulaDict[elem] > 0]
+        #for index, elem in enumerate(sorted(list(self._periodicTable.keys()))):
+        for index, elem in enumerate(sorted(elements)):
             mono = self._periodicTable[elem][0][0]
             for isotope in self._periodicTable[elem]:
-                if self._formulaDict[elem] != 0:
-                    isotopeTable.append((index, self._formulaDict[elem], 0, isotope[2], isotope[1], isotope[0] - mono))
+                #if self._formulaDict[elem] != 0:
+                isotopeTable.append((index, self._formulaDict[elem], 0, isotope[2], isotope[1], isotope[0] - mono))
         isotopeTable = np.array(sorted(isotopeTable,key=lambda tup: tup[1], reverse=True)
                                 , dtype=[('index', np.float64), ('nr', np.float64), ('nrIso', np.float64),
                                          ('relAb', np.float64), ('mass', np.float64), ('M+', np.float64)])
         """isotopeTable = np.array(isotopeTable
                                 , dtype=[('index', np.float64), ('nr', np.float64), ('nrIso', np.float64),
                                          ('relAb', np.float64), ('mass', np.float64), ('M+', np.float64)])"""
-        print('len',len(getByIndex(isotopeTable, isotopeTable['index'][0])),isotopeTable)
         if len(getByIndex(isotopeTable, isotopeTable['index'][0])) != 2:
-            print('oh no', isotopeTable)
             match = None
             for isotope in isotopeTable:
                 if len(getByIndex(isotopeTable, isotope['index'])) == 2:
@@ -206,7 +211,6 @@ class MolecularFormula(object):
                     oldIndex = row['index']
                     index += 1
                 row['index'] = index
-        print('hey ho', isotopeTable)
         return isotopeTable
 
     def calculateMonoIsotopic(self):

@@ -347,6 +347,9 @@ class SequenceService(AbstractService):
         for link in item.getSequenceList():
             if link not in monomereNames:
                 raise InvalidInputException(item.getName(), "Problem in Sequence: " + link + " unknown")
+        if ('+' in item.getName()) or ('-' in item.getName()):
+            raise InvalidInputException(item.getName(), 'Sequence name must not contain "+" or "-"')
+
 
 
 class FragmentationService(AbstractServiceForPatterns):

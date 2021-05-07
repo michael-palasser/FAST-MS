@@ -60,6 +60,13 @@ class fastFunctions_Test(TestCase):
         for i, row in enumerate(f.getByIndex(uni_table, 2)):
             for j, val in enumerate(row):
                 self.assertAlmostEqual(index_2_theo[i][j],val)
+        for i in range(50):
+            isotopeTable = MolecularFormula({'C':randint(0,50), 'H':randint(0,100), 'N':randint(0,30),
+                                                  'O':randint(0,30), 'K':randint(0,5)}).makeIsotopeTable()
+            for j in range(int(np.max(isotopeTable['index']))+1):
+                if j not in isotopeTable['index']:
+                    print('Problem:',isotopeTable)
+                    raise Exception(str(j)+' not found')
 
     def test_log_fact(self):
         self.assertAlmostEqual(math.exp(f.logFact(15)), math.factorial(15), delta=0.01)
@@ -140,6 +147,16 @@ class fastFunctions_Test(TestCase):
             except AssertionError:
                 raise AssertionError(molFormulaDummy_i.getFormulaDict())
 
+        isotopeTable = MolecularFormula({'C': 4, 'H': 36, 'N': 41,'O': 19, 'S':1}).makeProteinIsotopeTable()
+        sumInt = 0
+        for i, nr in enumerate([1,5,16,39]):
+            f.setIsotopeTable(isotopeTable)
+            fineStructure = f.calculatePeptFineStructure(i, isotopeTable)
+            self.assertEqual(nr,len(fineStructure))
+            sumInt+=np.sum(np.array(fineStructure)[:,1])
+            print(np.sum(np.array(fineStructure)[:,1]))
+        print(sumInt)
+
     def test_set_isotope_table(self):
         newTable = f.setIsotopeTable(uni_table)
         for i in [3,5,8,9]:
@@ -173,6 +190,29 @@ class fastFunctions_Test(TestCase):
                     self.assertEqual(nr,len(f.calculateFineStructure(isoPeak, isotopeTable)))
             except AssertionError:
                 raise AssertionError(molFormulaDummy_i.getFormulaDict())
+
+        nrs = [1,5,17,45,103]
+        for i in range(20):
+            molFormulaDummy_i = MolecularFormula({'C':randint(20,50), 'H':randint(40,100), 'N':randint(4,40),
+                                                  'O':randint(4,40), 'P':randint(0,5),'S':randint(4,5)})
+            isotopeTable = molFormulaDummy_i.makeIsotopeTable()
+            try:
+                for isoPeak,nr in enumerate(nrs):
+                    f.setIsotopeTable(isotopeTable)
+                    self.assertEqual(nr,len(f.calculateFineStructure(isoPeak, isotopeTable)))
+            except AssertionError:
+                print(isoPeak)
+                raise AssertionError(molFormulaDummy_i.getFormulaDict())
+        isotopeTable = MolecularFormula({'C': 4, 'H': 36, 'N': 41,'O': 19, 'S':1}).makeIsotopeTable()
+        sumInt = 0
+        for i, nr in enumerate([1,5,16,39]):
+            f.setIsotopeTable(isotopeTable)
+            fineStructure = f.calculateFineStructure(i, isotopeTable)
+            self.assertEqual(nr,len(fineStructure))
+            sumInt+=np.sum(np.array(fineStructure)[:,1])
+            print(np.sum(np.array(fineStructure)[:,1]))
+        print(sumInt)
+
 
     def test_loop_through_isotopes(self):
         isotopeTable = MolecularFormula('C5H5N5OP').makeIsotopeTable()

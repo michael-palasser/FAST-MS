@@ -6,6 +6,7 @@ Created on 21 Jul 2020
 from re import search as reSearch
 from multiprocessing import Pool
 
+from src.Exceptions import InvalidInputException
 from src.MolecularFormula import MolecularFormula
 from src.entities.Ions import Fragment
 
@@ -50,7 +51,7 @@ class FragmentLibraryBuilder(object):
     def buildSimpleLadder(self, sequ):
         '''
         Builds a sequenceList ladder of a basic fragment type
-        :param (list) sequ: sequenceList of precursor either from 5' or 3')
+        :param (list[str]) sequ: sequenceList of precursor either from 5' or 3')
         :return: (dict[list[str],MolecularFormula]) the ladder (key=sequenceList(list), val=formula(MolecularFormula))
         '''
         simpleLadder = list()
@@ -60,7 +61,7 @@ class FragmentLibraryBuilder(object):
         for link in sequ:
             if link not in monomers.keys():
                 print("problem at", length)
-                raise Exception(link)
+                raise InvalidInputException(link, 'building block unkown')
             formula = formula.addFormula(monomers[link].getFormula())
             simpleLadder.append((sequ[:length],formula))
             length += 1
@@ -72,7 +73,7 @@ class FragmentLibraryBuilder(object):
         '''
         Checks if sequenceList contains a corresponding residue for residue-specific fragments
         :param (str) residue:
-        :param (list) sequence:
+        :param (list[str]) sequence:
         :return: (bool)
         '''
         return (residue == '') or (residue == '-') or (residue in sequence)
@@ -96,11 +97,11 @@ class FragmentLibraryBuilder(object):
 
     def createFragmentLadder(self, basicLadder, fragTemplates):
         '''
-        Creates a fragment ladder
+        Creates a fragment ladder in one direction (forward or backward)
         :param (list) basicLadder: fragment ladder of a basic fragment type (see function buildSimpleLadder)
         :type fragTemplates: FragItem
-        :param fragTemplates: corresponding fragmenttemplate
-        :return: (list) ladder (list of Fragment-objects)
+        :param fragTemplates: corresponding fragmentTemplate
+        :return: (list[Fragment]) fragment ladder
         '''
         ladder = list()
         sequLength = len(self.__sequence.getSequenceList())
@@ -147,7 +148,7 @@ class FragmentLibraryBuilder(object):
         '''
         Splits the name of a template into species and modification
         :param (str) templName:
-        :return: (tuple) species, modification
+        :return: (tuple[str,str]) species, modification
         '''
         search = reSearch(r"([+,-])",templName)
         if search == None:
@@ -161,7 +162,7 @@ class FragmentLibraryBuilder(object):
         Calculates molecular formulas of precursor ions
         :type simpleFormula: MolecularFormula
         :param simpleFormula: template to calculate formula of precursor
-        :return: (list) precursorFragments (list of Fragments)
+        :return: (list[Fragment]) precursorFragments (list of Fragments)
         '''
         precursorFragments = []
         sequence = self.__sequence.getSequenceList()
@@ -211,9 +212,9 @@ class FragmentLibraryBuilder(object):
                 print(elem)
         sequence = self.__sequence.getSequenceList()
         forwardFragments = self.createFragmentLadder(self.buildSimpleLadder(sequence), self.__fragmentation.getFragTemplates(1))
-        SimpleLadderBack = self.buildSimpleLadder(sequence[::-1])
-        backwardFragments = self.createFragmentLadder(SimpleLadderBack, self.__fragmentation.getFragTemplates(-1))
-        precursorFragments = self.addPrecursor(SimpleLadderBack[len(sequence) - 1][1])
+        simpleLadderBack = self.buildSimpleLadder(sequence[::-1])
+        backwardFragments = self.createFragmentLadder(simpleLadderBack, self.__fragmentation.getFragTemplates(-1))
+        precursorFragments = self.addPrecursor(simpleLadderBack[len(sequence) - 1][1])
         #for frag in precursorFragments:
         #    print(frag.getName(),frag.formula.toString())
         self.__fragmentLibrary = forwardFragments + backwardFragments + precursorFragments
@@ -224,8 +225,9 @@ class FragmentLibraryBuilder(object):
 
     def addNewIsotopePattern(self):
         '''
-        Calls calculateIsotopePattern() function (class MolecularFormula) and subtracts electron mass if fragment
-        contains radicals. Calculation is parallelized if length of (precursor) sequence is longer than criticalLength
+        Calls calculateIsotopePattern() function (class MolecularFormula). Calculation is parallelized if length of
+        (precursor) sequence is longer than criticalLength (depends on type of molecule)
+        :return (list[Fragment]) list of fragments with isotope patterns
         '''
         """factor = 1
         if self.__sequence.getMolecule() == 'Protein':

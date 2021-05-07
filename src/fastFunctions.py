@@ -16,6 +16,9 @@ def getByIndex(isotopeTable, index):
     :param (int) index: index
     :return: ndarray(dtype=[float,float,float,float,float,float]) rows of table with corresponding indices
     '''
+    '''if len(isotopeTable[np.where(isotopeTable['index'] == index)]) == 0:
+        print(index)
+        raise Exception(str(index))'''
     return isotopeTable[np.where(isotopeTable['index'] == index)]
 
 
@@ -127,7 +130,7 @@ def calculateNuclFineStructure(isotopePeak, isotopeTable):
         isotope, mass of isotope, nominal mass shift compared to isotope with lowest m/z)
     :return: (ndarray(dtype=[float,float])) fine structure [(mass,rel.abundance)]
     '''
-    print(isotopePeak)
+    #print(isotopePeak)
     maxValues = getMaxValues(isotopePeak, isotopeTable)
     """for i in range(10):
         if isotopePeak>isotopeTable[i]['nr']:
@@ -136,7 +139,7 @@ def calculateNuclFineStructure(isotopePeak, isotopeTable):
             maxValues.append(isotopePeak)
     if isotopePeak > 0:
         isotopeTable[1]['nrIso'] = isotopePeak"""
-    print(isotopeTable['nrIso'])
+    #print(isotopeTable['nrIso'])
     massI, propI = calculatePercentage(isotopeTable)
     fineStructure = [(massI, propI)]
     for i13C in list(range(maxValues[1]))[::-1]:
@@ -147,7 +150,7 @@ def calculateNuclFineStructure(isotopePeak, isotopeTable):
                         if (i13C + i2H + i15N + i17O + 2 * i18O == isotopePeak) and \
                                 not (i17O + i18O > isotopeTable[6]['nr']) :
                             nrIsoList= np.array([0.,i13C,0.,i2H,0.,i15N,0.,i17O,i18O,0.])
-                            print(nrIsoList)
+                            #print(nrIsoList)
                             for i in range(len(isotopeTable)):
                                 isotopeTable[i]['nrIso']=nrIsoList[i]
                             #massI, propI = calculatePercentage(isotopeTable)
@@ -208,7 +211,7 @@ def calculatePeptFineStructure(isotopePeak, isotopeTable):
             maxValues.append(isotopePeak)
     if isotopePeak > 0:
         isotopeTable[1]['nrIso'] = isotopePeak"""
-    print(isotopeTable['nrIso'])
+    #print(isotopeTable['nrIso'])
     massI, propI = calculatePercentage(isotopeTable)
     fineStructure = [(massI, propI)]
     for i13C in list(range(maxValues[1]))[::-1]:
@@ -256,14 +259,14 @@ def calculateFineStructure(isotopePeak, isotopeTable):
         isotope, mass of isotope, nominal mass shift compared to isotope with lowest m/z)
     :return: (ndarray(dtype=[float,float])) fine structure [(mass,percentage)]
     '''
-    print(isotopePeak)
+    #print(isotopePeak)
     fineStructure = [(0.,0.)]
     for iFirst in list(range(isotopePeak + 1))[::-1]:
         isotopeTable[1]['nrIso'] = iFirst
         #print('first',iFirst)
         if iFirst == isotopePeak:
             massI, propI = calculatePercentage(isotopeTable)
-            print(isotopeTable['nrIso'])
+            #print(isotopeTable['nrIso'])
             fineStructure.append((massI,propI))
         else:
             fineStructure = loopThroughIsotopes(isotopePeak, isotopeTable, fineStructure, 3)
@@ -274,17 +277,17 @@ def calculateFineStructure(isotopePeak, isotopeTable):
 
 @njit
 def checkIsotopeTable(isotopeTable):
-    for i in range(np.max(isotopeTable['index'])+1):
+    for i in range(int(np.max(isotopeTable['index'])+1)):
         currentElements = getByIndex(isotopeTable,i)
         if np.sum(currentElements['nrIso'])> currentElements['nr'][0]:
-            print('no',isotopeTable)
+            #print('no',isotopeTable)
             return False
     return True
 
 @njit
 def loopThroughIsotopes(isotopePeak, isotopeTable, fineStructure, index):
     '''
-    Recursive function which loops through molecular formula and calculates isotopic fine structure (recursive function)
+    Recursive function which loops through molecular formula and calculates isotopic fine structure (recursive function):
     :param (int) isotopePeak: number of isotope peak (M+x)
     :type isotopeTable: ndarray(dtype=[float,float,float,float,float,float])
     :param isotopeTable: isotope table (index, nr. of atoms of element, nr. of atoms of isotope, rel. abundance of
@@ -293,28 +296,36 @@ def loopThroughIsotopes(isotopePeak, isotopeTable, fineStructure, index):
     :param (int) index: running index of corresponding element
     :return: (list[tuple[float,float]]) final fineStructure [(mass,rel.abundance)]
     '''
+    #If final isotope table for one isotope composition found
     if (np.sum(isotopeTable['nrIso']*isotopeTable['M+']) == isotopePeak):
+        #if combined nuumber of isotopes of element is not higher than nr of corresponding element atoms in molecule
         if checkIsotopeTable(isotopeTable):
             massI, propI = calculatePercentage(isotopeTable)
             fineStructure.append((massI, propI))
-            print(isotopePeak, isotopeTable)
         return fineStructure #eig sinnlos
+    #If isotope table unfinished
     elif index < len(isotopeTable):
         '''for i in range(int((isotopePeak + isotopeTable[index]['M+']) / isotopeTable[index]['M+'])):
             if i>isotopeTable[index]['nr']:
                 break
             isotopeTable[index]['nrIso'] = i
             loopThroughIsotopes(isotopePeak, isotopeTable, fineStructure, index + 1)'''
+        #if current isotope in table is highest abundant isotope loop until M+x (x>=1) isotope is current isotope
         while (isotopeTable[index]['M+'] == 0):
             index+=1
+            #if end of table is reached
             if index >= len(isotopeTable):
                 #print('exit')
                 return fineStructure
         currentIso = isotopeTable[index]
+        #loop over all possible
         for nrIso in range(int((isotopePeak + currentIso['M+']) / currentIso['M+'])):
+            #break if nr of isotope atoms is higher than nr of corresponding atoms of element in molecule
             if nrIso>currentIso['nr']:
                 break
+            #set nr of current isotope in table
             isotopeTable[index]['nrIso'] = nrIso
+            #loop to next isotope in table
             loopThroughIsotopes(isotopePeak, isotopeTable, fineStructure, index + 1)
     return fineStructure
 

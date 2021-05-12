@@ -1,1 +1,1 @@
-"{\n   \"sequName\": \"ubiquitin\",\n   \"charge\": 5,\n   \"fragmentation\": \"Protein_ECD\",\n   \"modifications\": \"-\",\n   \"nrMod\": 0,\n   \"spectralData\": \"/Users/eva-maria/Data_exchange_folder/SAUSAGE_beta1/Spectral_data/top-down/Ubiquitin_ECD_000006_M2_M4_G040_m050.txt\",\n   \"noiseLimit\": 10000.0,\n   \"fragLib\": \"\"\n}"
+"{\n   \"sequName\": \"neoRibo\",\n   \"charge\": -7,\n   \"fragmentation\": \"RNA_CAD\",\n   \"modifications\": \"CMCT\",\n   \"nrMod\": 1,\n   \"spectralData\": \"\",\n   \"noiseLimit\": 2009999.9999999998,\n   \"fragLib\": \"\"\n}"

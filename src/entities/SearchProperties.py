@@ -59,9 +59,9 @@ class PropertyStorage(object):
         :return: list[str] unimportant modifications
         '''
         unimportantModifications = []
-        for modification in self.__modifPattern.getItems():
+        '''for modification in self.__modifPattern.getItems():
             if not modification.getCalcOccupancy():
-                unimportantModifications.append(modification.getName())
+                unimportantModifications.append(modification.getName())'''
         return unimportantModifications
 
     def getFragItemDict(self):

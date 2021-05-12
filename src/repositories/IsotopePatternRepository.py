@@ -3,6 +3,7 @@ import os
 #import sqlite3
 #import time
 #from os.path import join
+import time
 
 import numpy as np
 
@@ -23,7 +24,7 @@ class IsotopePatternRepository(object):
     def findFile(self, settings):
         '''
         Checks if a isotope pattern file exists
-        :param (tuple[str,str,int,str]) settings: settings which are relevant for the filename
+        :param (tuple[str,str,int,str] | list[str,str,int,str]) settings: settings which are relevant for the filename
         :return: (bool) True if file exists
         '''
         if len(settings) == 1:
@@ -32,7 +33,7 @@ class IsotopePatternRepository(object):
                 file += '.csv'
             self.__file = os.path.join(path, 'Fragment_lists',file)
         else:
-            sequName, fragmentation, nrMod, modifications = settings[0], settings[1], settings[2], settings[3],
+            sequName, fragmentation, nrMod, modifications = settings[0], settings[1], settings[2], settings[3]
             if modifications == "-" or nrMod == "0":
                 self.__file = os.path.join(path, 'Fragment_lists', '_'.join((sequName, fragmentation + '.csv')))
             else:
@@ -76,11 +77,13 @@ class IsotopePatternRepository(object):
                 raise InvalidIsotopePatternException("", "no data in file")
             isotopePatternDict[name] = np.array(isotopePattern, dtype=[('m/z',np.float64),('calcInt', np.float64)])
         print('Checking correctness of fragment library')
+        start = time.time()
         for fragment in fragmentLibrary:
             if fragment.getName() not in isotopePatternDict:
                 raise InvalidIsotopePatternException(fragment.getName(), "not found in file")
             self.checkEquality(fragment, isotopePatternDict[fragment.getName()])
             fragment.setIsotopePattern(isotopePatternDict[fragment.getName()])
+        print('time',time.time()-start)
         print('done')
         return fragmentLibrary
 
@@ -92,13 +95,14 @@ class IsotopePatternRepository(object):
         :param (ndarray(dtype = [float,float])) savedPattern: isotope pattern from file
         :raises InvalidIsotopePatternException if not equal
         '''
-        newPattern = fragment.getFormula().calcIsotopePatternSlowly(2)
-        for i in range(2):
-            if newPattern[i]['m/z'] - savedPattern[i]['m/z'] > 10 ** (-6):
+        #newPattern = fragment.getFormula().calcIsotopePatternSlowly(3)
+        newPattern = fragment.getFormula().calcIsotopePatternSlowly(3)
+        for i in range(3):
+            if abs(newPattern[i]['m/z'] - savedPattern[i]['m/z']) > 10 ** (-6):
                 raise InvalidIsotopePatternException(fragment.getName(), "mass incorrect " +
                                                      str(newPattern[i]['m/z']) + " != " + str(savedPattern[i]['m/z']))
-            if newPattern[i]['calcInt'] - savedPattern[i]['calcInt'] > 10 ** (-6):
-                print(newPattern)
+            print(newPattern[i]['calcInt'] - savedPattern[i]['calcInt'])
+            if abs(newPattern[i]['calcInt'] - savedPattern[i]['calcInt']) > 10 ** (-6):
                 raise InvalidIsotopePatternException(fragment.getName(), '(' + str(i) + ") relative Abundance incorrect " +
                                                      str(newPattern[i]['calcInt']) + " != " + str(savedPattern[i]['calcInt']))
 

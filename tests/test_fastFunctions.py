@@ -1,9 +1,10 @@
 from random import randint
 from unittest import TestCase
 import numpy as np
+import math
+
 import src.fastFunctions as f
 from scipy.stats import binom, multinomial
-import math
 from src.MolecularFormula import MolecularFormula
 
 '''G = stringToFormula('C5H5N5O',{},1)

@@ -1,6 +1,5 @@
 from unittest import TestCase
 
-from src.MolecularFormula import MolecularFormula
 from src.entities.GeneralEntities import Sequence
 from src.top_down.LibraryBuilder import FragmentLibraryBuilder
 from src.entities.SearchProperties import PropertyStorage
@@ -22,20 +21,13 @@ class TestFragmentLibraryBuilder(TestCase):
 
     def initLibrary(self):
         self.sequenceService = SequenceService()
-        #self.fragmentationService = FragmentationService
-        #self.modificationService = ModificationService()
-        '''print(self.sequenceService.getSequences())
-        sequences = [Sequence(tup[0], tup[1], tup[2],i) for i,tup in enumerate(self.sequenceService.getSequences())]
-        sequences.append(Sequence('dummyRNA','GACU','RNA', len(sequences)+1))
-        sequences.append(Sequence('dummyProt','GAPH','Protein', len(sequences)+1))
-        print(sequences)
-        self.sequenceService.save(sequences)'''
         self.propertyStorageRNA = PropertyStorage('dummyRNA','RNA_CAD','CMCT')
         self.builderRNA = FragmentLibraryBuilder(PropertyStorage('dummyRNA','RNA_CAD','-'),0)
         self.builderRNA_CMCT0 = FragmentLibraryBuilder(self.propertyStorageRNA,0)
         self.builderRNA_CMCT1 = FragmentLibraryBuilder(self.propertyStorageRNA,1)
         self.builderRNA_CMCT2 = FragmentLibraryBuilder(self.propertyStorageRNA,2)
-        self.builderProt_CAD = FragmentLibraryBuilder(PropertyStorage('dummyProt','Protein_CAD','-'),0)
+        self.propertyStorageProtCAD = PropertyStorage('dummyProt','Protein_CAD','-')
+        self.builderProt_CAD = FragmentLibraryBuilder(self.propertyStorageProtCAD,0)
         self.builderProt_ECD = FragmentLibraryBuilder(PropertyStorage('dummyProt','Protein_ECD','-'),0)
 
 
@@ -59,7 +51,39 @@ class TestFragmentLibraryBuilder(TestCase):
         self.assertTrue(self.builderProt_ECD.checkForProlines('z',['H','P'],'A'))
 
     def test_create_fragment_ladder(self):
-        self.fail()
+        sequenceList, modifications, frags = self.getValues(self.propertyStorageRNA,
+                                                            self.propertyStorageRNA.getFragmentation().getItems())
+        fragsForw = [frag for frag in frags if frag.getDirection()==1]
+        simpleLadder = self.builderRNA.buildSimpleLadder(sequenceList)
+        fragListLength = len(fragsForw)*(len(sequenceList)-1)-6
+        self.assertEqual(fragListLength,
+                     len(self.builderRNA_CMCT0.createFragmentLadder(simpleLadder,
+                                                    self.propertyStorageRNA.getFragmentation().getFragTemplates(1))))
+        self.assertEqual((len(modifications)+1)*fragListLength,
+                         len(self.builderRNA_CMCT1.createFragmentLadder(simpleLadder,
+                                                    self.propertyStorageRNA.getFragmentation().getFragTemplates(1))))
+        self.assertEqual((len(modifications)+2)*fragListLength,
+                         len(self.builderRNA_CMCT2.createFragmentLadder(simpleLadder,
+                                                    self.propertyStorageRNA.getFragmentation().getFragTemplates(1))))
+        fragsBack = [frag for frag in frags if frag.getDirection()==-1]
+        simpleLadderBack = self.builderRNA.buildSimpleLadder(sequenceList[::-1])
+        fragListLength = len(fragsBack)*(len(sequenceList)-1)-11
+        self.assertEqual(fragListLength,
+                     len(self.builderRNA_CMCT0.createFragmentLadder(simpleLadderBack,
+                                                    self.propertyStorageRNA.getFragmentation().getFragTemplates(-1))))
+        self.assertEqual((len(modifications)+1)*fragListLength,
+                         len(self.builderRNA_CMCT1.createFragmentLadder(simpleLadderBack,
+                                                    self.propertyStorageRNA.getFragmentation().getFragTemplates(-1))))
+        self.assertEqual((len(modifications)+2)*fragListLength,
+                         len(self.builderRNA_CMCT2.createFragmentLadder(simpleLadderBack,
+                                                    self.propertyStorageRNA.getFragmentation().getFragTemplates(-1))))
+
+    def getValues(self, storage, fragItems):
+        sequenceList = self.propertyStorageRNA.getSequenceList()
+        modifications = [mod for mod in storage.getModification().getItems() if mod.enabled()]
+        frags = [frag for frag in fragItems if frag.enabled()]
+        return sequenceList, modifications, frags
+
 
     def test_process_template_name(self):
         tup = self.builderRNA.processTemplateName('c14-G')
@@ -70,9 +94,9 @@ class TestFragmentLibraryBuilder(TestCase):
         self.assertEqual('+CMCT+Na-Eth-G', tup[1])
 
     def test_add_precursor(self):
-        sequenceList = self.propertyStorageRNA.getSequenceList()
-        modifications = self.propertyStorageRNA.getModification().getItems()
-        precFrags = [precFrag for precFrag in self.propertyStorageRNA.getFragmentation().getItems2() if precFrag.enabled()]
+        #RNA
+        sequenceList, modifications, precFrags = self.getValues(self.propertyStorageRNA,
+                                                            self.propertyStorageRNA.getFragmentation().getItems2())
         simpleLadderBack = self.builderRNA.buildSimpleLadder(sequenceList[::-1])
         self.assertEqual(len(precFrags),
                          len(self.builderRNA_CMCT0.addPrecursor(simpleLadderBack[len(sequenceList) - 1][1])))
@@ -80,18 +104,30 @@ class TestFragmentLibraryBuilder(TestCase):
                          len(self.builderRNA_CMCT1.addPrecursor(simpleLadderBack[len(sequenceList) - 1][1])))
         self.assertEqual((len(modifications)+2)*len(precFrags),
                          len(self.builderRNA_CMCT2.addPrecursor(simpleLadderBack[len(sequenceList) - 1][1])))
+        self.assertEqual('dummyRNA',self.builderRNA_CMCT0.getPrecursor().getName())
+        self.assertEqual('dummyRNA+CMCT',self.builderRNA_CMCT1.getPrecursor().getName())
+        self.assertEqual('dummyRNA+2CMCT',self.builderRNA_CMCT2.getPrecursor().getName())
+
+        #Protein
+        sequenceList, modifications, precFrags = self.getValues(self.propertyStorageProtCAD,
+                                                            self.propertyStorageProtCAD.getFragmentation().getItems2())
+        simpleLadderBack = self.builderProt_CAD.buildSimpleLadder(sequenceList[::-1])
+        self.assertEqual(len(precFrags),
+                         len(self.builderProt_CAD.addPrecursor(simpleLadderBack[len(sequenceList) - 1][1])))
+        self.assertEqual('dummyProt',self.builderProt_CAD.getPrecursor().getName())
 
 
-    def test_create_fragment_library(self):
-        self.fail()
+    '''def test_create_fragment_library(self):
+        self.fail()'''
 
-    def test_add_new_isotope_pattern(self):
-        self.fail()
+    '''def test_add_new_isotope_pattern(self):
+        self.fail()'''
 
 
-    def test_get_precursor(self):
-        self.fail()
+    '''def test_get_precursor(self):
+        self.test_add_precursor()'''
 
-    '''def tearDown(self):
+
+    def tearDown(self):
         self.sequenceService.delete('dummyRNA')
-        self.sequenceService.delete('dummyProt')'''
+        self.sequenceService.delete('dummyProt')

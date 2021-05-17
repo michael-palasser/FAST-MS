@@ -87,7 +87,6 @@ class AbstractServiceForPatterns(AbstractService, ABC):
         elementRep = PeriodicTableRepository()
         elements = elementRep.getAllPatternNames()
         self.checkFormatOfItems(pattern.getItems(), elements, self.repository.getIntegers())
-        print('id', pattern.getId())
         self.checkIfUnique(pattern)
         if pattern.getId() == None:
             self.repository.createPattern(pattern)

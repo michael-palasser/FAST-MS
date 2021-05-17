@@ -2,7 +2,7 @@ import copy
 
 from src.FormulaFunctions import stringToFormula
 from src.fastFunctions import *
-import src.simpleFunctions as sf
+#import src.simpleFunctions as sf
 from src.Services import PeriodicTableService
 
 '''
@@ -109,8 +109,8 @@ class MolecularFormula(object):
         Calculates isotope patterns based on molecular formulas
         :return: (ndarray(dtype=[float,float])) isotope pattern1 (structured numpy array: [(mass,relative Abundance)])
         '''
-        mostAbundant=10**(-10)
-        prop = 1
+        #mostAbundant=10**(-10)
+        #prop = 1
         isoPeak=0
         isotope_pattern = list()
         elements = [key for key,val in self._formulaDict.items() if val>0]
@@ -124,16 +124,16 @@ class MolecularFormula(object):
             calculate = calculateFineStructure
             isotopeTable = self.makeIsotopeTable()
             #print(isotopeTable)
-        while(prop/mostAbundant>0.02):              #ToDo:Parameter
+        while(np.sum(np.array(isotope_pattern))<0.995):              #ToDo:Parameter
             setIsotopeTable(isotopeTable)
-            print(isoPeak, isotopeTable)
+            #print(isoPeak, isotopeTable)
             ultrafineStruct = np.array(calculate(isoPeak, isotopeTable))
             prop = np.sum(ultrafineStruct[:,1])
             M_iso = np.sum(ultrafineStruct[:,0]*ultrafineStruct[:,1])/prop
             isotope_pattern.append((M_iso,prop))
             isoPeak += 1
-            if prop > mostAbundant:
-                mostAbundant = prop
+            #if prop > mostAbundant:
+                #mostAbundant = prop
             """if args and args[0]:
                 if isoPeak == args[0]:
                     return np.array(isotope_pattern, dtype=[('m/z', np.float64), ('calcInt', np.float64)])"""
@@ -258,16 +258,16 @@ class MolecularFormula(object):
                 M_iso = np.sum(ultrafineStruct[:,0]*ultrafineStruct[:,1])/prop
                 isotope_pattern.append((M_iso,prop))
         else:
-            mostAbundant=10**(-10)
-            prop = 1
+            #mostAbundant=10**(-10)
+            #prop = 1
             isoPeak=0
-            while (prop / mostAbundant > 0.02):  # ToDo:Parameter
+            while(np.sum(np.array(isotope_pattern))<0.995):              #ToDo:Parameter# ToDo:Parameter
                 setIsotopeTable(isotopeTable)
                 ultrafineStruct = np.array(calculate(isoPeak, isotopeTable))
                 prop = np.sum(ultrafineStruct[:, 1])
                 M_iso = np.sum(ultrafineStruct[:, 0] * ultrafineStruct[:, 1]) / prop
                 isotope_pattern.append((M_iso, prop))
                 isoPeak += 1
-                if prop > mostAbundant:
-                    mostAbundant = prop
+                #if prop > mostAbundant:
+                #    mostAbundant = prop
         return np.array(isotope_pattern, dtype=[('m/z',np.float64),('calcInt', np.float64)])

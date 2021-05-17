@@ -196,7 +196,7 @@ class FragmentLibraryBuilder(object):
                                     MolecularFormula(modifTemplate.getFormula()).multiplyFormula(nrMod).getFormulaDict()),
                                     sequence, templateRadicals+modifTemplate.getRadicals())
                             precursorFragments.append(newFragment)
-                            if (name == precName):  #ToDo: check no Modification
+                            if (name == precName):
                                 self.__precursor = newFragment
         #[print(frag.getName(),frag.getRadicals()) for frag in precursorFragments]
         return precursorFragments

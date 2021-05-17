@@ -10,7 +10,7 @@ dict2= {'C':5,'H':5,'N':5, 'O':1, 'S': 10, 'Se':1}
 dict3= {'C':50,'H':50,'N':50, 'O':10, 'S': 10, 'Se':1}
 
 
-class Test(TestCase):
+class TestFormulaFunctions(TestCase):
     def test_string_to_formula2(self):
         self.assertEqual(stringToFormula2(string1, {}, 1), dict1)
         self.assertEqual(stringToFormula2(string1, stringToFormula2(string1, {}, 1), -1), dict1_0)

@@ -137,7 +137,6 @@ class TD_MainController(object):
             patternReader.saveIsotopePattern(self.libraryBuilder.addNewIsotopePattern())
             print("\ndone\nexecution time: ", round((time.time() - start) / 60, 2), "min\n")
 
-        #ToDo
         """Importing spectral pattern"""
         if self.settings['spectralData'] == '':
             return 1

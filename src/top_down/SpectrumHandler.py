@@ -54,7 +54,7 @@ class SpectrumHandler(object):
             self.__sprayMode = -1
         self.__upperBound=0
         self.precursor = precursor
-        self.__charge = abs(self.__settings['charge'] - self.precursor.getRadicals())
+        self.__charge = self.calcPrecCharge(self.__settings['charge'], self.precursor.getRadicals())
         self._normalizationFactor = None
 
         self.addSpectrum(self.__settings['spectralData'])
@@ -65,6 +65,9 @@ class SpectrumHandler(object):
         self._peaksArrType = np.dtype([('m/z', np.float64), ('relAb', np.float64),
                                        ('calcInt', np.float64), ('error', np.float32), ('used', np.bool_)])
 
+    def calcPrecCharge(self, charge, radicals):
+        return abs(charge - radicals)
+
     def getSpectrum(self, *args):
         '''
         Returns either full or part of spectrum (peak list)
@@ -74,6 +77,9 @@ class SpectrumHandler(object):
         if args and args[1]:
             return self.__spectrum[np.where((self.__spectrum[:, 0] > args[0]) & (self.__spectrum[:, 0] < args[1]))]
         return self.__spectrum
+
+    def setSpectrum(self, spectrum):
+        self.__spectrum = spectrum
 
     def getUpperBound(self):
         return self.__upperBound
@@ -108,10 +114,16 @@ class SpectrumHandler(object):
         :param file: opended csv-file
         :return: (ndarray(dtype=float, ndim=2)) [(m/z, int)]
         '''
+        skip = 0
+        lines = file.readlines()
+        if lines[0].startswith('m/z'):
+            skip = 1
         try:
-            return np.loadtxt(file, delimiter=',', skiprows=1, usecols=[0, 2])
+            #return np.loadtxt(lines, delimiter=',', skiprows=skip, usecols=[0, 2])
+            return np.loadtxt(lines, delimiter=',', skiprows=skip, usecols=[0, 1])
         except IndexError:
-            return np.loadtxt(file, delimiter=';', skiprows=1, usecols=[0, 2])
+            #return np.loadtxt(lines, delimiter=';', skiprows=skip, usecols=[0, 2])
+            return np.loadtxt(lines, delimiter=';', skiprows=skip, usecols=[0, 1])
 
     def addSpectrumFromTxt(self, file):
         '''
@@ -172,16 +184,17 @@ class SpectrumHandler(object):
             currentWindow = self.getPeaksInWindow(self.__spectrum, currentMz, windowSize)
             peaksHigherThanNoise.append((currentMz, currentWindow[np.where(currentWindow > (noise * 5))].size))
             currentMz += 1
+        print(peaksHigherThanNoise)
         peaksHigherThanNoise = np.array(peaksHigherThanNoise)
         windowSize, currentMz = 100 , 1200
         while currentMz < 2500:
             currentWindow = self.getPeaksInWindow(peaksHigherThanNoise, currentMz, windowSize)
-            sumInt = np.sum(currentWindow[:, 1])
-            print(currentMz, sumInt)
-            if sumInt < 5:
+            numPeaks = np.sum(currentWindow[:, 1])
+            print(currentMz, numPeaks)
+            if numPeaks < 5:
                 currentMz += configs['upperBoundTolerance']
                 break
-            elif sumInt < 10:
+            elif numPeaks < 10:
                 currentMz += 2* configs['upperBoundTolerance']
                 break
             currentMz += windowSize / 2
@@ -276,13 +289,10 @@ class SpectrumHandler(object):
         '''
         modCharge = 0
         for mod, charge in self.__properties.getChargedModifications().items():
-            print(mod, charge)
-            if mod in fragment.getModification():
+            if mod[1:] in fragment.getModification():
                 nrMod = 1
                 if len(findall(r"(\d+)"+mod, fragment.getModification())) > 0:
                     nrMod = int(findall(r"(\d+)"+mod, fragment.getModification())[0])
-                print(modCharge, charge, nrMod, self.__sprayMode)
-                print(type(modCharge), type(charge), type(nrMod), type(self.__sprayMode))
                 modCharge += charge * nrMod * self.__sprayMode
         return modCharge
 

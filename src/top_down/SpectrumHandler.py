@@ -68,6 +68,9 @@ class SpectrumHandler(object):
     def calcPrecCharge(self, charge, radicals):
         return abs(charge - radicals)
 
+    def setNormalizationFactor(self, factor):
+        self._normalizationFactor = factor
+
     def getSpectrum(self, *args):
         '''
         Returns either full or part of spectrum (peak list)
@@ -102,7 +105,7 @@ class SpectrumHandler(object):
         Add spectrum from file
         :param (str) filePath: path of txt or csv file
         '''
-        with open(filePath, mode='r') as f:
+        with open(filePath, mode='r', encoding='utf_8_sig') as f:
             if filePath[-4:] == '.csv':
                 self.__spectrum = self.addSpectrumFromCsv(f)
             else:
@@ -114,16 +117,28 @@ class SpectrumHandler(object):
         :param file: opended csv-file
         :return: (ndarray(dtype=float, ndim=2)) [(m/z, int)]
         '''
-        skip = 0
-        lines = file.readlines()
-        if lines[0].startswith('m/z'):
+        #skip = 0
+        #lines = file.readlines()
+        '''print(lines)
+        if 'm/z' in lines[0]:
             skip = 1
+        else:
+            print(lines[0])
+            raw = lines[0].split(',')
+            print(raw)
+            toAdd = np.empty(2,dtype=float)
+            toAdd[0] = float(raw[0].encode('utf-8-sig').decode('utf-8-sig'))
+            toAdd[1] = float(raw[1][:-2])
+            print('dsf',toAdd)'''
         try:
+            #print(np.loadtxt(lines[1:], delimiter=',', skiprows=1, usecols=[0, 1]))
             #return np.loadtxt(lines, delimiter=',', skiprows=skip, usecols=[0, 2])
-            return np.loadtxt(lines, delimiter=',', skiprows=skip, usecols=[0, 1])
+            return np.loadtxt(file, delimiter=',', skiprows=1, usecols=[0, 1])
         except IndexError:
             #return np.loadtxt(lines, delimiter=';', skiprows=skip, usecols=[0, 2])
-            return np.loadtxt(lines, delimiter=';', skiprows=skip, usecols=[0, 1])
+            return np.loadtxt(file, delimiter=';', skiprows=1, usecols=[0, 1])
+        except ValueError:
+            raise InvalidInputException('Incorrect Format of spectral data', '\nThe format must be "m/z,int" or "m/z;int"')
 
     def addSpectrumFromTxt(self, file):
         '''
@@ -297,7 +312,7 @@ class SpectrumHandler(object):
         return modCharge
 
     #ToDo: Test SearchParameters, Proteins!, Parameters
-    def getSearchParameters(self, fragment, precModCharge):
+    def getChargeRange(self, fragment, precModCharge):
         '''
         Calculates the most probable charge (z) for a given fragment and returns a range of this z +/- a tolerance
         The charge is calculated using the number of phosphates (RNA/DNA) or using the length of the sequence (proteins)
@@ -317,20 +332,19 @@ class SpectrumHandler(object):
             #probableZ = self.getChargeScore(fragment) * self._normalizationFactor
             probableZ = len(fragment.getSequence()) * self._normalizationFactor
         elif molecule in ['RNA' ,'DNA'] and self.__sprayMode == 1:
-            probableZ = len(self.__sequList) * self._normalizationFactor
+            probableZ = len(fragment.getSequence()) * self._normalizationFactor
         else:
-            probableZ = len(self.__sequList) * self._normalizationFactor
+            probableZ = len(fragment.getSequence()) * self._normalizationFactor
         probableZ -= fragment.getRadicals()
         tolerance = configs['zTolerance']
         lowZ, highZ = 1, self.__charge
-        if fragment.getNumber() == 0:
-            highZ = abs(self.__settings['charge'])
         zEffect = (precModCharge - self.getModCharge(fragment)) * self.__sprayMode
-        if (probableZ-tolerance + zEffect)> lowZ:
-            lowZ = round(probableZ-tolerance + zEffect)
-        if (probableZ+tolerance + zEffect)< highZ:
-            highZ = round(probableZ + tolerance + zEffect)
-        print(fragment.getName(),lowZ,round(probableZ + zEffect,2),highZ)
+        probableZ += zEffect
+        if (probableZ-tolerance)> lowZ:
+            lowZ = round(probableZ-tolerance)
+        if (probableZ+tolerance)< highZ:
+            highZ = round(probableZ + tolerance)
+        print(fragment.getName(),lowZ,round(probableZ,2),highZ)
         return range(lowZ,highZ+1)
 
 
@@ -351,7 +365,7 @@ class SpectrumHandler(object):
         for fragment in fragmentLibrary:
             self._searchedChargeStates[fragment.getName()] = []
             fragment.setIsotopePattern(np.sort(fragment.getIsotopePattern(), order='calcInt')[::-1])
-            zRange = self.getSearchParameters(fragment,precModCharge)
+            zRange = self.getChargeRange(fragment, precModCharge)
             peakQuantitiy = fragment.getNumberOfHighestIsotopes()
             #if zRange == None:
             #    continue
@@ -442,7 +456,7 @@ class SpectrumHandler(object):
                     self.calculateError(foundIsotopePeaks[0][0], theoPeak['m/z']), True)
         else:
             lowestError = 100
-            for peak in foundIsotopePeaks:
+            for peak in foundIsotopePeaks: #ToDo
                 error = self.calculateError(peak[0], theoPeak[0])
                 if abs(error) < abs(lowestError):
                     lowestError = error

@@ -97,7 +97,13 @@ class IsotopePatternRepository(object):
         '''
         #newPattern = fragment.getFormula().calcIsotopePatternSlowly(3)
         newPattern = fragment.getFormula().calcIsotopePatternSlowly(3)
-        for i in range(3):
+        if len(savedPattern)!=len(newPattern):
+            raise InvalidIsotopePatternException(fragment.getName(), " length of fragment pattern incorrect " +
+                                                str(len(savedPattern)) + "(old) != " + str(len(newPattern)))
+        highestTested = 3
+        if len(savedPattern)<3:
+            highestTested = len(savedPattern)
+        for i in range(highestTested):
             if abs(newPattern[i]['m/z'] - savedPattern[i]['m/z']) > 10 ** (-6):
                 raise InvalidIsotopePatternException(fragment.getName(), "mass incorrect " +
                                                      str(newPattern[i]['m/z']) + " != " + str(savedPattern[i]['m/z']))

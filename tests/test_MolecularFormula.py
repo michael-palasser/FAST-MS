@@ -107,6 +107,7 @@ class MolecularFormulaTest(TestCase):
         uni_pattern = [(174.03917908, 0.92733003), (175.04099458, 0.06836688), (176.04296025, 0.00412072)]
         self.testIsotopePattern(RNA_pattern, RNA_formulaDummy.calculateIsotopePattern())
         self.testIsotopePattern(peptide_pattern, peptideFormulaDummy.calculateIsotopePattern())
+        print(uniFormulaDummy.calculateIsotopePattern())
         self.testIsotopePattern(uni_pattern, uniFormulaDummy.calculateIsotopePattern())
         for i in range(100):
             molFormulaDummy_i = MolecularFormula({'C': randint(5, 50), 'H': randint(10, 100),
@@ -114,7 +115,7 @@ class MolecularFormulaTest(TestCase):
                                                   'P': randint(0, 2), 'S': randint(0, 2)})
             calcIsotopePattern = molFormulaDummy_i.calculateIsotopePattern()
             try:
-                self.assertAlmostEqual(1.0, float(np.sum(calcIsotopePattern['calcInt'])), delta=0.009)
+                self.assertAlmostEqual(1.0, float(np.sum(calcIsotopePattern['calcInt'])), delta=0.004)
                 self.assertTrue(np.sum(calcIsotopePattern['calcInt']) < 1)
             except AssertionError:
                 print(calcIsotopePattern)

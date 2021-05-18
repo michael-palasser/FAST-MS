@@ -45,7 +45,7 @@ class Fragment(object):
         self._formula = formula
 
     def getSequence(self):
-        return self._modification
+        return self._sequence
     def setSequence(self, sequence):
         self._sequence = sequence
 

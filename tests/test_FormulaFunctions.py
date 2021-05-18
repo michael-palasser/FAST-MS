@@ -1,4 +1,5 @@
 from unittest import TestCase
+
 from src.FormulaFunctions import *
 
 string1 = 'C5H5N5O'

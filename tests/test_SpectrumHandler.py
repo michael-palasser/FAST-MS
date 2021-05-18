@@ -3,6 +3,7 @@ from unittest import TestCase
 import numpy as np
 
 from src import path
+from src.MolecularFormula import MolecularFormula
 from src.entities.Ions import Fragment
 from src.entities.SearchProperties import PropertyStorage
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
@@ -13,13 +14,22 @@ from src.top_down.SpectrumHandler import SpectrumHandler
 class TestSpectrumHandler(TestCase):
     def setUp(self):
         filePath = os.path.join(path, 'tests', 'dummySpectrum.txt')
-        self.settings = {'sequName': 'dummyRNA', 'charge': -2, 'fragmentation': 'RNA_CAD', 'modifications': 'CMCT',
+        self.configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
+
+        self.settings = {'sequName': 'dummyRNA', 'charge': -3, 'fragmentation': 'RNA_CAD', 'modifications': 'CMCT',
                     'nrMod': 1, 'spectralData': filePath, 'noiseLimit': 1.0, 'fragLib': ''}
         self.props = PropertyStorage(self.settings['sequName'], self.settings['fragmentation'], self.settings['modifications'])
-        self.configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
         builder = FragmentLibraryBuilder(self.props,1)
         builder.createFragmentLibrary()
         self.spectrumHandler = SpectrumHandler(self.props,builder.getPrecursor(),self.settings)
+
+
+        self.settingsProt = {'sequName': 'dummyProt', 'charge': 4, 'fragmentation': 'Protein_CAD', 'modifications': '-',
+                    'nrMod': 0, 'spectralData': filePath, 'noiseLimit': 1.0, 'fragLib': ''}
+        self.propsProt = PropertyStorage(self.settingsProt['sequName'], self.settingsProt['fragmentation'], self.settingsProt['modifications'])
+        builder = FragmentLibraryBuilder(self.propsProt,0)
+        builder.createFragmentLibrary()
+        self.spectrumHandlerProt = SpectrumHandler(self.propsProt,builder.getPrecursor(),self.settingsProt)
         '''builder2 = FragmentLibraryBuilder(self.props,2)
         builder2.createFragmentLibrary()
         settings2 = self.settings
@@ -69,8 +79,53 @@ class TestSpectrumHandler(TestCase):
         normalizationFactor = abs(self.settings['charge'])/(len(self.props.getSequenceList())-1)
         self.assertAlmostEqual(normalizationFactor,self.spectrumHandler.getNormalizationFactor())
 
-    def test_get_search_parameters(self):
-        self.fail()
+    def test_get_charge_range(self):
+        nrP = len(self.props.getSequenceList())-1
+        precModCharge = self.spectrumHandler.getModCharge(Fragment('c',3,'+CMCT','',[],0))
+        self.spectrumHandler.setNormalizationFactor(self.spectrumHandler.getNormalizationFactor())
+        tolerance = self.configs['zTolerance']
+        precCharge = abs(self.settings['charge'])
+        self.spectrumHandlerProt.setNormalizationFactor(self.spectrumHandlerProt.getNormalizationFactor())
+
+        rangeCalc = self.spectrumHandler.getChargeRange(Fragment('y', 1, '', MolecularFormula({'P': 0}), [], 0),
+                                                        precModCharge)
+        self.assertEqual(0, rangeCalc.stop)
+
+        rangeTheo = self.getRange(precCharge/nrP-precModCharge, tolerance, precCharge)
+        rangeCalc = self.spectrumHandler.getChargeRange(Fragment('c',3,'',MolecularFormula({'P':1}),[],0),precModCharge)
+        print(rangeTheo,rangeCalc)
+        self.assertEqual(rangeTheo.start,rangeCalc.start)
+        self.assertEqual(rangeTheo.stop,rangeCalc.stop)
+
+        rangeTheo = self.getRange(2*precCharge/nrP-precModCharge, tolerance, precCharge)
+        rangeCalc = self.spectrumHandler.getChargeRange(Fragment('c',3,'',MolecularFormula({'P':2}),[],0),precModCharge)
+        self.assertEqual(rangeTheo.start,rangeCalc.start)
+        self.assertEqual(rangeTheo.stop,rangeCalc.stop)
+
+        rangeTheo = self.getRange(2*precCharge/nrP, tolerance, precCharge)
+        rangeCalc = self.spectrumHandler.getChargeRange(Fragment('c',3,'+CMCT',MolecularFormula({'P':2}),[],0),precModCharge)
+        self.assertEqual(rangeTheo.start,rangeCalc.start)
+        self.assertEqual(rangeTheo.stop,rangeCalc.stop)
+
+        rangeTheo = self.getRange(abs(self.settingsProt['charge']*3)/len(self.propsProt.getSequenceList()), tolerance, self.settingsProt['charge'])
+        rangeCalc = self.spectrumHandlerProt.getChargeRange(Fragment('c',3,'',MolecularFormula({'P':1}),['G', 'A', 'P'],0),0)
+        self.assertEqual(rangeTheo.start,rangeCalc.start)
+        self.assertEqual(rangeTheo.stop,rangeCalc.stop)
+
+
+        rangeTheo = self.getRange(abs(self.settingsProt['charge']*3)/len(self.propsProt.getSequenceList())-1, tolerance, self.settingsProt['charge'])
+        rangeCalc = self.spectrumHandlerProt.getChargeRange(Fragment('c',3,'',MolecularFormula({'P':1}),['G', 'A', 'P'],1),0)
+        self.assertEqual(rangeTheo.start,rangeCalc.start)
+        self.assertEqual(rangeTheo.stop,rangeCalc.stop)
+
+    def getRange(self,probZ,tolerance, precCharge):
+        low = int(round(probZ-tolerance))
+        if low < 1 :
+            low = 1
+        high = precCharge
+        if probZ+tolerance < precCharge:
+            high = int(round(probZ+tolerance))
+        return range(low,high+1)
 
     def test_get_correct_peak(self):
         self.fail()

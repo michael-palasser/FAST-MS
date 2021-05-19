@@ -49,7 +49,6 @@ class SpectrumHandler(object):
         self.__properties = properties
         self.__settings = settings
         self.__sprayMode = 1
-        print(settings)
         if self.__settings['charge'] < 0:
             self.__sprayMode = -1
         self.__upperBound=0
@@ -199,7 +198,6 @@ class SpectrumHandler(object):
             currentWindow = self.getPeaksInWindow(self.__spectrum, currentMz, windowSize)
             peaksHigherThanNoise.append((currentMz, currentWindow[np.where(currentWindow > (noise * 5))].size))
             currentMz += 1
-        print(peaksHigherThanNoise)
         peaksHigherThanNoise = np.array(peaksHigherThanNoise)
         windowSize, currentMz = 100 , 1200
         while currentMz < 2500:
@@ -349,7 +347,7 @@ class SpectrumHandler(object):
 
 
     #ToDo: Refactor
-    def findPeaks(self, fragmentLibrary):
+    def findIons(self, fragmentLibrary):
         '''
         Assigns peaks in spectrum to isotope peaks of corresponding ion
         1. Possible charges of species are calculated
@@ -364,13 +362,14 @@ class SpectrumHandler(object):
         self._normalizationFactor = self.getNormalizationFactor()
         for fragment in fragmentLibrary:
             self._searchedChargeStates[fragment.getName()] = []
-            fragment.setIsotopePattern(np.sort(fragment.getIsotopePattern(), order='calcInt')[::-1])
+            #fragment.setIsotopePattern(np.sort(fragment.getIsotopePattern(), order='calcInt')[::-1])
+            sortedPattern = np.sort(fragment.getIsotopePattern(), order='calcInt')[::-1]
             zRange = self.getChargeRange(fragment, precModCharge)
             peakQuantitiy = fragment.getNumberOfHighestIsotopes()
             #if zRange == None:
             #    continue
             for z in zRange:
-                theoreticalPeaks = copy.deepcopy(fragment.getIsotopePattern())
+                theoreticalPeaks = copy.deepcopy(sortedPattern)
                 #if self.__settings['dissociation'] in ['ECD', 'EDD', 'ETD'] and fragment.number == 0:
                 #    theoreticalPeaks['mass'] += ((self.protonMass-self.eMass) * (self.__charge - z))
                     #print("heeeeee\n",fragment.getName(),z, theoreticalPeaks['mass'])
@@ -382,9 +381,10 @@ class SpectrumHandler(object):
                     sumIntTheo = 0
                     foundMainPeaks = list()
                     for i in range(peakQuantitiy):
-                        searchMask = np.where(abs(self.calculateError(self.__spectrum[:, 0], theoreticalPeaks[i]['m/z']))
+                        '''searchMask = np.where(abs(self.calculateError(self.__spectrum[:, 0], theoreticalPeaks[i]['m/z']))
                                               < getErrorLimit(self.__spectrum[:, 0]))
-                        spectralPeak = self.getCorrectPeak(self.__spectrum[searchMask], theoreticalPeaks[i])
+                        spectralPeak = self.getCorrectPeak(self.__spectrum[searchMask], theoreticalPeaks[i])'''
+                        spectralPeak = self.findPeak(theoreticalPeaks[i])
                         sumInt += spectralPeak[1]
                         foundMainPeaks.append(spectralPeak)
                         sumIntTheo += theoreticalPeaks[i]['calcInt']
@@ -394,36 +394,32 @@ class SpectrumHandler(object):
                         sumInt += (peakQuantitiy - 1 - len(foundMainPeaks)) * noise * 0.5              #if one or more isotope peaks were not found noise added #parameter
                         notInNoise = np.where(theoreticalPeaks['calcInt'] >noise*
                                               configs['thresholdFactor'] / (sumInt/sumIntTheo))
-                        '''inNoise = np.where(theoreticalPeaks['calcInt'] <= noise*
-                                           configs['thresholdFactor'] / (sumInt/sumIntTheo))'''
                         if theoreticalPeaks[notInNoise].size > len(foundMainPeaks):
-                            foundPeaks = list()
+                            foundPeaks = [self.findPeak(theoPeak) for theoPeak in theoreticalPeaks[notInNoise]]
                             #find other isotope Peaks
-                            for theoPeak in theoreticalPeaks[notInNoise]:
+                            '''for theoPeak in theoreticalPeaks[notInNoise]:
                                 searchMask = np.where(abs(self.calculateError(self.__spectrum[:, 0], theoPeak['m/z']))
                                                       < (getErrorLimit(self.__spectrum[:, 0]) + configs['errorTolerance']))
-                                foundPeaks.append(self.getCorrectPeak(self.__spectrum[searchMask], theoPeak))
+                                foundPeaks.append(self.getCorrectPeak(self.__spectrum[searchMask], theoPeak))'''
                             foundPeaksArr = np.sort(np.array(foundPeaks, dtype=self._peaksArrType), order=['m/z'])
                             if not np.all(foundPeaksArr['relAb']==0):
                                 self._foundIons.append(FragmentIon(fragment, np.min(theoreticalPeaks['m/z']), z, foundPeaksArr, noise))
-                                #print(fragment.getName(),z,'\n', theoreticalPeaks[0]['m/z'], z, "{:.2e}".format(noise))
-                                #print(fragment.getName(),foundPeaksArr)
-                                for peak in foundPeaksArr:
-                                    if peak['relAb']>0:
-                                        print("\t",np.around(peak['m/z'],4),"\t",peak['relAb'])
+                                [print("\t",np.around(peak['m/z'],4),"\t",peak['relAb']) for peak in foundPeaksArr if peak['relAb']>0]
                             else:
                                 self.addToDeletedIons(fragment, foundMainPeaks, noise, np.min(theoreticalPeaks['m/z']), z)
                         elif theoreticalPeaks[notInNoise].size > 0:
                             foundMainPeaksArr = np.sort(np.array(foundMainPeaks, dtype=self._peaksArrType), order=['m/z'])
                             self._foundIons.append(FragmentIon(fragment, np.min(theoreticalPeaks['m/z']), z,
                                                                foundMainPeaksArr, noise))
-                            for peak in foundMainPeaksArr:
-                                if peak['relAb']>0:
-                                    print("\t",np.around(peak['m/z'],4),"\t",peak['relAb'])
+                            [print("\t",np.around(peak['m/z'],4),"\t",peak['relAb']) for peak in foundMainPeaksArr if peak['relAb']>0]
                         else:
-                            """for theoPeak in theoreticalPeaks[inNoise]:
-                                foundMainPeaks.append((theoPeak['m/z'],0,theoPeak['m/z'],theoPeak['relAb'],0,1))"""
                             self.addToDeletedIons(fragment, foundMainPeaks, noise, np.min(theoreticalPeaks['m/z']), z)
+
+    def findPeak(self, theoPeak):
+        searchMask = np.where(abs(self.calculateError(self.__spectrum[:, 0], theoPeak['m/z']))
+                              < getErrorLimit(self.__spectrum[:, 0]))
+        return self.getCorrectPeak(self.__spectrum[searchMask], theoPeak)
+
 
 
     def addToDeletedIons(self, fragment, foundMainPeaks, noise, monoisotopic, z):
@@ -445,8 +441,8 @@ class SpectrumHandler(object):
         '''
         Selects the correct peak in spectrum for a theoretical isotope peak
         Correct is the peak with the lowest ppm error
-        :param (ndArray, dtype=float) foundIsotopePeaks:
-        :param (ndArray) theoPeak:
+        :param (ndArray (dtype=float)) foundIsotopePeaks:
+        :param (ndArray (dtype=[float,float]) theoPeak: calculated peak (structured array [m/z,calcInt])
         :return: (Tuple[float, int, float, float, bool]) m/z, z, int, error, used
         '''
         if len(foundIsotopePeaks) == 0:

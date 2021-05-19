@@ -74,7 +74,7 @@ class Fragment(object):
 
     def getNumberOfHighestIsotopes(self):
         '''
-        Defines number of peaks to be searched for in first step of findPeaks function in SpectrumHandler
+        Defines number of peaks to be searched for in first step of findIons function in SpectrumHandler
         :return: number of peaks
         '''
         abundances = self._isotopePattern['calcInt'] / self._isotopePattern[0]['calcInt']

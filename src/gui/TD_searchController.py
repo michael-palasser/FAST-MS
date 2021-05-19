@@ -146,7 +146,7 @@ class TD_MainController(object):
         """Finding fragments"""
         print("\n********** Search for spectrum **********")
         start = time.time()
-        self.spectrumHandler.findPeaks(self.libraryBuilder.getFragmentLibrary())
+        self.spectrumHandler.findIons(self.libraryBuilder.getFragmentLibrary())
         print("\ndone\nexecution time: ", round((time.time() - start) / 60, 3), "min\n")
 
         self._intensityModeller = IntensityModeller(self.configs)

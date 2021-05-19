@@ -1,4 +1,5 @@
 import os
+from copy import deepcopy
 from unittest import TestCase
 import numpy as np
 
@@ -8,7 +9,7 @@ from src.entities.Ions import Fragment
 from src.entities.SearchProperties import PropertyStorage
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.top_down.LibraryBuilder import FragmentLibraryBuilder
-from src.top_down.SpectrumHandler import SpectrumHandler
+from src.top_down.SpectrumHandler import SpectrumHandler, getErrorLimit
 
 
 class TestSpectrumHandler(TestCase):
@@ -19,17 +20,18 @@ class TestSpectrumHandler(TestCase):
         self.settings = {'sequName': 'dummyRNA', 'charge': -3, 'fragmentation': 'RNA_CAD', 'modifications': 'CMCT',
                     'nrMod': 1, 'spectralData': filePath, 'noiseLimit': 1.0, 'fragLib': ''}
         self.props = PropertyStorage(self.settings['sequName'], self.settings['fragmentation'], self.settings['modifications'])
-        builder = FragmentLibraryBuilder(self.props,1)
-        builder.createFragmentLibrary()
-        self.spectrumHandler = SpectrumHandler(self.props,builder.getPrecursor(),self.settings)
+        self.builder = FragmentLibraryBuilder(self.props,1)
+        self.builder.createFragmentLibrary()
+        self.builder.addNewIsotopePattern()
+        self.spectrumHandler = SpectrumHandler(self.props,self.builder.getPrecursor(),self.settings)
 
 
         self.settingsProt = {'sequName': 'dummyProt', 'charge': 4, 'fragmentation': 'Protein_CAD', 'modifications': '-',
                     'nrMod': 0, 'spectralData': filePath, 'noiseLimit': 1.0, 'fragLib': ''}
         self.propsProt = PropertyStorage(self.settingsProt['sequName'], self.settingsProt['fragmentation'], self.settingsProt['modifications'])
-        builder = FragmentLibraryBuilder(self.propsProt,0)
-        builder.createFragmentLibrary()
-        self.spectrumHandlerProt = SpectrumHandler(self.propsProt,builder.getPrecursor(),self.settingsProt)
+        self.builderProt = FragmentLibraryBuilder(self.propsProt,0)
+        self.builderProt.createFragmentLibrary()
+        self.spectrumHandlerProt = SpectrumHandler(self.propsProt,self.builderProt.getPrecursor(),self.settingsProt)
         '''builder2 = FragmentLibraryBuilder(self.props,2)
         builder2.createFragmentLibrary()
         settings2 = self.settings
@@ -93,7 +95,6 @@ class TestSpectrumHandler(TestCase):
 
         rangeTheo = self.getRange(precCharge/nrP-precModCharge, tolerance, precCharge)
         rangeCalc = self.spectrumHandler.getChargeRange(Fragment('c',3,'',MolecularFormula({'P':1}),[],0),precModCharge)
-        print(rangeTheo,rangeCalc)
         self.assertEqual(rangeTheo.start,rangeCalc.start)
         self.assertEqual(rangeTheo.stop,rangeCalc.stop)
 
@@ -128,10 +129,110 @@ class TestSpectrumHandler(TestCase):
         return range(low,high+1)
 
     def test_get_correct_peak(self):
-        self.fail()
+        '''isotopePattern_dtype = np.dtype([('m/z', np.float64), ('relAb', np.float64),
+                                       ('calcInt', np.float64), ('error', np.float32), ('used', np.bool_)])'''
+        dtype = [('m/z', np.float64), ('calcInt', np.float64)]
+        theoPeak = np.array([(300.54, 0.5)], dtype=dtype)
+        self.assertEqual(0,self.spectrumHandler.getCorrectPeak(np.array([]),theoPeak[0])[1])
+        dummyPeak, error = self.getDummyPeak(theoPeak)
+        finPeak = self.spectrumHandler.getCorrectPeak(dummyPeak,theoPeak[0])
+        self.assertAlmostEqual(dummyPeak[0][0],finPeak[0])
+        self.assertAlmostEqual(dummyPeak[0][1],finPeak[1])
+        self.assertAlmostEqual(theoPeak['calcInt'],finPeak[2])
+        self.assertAlmostEqual(error,finPeak[3])
+        self.assertAlmostEqual(True,finPeak[4])
+        for i in range(20):
+            dummyPeak1, error1 = self.getDummyPeak(theoPeak)
+            dummyPeak2 = deepcopy(dummyPeak1)
+            dummyPeak2[0] *=(1+error1/10**6)
+            dummyPeak3 = deepcopy(dummyPeak1)
+            dummyPeak3[0] *=(1-2.1*error1/10**6)
+            dummyPeaks = np.concatenate((dummyPeak1,dummyPeak2,dummyPeak3),axis=0)
+            finPeak = self.spectrumHandler.getCorrectPeak(dummyPeaks,theoPeak[0])
+            self.assertAlmostEqual(dummyPeak1[0][0],finPeak[0])
+            self.assertAlmostEqual(dummyPeak1[0][1],finPeak[1])
+            self.assertAlmostEqual(theoPeak['calcInt'],finPeak[2])
+            self.assertAlmostEqual(error1,finPeak[3])
+            self.assertAlmostEqual(True,finPeak[4])
+            theoPeak['m/z'] += 100
 
-    def test_find_peaks(self):
-        self.fail()
+    def getDummyPeak(self, theoPeak, outside=False):
+        if outside == False:
+            randomError = np.random.rand(1)*(-1)**(np.random.randint(2))*getErrorLimit(theoPeak['m/z'])
+        else:
+            randomError = (np.random.rand(1)+1)*(-1)**(np.random.randint(2))*getErrorLimit(theoPeak['m/z'])
+        mz = theoPeak['m/z']*(1+randomError/10**6)
+        return np.array([(mz[0], (theoPeak['calcInt']+np.random.rand(1)/10*(-1)**(np.random.randint(2)))[0])]), randomError[0]
+
+    def test_find_peak(self):
+        dtype = [('m/z', np.float64), ('calcInt', np.float64)]
+        theoPeak = np.array([(310.58, 0.5)], dtype=dtype)
+        for i in range(5):
+            dummyPeak, error = self.getDummyPeak(theoPeak, True)
+            dummyPeak[0][1] *= 10**7
+            self.spectrumHandler.setSpectrum(np.concatenate((self.spectrumHandler.getSpectrum(),dummyPeak),axis=0))
+            self.assertEqual(0,self.spectrumHandler.findPeak(theoPeak[0])[1])
+            theoPeak['m/z'] += 100
+        for i in range(5):
+            dummyPeak, error = self.getDummyPeak(theoPeak)
+            dummyPeak[0][1] *= 10**7
+            self.spectrumHandler.setSpectrum(np.concatenate((self.spectrumHandler.getSpectrum(),dummyPeak),axis=0))
+            self.assertTrue(self.spectrumHandler.findPeak(theoPeak[0])[1]>0)
+            theoPeak['m/z'] += 100
+        self.setUp()
+
+
+    def test_find_ions_basic(self):
+        #prepare everything
+        self.spectrumHandler.findIons(self.builder.getFragmentLibrary())
+        self.assertEqual(0,len(self.spectrumHandler.getFoundIons()))
+        precModCharge = self.spectrumHandler.getModCharge(self.builder.getPrecursor())
+        #peaksToFind = []
+        #nrsOfPeaks = {}
+        originalSpectrum = self.spectrumHandler.getSpectrum()
+        upperBound = self.spectrumHandler.getUpperBound()
+        for i,fragment in enumerate(self.builder.getFragmentLibrary()):
+            print('hey',fragment.getName())
+            isotopePattern = fragment.getIsotopePattern()
+            for z in self.spectrumHandler.getChargeRange(fragment,precModCharge):
+                print('hey',z,isotopePattern)
+                theoreticalPeaks = deepcopy(isotopePattern)
+                #if self.__settings['dissociation'] in ['ECD', 'EDD', 'ETD'] and fragment.number == 0:
+                #    theoreticalPeaks['mass'] += ((self.protonMass-self.eMass) * (self.__charge - z))
+                    #print("heeeeee\n",fragment.getName(),z, theoreticalPeaks['mass'])
+                theoreticalPeaks['m/z'] = self.spectrumHandler.getMz(theoreticalPeaks['m/z'], z * -1, fragment.getRadicals())
+                print('hey',theoreticalPeaks)
+                if (self.configs['lowerBound'] < theoreticalPeaks[0]['m/z'] < upperBound):
+                    peaksToFind = []
+                    print('hey','yes')
+                    for peak in theoreticalPeaks[:np.random.randint(low=1,high=len(isotopePattern))]:
+                        dummyPeak,error = self.getDummyPeak(peak)
+                        dummyPeak[0][1] =round(10**8*dummyPeak[0][1])
+                        peaksToFind.append(dummyPeak[0])
+                    peaksToFind=np.array(peaksToFind)
+                    print('hey',peaksToFind)
+                    #[isotopePattern[:np.random.randint(low=0,high=len(isotopePattern))]
+
+                    #find ions
+                    self.spectrumHandler.setSpectrum(np.concatenate((self.spectrumHandler.getSpectrum(),peaksToFind),axis=0))
+                    self.spectrumHandler.findIons(self.builder.getFragmentLibrary())
+
+                    #test
+                    found = self.spectrumHandler.getFoundIons()
+                    foundFragment = None
+                    for frag in found:
+                        if (frag.getName() == fragment.getName()) and (frag.getCharge() == z):
+                            foundFragment=frag
+                    self.assertEqual(fragment.getName(),foundFragment.getName())
+                    print(fragment.getName())
+                    foundIsoPattern = foundFragment.getIsotopePattern()
+                    print(foundIsoPattern, peaksToFind)
+                    for j,peak in enumerate(peaksToFind):
+                        print(peak,foundIsoPattern[j])
+                        self.assertAlmostEqual(peak[1],foundIsoPattern[j][1])
+
+                    self.spectrumHandler.setSpectrum(originalSpectrum)
+
 
 
     '''def test_resize_spectrum(self):

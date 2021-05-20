@@ -7,7 +7,7 @@ import numpy as np
 from copy import deepcopy
 from scipy.optimize import minimize
 from scipy.optimize import minimize_scalar
-from src.top_down.SpectrumHandler import getErrorLimit
+from src.top_down.SpectrumHandler import getErrorLimit, calculateError
 
 class IntensityModeller(object):
     '''
@@ -35,9 +35,9 @@ class IntensityModeller(object):
     def addRemodelledIon(self, ion):
         self._remodelledIons.append(ion)
 
-    @staticmethod
+    '''@staticmethod
     def calculateError(value, theoValue):
-        return (value - theoValue) / theoValue * 10 ** 6
+        return (value - theoValue) / theoValue * 10 ** 6'''
 
     '''@staticmethod
     def getHash(ion):
@@ -53,10 +53,11 @@ class IntensityModeller(object):
         :param (ndArray, dtype=float) theoIntensities: calculated intensities
         :return: (float) sum of squares
         '''
-        sum_square = 0
-        for spectralIntensity, theoIntensities in zip(spectralIntensities,theoIntensities):
-            sum_square += (spectralIntensity-theoIntensities*x)**2
-        return sum_square
+        '''sum_square = 0
+        for spectralIntensity, theoIntensity in zip(spectralIntensities,theoIntensities):
+            sum_square += (spectralIntensity-theoIntensity*x)**2
+        return sum_square'''
+        return np.sum(np.linalg.norm(spectralIntensities-theoIntensities*x)**2)
 
 
     def modelDistribution(self, spectralIntensities, theoInt, mzArray):
@@ -93,14 +94,7 @@ class IntensityModeller(object):
         '''
         print(ion.getId())
         outlierList = list()
-        '''ion.error = np.average(ion.isotopePattern['error'][np.where((ion.isotopePattern['relAb'] != 0) & (ion.isotopePattern['used']))])
-        solution, gValue, outliers = \
-            self.modelDistribution(ion.isotopePattern['relAb'], ion.isotopePattern['calcInt'], ion.isotopePattern['m/z'])
-        ion.isotopePattern['calcInt'] = ion.isotopePattern['calcInt'] * solution.x
-        ion.quality = solution.fun**(0.5) / ion.intensity
-        ion.getScore()'''
         ion, outliers = self.modelIon(ion)
-        #ToDo: corrected ion not necessary?
         correctedIon = deepcopy(ion)
         if len(outliers) > 0:
             while len(outliers) > 0:
@@ -190,7 +184,7 @@ class IntensityModeller(object):
         sameMonoisotopics = list()
         self._monoisotopicList = np.array(self._monoisotopicList)
         for elem in self._monoisotopicList:
-            same_mono_index = np.where((abs(self.calculateError(self._monoisotopicList['mono'], elem['mono']))
+            same_mono_index = np.where((abs(calculateError(self._monoisotopicList['mono'], elem['mono']))
                  < getErrorLimit(elem['mono'])) & \
                                        (self._monoisotopicList['name'] != elem['name']) &
                                        (self._monoisotopicList['charge'] == elem['charge']))

@@ -13,7 +13,7 @@ from src.top_down.LibraryBuilder import FragmentLibraryBuilder
 from src.top_down.SpectrumHandler import SpectrumHandler, getErrorLimit
 from tests.test_LibraryBuilder import initTestSequences,deleteTestSequences
 
-def initTest():
+def initTestLibraryBuilder():
     initTestSequences(SequenceService())
     configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
     filePath = os.path.join(path, 'tests', 'dummySpectrum.txt')
@@ -36,7 +36,7 @@ class TestSpectrumHandler(TestCase):
         self.builder = FragmentLibraryBuilder(self.props,1)
         self.builder.createFragmentLibrary()
         self.builder.addNewIsotopePattern()'''
-        self.configs, self.settings, self.props, self.builder = initTest()
+        self.configs, self.settings, self.props, self.builder = initTestLibraryBuilder()
         self.spectrumHandler = SpectrumHandler(self.props,self.builder.getPrecursor(),self.settings)
 
 
@@ -127,7 +127,6 @@ class TestSpectrumHandler(TestCase):
         rangeCalc = self.spectrumHandlerProt.getChargeRange(Fragment('c',3,'',MolecularFormula({'P':1}),['G', 'A', 'P'],0),0)
         self.assertEqual(rangeTheo.start,rangeCalc.start)
         self.assertEqual(rangeTheo.stop,rangeCalc.stop)
-
 
         rangeTheo = self.getRange(abs(self.settingsProt['charge']*3)/len(self.propsProt.getSequenceList())-1, tolerance, self.settingsProt['charge'])
         rangeCalc = self.spectrumHandlerProt.getChargeRange(Fragment('c',3,'',MolecularFormula({'P':1}),['G', 'A', 'P'],1),0)

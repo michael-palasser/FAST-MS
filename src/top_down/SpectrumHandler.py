@@ -391,7 +391,7 @@ class SpectrumHandler(object):
                     if sumInt > 0:
                         noise = self.calculateNoise(theoreticalPeaks[0]['m/z'], 4)
                         #print('\twent through',round(noise))
-                        sumInt += (peakQuantitiy - 1 - len(foundMainPeaks)) * noise * 0.5              #if one or more isotope peaks were not found noise added #parameter
+                        sumInt += (peakQuantitiy - len(foundMainPeaks)) * noise * 0.5              #if one or more isotope peaks were not found noise added #parameter
                         notInNoise = np.where(theoreticalPeaks['calcInt'] >noise*
                                               configs['thresholdFactor'] / (sumInt/sumIntTheo))
                         if theoreticalPeaks[notInNoise].size > len(foundMainPeaks):

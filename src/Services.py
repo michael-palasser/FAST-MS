@@ -431,9 +431,17 @@ class ModificationService(AbstractServiceForPatterns):
         elementRep = PeriodicTableRepository()
         elements = elementRep.getAllPatternNames()
         self.checkFormatOfItems(pattern.getItems(), elements, self.repository.getIntegers()[0])
+        checkedItems = []
+        for item in pattern.getItems():
+            checkedItem = item
+            if item[0][0] not in ['+','-']:
+                checkedItem = ['+' + item[0]] + [elem for elem in item[1:]]
+            checkedItems.append(checkedItem)
+        pattern.setItems(checkedItems)
         pattern = super(ModificationService, self).save(pattern)
         elementRep.close()
         return pattern
+
 
     def getFormula(self, item):
         '''

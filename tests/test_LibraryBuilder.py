@@ -5,18 +5,24 @@ from src.top_down.LibraryBuilder import FragmentLibraryBuilder
 from src.entities.SearchProperties import PropertyStorage
 from src.Services import *
 
+def initTestSequences(sequenceService):
+    sequences = [Sequence(tup[0], tup[1], tup[2], i) for i, tup in
+                 enumerate(sequenceService.getSequences())]
+    sequences.append(Sequence('dummyRNA', 'GACU', 'RNA', len(sequences) + 1))
+    sequences.append(Sequence('dummyProt', 'GAPH', 'Protein', len(sequences) + 1))
+    print(sequences)
+    sequenceService.save(sequences)
+
+def deleteTestSequences(sequenceService):
+    sequenceService.delete('dummyRNA')
+    sequenceService.delete('dummyProt')
 
 class TestFragmentLibraryBuilder(TestCase):
     def setUp(self):
         try:
             self.initLibrary()
         except:
-            sequences = [Sequence(tup[0], tup[1], tup[2], i) for i, tup in
-                         enumerate(self.sequenceService.getSequences())]
-            sequences.append(Sequence('dummyRNA', 'GACU', 'RNA', len(sequences) + 1))
-            sequences.append(Sequence('dummyProt', 'GAPH', 'Protein', len(sequences) + 1))
-            print(sequences)
-            self.sequenceService.save(sequences)
+            initTestSequences(self.sequenceService)
             self.initLibrary()
 
     def initLibrary(self):
@@ -129,5 +135,4 @@ class TestFragmentLibraryBuilder(TestCase):
 
 
     def tearDown(self):
-        self.sequenceService.delete('dummyRNA')
-        self.sequenceService.delete('dummyProt')
+        deleteTestSequences(self.sequenceService)

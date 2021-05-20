@@ -5,16 +5,29 @@ import numpy as np
 
 from src import path
 from src.MolecularFormula import MolecularFormula
+from src.Services import SequenceService
 from src.entities.Ions import Fragment
 from src.entities.SearchProperties import PropertyStorage
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.top_down.LibraryBuilder import FragmentLibraryBuilder
 from src.top_down.SpectrumHandler import SpectrumHandler, getErrorLimit
+from tests.test_LibraryBuilder import initTestSequences,deleteTestSequences
 
+def initTest():
+    initTestSequences(SequenceService())
+    configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
+    filePath = os.path.join(path, 'tests', 'dummySpectrum.txt')
+    settings = {'sequName': 'dummyRNA', 'charge': -3, 'fragmentation': 'RNA_CAD', 'modifications': 'CMCT',
+                     'nrMod': 1, 'spectralData': filePath, 'noiseLimit': 10 ** 5, 'fragLib': ''}
+    props = PropertyStorage(settings['sequName'], settings['fragmentation'],settings['modifications'])
+    builder = FragmentLibraryBuilder(props, 1)
+    builder.createFragmentLibrary()
+    builder.addNewIsotopePattern()
+    return configs, settings, props, builder
 
 class TestSpectrumHandler(TestCase):
     def setUp(self):
-        filePath = os.path.join(path, 'tests', 'dummySpectrum.txt')
+        '''filePath = os.path.join(path, 'tests', 'dummySpectrum.txt')
         self.configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
 
         self.settings = {'sequName': 'dummyRNA', 'charge': -3, 'fragmentation': 'RNA_CAD', 'modifications': 'CMCT',
@@ -22,12 +35,13 @@ class TestSpectrumHandler(TestCase):
         self.props = PropertyStorage(self.settings['sequName'], self.settings['fragmentation'], self.settings['modifications'])
         self.builder = FragmentLibraryBuilder(self.props,1)
         self.builder.createFragmentLibrary()
-        self.builder.addNewIsotopePattern()
+        self.builder.addNewIsotopePattern()'''
+        self.configs, self.settings, self.props, self.builder = initTest()
         self.spectrumHandler = SpectrumHandler(self.props,self.builder.getPrecursor(),self.settings)
 
 
         self.settingsProt = {'sequName': 'dummyProt', 'charge': 4, 'fragmentation': 'Protein_CAD', 'modifications': '-',
-                    'nrMod': 0, 'spectralData': filePath, 'noiseLimit': 10**5, 'fragLib': ''}
+                    'nrMod': 0, 'spectralData': os.path.join(path, 'tests', 'dummySpectrum.txt'), 'noiseLimit': 10**5, 'fragLib': ''}
         self.propsProt = PropertyStorage(self.settingsProt['sequName'], self.settingsProt['fragmentation'], self.settingsProt['modifications'])
         self.builderProt = FragmentLibraryBuilder(self.propsProt,0)
         self.builderProt.createFragmentLibrary()
@@ -303,3 +317,6 @@ class TestSpectrumHandler(TestCase):
 
     def test_set_searched_charge_states(self):
         self.fail()'''
+
+    def tearDown(self):
+        deleteTestSequences(SequenceService())

@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import QTableWidget
 from math import log10
 import pandas as pd
 
-from src.Exceptions import UnvalidInputException
+from src.Exceptions import InvalidInputException
 
 
 class IonTableWidget(QTableWidget):
@@ -138,7 +138,7 @@ class IsoPatternIon(IonTableWidget):
         try:
             return int(self.item(0,2).text())
         except ValueError:
-            raise UnvalidInputException('Unvalid Intensity', self.item(0,2).text())
+            raise InvalidInputException('Unvalid Intensity', self.item(0, 2).text())
 
 
     def getIon(self, row):

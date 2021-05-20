@@ -4,24 +4,32 @@ Created on 10 Aug 2020
 @author: michael
 '''
 import numpy as np
-from math import isnan
 
 class Analyser(object):
     '''
-    classdocs
+    Class for analysing the ion list
     '''
     def __init__(self, ions, sequence, precCharge, modification):
+        '''
+        :param (list of FragmentIon) ions: observed ion (from intensityModeller)
+        :param (list of str) sequence: list of building blocks in sequence of precursor
+        :param (int) precCharge: charge of precursor
+        :param (str) modification: modification of precursor
+        '''
         self._ions = ions #sorted(_ions, key=lambda obj:(obj.type , obj.number))
         self._sequence = sequence
         self._precCharge = abs(precCharge)
         self._modification = modification
         #self._percentageDict = dict()
 
-
     def setIons(self, ions):
         self._ions = ions
 
     def calculateRelAbundanceOfSpecies(self):
+        '''
+        Calculates relative abundances of all fragment types including the precursor ion
+        :return: (dict[str,float]) relative fragment type abundances {type:abundance}
+        '''
         relAbundanceOfSpecies = dict()
         totalSum = 0
         """for type in fragmentList:
@@ -38,6 +46,10 @@ class Analyser(object):
         return relAbundanceOfSpecies
 
     def getModificationLoss(self):
+        '''
+        Calculates the proportion of modification loss of the precursor
+        :return: (float) modification loss proportion
+        '''
         if self._modification == "":
             return None
         modifiedSum = 0
@@ -50,7 +62,14 @@ class Analyser(object):
         return 1 - modifiedSum / totalSum
 
 
-    def calculatePercentages(self, interestingIons, *args):
+    def calculateOccupancies(self, interestingIons, *args):
+        '''
+        Calculates the modified proportion for each fragment
+        :param (list of str) interestingIons: fragment types which should be analysed
+        :param (list of str) args: list of modifications which should not be used for the calculation (optional)
+        :return: (dict[str,ndarray[float]]) dictionary {fragment type: proportions [fragment number x proportion]}
+            of modified proportions for every (interesting) fragment type
+        '''
         if self._modification == "":
             return None
         temp = dict()
@@ -58,7 +77,7 @@ class Analyser(object):
             if ion.getType() in interestingIons:
                 if args:
                     if len([mod for mod in args[0] if mod in ion.getModification()])>0:
-                        print('not', ion.getName())
+                        #print('not', ion.getName())
                         continue
                 if ion.getType() not in temp.keys():
                     temp[ion.getType()] = np.zeros((len(self._sequence), 3))
@@ -66,11 +85,11 @@ class Analyser(object):
                     temp[ion.getType()][ion.getNumber() - 1] += \
                         np.array([ion.getRelAbundance(),
                                   ion.getRelAbundance() * int(self.getNrOfModifications(ion.getModification())), 0])
-                    print('\t', ion.getName(), ion.getRelAbundance()*int(self.getNrOfModifications(ion.getModification())), 'mod')
+                    #print('\t', ion.getName(), ion.getRelAbundance()*int(self.getNrOfModifications(ion.getModification())), 'mod')
                 else:
                     temp[ion.getType()][ion.getNumber() - 1] += \
                         np.array([ion.getRelAbundance(),0,0])
-                    print('\t', ion.getName(), ion.getRelAbundance())
+                    #print('\t', ion.getName(), ion.getRelAbundance())
         for key,vals in temp.items():
             print('sequ.\t',key+'_free\t', key+'+'+self._modification)
             [print(str(i+1), '\t',val[0]-val[1], '\t', val[1]) for i,val in enumerate(vals)]
@@ -78,6 +97,11 @@ class Analyser(object):
 
 
     def getNrOfModifications(self, modificationString):
+        '''
+        Determines how often an ion is modified
+        :param (str) modificationString: (raw) modification string of an ion
+        :return: (int) number of modifications of ion
+        '''
         nrOfModif = 1
         if modificationString[modificationString.find(self._modification) - 1].isdigit():
             nrOfModif = modificationString[modificationString.find(self._modification) - 1]
@@ -86,6 +110,13 @@ class Analyser(object):
         return nrOfModif
 
     def calculateProportions(self, tempDict):
+        '''
+        Calculates the proportion of the interesting value (col 2)
+        :param (dict[str,ndarray(dtype=[float,float,float])]) tempDict: dict {fragment type: array} with array columns:
+            summed values, interesting values, 0
+        :return: (dict[str,ndarray(dtype=[float,float,float])]) dict {fragment type: array} with array columns:
+            summed values, interesting values, interesting proportion
+        '''
         proportions = dict()
         for key,arr in tempDict.items():
             for row in arr:
@@ -96,7 +127,15 @@ class Analyser(object):
             proportions[key] = arr[:, 2]
         return proportions
 
-    def getAvCharges(self, interestingIons, reduced):
+    def analyseCharges(self, interestingIons, reduced):
+        '''
+        Calculates the average charges and the charge ranges for each (interesting) fragment
+        :param (list of str) interestingIons: fragment types which should be analysed
+        :param (bool) reduced: if True abundances are divided by charge
+        :return: (tuple[Dict[str:ndarray[float]], Dict[str:ndarray[float, float]]])
+            dictionary with average charges {fragment type: charge array[fragment number x av.charge]}
+            dictionary with min/max charges {fragment type: charge array[fragment number x (min.charge, max charge)]}
+        '''
         temp = dict()
         #redTemp = dict()
         chargeDict = dict()
@@ -132,6 +171,16 @@ class Analyser(object):
         return avCharges, minMaxChargeDict
 
     def toTable(self, forwardVals, backwardVals):
+        '''
+        For output of calculateOccupancies and analyseCharges to table
+        :param (list of ndarray(dtype = float)) forwardVals: list (length = N_forw) of arrays with values of
+            forward (e.g. a,b,c,..) fragment types
+        :param (list of ndarray(dtype = float)) backwardVals: list (length = N_back) of arrays with values of
+            backward (e.g. x,y,z,..) fragment types
+        :return: (list of list[str,int,N_forw x float, N_back x float, int, str]) 2D list,
+            4 + N_forw + N_back columns (building block (forw), number (forw), N_forw x val_frag_forw ,
+                N_back x val_frag_back,  number (back), building block (back))
+        '''
         table = []
         for i, bb in enumerate(self._sequence[:-1]):
             table.append([bb, i+1])

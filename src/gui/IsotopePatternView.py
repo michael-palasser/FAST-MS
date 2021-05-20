@@ -1,6 +1,6 @@
 from PyQt5 import QtWidgets, QtCore
 
-from src.IsotopePatternService import IsotopePatternService
+from src.IsotopePatternLogics import IsotopePatternLogics
 from src.Services import *
 from src.gui.IonTableWidget import IsoPatternIon
 from src.gui.PeakViews import IsoPatternPeakWidget
@@ -10,7 +10,7 @@ from src.gui.SpectrumView import TheoSpectrumView
 class IsotopePatternView(QtWidgets.QMainWindow):
     def __init__(self, parent):
         super(IsotopePatternView, self).__init__(parent)
-        self._controller = IsotopePatternService()
+        self._controller = IsotopePatternLogics()
         self._fragmentationOpts = self._controller.getFragmentationNames()
         self._modifPatternOpts = self._controller.getModifPatternNames()
         self._intensity = 100
@@ -194,7 +194,7 @@ class IsotopePatternView(QtWidgets.QMainWindow):
                                 self.inputForm.text(), charge, int(self.radicals.text()), self._intensity,
                                 self.fragmentationBox.currentText(), self.fragmentBox.currentText(),
                                 self.modPatternBox.currentText(), self.modifBox.currentText(), self.nrOfMods.value())
-        except UnvalidInputException as e:
+        except InvalidInputException as e:
             QtWidgets.QMessageBox.warning(self, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
             return
         self.restartView(ion, neutralMass)
@@ -218,10 +218,11 @@ class IsotopePatternView(QtWidgets.QMainWindow):
         #self.peakTable.show()
 
     def restartView(self, ion, neutralMass):
-        self.spectrumView.hide()
+        self.updateSpectrumView(ion)
+        '''self.spectrumView.hide()
         del self.spectrumView
         self.spectrumView = TheoSpectrumView(self.centralwidget, ion.getIsotopePattern(), 365)
-        self.spectrumView.setGeometry(QtCore.QRect(250, 50, 365, 300))
+        self.spectrumView.setGeometry(QtCore.QRect(250, 50, 365, 300))'''
         #self.spectrumView.setGeometry(QtCore.QRect(250, 50, 350, 280))
         self.peakTable.hide()
         self._ionTable.hide()
@@ -243,6 +244,15 @@ class IsotopePatternView(QtWidgets.QMainWindow):
         hight = self.makePeakTable(ion.getIsotopePattern())
         #self._vertLayout.insertWidget(5, self.peakTable)
         self.resize(615, 420 + hight + 30)
+
+    def updateSpectrumView(self, ion):
+        print(self.spectrumView)
+        self.spectrumView.hide()
+        del self.spectrumView
+        isotopePattern = self._controller.getIsotopePattern(ion)
+        print(isotopePattern)
+        self.spectrumView = TheoSpectrumView(self.centralwidget, isotopePattern, 365)
+        self.spectrumView.setGeometry(QtCore.QRect(250, 50, 365, 300))
 
     #def getIonVals(self, ion, neutralMass):
     #    return (ion.isotopePattern['m/z'][0], abs(ion._charge), self._intensity, "-", 0., ion.formula, neutralMass)
@@ -282,7 +292,7 @@ class IsotopePatternView(QtWidgets.QMainWindow):
         try:
             ion = self._controller.model(peaks)
             self._intensity = round(ion.getIntensity())
-        except UnvalidInputException as e:
+        except InvalidInputException as e:
             QtWidgets.QMessageBox.warning(self, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
             return
         #ionVals = list(self._ionTable.getIon(0))

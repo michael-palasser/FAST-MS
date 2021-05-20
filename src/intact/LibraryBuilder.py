@@ -11,13 +11,13 @@ from src.entities.IonTemplates import IntactModification
 
 class IntactLibraryBuilder(object):
     '''
-    LibraryBuilder for intact ion search
+    Responsible for creating list of theoretical values of intact ions
     '''
     def __init__(self, sequName, modificationName):
         '''
 
-        :param sequName: Name of the Sequence
-        :param modificationName: Name of the Modification
+        :param (str) sequName: Name of the Sequence
+        :param (str) modificationName: Name of the Modification
         '''
         self.sequence = SequenceService().get(sequName)
         self.sequenceList = self.sequence.getSequenceList()
@@ -29,7 +29,7 @@ class IntactLibraryBuilder(object):
     def createLibrary(self):
         '''
         creates a library of modified ions
-        :return: dict of ions
+        :return: (dict[str,MolecularFormula]) library of formulas {name:formula}
         '''
         unmodFormula = self.getUnmodifiedFormula()
         library = {"" : (unmodFormula.calculateMonoIsotopic(),0)}
@@ -43,8 +43,8 @@ class IntactLibraryBuilder(object):
 
     def getUnmodifiedFormula(self):
         '''
-
-        :return: unmodified intact ion
+        Calculates molecular formula of unmodified intact ion
+        :return: (MolecularFormula) formula of unmodified intact ion
         '''
         formula = MolecularFormula(self._molecule.getFormula())
         buildingBlocks = self._molecule.getBBDict()

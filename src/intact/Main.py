@@ -20,6 +20,15 @@ from src import path
 
 
 def run():
+    '''
+    Analyses one or more spectra of intact ions:
+    1.  Input: txt file, format: m/z, z, relative abundance #ToDo
+    2.  Library with theoretical ion masses is created
+    3.  Search for ions in uncalibrated spectrum. These are used for internal calibration (automated)
+    4.  Search for ions in calibrated spectrum
+    5.  Analysis: charge states, modifications/ligands, ...
+    6.  Output in xlsx file
+    '''
     #dialog = IntactStartDialog()
     configHandler = ConfigurationHandlerFactory.getIntactHandler()
     spectralFile = os.path.join(path, 'Spectral_data','intact', configHandler.get('spectralData'))
@@ -37,7 +46,7 @@ def run():
 
     """find __spectrum"""
     print("\n********** finding __spectrum **********")
-    analyser = IntactAnalyser(finder.findIons(configHandler.get('k'), configHandler.get('d'), 1))
+    analyser = IntactAnalyser(finder.findIons(configHandler.get('k'), configHandler.get('d'), True))
 
     """output"""
     print("\n********** output **********")
@@ -51,8 +60,8 @@ def run():
     excelWriter = IntactExcelWriter(output)
     avCharges, avErrors = analyser.calculateAvChargeAndError()
     try:
-        excelWriter.writeAnalysis(parameters, analyser.getIonList(),
-                                  avCharges,avErrors,
+        excelWriter.writeAnalysis(parameters, analyser.getSortedIonList(),
+                                  avCharges, avErrors,
                                   analyser.calculateAverageModification(),
                                   analyser.calculateModifications())
         print("saved in:", output)

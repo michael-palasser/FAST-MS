@@ -36,7 +36,7 @@ def writeElements():
 
 def readMoleculeFile(moleculeFile, molecule):
     '''
-    reads and processes file which contains formulas of monomeres and precursor ions
+    reads and processes file which contains formulas of buildingBlocks and precursor ions
     :param moleculeFile: (RNA.txt, DNA.txt, Protein.txt in Parameters - folder)
     :return: void
     '''
@@ -89,7 +89,7 @@ def writeMolecules():
             gain,loss = 'H','O2P1'
             if molecule == 'Protein':
                 gain, loss = 'H2O', ''
-            service.savePattern(Makromolecule(molecule, gain, loss, monomers,None))
+            service.savePattern(Macromolecule(molecule, gain, loss, monomers, None))
     except:
         traceback.print_exc()
     finally:
@@ -157,7 +157,7 @@ def readFragmentations(file):
 
 
 def writeFragments(name, fragPath,precFrag):
-    service = FragmentIonService()
+    service = FragmentationService()
     try:
         with open(fragPath) as f:
             fragments = readFragmentations(f)
@@ -306,5 +306,5 @@ writeFragments("Protein_ECD",fragPath, prcFrags)
 
 #writeIntactModifs()
 
-#service = FragmentIonService()
+#service = FragmentationService()
 #service.restart()

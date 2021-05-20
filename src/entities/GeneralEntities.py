@@ -3,9 +3,20 @@ from re import findall
 from src.entities.AbstractEntities import PatternWithItems, AbstractItem1, AbstractPattern, AbstractItem2
 
 
-class Makromolecule(PatternWithItems):
-    def __init__(self, name, moleculeGain, moleculeLoss, monomeres, id):
-        super(Makromolecule, self).__init__(name, monomeres, id)
+class Macromolecule(PatternWithItems):
+    '''
+    Class which stores molecule properties. E.g. protein, RNA, DNA
+    '''
+    def __init__(self, name, moleculeGain, moleculeLoss, buildingBlocks, id):
+        '''
+        :param (str) name: name of macromolecule
+        :param (str) moleculeGain: template of formula (gain)
+        :param (str) moleculeLoss: template of formula (loss)
+        :param (list[tuple[str, str, float, float] | list[str, str, float, float] | BuildingBlock]) buildingBlocks:
+            list of building blocks
+        :param (int | None) id: id of macromolecule
+        '''
+        super(Macromolecule, self).__init__(name, buildingBlocks, id)
         self.__gain = moleculeGain
         self.__loss = moleculeLoss
 
@@ -16,12 +27,17 @@ class Makromolecule(PatternWithItems):
         return self.__loss
 
     def getFormula(self):
+        '''
+        Returns template of molecular formula of macromolecule
+        :return: (str) molecular formula
+        '''
         formula = AbstractItem2.stringToFormula(self.__gain, dict(), 1)
         return AbstractItem2.stringToFormula(self.__loss, formula, -1)
 
     def getBBDict(self):
         '''
-        :return  {name:BuildingBlock}
+        Returns dict of building blocks
+        :return (dict[str,BuildingBlock]) dict of {name of building block:BuildingBlock}
         '''
         itemDict = dict()
         for item in self._items:
@@ -32,8 +48,15 @@ class Makromolecule(PatternWithItems):
         return itemDict
 
 class BuildingBlock(AbstractItem1):
+    '''
+    e.g. guanidine for RNA, lysine for proteins
+    '''
     #def __init__(self, name, formulaString, acidity):
     def __init__(self, item):
+        '''
+        :param (list[str, str, float, float] | tuple[str, str, float, float]) item:
+            list of properties (name, formulaString, gas-phase basicity (gb) in positive mode, gb in negative mode)
+        '''
         super(BuildingBlock, self).__init__(item[0])
         self.__formulaString = item[1]
         self.__gbP = item[2]
@@ -60,9 +83,9 @@ class BuildingBlock(AbstractItem1):
 class Element(PatternWithItems):
     def __init__(self, name, isotopes, id):
         """
-        :param (str) name:
-        :param (list) isotopes: list of isotope values (tuples) or Isotope - objects:
-        :param (int) id:
+        :param (str) name: name of element
+        :param (list[list[int, float, float] | list[tuple[int, float, float] | Isotope]) isotopes: list of isotopes:
+        :param (int | None) id: id of element
         """
         super(Element, self).__init__(name, isotopes, id)
 

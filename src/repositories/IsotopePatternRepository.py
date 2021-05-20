@@ -1,31 +1,39 @@
 import csv
 import os
-import sqlite3
+#import sqlite3
+#import time
+#from os.path import join
 import time
-from os.path import join
 
 import numpy as np
 
 from src import path
-from src.Exceptions import UnvalidIsotopePatternException
+from src.Exceptions import InvalidIsotopePatternException
 
 
-class IsotopePatternReader(object):
+class IsotopePatternRepository(object):
+    '''
+    Responsible for managing stored isotope patterns (csv-files)
+    '''
     def __init__(self):
         self.__file = None
-
 
     def getFile(self):
         return self.__file
 
     def findFile(self, settings):
+        '''
+        Checks if a isotope pattern file exists
+        :param (tuple[str,str,int,str] | list[str,str,int,str]) settings: settings which are relevant for the filename
+        :return: (bool) True if file exists
+        '''
         if len(settings) == 1:
             file = settings[0]
             if not file[-4:] == '.csv':
                 file += '.csv'
             self.__file = os.path.join(path, 'Fragment_lists',file)
         else:
-            sequName, fragmentation, nrMod, modifications = settings[0], settings[1], settings[2], settings[3],
+            sequName, fragmentation, nrMod, modifications = settings[0], settings[1], settings[2], settings[3]
             if modifications == "-" or nrMod == "0":
                 self.__file = os.path.join(path, 'Fragment_lists', '_'.join((sequName, fragmentation + '.csv')))
             else:
@@ -36,9 +44,10 @@ class IsotopePatternReader(object):
 
     def addIsotopePatternFromFile(self, fragmentLibrary):
         '''
-        Reads and processes isotope patterns from existing file
-        :param file: file with istope patterns (in folder Fragment_lists)
-        :return: void
+        Checks and imports isotope patterns from existing file
+        :param (list[Fragment]) fragmentLibrary: list of fragments without isotope patterns
+        :return: (list[Fragment]) list of fragments with isotope patterns from file
+        :raises InvalidIsotopePatternException: if stored isotope pattern does not match newly calculated one
         '''
         isotopePatternDict = dict()
         #print(self.__file)
@@ -63,36 +72,51 @@ class IsotopePatternReader(object):
                     isotopePattern.append((row[1], row[2]))
                 except IndexError:
                     print(row)
-                    raise UnvalidIsotopePatternException(row, " incorrect")
+                    raise InvalidIsotopePatternException(row, " incorrect")
             if i < 1:
-                raise UnvalidIsotopePatternException("", "no data in file")
+                raise InvalidIsotopePatternException("", "no data in file")
             isotopePatternDict[name] = np.array(isotopePattern, dtype=[('m/z',np.float64),('calcInt', np.float64)])
         print('Checking correctness of fragment library')
+        start = time.time()
         for fragment in fragmentLibrary:
             if fragment.getName() not in isotopePatternDict:
-                raise UnvalidIsotopePatternException(fragment.getName(),"not found in file")
+                raise InvalidIsotopePatternException(fragment.getName(), "not found in file")
             self.checkEquality(fragment, isotopePatternDict[fragment.getName()])
             fragment.setIsotopePattern(isotopePatternDict[fragment.getName()])
+        print('time',time.time()-start)
         print('done')
         return fragmentLibrary
 
     def checkEquality(self, fragment, savedPattern):
-        newPattern = fragment.getFormula().calcIsotopePatternSlowly(2)
-        for i in range(2):
-            if newPattern[i]['m/z'] - savedPattern[i]['m/z'] > 10 ** (-6):
-                raise UnvalidIsotopePatternException(fragment.getName(), "mass incorrect " +
-                     str(newPattern[i]['m/z']) + " != " + str(savedPattern[i]['m/z']))
-            if newPattern[i]['calcInt'] - savedPattern[i]['calcInt'] > 10 ** (-6):
-                print(newPattern)
-                raise UnvalidIsotopePatternException(fragment.getName(), '('+str(i)+") relative Abundance incorrect " +
-                     str(newPattern[i]['calcInt']) + " != " + str(savedPattern[i]['calcInt']))
+        '''
+        Checks if stored isotope pattern is correct
+        :type fragment: Fragment
+        :param (Fragment) fragment: freshly created Fragment
+        :param (ndarray(dtype = [float,float])) savedPattern: isotope pattern from file
+        :raises InvalidIsotopePatternException if not equal
+        '''
+        #newPattern = fragment.getFormula().calcIsotopePatternSlowly(3)
+        newPattern = fragment.getFormula().calcIsotopePatternSlowly(3)
+        '''if len(savedPattern)!=len(newPattern):
+            raise InvalidIsotopePatternException(fragment.getName(), " length of fragment pattern incorrect " +
+                                                str(len(savedPattern)) + "(old) != " + str(len(newPattern)))'''
+        highestTested = 3
+        if len(savedPattern)<3:
+            highestTested = len(savedPattern)
+        for i in range(highestTested):
+            if abs(newPattern[i]['m/z'] - savedPattern[i]['m/z']) > 10 ** (-6):
+                raise InvalidIsotopePatternException(fragment.getName(), "mass incorrect " +
+                                                     str(newPattern[i]['m/z']) + " != " + str(savedPattern[i]['m/z']))
+            print(newPattern[i]['calcInt'] - savedPattern[i]['calcInt'])
+            if abs(newPattern[i]['calcInt'] - savedPattern[i]['calcInt']) > 10 ** (-6):
+                raise InvalidIsotopePatternException(fragment.getName(), '(' + str(i) + ") relative Abundance incorrect " +
+                                                     str(newPattern[i]['calcInt']) + " != " + str(savedPattern[i]['calcInt']))
 
 
     def saveIsotopePattern(self, fragmentLibrary):
         '''
         Saves calculated isotope patterns to a file
-        :param file: csv-file in folder Fragment_lists
-        :return: void
+        :param (list[Fragment]) fragmentLibrary: list of fragments (with calculated isotope pattern)
         '''
         np.set_printoptions(suppress=True)
         #M_max = 0

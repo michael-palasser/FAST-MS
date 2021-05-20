@@ -26,6 +26,12 @@ def readCsv(file):
 
 
 def run(mainWindow):
+    '''
+    Calculates modification/ligand occupancies of a given ion list.
+    Input: csv file
+    Output: xlsx file
+    :param (PyQt5.QtWidgets.QMainWindow | Any) mainWindow: Qt parent
+    '''
     service = SequenceService()
     dlg = OccupancyRecalcStartDialog(mainWindow, service.getAllSequenceNames())
     dlg.exec_()
@@ -35,7 +41,7 @@ def run(mainWindow):
         modification = dlg.modification
 
         """import ion-list"""
-        spectralFile = path + 'Spectral_data/Occupancies_in.csv'
+        spectralFile = os.path.join(path, 'Spectral_data/Occupancies_in.csv')
         with open(spectralFile, 'w') as f:
             f.write("m/z,z,int,name")
         subprocess.call(['open',spectralFile])
@@ -65,7 +71,7 @@ def run(mainWindow):
             date = datetime.now().strftime("%d/%m/%Y %H:%M")
             excelWriter.worksheet1.write(0,0,date)
             row = excelWriter.writeAbundancesOfSpecies(2, analyser.calculateRelAbundanceOfSpecies())
-            excelWriter.writeOccupancies(row,sequence,analyser.calculatePercentages(speciesList))
+            excelWriter.writeOccupancies(row, sequence, analyser.calculateOccupancies(speciesList))
             excelWriter.closeWorkbook()
             try:
                 subprocess.call(['open', os.path.join(path, "Spectral_data","Occupancies_out.xlsx")])

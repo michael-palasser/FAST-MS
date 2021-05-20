@@ -9,9 +9,12 @@ from xlsxwriter.utility import xl_rowcol_to_cell
 
 class IntactExcelWriter(object):
     '''
-
+    Responsible for output of intact ion search to xlsx file
     '''
     def __init__(self, file):
+        '''
+        :param (str) file: path of xlsx output file
+        '''
         self.workbook = xlsxwriter.Workbook(file)
         self.worksheet1 = self.workbook.add_worksheet('analysis')
         self.row = 0
@@ -20,6 +23,10 @@ class IntactExcelWriter(object):
         self.col = 0
 
     def writeParameters(self, parameters):
+        '''
+        Writes all user defined parameters to xlsx file
+        :param (dict[str,Any]) parameters: {(str) name: value}
+        '''
         self.worksheet1.write(self.row,0,'parameters:')
         self.row += 1
         for key,val in parameters.items():
@@ -29,6 +36,10 @@ class IntactExcelWriter(object):
         self.row += 2
 
     def writeIons(self, listOfIons):
+        '''
+        Writes list of observed ion of one spectrum to xlsx file
+        :param (list[IntactIon]) listOfIons: list of Ion objects
+        '''
         self.worksheet1.write(self.row,0,'observed __spectrum:')
         row = self.row+1
         self.worksheet1.write_row(row,0,['m/z','z','int','name','error'])
@@ -40,6 +51,11 @@ class IntactExcelWriter(object):
         self.col = 6
 
     def writeAvChargeAndError(self, averageCharge, avError):
+        '''
+        Writes av. charge and av. error of one spectrum to xlsx file
+        :param (float) averageCharge: average charge in a spectrum
+        :param (float) avError:  average ppm error in a spectrum
+        '''
         self.worksheet1.write(self.row,self.col,'av.charge:')
         self.worksheet1.write(self.row+1,self.col,averageCharge,self.format2digit)
         self.worksheet1.write(self.row+2,self.col,'av.error:')
@@ -47,6 +63,10 @@ class IntactExcelWriter(object):
         self.col += 2
 
     def writeAverageMod(self, avModifPerCharge):
+        '''
+        Writes av. modifications per charge of one spectrum to xlsx file
+        :param (dict[int,float]) avModifPerCharge: {charge: av. modification}
+        '''
         self.worksheet1.write(self.row,self.col,'av. number of modifications:')
         self.worksheet1.write_row(self.row+1,self.col,['z','value'])
         row = self.row+1
@@ -62,6 +82,11 @@ class IntactExcelWriter(object):
         self.col += 3
 
     def writeModifications(self, modifications):
+        '''
+        Writes the percentages of each modification for each charge state in one spectrum to xlsx file
+        :param (dict[str,ndarray(dtype=[int,float])]) modifications:
+            {modification: 2D array of [(charge,percentage)]}
+        '''
         self.percentFormat = self.workbook.add_format({'num_format': '0.0%'})
         self.worksheet1.write(self.row,self.col,'modifications:')
         self.worksheet1.write(self.row+1,self.col,'av.values')
@@ -89,6 +114,16 @@ class IntactExcelWriter(object):
 
 
     def writeAnalysis(self, parameters, listsOfIons, avCharges,avErrors,avModifPerCharges, modificationsInSpectra):
+        '''
+        Writes the analysis to xlsx file
+        :param (dict[str,Any]) parameters: {name: value}
+        :param (list[list[IntactIon]]) listsOfIons: observed ions for each spectrum
+        :param (list[float]) avCharges: average charges in each spectrum
+        :param (list[float]) avErrors: average ppm error in each spectrum
+        :param (list[dict[int,float]]) avModifPerCharges: av. modifications {charge: av. modification} in each spectrum
+        :param (list[dict[str,ndarray(dtype=[int,float])]]) modificationsInSpectra:
+            {modification: 2D array of [(charge,percentage)])} for each spectrum
+        '''
         self.writeParameters(parameters)
         for i in range(len(avCharges)):
             self.worksheet1.write(self.row, 0, 'spectralFile '+str(i+1))

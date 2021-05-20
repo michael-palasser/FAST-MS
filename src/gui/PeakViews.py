@@ -6,7 +6,7 @@ import pandas as pd
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import Qt
 
-from src.Exceptions import UnvalidInputException
+from src.Exceptions import InvalidInputException
 from src.gui.IonTableWidget import IonTableWidget
 from src.gui.ResultView import AbstractTableModel
 
@@ -31,6 +31,7 @@ class PeakTableModel(AbstractTableModel):
                 #print(item)
                 formatString = self._format[col]
                 if col == 1 or col ==2:
+                    item = int(round(item))
                     if item >= 10 ** 12:
                         lg10 = str(int(log10(item) + 1))
                         formatString = '{:' + lg10 + 'd}'
@@ -57,7 +58,7 @@ class PeakTableModel(AbstractTableModel):
 class SimplePeakView(QtWidgets.QWidget):
     def __init__(self, parent, ion):
         super().__init__(parent)
-        self._peaks = ion.getPeakValues()
+        self._peaks = ion.getIsotopePattern()
         model = PeakTableModel(self._peaks)
         # self.proxyModel = QSortFilterProxyModel()
         # self.proxyModel.setSourceModel(model)
@@ -99,7 +100,7 @@ class PeakView(QtWidgets.QMainWindow):
         self.setCentralWidget(QtWidgets.QWidget(self))
         self._verticalLayout = QtWidgets.QVBoxLayout(self.centralWidget())
         self._ionTable = IonTableWidget(self.centralWidget(),(self._ion,),30)
-        self._peakTable = PeakWidget(self.centralWidget(), self._ion.getPeakValues())
+        self._peakTable = PeakWidget(self.centralWidget(), self._ion.getIsotopePattern())
         self.model = model
         self.save = save
         buttonWidget = QtWidgets.QWidget(self.centralWidget())
@@ -141,7 +142,7 @@ class PeakView(QtWidgets.QMainWindow):
         newIon = self.model(copy.deepcopy(self._ion),vals)
         if self._ion.getIntensity() != newIon.getIntensity():
             self._ion = newIon
-            self._peakTable.setPeaks(self._ion.getPeakValues())
+            self._peakTable.setPeaks(self._ion.getIsotopePattern())
             self._verticalLayout.removeWidget(self._ionTable)
             del self._ionTable
             self._ionTable =  IonTableWidget(self.centralWidget(),(self._ion,),30)
@@ -178,6 +179,7 @@ class GeneralPeakWidget(QtWidgets.QTableWidget):
                 newItem.setTextAlignment(QtCore.Qt.AlignRight)
                 if j == 1 or j==2:
                     formatString = self._format[2]
+                    item = int(round(item))
                     if item >= 10 ** 12:
                         lg10 = str(int(log10(item) + 1))
                         formatString = '{:' + lg10 + 'd}'
@@ -208,7 +210,9 @@ class GeneralPeakWidget(QtWidgets.QTableWidget):
             df=pd.DataFrame(data=self._peaks, columns=self.headers)
             df['int. (spectrum)']= self._peaks['relAb']
             df['int. (calc.)']= self._peaks['calcInt']
+            df['error /ppm']= self._peaks['error']
             df.to_clipboard(index=False,header=True)
+            print(df)
 
     def readTable(self):
         itemList = []
@@ -243,5 +247,16 @@ class IsoPatternPeakWidget(GeneralPeakWidget):
                     intensity = int(self.item(row, 1).text())
                 itemList.append((intensity, int(self.item(row, 3).checkState()/2)==1, float(self.item(row, 0).text())))
             except ValueError:
-                raise UnvalidInputException('Intensities must be numbers',self.item(row, 1).text())
+                raise InvalidInputException('Intensities must be numbers', self.item(row, 1).text())
         return itemList
+
+    def showOptions(self, table, pos):
+        menu = QtWidgets.QMenu()
+        copyAction = menu.addAction("Copy Table")
+        action = menu.exec_(table.viewport().mapToGlobal(pos))
+        if action == copyAction:
+            #peaks.astype(float)
+            df=pd.DataFrame(data=self._peaks, columns=self.headers)
+            df['int. (spectrum)']= self._peaks['relAb']
+            df['int. (calc.)']= self._peaks['calcInt']
+            df.to_clipboard(index=False,header=True)

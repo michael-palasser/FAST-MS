@@ -5,7 +5,7 @@ from PyQt5 import QtWidgets, QtCore
 from src import path
 from os.path import join
 
-from src.Services import FragmentIonService, ModificationService, SequenceService
+from src.Services import FragmentationService, ModificationService, SequenceService
 from src.gui.AbstractDialogs import StartDialog, DialogWithTabs, AbstractDialog
 from src.gui.Widgets import OpenFileWidget
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
@@ -22,7 +22,7 @@ class TDStartDialog(StartDialog):
     def setupUi(self):
         labelNames = ("Sequence Name:", "Charge:", "Fragmentation:", "Modifications:", "Nr. of Modifications:",
                            "Spectral Data:", "Noise Threshold (x10^6):", "Fragment Library:")
-        fragPatterns = FragmentIonService().getAllPatternNames()
+        fragPatterns = FragmentationService().getAllPatternNames()
         modPatterns = ModificationService().getAllPatternNames()
         sequences = SequenceService().getAllSequenceNames()
         widgets = {"sequName": (self.createComboBox(self,sequences), "Name of the sequence"),

@@ -12,9 +12,13 @@ protonMass = 1.00727647
 
 class Finder(object):
     '''
-
+    Responsible for assigning ions
     '''
     def __init__(self, theoValues, configHandler):
+        '''
+        :param (dict[str, MolecularFormula]) theoValues: library of formulas {name:formula}
+        :param configHandler: (ConfigHandler) configurationHandler for intact ions
+        '''
         self.theoValues = theoValues
         self.mode = 1
         if configHandler.get('sprayMode') == 'negative':
@@ -24,6 +28,10 @@ class Finder(object):
         self.foundIons = list()
 
     def readData(self,file):
+        '''
+        Reads txt files containing ion data (format: m/z    z   relAb) and creates a 2D array (m/z, z, relAb)
+        :param (file) file: opened txt file
+        '''
         spectrum = list()
         for line in file:
             line = line.rstrip()
@@ -51,10 +59,31 @@ class Finder(object):
         return (value - theoValue) / theoValue * 10 ** 6
 
     def getErrorLimit(self,k, d, mz):
+        '''
+        calculates error threshold in ppm
+        :param (float) k: slope of error threshold
+        :param (float) d: intercept of error threshold
+        :param (float) mz: corresponding (theoretical) m/z
+        :return: (float) threshold
+        '''
         return k / 1000 * mz + d
 
 
-    def findIons(self, k, d, flag):
+    def findIons(self, k, d, flag=False):
+        '''
+        Assigns ions in spectrum to corresponding ions:
+        function loops over all possible charge states of the ion within the range minMz and maxMz and searches for the
+        corresponding ion in the spectrum:
+            * if it does not find the ion and the flag is True it also includes misassignments of the monoisotopic m/z
+              (monosisotopic +/- 1.00266/z)
+            * if more than one ion was found to be within the ppm - threshold and the flag is True the ppm-error
+              threshold is set to 6.5. If there is still more than 1 ion or no ion within the threshold the spectral ion
+              with the highest abundance is taken
+        :param (float) k: slope of error threshold
+        :param (float) d: intercept of error threshold
+        :param (bool) flag: if set, errors in ion list in txt file (+/- 1 Da) are taken in account
+        :return: (list[list[IntactIon]]) ions
+        '''
         ionLists = list()
         for spectrum in self.data:
             ions = list()
@@ -72,7 +101,7 @@ class Finder(object):
                             ions.append(Ion(self.configHandler.get('sequName'),modif,spectrum[mask]['m/z'][0],self.getMz(mass,z),
                                             spectrum[mask]['z'][0],spectrum[mask]['relAb'][0],val[1]))
 
-                        elif (flag == 1):
+                        elif flag:
                             if len(mask[0]) == 0:
                                 mask = np.where(
                                     (abs(self.calculateError(spectrum['m/z'], self.getMz(mass+1.00266, z)))
@@ -111,14 +140,31 @@ class Finder(object):
 
     @staticmethod
     def fun_parabola(x,a,b,c):
+        '''
+        Quadratic calibration function: a * x^2 + b * x + c
+        :param (float) x: m/z
+        :param (float) a:
+        :param (float) b:
+        :param (float) c:
+        :return: (float) value of the calibration function
+        '''
         return a * x**2 + b * x + c
 
 
     def calibrate(self):
+        '''
+        Calibrates spectra internally using a quadratic calibration function:
+        Loops over each spectral ion list :
+            1.  Search for ions in uncalibrated spectral ion list using the user defined ppm threshold for calibration
+                (errorLimitCalib)
+            2.  Spectral ion list is calibrated by least square method
+            3.  If the average ppm error is below 2.5 the spectrum the calibration is used. Otherwise the ppm threshold
+                is decreased by 10 ppm and step 2 and 3 are repeated until the average ppm error is below 2.5
+        '''
         calibrationValues = list()
         count = 1
         errorLimit = self.configHandler.get('errorLimitCalib')
-        for ionList in self.findIons(0, errorLimit, 0):
+        for ionList in self.findIons(0, errorLimit):
             limit = errorLimit
             solution = [0,1,0]
             while limit >=10 :

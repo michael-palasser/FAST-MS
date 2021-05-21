@@ -5,7 +5,7 @@ from src.top_down.LibraryBuilder import FragmentLibraryBuilder
 from src.entities.SearchProperties import PropertyStorage
 from src.Services import *
 
-def initTestSequences(sequenceService):
+def initTestSequences(sequenceService=SequenceService()):
     sequences = [Sequence(tup[0], tup[1], tup[2], i) for i, tup in
                  enumerate(sequenceService.getSequences())]
     sequences.append(Sequence('dummyRNA', 'GACU', 'RNA', len(sequences) + 1))
@@ -13,7 +13,7 @@ def initTestSequences(sequenceService):
     print(sequences)
     sequenceService.save(sequences)
 
-def deleteTestSequences(sequenceService):
+def deleteTestSequences(sequenceService=SequenceService()):
     sequenceService.delete('dummyRNA')
     sequenceService.delete('dummyProt')
 

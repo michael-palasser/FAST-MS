@@ -5,7 +5,6 @@ import numpy as np
 
 from src import path
 from src.MolecularFormula import MolecularFormula
-from src.Services import SequenceService
 from src.entities.Ions import Fragment
 from src.entities.SearchProperties import PropertyStorage
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
@@ -14,7 +13,7 @@ from src.top_down.SpectrumHandler import SpectrumHandler, getErrorLimit
 from tests.test_LibraryBuilder import initTestSequences,deleteTestSequences
 
 def initTestLibraryBuilder():
-    initTestSequences(SequenceService())
+    initTestSequences()
     configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
     filePath = os.path.join(path, 'tests', 'dummySpectrum.txt')
     settings = {'sequName': 'dummyRNA', 'charge': -3, 'fragmentation': 'RNA_CAD', 'modifications': 'CMCT',
@@ -318,4 +317,4 @@ class TestSpectrumHandler(TestCase):
         self.fail()'''
 
     def tearDown(self):
-        deleteTestSequences(SequenceService())
+        deleteTestSequences()

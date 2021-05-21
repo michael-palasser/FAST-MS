@@ -35,6 +35,9 @@ class IntensityModeller(object):
     def addRemodelledIon(self, ion):
         self._remodelledIons.append(ion)
 
+    def setMonoisotopicList(self, monoisotopicList):
+        self._monoisotopicList = monoisotopicList
+
     '''@staticmethod
     def calculateError(value, theoValue):
         return (value - theoValue) / theoValue * 10 ** 6'''
@@ -45,7 +48,7 @@ class IntensityModeller(object):
 
 
     @staticmethod
-    def fun_sum_square_scalar(x,spectralIntensities,theoIntensities):
+    def loss_1D_sum_square(x, spectralIntensities, theoIntensities):
         '''
         Sum of squares function for a linear 1D function
         :param (float) x: factor for theoIntensities (must be optimised - weight)
@@ -70,7 +73,7 @@ class IntensityModeller(object):
         :return: (tuple[Any, list[float]) solution of scipy.optimize.minimize_scalar, m/z values which had an outlier intensity
         '''
         #x =np.sum(spectralIntensities)/len(spectralIntensities)
-        solution = minimize_scalar(self.fun_sum_square_scalar, args=(spectralIntensities, theoInt))
+        solution = minimize_scalar(self.loss_1D_sum_square, args=(spectralIntensities, theoInt))
         calcIntensities = theoInt * solution.x
         #sumOfInt = np.sum(calcIntensities)
         #fitQuality = solution.fun**(0.5) / sumOfInt  # correct: (sum_square)^(1/2)/ion.intensity (but ion.intensity = n*I_av)
@@ -158,9 +161,11 @@ class IntensityModeller(object):
             return
         if (correctedIon.getQuality() < self._configs['shapeDel']) :
             self._correctedIons[correctedIon.getHash()] = correctedIon
-            self._monoisotopicList.append(np.array(
+            '''self._monoisotopicList.append(np.array(
                 [(correctedIon.getName(), correctedIon.getCharge(), ion.getMonoisotopic())],
-                dtype=[('name','U32'),('charge', np.uint8),('mono',np.float64)]))
+                dtype=[('name','U32'),('charge', np.uint8),('mono',np.float64)]))'''
+            self._monoisotopicList.append(np.array(
+                (correctedIon.getName(), correctedIon.getCharge(), ion.getMonoisotopic())))
             print('\tqual',correctedIon.getQuality())
         else:
             correctedIon.addComment("qual.")
@@ -182,7 +187,8 @@ class IntensityModeller(object):
         :return: (list of list[FragmentIon]) list of list of ions with same charge and monoistopic m/z
         '''
         sameMonoisotopics = list()
-        self._monoisotopicList = np.array(self._monoisotopicList)
+        self._monoisotopicList = np.array(self._monoisotopicList,
+                                          dtype=[('name','U32'),('charge', np.uint8),('mono',np.float64)])
         for elem in self._monoisotopicList:
             same_mono_index = np.where((abs(calculateError(self._monoisotopicList['mono'], elem['mono']))
                  < getErrorLimit(elem['mono'])) & \
@@ -223,6 +229,18 @@ class IntensityModeller(object):
         if args and args[0]:
             flag = 1
             maxOverlaps = args[0]'''
+        simplePatterns, complexPatterns = self.findOverlaps(maxOverlaps)
+        if not allAuto:
+            self.commentIonsInPatterns(simplePatterns)
+        self.remodelIntensity(simplePatterns, [])
+        return complexPatterns
+
+    def findOverlaps(self,maxOverlaps):
+        '''
+        Searches for overlaps (ions which have the same peaks) in spectrum.
+        :param (int) maxOverlaps: threshold for pattern to be complex
+        :return: (tuple[list[list[FragmentIon]]], list[list[FragmentIon]]]) simple patterns, complex patterns
+        '''
         self.usedPeaks = dict()
         overlappingPeaks = list()
         for ion in self._correctedIons.values():
@@ -255,10 +273,8 @@ class IntensityModeller(object):
                                                   key=lambda ion: ion.getIsotopePattern()['m/z'][0]))
                 else:
                     simplePatterns.append(pattern)
-        if not allAuto:
-            self.commentIonsInPatterns(simplePatterns)
-        self.remodelIntensity(simplePatterns, [])
-        return complexPatterns
+        return simplePatterns,complexPatterns
+
 
 
     def commentIonsInPatterns(self, patterns):
@@ -539,7 +555,6 @@ class IntensityModeller(object):
                                    peakArray['m/z'][noOutliers])
         peakArray['calcInt'] = np.around(peakArray['calcInt'] * solution.x)
         intensity = np.sum(peakArray['calcInt'])
-        print('modelled',peakArray, intensity)
         if intensity != 0:
             quality = solution.fun ** (0.5) / intensity
             return peakArray, intensity, quality

@@ -86,6 +86,10 @@ class IntensityModeller(object):
         return solution, mzArray[outlier_index].tolist()
 
 
+    def calcQuality(self, sumSquare, intensity):
+        return sumSquare**(0.5) / intensity
+
+
     def calculateIntensity(self, ion):
         '''
         Models the theoretical isotope distribution of an ion to the observed one in the spectrum.
@@ -122,7 +126,7 @@ class IntensityModeller(object):
                     correctedIon.setIntensity(np.sum(isoPattern['calcInt'] * solution.x))
                     #isoPattern['calcInt'] = correctedIon.getIsotopePattern()['calcInt'] * solution.x
                     correctedIon.setIsotopePatternPart('calcInt',correctedIon.getIsotopePattern()['calcInt']*solution.x)
-            correctedIon.setQuality(solution.fun**(0.5) / correctedIon.getIntensity())
+            correctedIon.setQuality(self.calcQuality(solution.fun, correctedIon.getIntensity()))
             correctedIon.setError(np.average(ion.getIsotopePattern()['error'][noOutliers]
                                             [np.where(ion.getIsotopePattern()['relAb'][noOutliers] != 0)]))
             for peak in correctedIon.getIsotopePattern():
@@ -147,7 +151,7 @@ class IntensityModeller(object):
         #ion.isotopePattern['calcInt'] = ion.isotopePattern['calcInt'] * solution.x
         ion.setIsotopePatternPart('calcInt',ion.getIsotopePattern()['calcInt']*solution.x)
         if ion.getIntensity() != 0:
-            ion.setQuality(solution.fun ** (0.5) / ion.getIntensity())
+            ion.setQuality(self.calcQuality(solution.fun, ion.getIntensity()))
         return ion, outliers
 
     def processIons(self, ion):
@@ -430,7 +434,7 @@ class IntensityModeller(object):
                         self._correctedIons[ion].setIntensity(self._correctedIons[ion].getIntensity() * factor)
                         sum_int += self._correctedIons[ion].getIntensity()  #for error calc
                     for ion in undeletedIons:
-                        self._correctedIons[ion].setQuality(solution.fun ** (0.5) / sum_int)
+                        self._correctedIons[ion].setQuality(self.calcQuality(solution.fun, sum_int))
                     print("\tqual:",round(solution.fun**(0.5) / sum_int,2))
                     break
             for ion in del_ions:
@@ -556,10 +560,11 @@ class IntensityModeller(object):
         peakArray['calcInt'] = np.around(peakArray['calcInt'] * solution.x)
         intensity = np.sum(peakArray['calcInt'])
         if intensity != 0:
-            quality = solution.fun ** (0.5) / intensity
+            quality = self.calcQuality(solution.fun, intensity)
             return peakArray, intensity, quality
         else:
             return peakArray, intensity, 0.
+
 
     def setIonLists(self, observedIons, deletedIons, remIons):
         self._correctedIons = {ion.getHash():ion for ion in observedIons}

@@ -16,6 +16,7 @@ def initTestSequences(sequenceService=SequenceService()):
 def deleteTestSequences(sequenceService=SequenceService()):
     sequenceService.delete('dummyRNA')
     sequenceService.delete('dummyProt')
+    sequenceService.close()
 
 class TestFragmentLibraryBuilder(TestCase):
     def setUp(self):

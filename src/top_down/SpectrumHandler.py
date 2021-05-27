@@ -326,9 +326,10 @@ class SpectrumHandler(object):
         molecule = self.__properties.getMolecule().getName()
         if molecule in ['RNA' ,'DNA'] and self.__sprayMode == -1:
             #probableZ = (fragment.number-1) * self._normalizationFactor
-            probableZ = fragment.getFormula().getFormulaDict()['P']* self._normalizationFactor
-            if fragment.getFormula().getFormulaDict()['P'] == 0:
+            formula = fragment.getFormula().getFormulaDict()
+            if ('P' not in formula.keys()) or (fragment.getFormula().getFormulaDict()['P'] == 0):
                 return range(0,0)
+            probableZ = fragment.getFormula().getFormulaDict()['P']* self._normalizationFactor
             #probableZ = fragment.formula.formulaDict['P'] * self._normalizationFactor
         elif molecule == 'Protein':
             #probableZ = self.getChargeScore(fragment) * self._normalizationFactor

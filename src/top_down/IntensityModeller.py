@@ -165,11 +165,11 @@ class IntensityModeller(object):
             return
         if (correctedIon.getQuality() < self._configs['shapeDel']) :
             self._correctedIons[correctedIon.getHash()] = correctedIon
-            '''self._monoisotopicList.append(np.array(
-                [(correctedIon.getName(), correctedIon.getCharge(), ion.getMonoisotopic())],
-                dtype=[('name','U32'),('charge', np.uint8),('mono',np.float64)]))'''
             self._monoisotopicList.append(np.array(
-                (correctedIon.getName(), correctedIon.getCharge(), ion.getMonoisotopic())))
+                [(correctedIon.getName(), correctedIon.getCharge(), ion.getMonoisotopic())],
+                dtype=[('name','U32'),('charge', np.uint8),('mono',np.float64)]))
+            '''self._monoisotopicList.append(
+                (correctedIon.getName(), correctedIon.getCharge(), ion.getMonoisotopic()))'''
             print('\tqual',correctedIon.getQuality())
         else:
             correctedIon.addComment("qual.")
@@ -191,6 +191,7 @@ class IntensityModeller(object):
         :return: (list of list[FragmentIon]) list of list of ions with same charge and monoistopic m/z
         '''
         sameMonoisotopics = list()
+        print(np.array(self._monoisotopicList))
         self._monoisotopicList = np.array(self._monoisotopicList,
                                           dtype=[('name','U32'),('charge', np.uint8),('mono',np.float64)])
         for elem in self._monoisotopicList:

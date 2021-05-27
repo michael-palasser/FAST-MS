@@ -84,7 +84,7 @@ class Analyser(object):
                 if self._modification in ion.getModification():
                     temp[ion.getType()][ion.getNumber() - 1] += \
                         np.array([ion.getRelAbundance(),
-                                  ion.getRelAbundance() * int(self.getNrOfModifications(ion.getModification())), 0])
+                                  ion.getRelAbundance() * self.getNrOfModifications(ion.getModification()), 0])
                     #print('\t', ion.getName(), ion.getRelAbundance()*int(self.getNrOfModifications(ion.getModification())), 'mod')
                 else:
                     temp[ion.getType()][ion.getNumber() - 1] += \
@@ -107,7 +107,7 @@ class Analyser(object):
             nrOfModif = modificationString[modificationString.find(self._modification) - 1]
             if modificationString[modificationString.find(self._modification) - 2].isdigit():
                 nrOfModif += (10 * modificationString[modificationString.find(self._modification) - 2])
-        return nrOfModif
+        return int(nrOfModif)
 
     def calculateProportions(self, tempDict):
         '''
@@ -125,6 +125,7 @@ class Analyser(object):
                 else:
                     row[2] = None
             proportions[key] = arr[:, 2]
+        print('calculateProportions',proportions)
         return proportions
 
     def analyseCharges(self, interestingIons, reduced):
@@ -190,6 +191,7 @@ class Analyser(object):
             [table[i].append(val) for i, val in enumerate(reversed(vals[:-1]))]
         for i, bb in enumerate(self._sequence[1:]):
             table[i]+=[len(self._sequence)-i-1,bb]
+
         return table
 
     '''def addColumn(self, table, vals):

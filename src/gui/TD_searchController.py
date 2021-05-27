@@ -224,7 +224,8 @@ class TD_MainController(object):
         self.createMenu("Edit", {'Repeat ovl. modelling': self.repeatModellingOverlaps},
                         ['Repeat overlap modelling involving user inputs'], [""])
         self.createMenu("Show",
-                {'Results': self.mainWindow.show, 'Occupancy-Plot': self.showOccupancyPlot,
+                {'Results': self.mainWindow.show,
+                 'Occupancy-Plot': self.showOccupancyPlot,
                  'Charge-Plot': lambda: self.showChargeDistrPlot(False),
                  'Reduced Charge-Plot':lambda: self.showChargeDistrPlot(True),
                  'Sequence Coverage': self.dumb, 'Original Values':self.showRemodelledIons,
@@ -236,10 +237,15 @@ class TD_MainController(object):
                 ['',"", "", '', '', '', ''])
         if self.settings['modifications'] == '-':
             self._actions['Occupancy-Plot'].setDisabled(True)
+        if len(self.configs['interestingIons'])<1:
+            for action in ['Occupancy-Plot','Charge-Plot','Reduced Charge-Plot']:
+                self._actions[action].setDisabled(True)
+                self._actions[action].setToolTip('Choose ions of interest within "Edit Parameters" menu to use this function')
 
     def createMenu(self, name, options, tooltips, shortcuts):
         menu = QtWidgets.QMenu(self.menubar)
         menu.setTitle(self._translate(self.mainWindow.objectName(), name))
+        menu.setToolTipsVisible(True)
         #menuActions = dict()
         pos = len(options)
         for i, option in enumerate(options.keys()):

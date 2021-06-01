@@ -316,5 +316,5 @@ class TestSpectrumHandler(TestCase):
     def test_set_searched_charge_states(self):
         self.fail()'''
 
-    def tearDown(self):
-        deleteTestSequences()
+    '''def tearDown(self):
+        deleteTestSequences()'''

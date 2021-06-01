@@ -135,5 +135,5 @@ class TestFragmentLibraryBuilder(TestCase):
         self.test_add_precursor()'''
 
 
-    def tearDown(self):
-        deleteTestSequences(self.sequenceService)
+    """def tearDown(self):
+        deleteTestSequences(self.sequenceService)"""

@@ -1,3 +1,4 @@
+from copy import deepcopy
 from unittest import TestCase
 import numpy as np
 
@@ -88,8 +89,8 @@ class TestAnalyser(TestCase):
                 ion.setIntensity(intensity)
                 if ion.getType()==currentType:
                     if mod in ion.getModification():
-                        arr[ion.getNumber()-1,0] += intensity/ion.getCharge()
-                    arr[ion.getNumber() - 1, 1] += intensity/ion.getCharge()
+                        arr[ion.getNumber()-1,1] += intensity/ion.getCharge()
+                    arr[ion.getNumber() - 1, 0] += intensity/ion.getCharge()
                 ions.append(ion)
             self.analyser.setIons(ions)
             occupDict = self.analyser.calculateOccupancies([currentType])
@@ -97,8 +98,8 @@ class TestAnalyser(TestCase):
             self.assertEqual(1, len(occupDict.keys()))
             self.assertEqual(len(arr), len(occupDict[currentType]))
             for i,val in enumerate(occupDict[currentType]):
-                if arr[i,1] != 0:
-                    self.assertAlmostEqual(arr[i,0]/arr[i,1],val)
+                if arr[i,0] != 0:
+                    self.assertAlmostEqual(arr[i,1]/arr[i,0],val)
             occupDict = self.analyser.calculateOccupancies([currentType],['+CMCT'])
             self.assertTrue(currentType in occupDict.keys())
             self.assertEqual(1, len(occupDict.keys()))
@@ -119,7 +120,41 @@ class TestAnalyser(TestCase):
         self.fail()'''
 
     def test_analyse_charges(self):
-        self.fail()
+        types = np.unique([ion.getType() for ion in self.ions.values()])
+        ions = []
+        for currentType in types:
+            if len(currentType) > 1:  # precursor not relevant
+                continue
+            sequLength = len(self.props.getSequenceList())
+            arr = np.zeros((sequLength, 2))
+            redArr = deepcopy(arr)
+            allCharges = {i+1:[] for i in range(sequLength)}
+            for ion in self.ions.values():
+                intensity = 10 ** 7
+                ion.setIntensity(intensity)
+                if ion.getType() == currentType:
+                    redArr[ion.getNumber() - 1, 0] += intensity  / ion.getCharge()
+                    redArr[ion.getNumber() - 1, 1] += intensity
+                    arr[ion.getNumber() - 1, 0] += intensity
+                    arr[ion.getNumber() - 1, 1] += intensity * ion.getCharge()
+                    allCharges[ion.getNumber()].append(ion.getCharge())
+                ions.append(ion)
+            self.analyser.setIons(ions)
+            chargeDict, minMax = self.analyser.analyseCharges([currentType], False)
+            redChargeDict, redMinMax = self.analyser.analyseCharges([currentType], True)
+            print(allCharges)
+            for dict_i, theoArr in zip([chargeDict, redChargeDict], [arr,redArr]):
+                self.assertTrue(currentType in dict_i.keys())
+                self.assertEqual(1, len(dict_i.keys()))
+                self.assertEqual(len(theoArr), len(dict_i[currentType]))
+                for i, val in enumerate(dict_i[currentType]):
+                    if theoArr[i, 1] != 0:
+                        self.assertAlmostEqual(theoArr[i, 1] / theoArr[i, 0], val)
+            self.assertTrue(currentType in minMax.keys())
+            for i,row in enumerate(minMax[currentType]):
+                if len(allCharges[i+1])>0:
+                    self.assertEqual(min(allCharges[i+1]),row[0])
+                    self.assertEqual(max(allCharges[i+1]),row[1])
 
     '''def test_to_table(self):
         self.fail()'''

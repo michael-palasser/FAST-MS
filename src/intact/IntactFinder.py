@@ -7,8 +7,10 @@ Created on 1 Oct 2020
 import numpy as np
 from scipy.optimize import curve_fit
 from src.entities.Ions import IntactIon as Ion
+from src.top_down.SpectrumHandler import calculateError
 
 protonMass = 1.00727647
+
 
 class Finder(object):
     '''
@@ -54,9 +56,9 @@ class Finder(object):
         return mass / z + protonMass * self.mode
 
 
-    @staticmethod
+    '''@staticmethod
     def calculateError(value, theoValue):
-        return (value - theoValue) / theoValue * 10 ** 6
+        return (value - theoValue) / theoValue * 10 ** 6'''
 
     def getErrorLimit(self,k, d, mz):
         '''
@@ -95,7 +97,7 @@ class Finder(object):
                         break
                     elif self.getMz(mass,z) < self.configHandler.get('maxMz'):
                         errorLimit = self.getErrorLimit(k, d, self.getMz(mass, z))
-                        mask = np.where((abs(self.calculateError(spectrum['m/z'], self.getMz(mass,z))) < errorLimit)
+                        mask = np.where((abs(calculateError(spectrum['m/z'], self.getMz(mass,z))) < errorLimit)
                                         & (spectrum['z'] == z))
                         if (len(mask[0]) == 1):
                             ions.append(Ion(self.configHandler.get('sequName'),modif,spectrum[mask]['m/z'][0],self.getMz(mass,z),
@@ -104,11 +106,11 @@ class Finder(object):
                         elif flag:
                             if len(mask[0]) == 0:
                                 mask = np.where(
-                                    (abs(self.calculateError(spectrum['m/z'], self.getMz(mass+1.00266, z)))
+                                    (abs(calculateError(spectrum['m/z'], self.getMz(mass+1.00266, z)))
                                         < errorLimit) & (spectrum['z'] == z))
                                 if len(mask[0]) == 0:
                                     mask = np.where(
-                                        (abs(self.calculateError(spectrum['m/z'], self.getMz(mass-1.00266, z)))
+                                        (abs(calculateError(spectrum['m/z'], self.getMz(mass-1.00266, z)))
                                             < errorLimit) & (spectrum['z'] == z))
 
                                 if (len(mask[0]) == 1):
@@ -119,7 +121,7 @@ class Finder(object):
                                 #print("more than one ion within error range:",spectralFile[mask])
                                 ionPicked = 0
                                 if errorLimit > 6.5:
-                                    newMask = np.where(abs(self.calculateError(spectrum['m/z'],
+                                    newMask = np.where(abs(calculateError(spectrum['m/z'],
                                                                                self.getMz(mass,z))) < 6.5)
                                     if (len(newMask[0]) == 1):
                                         ionPicked = 1
@@ -175,11 +177,11 @@ class Finder(object):
                 for ion in ionList:
                     calibratedX = self.fun_parabola(ion.getMz(), solution[0], solution[1], solution[2])
                     theoMz = ion.getTheoMz()
-                    print(abs(self.calculateError(calibratedX, theoMz)))
-                    if abs(self.calculateError(calibratedX, theoMz)) < limit:
+                    print(abs(calculateError(calibratedX, theoMz)))
+                    if abs(calculateError(calibratedX, theoMz)) < limit:
                         y.append(theoMz)
                         x.append(ion.getMz())
-                        errorList.append(abs(self.calculateError(calibratedX, theoMz)))
+                        errorList.append(abs(calculateError(calibratedX, theoMz)))
                 solution, pcov = curve_fit(self.fun_parabola, np.array(x), np.array(y))
                 limit -= 10
                 if np.average(np.array(errorList)) < 2.5:

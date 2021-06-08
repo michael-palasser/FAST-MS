@@ -43,9 +43,9 @@ class Window(AbstractMainWindow):
                          'Edit Modifications':
                              (lambda: self.editData(ModificationEditorController), 'Edit modification/ligand patterns',
                               None)}, None)
-        self.createMenu('Other Tools', {'Analyse Intact Ions': (lambda: self.editData(IntactIonsSearch),
+        self.createMenu('Other Tools', {'Analyse Intact Ions': (lambda: self.editData(self.startIntactIonSearch),
                                                  'Starts analysis of spectrum with unfragmented ions', None),
-                         'Edit Intact Ions': (lambda: self.editData(IntactIonsSearch), 'Edit Intact Ions', None),
+                         'Edit Intact Ions': (lambda: self.editData(IntactIonEditorController), 'Edit Intact Ions', None),
                          'Isotope Pattern Tool':
                              (lambda: IsotopePatternView(self), 'Calculates the isotope pattern of an ion', None)},None)
         self.createMenu('Edit data',

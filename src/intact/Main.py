@@ -10,11 +10,11 @@ import traceback
 from datetime import datetime
 
 
-from src.intact.LibraryBuilder import IntactLibraryBuilder
-from src.intact.Finder import Finder
+from src.intact.IntactLibraryBuilder import IntactLibraryBuilder
+from src.intact.IntactFinder import Finder
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
-from src.intact.Analyser import IntactAnalyser
-from src.intact.ExcelWriter import IntactExcelWriter
+from src.intact.IntactAnalyser import IntactAnalyser
+from src.intact.IntactExcelWriter import IntactExcelWriter
 from src import path
 #from src.gui.ParameterDialogs import IntactStartDialog
 

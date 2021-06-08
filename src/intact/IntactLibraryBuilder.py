@@ -23,7 +23,6 @@ class IntactLibraryBuilder(object):
         self.sequenceList = self.sequence.getSequenceList()
         self._molecule = MoleculeService().get(self.sequence.getMolecule())
         self.modifications = IntactIonService().getPatternWithObjects(modificationName, IntactModification)
-        print('here')
 
 
     def createLibrary(self):
@@ -36,7 +35,6 @@ class IntactLibraryBuilder(object):
         for item in self.modifications.getItems():
             if item.enabled():
                 modFormula = unmodFormula.addFormula(item.getFormula())
-                print(item.getName(), modFormula.toString(), modFormula.calculateMonoIsotopic())
                 library[item.getName()] = (modFormula.calculateMonoIsotopic(),item.getNrMod())
         return library
 

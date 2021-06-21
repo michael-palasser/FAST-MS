@@ -1,18 +1,18 @@
 from unittest import TestCase
 
-from src.MolecularFormula import MolecularFormula
 from src.Services import SequenceService
 from src.intact.IntactLibraryBuilder import IntactLibraryBuilder
-from tests.test_LibraryBuilder import initTestSequences
+from tests.top_down.test_LibraryBuilder import initTestSequences
 
-
+def initSequences():
+    initTestSequences(SequenceService())
 
 class TestIntactLibraryBuilder(TestCase):
     def setUp(self):
         try:
             self.initLibrary()
         except:
-            initTestSequences(SequenceService())
+            initSequences()
             self.initLibrary()
 
     def initLibrary(self):

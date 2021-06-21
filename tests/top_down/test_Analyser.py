@@ -4,7 +4,7 @@ import numpy as np
 
 from src.entities.Ions import FragmentIon, Fragment
 from src.top_down.Analyser import Analyser
-from tests.test_IntensityModeller import initTestSpectrumHandler
+from tests.top_down.test_IntensityModeller import initTestSpectrumHandler
 
 
 class TestAnalyser(TestCase):

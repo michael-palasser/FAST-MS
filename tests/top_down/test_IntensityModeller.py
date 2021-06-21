@@ -4,8 +4,7 @@ import numpy as np
 
 from src.MolecularFormula import MolecularFormula
 from src.entities.Ions import FragmentIon, Fragment
-from tests.test_LibraryBuilder import deleteTestSequences
-from tests.test_SpectrumHandler import initTestLibraryBuilder
+from tests.top_down.test_SpectrumHandler import initTestLibraryBuilder
 from src.top_down.SpectrumHandler import SpectrumHandler
 from src.top_down.IntensityModeller import IntensityModeller
 

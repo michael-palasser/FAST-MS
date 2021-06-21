@@ -10,7 +10,8 @@ from src.entities.SearchProperties import PropertyStorage
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.top_down.LibraryBuilder import FragmentLibraryBuilder
 from src.top_down.SpectrumHandler import SpectrumHandler, getErrorLimit
-from tests.test_LibraryBuilder import initTestSequences,deleteTestSequences
+from tests.top_down.test_LibraryBuilder import initTestSequences
+
 
 def initTestLibraryBuilder():
     initTestSequences()

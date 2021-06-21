@@ -58,10 +58,10 @@ def run():
     parameters = {'pattern:':spectralFile,'date:':datetime.now().strftime("%d/%m/%Y %H:%M")}
     parameters.update(configHandler.getAll())
     excelWriter = IntactExcelWriter(output)
-    avCharges, avErrors = analyser.calculateAvChargeAndError()
+    avCharges, avErrors, stddevs = analyser.calculateAvChargeAndError()
     try:
         excelWriter.writeAnalysis(parameters, analyser.getSortedIonList(),
-                                  avCharges, avErrors,
+                                  avCharges, avErrors, stddevs,
                                   analyser.calculateAverageModification(),
                                   analyser.calculateModifications())
         print("saved in:", output)

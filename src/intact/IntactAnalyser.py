@@ -26,17 +26,22 @@ class IntactAnalyser(object):
         #value changed if reduced intensities are used
         averageCharges = list()
         averageErrors = list()
+        stddevOfErrors = list()
         for ionList in self._ionLists:
             chargeSum = 0
             sumInt = 0
-            errorSum = 0
-            notCounted = 0
+            #exclude SNAP misassignments
+            errors = [ion.calculateError() for ion in ionList if abs(ion.calculateError()) < 30]
+            averageErrors.append(np.abs(np.average(errors)))
+            stddevOfErrors.append(np.sqrt(np.sum([error**2 for error in errors]))/len(errors))
+            #errorSum = 0
+            #notCounted = 0
             for ion in ionList:
                 sumInt += ion.getIntensity()
-                if abs(ion.calculateError()) < 30:
-                    errorSum += ion.calculateError()
-                else:
-                    notCounted += 1
+                #if abs(ion.calculateError()) < 30:
+                    #errorSum += ion.calculateError()
+                #else:
+                    #notCounted += 1
                 chargeSum += ion.getCharge() *ion.getIntensity()
                 charge = ion.getCharge()
                 if charge < self._minCharge:
@@ -44,8 +49,8 @@ class IntactAnalyser(object):
                 if charge > self._maxCharge:
                     self._maxCharge = charge
             averageCharges.append(chargeSum/sumInt)
-            averageErrors.append(errorSum/(len(ionList)-notCounted))
-        return averageCharges, averageErrors
+            #averageErrors.append(errorSum/(len(ionList)-notCounted))
+        return averageCharges, averageErrors, stddevOfErrors
 
     def calculateAverageModification(self):
         '''

@@ -50,7 +50,7 @@ class IntactExcelWriter(object):
             self._lastRow = row
         self._col = 6
 
-    def writeAvChargeAndError(self, averageCharge, avError):
+    def writeAvChargeAndError(self, averageCharge, avError, stdDevOfErrors):
         '''
         Writes av. charge and av. error of one spectrum to xlsx file
         :param (float) averageCharge: average charge in a spectrum
@@ -58,8 +58,10 @@ class IntactExcelWriter(object):
         '''
         self._worksheet1.write(self._row, self._col, 'av.charge:')
         self._worksheet1.write(self._row + 1, self._col, averageCharge, self._format2digit)
-        self._worksheet1.write(self._row + 2, self._col, 'av.error:')
-        self._worksheet1.write(self._row + 3, self._col, avError, self._format2digit)
+        self._worksheet1.write(self._row + 3, self._col, 'av.error:')
+        self._worksheet1.write(self._row + 4, self._col, avError, self._format2digit)
+        self._worksheet1.write(self._row + 5, self._col, 'stddev.errors:')
+        self._worksheet1.write(self._row + 6, self._col, stdDevOfErrors, self._format2digit)
         self._col += 2
 
     def writeAverageMod(self, avModifPerCharge):
@@ -113,7 +115,7 @@ class IntactExcelWriter(object):
         self._col = currentCol + 3
 
 
-    def writeAnalysis(self, parameters, listsOfIons, avCharges,avErrors,avModifPerCharges, modificationsInSpectra):
+    def writeAnalysis(self, parameters, listsOfIons, avCharges,avErrors, stdDevsOfErrors,avModifPerCharges, modificationsInSpectra):
         '''
         Writes the analysis to xlsx file
         :param (dict[str,Any]) parameters: {name: value}
@@ -129,7 +131,7 @@ class IntactExcelWriter(object):
             self._worksheet1.write(self._row, 0, 'spectralFile ' + str(i + 1))
             self._row+=1
             self.writeIons(listsOfIons[i])
-            self.writeAvChargeAndError(avCharges[i], avErrors[i])
+            self.writeAvChargeAndError(avCharges[i], avErrors[i],stdDevsOfErrors[i])
             self.writeAverageMod(avModifPerCharges[i])
             self.writeModifications(modificationsInSpectra[i])
             self._row = self._lastRow + 2

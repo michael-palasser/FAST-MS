@@ -58,10 +58,11 @@ class IntactExcelWriter(object):
         '''
         self._worksheet1.write(self._row, self._col, 'av.charge:')
         self._worksheet1.write(self._row + 1, self._col, averageCharge, self._format2digit)
-        self._worksheet1.write(self._row + 3, self._col, 'av.error:')
-        self._worksheet1.write(self._row + 4, self._col, avError, self._format2digit)
-        self._worksheet1.write(self._row + 5, self._col, 'stddev.errors:')
-        self._worksheet1.write(self._row + 6, self._col, stdDevOfErrors, self._format2digit)
+        self._worksheet1.write(self._row + 3, self._col, 'calibration:')
+        self._worksheet1.write(self._row + 4, self._col, 'av.error:')
+        self._worksheet1.write(self._row + 4, self._col+1, avError, self._format2digit)
+        self._worksheet1.write(self._row + 5, self._col, 'std.dev.:')
+        self._worksheet1.write(self._row + 5, self._col+1, stdDevOfErrors, self._format2digit)
         self._col += 2
 
     def writeAverageMod(self, avModifPerCharge):

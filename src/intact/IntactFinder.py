@@ -187,7 +187,8 @@ class Finder(object):
                         errorList.append(abs(calculateError(calibratedX, theoMz)))
                 solution, pcov = curve_fit(self.fun_parabola, np.array(x), np.array(y))
                 limit -= 10
-                if np.average(np.array(errorList)) < 2.5:
+                errorList = np.array(errorList)
+                if np.average(errorList) < 1.0 and np.std(errorList)<2.0: #ToDo: to parameters
                     break
             count += 1
             calibrationValues.append(solution)

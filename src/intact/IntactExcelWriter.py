@@ -40,7 +40,7 @@ class IntactExcelWriter(object):
         Writes list of observed ion of one spectrum to xlsx file
         :param (list[IntactIon]) listOfIons: list of Ion objects
         '''
-        self._worksheet1.write(self._row, 0, 'observed __spectrum:')
+        self._worksheet1.write(self._row, 0, 'observed ions:')
         row = self._row + 1
         self._worksheet1.write_row(row, 0, ['m/z', 'z', 'int', 'name', 'error'])
         for ion in listOfIons:

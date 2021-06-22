@@ -31,9 +31,9 @@ class IntactAnalyser(object):
             chargeSum = 0
             sumInt = 0
             #exclude SNAP misassignments
-            errors = [ion.calculateError() for ion in ionList if abs(ion.calculateError()) < 30]
-            averageErrors.append(np.abs(np.average(errors)))
-            stddevOfErrors.append(np.sqrt(np.sum([error**2 for error in errors]))/len(errors))
+            errors = np.array([ion.calculateError() for ion in ionList if abs(ion.calculateError()) < 30])
+            averageErrors.append(np.average(errors))
+            stddevOfErrors.append(np.std(errors))
             #errorSum = 0
             #notCounted = 0
             for ion in ionList:

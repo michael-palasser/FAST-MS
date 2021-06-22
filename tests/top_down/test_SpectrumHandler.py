@@ -16,7 +16,7 @@ from tests.top_down.test_LibraryBuilder import initTestSequences
 def initTestLibraryBuilder():
     initTestSequences()
     configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
-    filePath = os.path.join(path, 'tests', 'dummySpectrum.txt')
+    filePath = os.path.join(path, 'tests', 'top_down', 'dummySpectrum.txt')
     settings = {'sequName': 'dummyRNA', 'charge': -3, 'fragmentation': 'RNA_CAD', 'modifications': 'CMCT',
                      'nrMod': 1, 'spectralData': filePath, 'noiseLimit': 10 ** 5, 'fragLib': ''}
     props = PropertyStorage(settings['sequName'], settings['fragmentation'],settings['modifications'])
@@ -41,7 +41,7 @@ class TestSpectrumHandler(TestCase):
 
 
         self.settingsProt = {'sequName': 'dummyProt', 'charge': 4, 'fragmentation': 'Protein_CAD', 'modifications': '-',
-                    'nrMod': 0, 'spectralData': os.path.join(path, 'tests', 'dummySpectrum.txt'), 'noiseLimit': 10**5, 'fragLib': ''}
+                    'nrMod': 0, 'spectralData': os.path.join(path, 'tests', 'top_down', 'dummySpectrum.txt'), 'noiseLimit': 10**5, 'fragLib': ''}
         self.propsProt = PropertyStorage(self.settingsProt['sequName'], self.settingsProt['fragmentation'], self.settingsProt['modifications'])
         self.builderProt = FragmentLibraryBuilder(self.propsProt,0)
         self.builderProt.createFragmentLibrary()
@@ -59,7 +59,7 @@ class TestSpectrumHandler(TestCase):
         self.assertEqual(5, self.spectrumHandler.calcPrecCharge(-6,-1))
 
     def test_add_spectrum_from_csv_and_txt(self):
-        with open(os.path.join(path, 'tests', 'dummySpectrum.csv'), 'r') as f:
+        with open(os.path.join(path, 'tests', 'top_down', 'dummySpectrum.csv'), 'r') as f:
             fromCsv = self.spectrumHandler.addSpectrumFromCsv(f)
         with open(self.settings['spectralData'], 'r') as f:
             fromTxt = self.spectrumHandler.addSpectrumFromTxt(f)

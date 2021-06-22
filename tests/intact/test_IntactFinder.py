@@ -1,6 +1,8 @@
+import os
 from unittest import TestCase
 import numpy as np
 
+from src import path
 from src.Services import SequenceService
 from src.entities.GeneralEntities import Sequence
 from src.intact.IntactFinder import Finder
@@ -33,12 +35,12 @@ def initTestSequences(sequenceService=SequenceService()):
                  enumerate(sequenceService.getSequences())]
     sequences.append(Sequence('neoRibo', 'GGCUGCUUGUCCUUUAAUGGUCCAGUC', 'RNA', len(sequences) + 1))
     sequences.append(Sequence('dummyProt', 'GAPH', 'Protein', len(sequences) + 1))
-    print(sequences)
     sequenceService.save(sequences)
 
 class TestFinder(TestCase):
     #ToDo: test for protein
     def setUp(self):
+        self.RNA_spectrum = os.path.join(path, 'tests', 'intact', '2511_RIO_test.txt')
         try:
             self.finderRNA, self.configRNA, self.finderProt, self.configProt = initFinders()
         except:
@@ -47,7 +49,7 @@ class TestFinder(TestCase):
 
 
     def test_read_data(self):
-        with open('2511_RIO_test.txt') as f:
+        with open(self.RNA_spectrum,'r') as f:
             self.finderRNA.readData(f)
         self.assertEqual(4, len(self.finderRNA.getData()))
         for spectrum in self.finderRNA.getData():
@@ -61,7 +63,7 @@ class TestFinder(TestCase):
         self.fail()'''
 
     def test_find_ions(self):
-        with open('2511_RIO_test.txt') as f:
+        with open(self.RNA_spectrum,'r') as f:
             self.finderRNA.readData(f)
         self.finderRNA.calibrate()
         for ionList in self.finderRNA.findIons(self.configRNA.get('k'), self.configRNA.get('d'), True):
@@ -71,7 +73,7 @@ class TestFinder(TestCase):
         self.fail()'''
 
     def test_calibrate(self):
-        with open('2511_RIO_test.txt') as f:
+        with open(self.RNA_spectrum,'r') as f:
             self.finderRNA.readData(f)
         errors1 = []
         for ionList in self.finderRNA.findIons(0, 50):
@@ -79,12 +81,12 @@ class TestFinder(TestCase):
         self.finderRNA.calibrate()
         errors2, stddevs = [], []
         for ionList in self.finderRNA.findIons(0, 50):
-            errors = [ion.calculateError() for ion in ionList if abs(ion.calculateError()) < 30]
+            errors = np.array([ion.calculateError() for ion in ionList if abs(ion.calculateError()) < 30])
             errors2.append(np.abs(np.average(errors)))
-            stddevs.append(np.sqrt(np.sum([error**2 for error in errors]))/len(errors))
+            stddevs.append(np.std(errors))
         for i in range(len(errors1)):
             self.assertLess(errors2[i],errors1[i])
             #print(stddevs[i], errors2[i],errors1[i])
             self.assertLess(errors2[i],1)
-            self.assertLess(stddevs[i],1)
+            self.assertLess(stddevs[i],2)
 

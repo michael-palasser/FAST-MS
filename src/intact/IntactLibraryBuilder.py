@@ -19,11 +19,10 @@ class IntactLibraryBuilder(object):
         :param (str) sequName: Name of the Sequence
         :param (str) modificationName: Name of the Modification
         '''
-        self.sequence = SequenceService().get(sequName)
-        self.sequenceList = self.sequence.getSequenceList()
-        self._molecule = MoleculeService().get(self.sequence.getMolecule())
-        self.modifications = IntactIonService().getPatternWithObjects(modificationName, IntactModification)
-        print('here')
+        self._sequence = SequenceService().get(sequName)
+        self._sequenceList = self._sequence.getSequenceList()
+        self._molecule = MoleculeService().get(self._sequence.getMolecule())
+        self._modifications = IntactIonService().getPatternWithObjects(modificationName, IntactModification)
 
 
     def createLibrary(self):
@@ -33,10 +32,9 @@ class IntactLibraryBuilder(object):
         '''
         unmodFormula = self.getUnmodifiedFormula()
         library = {"" : (unmodFormula.calculateMonoIsotopic(),0)}
-        for item in self.modifications.getItems():
+        for item in self._modifications.getItems():
             if item.enabled():
                 modFormula = unmodFormula.addFormula(item.getFormula())
-                print(item.getName(), modFormula.toString(), modFormula.calculateMonoIsotopic())
                 library[item.getName()] = (modFormula.calculateMonoIsotopic(),item.getNrMod())
         return library
 
@@ -48,6 +46,6 @@ class IntactLibraryBuilder(object):
         '''
         formula = MolecularFormula(self._molecule.getFormula())
         buildingBlocks = self._molecule.getBBDict()
-        for link in self.sequenceList:
+        for link in self._sequenceList:
             formula = formula.addFormula(buildingBlocks[link].getFormula())
         return formula

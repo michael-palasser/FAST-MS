@@ -475,6 +475,8 @@ class ModificationEditorController(AbstractEditorControllerWithTabs):
                                   {"name": QtWidgets.QLineEdit(self.centralwidget),
                                    "modification": QtWidgets.QLineEdit(self.centralwidget)},
                                   [self.pattern.getName(), self.pattern.getModification()])
+        self.widgets["name"].setToolTip("Pattern will be stored under this name.")
+        self.widgets["modification"].setToolTip("Modification of the precursor")
         self.tabWidget = self.makeTabWidget("Modifications", "Excluded Modifications")
         self.tab1.setToolTip("For every fragment, the corresponding modified fragment will be included")
         self.tab2.setToolTip("These modifications will be excluded from ion search")

@@ -25,6 +25,10 @@ def getErrorLimit(mz):
 eMass = electron_mass*N_A*1000
 protMass = proton_mass *N_A*1000
 
+def calculateError(value, theoValue):
+        return (value - theoValue) / theoValue * 10 ** 6
+
+
 class SpectrumHandler(object):
     '''
     Reads spectra, calculates noise and finds peaks in __spectrum
@@ -263,9 +267,9 @@ class SpectrumHandler(object):
         return allPeaks[spectralWindowIndex]
 
 
-    @staticmethod
+    '''@staticmethod
     def calculateError(value, theoValue):
-        return (value - theoValue) / theoValue * 10 ** 6
+        return (value - theoValue) / theoValue * 10 ** 6'''
 
     def getNormalizationFactor(self):
         '''
@@ -322,9 +326,10 @@ class SpectrumHandler(object):
         molecule = self.__properties.getMolecule().getName()
         if molecule in ['RNA' ,'DNA'] and self.__sprayMode == -1:
             #probableZ = (fragment.number-1) * self._normalizationFactor
-            probableZ = fragment.getFormula().getFormulaDict()['P']* self._normalizationFactor
-            if fragment.getFormula().getFormulaDict()['P'] == 0:
+            formula = fragment.getFormula().getFormulaDict()
+            if ('P' not in formula.keys()) or (fragment.getFormula().getFormulaDict()['P'] == 0):
                 return range(0,0)
+            probableZ = fragment.getFormula().getFormulaDict()['P']* self._normalizationFactor
             #probableZ = fragment.formula.formulaDict['P'] * self._normalizationFactor
         elif molecule == 'Protein':
             #probableZ = self.getChargeScore(fragment) * self._normalizationFactor
@@ -416,7 +421,7 @@ class SpectrumHandler(object):
                             self.addToDeletedIons(fragment, foundMainPeaks, noise, np.min(theoreticalPeaks['m/z']), z)
 
     def findPeak(self, theoPeak):
-        searchMask = np.where(abs(self.calculateError(self.__spectrum[:, 0], theoPeak['m/z']))
+        searchMask = np.where(abs(calculateError(self.__spectrum[:, 0], theoPeak['m/z']))
                               < getErrorLimit(self.__spectrum[:, 0]))
         return self.getCorrectPeak(self.__spectrum[searchMask], theoPeak)
 
@@ -449,11 +454,11 @@ class SpectrumHandler(object):
             return (theoPeak['m/z'], 0, theoPeak['calcInt'], 0, True)  # passt mir noch nicht
         elif len(foundIsotopePeaks) == 1:
             return (foundIsotopePeaks[0][0], foundIsotopePeaks[0][1], theoPeak['calcInt'],
-                    self.calculateError(foundIsotopePeaks[0][0], theoPeak['m/z']), True)
+                    calculateError(foundIsotopePeaks[0][0], theoPeak['m/z']), True)
         else:
             lowestError = 100
             for peak in foundIsotopePeaks: #ToDo
-                error = self.calculateError(peak[0], theoPeak[0])
+                error = calculateError(peak[0], theoPeak[0])
                 if abs(error) < abs(lowestError):
                     lowestError = error
                     lowestErrorPeak = peak

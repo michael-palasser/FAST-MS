@@ -17,9 +17,9 @@ class ConfigHandler(object):
         '''
         :param (str) configFile: path of json file where configuration values are stored
         '''
-        #with openAgain(configFile, "w") as f:
+        #with openAgain(_configFile, "w") as f:
          #   json.dump(json.dumps(parameters), f)
-        self.configFile = configFile
+        self._configFile = configFile
         if isfile(configFile):
             with open(configFile, "r") as f:
                 self.__parameters = json.loads(json.load(f))
@@ -43,7 +43,7 @@ class ConfigHandler(object):
         Updates the configuration file
         :param (dict[str,Any]) parameters: new configurations
         '''
-        with open(self.configFile, "w") as f:
+        with open(self._configFile, "w") as f:
             json.dump(json.dumps(parameters, indent=3), f)
 
     def getAll(self):
@@ -55,6 +55,10 @@ class ConfigHandler(object):
             return self.__parameters
         print("Configuration file does not exist")
 
+    def update(self, parameter, value):
+        if parameter not in self.__parameters.keys():
+            raise Exception('Parameter ',parameter, ' not in configurations.')
+        self.__parameters[parameter] = value
 
 dataPath = join(path, "src", "data")
 

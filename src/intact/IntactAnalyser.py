@@ -14,9 +14,9 @@ class IntactAnalyser(object):
         '''
         :param (list[list[IntactIon]]) ionLists: list of IntactIons in each spectrum
         '''
-        self.ionLists = ionLists
-        self.minCharge = 250
-        self.maxCharge = 0
+        self._ionLists = ionLists
+        self._minCharge = 250
+        self._maxCharge = 0
 
     def calculateAvChargeAndError(self):
         '''
@@ -26,26 +26,31 @@ class IntactAnalyser(object):
         #value changed if reduced intensities are used
         averageCharges = list()
         averageErrors = list()
-        for ionList in self.ionLists:
+        stddevOfErrors = list()
+        for ionList in self._ionLists:
             chargeSum = 0
             sumInt = 0
-            errorSum = 0
-            notCounted = 0
+            #exclude SNAP misassignments
+            errors = np.array([ion.calculateError() for ion in ionList if abs(ion.calculateError()) < 30])
+            averageErrors.append(np.average(errors))
+            stddevOfErrors.append(np.std(errors))
+            #errorSum = 0
+            #notCounted = 0
             for ion in ionList:
                 sumInt += ion.getIntensity()
-                if abs(ion.calculateError()) < 30:
-                    errorSum += ion.calculateError()
-                else:
-                    notCounted += 1
+                #if abs(ion.calculateError()) < 30:
+                    #errorSum += ion.calculateError()
+                #else:
+                    #notCounted += 1
                 chargeSum += ion.getCharge() *ion.getIntensity()
                 charge = ion.getCharge()
-                if charge < self.minCharge:
-                    self.minCharge = charge
-                if charge > self.maxCharge:
-                    self.maxCharge = charge
+                if charge < self._minCharge:
+                    self._minCharge = charge
+                if charge > self._maxCharge:
+                    self._maxCharge = charge
             averageCharges.append(chargeSum/sumInt)
-            averageErrors.append(errorSum/(len(ionList)-notCounted))
-        return averageCharges, averageErrors
+            #averageErrors.append(errorSum/(len(ionList)-notCounted))
+        return averageCharges, averageErrors, stddevOfErrors
 
     def calculateAverageModification(self):
         '''
@@ -53,7 +58,7 @@ class IntactAnalyser(object):
         :return: (list[dict[int,float]]) list of {charge:av.modification}
         '''
         averageModifications = list()
-        for ionList in self.ionLists:
+        for ionList in self._ionLists:
             averageModificationPerZ = dict()
             for ion in ionList:
                 charge = ion.getCharge()
@@ -72,9 +77,9 @@ class IntactAnalyser(object):
         Makes an array filled with observed charges
         :return: (ndarray(dtype = [int,int]) [(charge, 0)]
         '''
-        arr = np.zeros((self.maxCharge - self.minCharge + 1, 2))
-        for i in range(self.maxCharge - self.minCharge + 1):
-            arr[i][0] = self.minCharge + i
+        arr = np.zeros((self._maxCharge - self._minCharge + 1, 2))
+        for i in range(self._maxCharge - self._minCharge + 1):
+            arr[i][0] = self._minCharge + i
         return arr
 
     def calculateModifications(self):
@@ -84,14 +89,14 @@ class IntactAnalyser(object):
         '''
         modificationsInSpectra = list()
         #avOfModInSpectra = list()
-        for ionList in self.ionLists:
+        for ionList in self._ionLists:
             modifications = dict()
             intensitiesPerCharge = self.makeChargeArray()
             for ion in ionList:
                 if ion.getModification() not in modifications:
                     modifications[ion.getModification()] = self.makeChargeArray()
-                modifications[ion.getModification()][ion.getCharge()-self.minCharge][1] = ion.getIntensity()
-                intensitiesPerCharge[ion.getCharge()-self.minCharge][1] += ion.getIntensity()
+                modifications[ion.getModification()][ion.getCharge() - self._minCharge][1] = ion.getIntensity()
+                intensitiesPerCharge[ion.getCharge() - self._minCharge][1] += ion.getIntensity()
             nonZero = np.where(intensitiesPerCharge[:,1] != 0)
             dataLength = len(intensitiesPerCharge[nonZero])
             #averageOfModifications = dict()
@@ -113,6 +118,6 @@ class IntactAnalyser(object):
         :return: (list[list[IntactIon]])
         '''
         returnedLists = list()
-        for ionList in self.ionLists:
+        for ionList in self._ionLists:
             returnedLists.append(sorted(ionList,key=lambda obj:obj.getMz()))
         return returnedLists

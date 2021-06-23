@@ -7,7 +7,7 @@ class Info(object):
     '''
     def __init__(self, *args):
         '''
-        :param args: new analysis: ((dict) settings, (dict) configurations, (PropertyStorage) searchProperty)
+        :param args: new analysis: ((dict) settings, (dict) configurations, (SearchSettings) searchProperty)
                     loaded analysis: ((str) infoString)
         '''
         if len(args)==3:

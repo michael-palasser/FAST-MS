@@ -12,7 +12,7 @@ from src.entities.Ions import Fragment, FragmentIon
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.top_down.IntensityModeller import IntensityModeller
 from src.top_down.LibraryBuilder import FragmentLibraryBuilder
-from src.top_down.SpectrumHandler import SpectrumHandler
+from src.top_down.SpectrumHandler import getMz
 
 
 class IsotopePatternLogics(object):
@@ -59,7 +59,7 @@ class IsotopePatternLogics(object):
         '''
         return [fragTemplate.getName() for fragTemplate in
                 self._fragService.getPatternWithObjects(fragmentationName).getItems()],\
-               ['intact']+[precTemplate.getName() for precTemplate in
+               [precTemplate.getName() for precTemplate in
                 self._fragService.getPatternWithObjects(fragmentationName).getItems2()][1:]
 
 
@@ -80,22 +80,29 @@ class IsotopePatternLogics(object):
         '''
         return self._neutralMass
 
-    def calculate(self, mode, inputString, charge, radicals, intensity, *args):
+    def calculate(self, mode, inputString, charge, radicals, intensity, fragmentationName=None, fragTemplName=None,
+                  modifPatternName=None, modifName=None, nrMod=None):
         '''
         Calculates the isotope pattern of the ion
+        Parameters fragmentationName, fragTemplName, modifPatternName, modifName, nrMod are only optional if mode is
+        'mol. formula'
         :param (str) mode: molecule
         :param (str) inputString: formula
         :param (int) charge: charge
         :param (int) radicals: nr. of radicals
         :param (int | float) intensity: intensity of the ion
-        :param (tuple[str,str,str,str,int]) args: if mode is not 'mol. formula': names of fragmentation pattern,
-            fragment template, modification pattern, & modification, nr. of modifications
+        :param (str) fragmentationName: name of fragmentation pattern (optional)
+        :param (str) fragTemplName: name of fragment template (optional)
+        :param (str) modifPatternName: name of modification pattern (optional)
+        :param (str) modifName: name of modification (optional)
+        :param (int) nrMod: nr. of modifications (optional)
         :return: (tuple[FragmentIon, float]) calculated ion, mass of neutral molecule
         '''
         if mode == self.getMolecules()[0]:
             fragment = Fragment('-',0,'',MolecularFormula(self.checkFormula(inputString)),[],radicals)
         else:
-            fragment = self.getFragment(mode, inputString, args[0], args[1], args[2], args[3], args[4])
+            fragment = self.getFragment(mode, inputString, fragmentationName, fragTemplName, modifPatternName,
+                                        modifName, nrMod)
         if fragment.getFormula() != self._formula:
             self._formula = fragment.getFormula()
             #self._fragment = fragment
@@ -106,7 +113,7 @@ class IsotopePatternLogics(object):
         isotopePattern = copy.deepcopy(self._isotopePattern)
         isotopePattern['calcInt'] *= intensity
         self._neutralMass = isotopePattern['m/z'][0]
-        isotopePattern['m/z'] = SpectrumHandler.getMz(isotopePattern['m/z'],charge,radicals)
+        isotopePattern['m/z'] = getMz(isotopePattern['m/z'],charge,radicals)
         peaks = []
         for row in isotopePattern:
             peaks.append((row['m/z'],0,row['calcInt'],1))
@@ -126,6 +133,8 @@ class IsotopePatternLogics(object):
         formula = stringToFormula(formulaString,{},1)
         if formula == {}:
             raise InvalidInputException(formulaString, ", Unvalid format")
+        if formulaString[0].islower():
+            raise InvalidInputException(formulaString, ", Unvalid format, first character must not be lower case")
         for key in formula.keys():
             if key not in self._elements:
                 print("Element: " + key + " unknown")
@@ -153,27 +162,23 @@ class IsotopePatternLogics(object):
         for link in sequenceList:
             formula = formula.addFormula(buildingBlocks[link].getFormula())
         fragmentation = self._fragService.getPatternWithObjects(fragmentationName)
-        if fragTemplName in (['intact']+[precTempl.getName() for precTempl in fragmentation.getItems2()]):
+        if fragTemplName in ([precTempl.getName() for precTempl in fragmentation.getItems2()]):
             formula = formula.addFormula(molecule.getFormula())
-            if fragTemplName != 'intact':
-                fragTempl = [precTempl for precTempl in fragmentation.getItems2() if precTempl.getName()==fragTemplName][0]
-            else:
-                fragTempl = PrecursorItem(("", "", "", "", 0, True))
-            species = 'intact'
+            fragTempl = [precTempl for precTempl in fragmentation.getItems2() if precTempl.getName()==fragTemplName][0]
             number = 0
-            rest = fragTempl.getName()
         else:
             fragTempl = [fragTempl for fragTempl in fragmentation.getItems() if fragTempl.getName()==fragTemplName][0]
-            species, rest = FragmentLibraryBuilder.processTemplateName(fragTempl.getName())
             number = len(sequenceList)
+        species, rest = FragmentLibraryBuilder.processTemplateName(fragTempl.getName())
         formula = formula.addFormula(fragTempl.getFormula())
         if modifPatternName != '-' and nrMod != 0:
             modPattern = self._modService.getPatternWithObjects(modifPatternName)
             modif = [modif for modif in modPattern.getItems() if modif.getName()==modifName][0]
             formula = formula.addFormula({key:val*nrMod for key,val in modif.getFormula().items()})
             if nrMod != 1:
-                rest+=str(nrMod)
-            rest+=modifName
+                rest =modifName[0]+str(nrMod)+modifName[1:]+rest
+            else:
+                rest =modifName+rest
         return Fragment(species, number, rest, formula, sequenceList, fragTempl.getRadicals())
 
     def model(self, peaks):

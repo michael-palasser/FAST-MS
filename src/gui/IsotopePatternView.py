@@ -139,7 +139,7 @@ class IsotopePatternView(QtWidgets.QMainWindow):
         [box.model().item(i).setEnabled(True) for i in range(box.count())]
         toAdjust = box.count()-len(options)
         if args:
-            toAdjust-=len(args[0])-1
+            toAdjust-=(len(args[0])+1)
         if toAdjust > 0:
             [box.removeItem(i) for i in range(len(options), len(options)+toAdjust)]
         elif toAdjust < 0:
@@ -174,6 +174,7 @@ class IsotopePatternView(QtWidgets.QMainWindow):
     def getFragValues(self):
         if self.fragmentationBox.currentText() != "":
             fragItems, precItems = self._controller.getFragItems(self.fragmentationBox.currentText())
+            print('hier1', precItems)
             self.fillComboBox(self.fragmentBox, fragItems, precItems)
 
     def getModValues(self):

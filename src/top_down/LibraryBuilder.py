@@ -23,7 +23,7 @@ class FragmentLibraryBuilder(object):
 
     def __init__(self, properties, maxMod):
         '''
-        :type properties: PropertyStorage
+        :type properties: SearchSettings
         :param properties: propertyStorage of search
         :param (int) maxMod: number of modifications on precursor
         fragmentLibrary: list of all fragments

@@ -6,10 +6,10 @@ import numpy as np
 from src import path
 from src.MolecularFormula import MolecularFormula
 from src.entities.Ions import Fragment
-from src.entities.SearchProperties import PropertyStorage
+from src.entities.SearchSettings import SearchSettings
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.top_down.LibraryBuilder import FragmentLibraryBuilder
-from src.top_down.SpectrumHandler import SpectrumHandler, getErrorLimit
+from src.top_down.SpectrumHandler import SpectrumHandler, getErrorLimit, getMz
 from tests.top_down.test_LibraryBuilder import initTestSequences
 
 
@@ -19,7 +19,7 @@ def initTestLibraryBuilder():
     filePath = os.path.join(path, 'tests', 'top_down', 'dummySpectrum.txt')
     settings = {'sequName': 'dummyRNA', 'charge': -3, 'fragmentation': 'RNA_CAD', 'modifications': 'CMCT',
                      'nrMod': 1, 'spectralData': filePath, 'noiseLimit': 10 ** 5, 'fragLib': ''}
-    props = PropertyStorage(settings['sequName'], settings['fragmentation'],settings['modifications'])
+    props = SearchSettings(settings['sequName'], settings['fragmentation'], settings['modifications'])
     builder = FragmentLibraryBuilder(props, 1)
     builder.createFragmentLibrary()
     builder.addNewIsotopePattern()
@@ -32,7 +32,7 @@ class TestSpectrumHandler(TestCase):
 
         self.settings = {'sequName': 'dummyRNA', 'charge': -3, 'fragmentation': 'RNA_CAD', 'modifications': 'CMCT',
                     'nrMod': 1, 'spectralData': filePath, 'noiseLimit': 10**5, 'fragLib': ''}
-        self.props = PropertyStorage(self.settings['sequName'], self.settings['fragmentation'], self.settings['modifications'])
+        self.props = SearchSettings(self.settings['sequName'], self.settings['fragmentation'], self.settings['modifications'])
         self.builder = FragmentLibraryBuilder(self.props,1)
         self.builder.createFragmentLibrary()
         self.builder.addNewIsotopePattern()'''
@@ -42,7 +42,7 @@ class TestSpectrumHandler(TestCase):
 
         self.settingsProt = {'sequName': 'dummyProt', 'charge': 4, 'fragmentation': 'Protein_CAD', 'modifications': '-',
                     'nrMod': 0, 'spectralData': os.path.join(path, 'tests', 'top_down', 'dummySpectrum.txt'), 'noiseLimit': 10**5, 'fragLib': ''}
-        self.propsProt = PropertyStorage(self.settingsProt['sequName'], self.settingsProt['fragmentation'], self.settingsProt['modifications'])
+        self.propsProt = SearchSettings(self.settingsProt['sequName'], self.settingsProt['fragmentation'], self.settingsProt['modifications'])
         self.builderProt = FragmentLibraryBuilder(self.propsProt,0)
         self.builderProt.createFragmentLibrary()
         self.spectrumHandlerProt = SpectrumHandler(self.propsProt,self.builderProt.getPrecursor(),self.settingsProt)
@@ -211,7 +211,7 @@ class TestSpectrumHandler(TestCase):
                 theoreticalPeaks = deepcopy(isotopePattern)
                 #if self.__settings['dissociation'] in ['ECD', 'EDD', 'ETD'] and fragment.number == 0:
                 #    theoreticalPeaks['mass'] += ((self.protonMass-self.eMass) * (self.__charge - z))
-                theoreticalPeaks['m/z'] = self.spectrumHandler.getMz(theoreticalPeaks['m/z'], z * -1, fragment.getRadicals())
+                theoreticalPeaks['m/z'] = getMz(theoreticalPeaks['m/z'], z * -1, fragment.getRadicals())
                 if (self.configs['lowerBound'] < theoreticalPeaks[0]['m/z'] < upperBound):
                     peaksToFind = []
                     for peak in theoreticalPeaks[:np.random.randint(low=1,high=len(isotopePattern))]:
@@ -249,7 +249,7 @@ class TestSpectrumHandler(TestCase):
             isotopePattern = fragment.getIsotopePattern()
             for z in self.spectrumHandler.getChargeRange(fragment, precModCharge):
                 theoreticalPeaks = deepcopy(isotopePattern)
-                theoreticalPeaks['m/z'] = self.spectrumHandler.getMz(theoreticalPeaks['m/z'], z * -1,
+                theoreticalPeaks['m/z'] = getMz(theoreticalPeaks['m/z'], z * -1,
                                                                      fragment.getRadicals())
                 if (self.configs['lowerBound'] < theoreticalPeaks[0]['m/z'] < upperBound):
                     sortedPeaks = sorted(theoreticalPeaks,key=lambda row:row[1],reverse=True)
@@ -306,8 +306,6 @@ class TestSpectrumHandler(TestCase):
     def test_add_to_deleted_ions(self):
         self.fail()
 
-    def test_get_mz(self):
-        self.fail()
 
     def test_calculate_error(self):
         self.fail()   

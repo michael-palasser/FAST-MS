@@ -134,6 +134,8 @@ class MolecularFormulaTest(TestCase):
             self.assertAlmostEqual(1.0, float(np.sum(calcIsotopePattern['calcInt'])), delta=0.005)
             self.assertTrue(np.sum(calcIsotopePattern['calcInt']) < 1)
 
+
+
     '''def test_calc_isotope_pattern_slowly(self):
         self.fail()'''
 

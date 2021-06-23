@@ -28,6 +28,19 @@ protMass = proton_mass *N_A*1000
 def calculateError(value, theoValue):
         return (value - theoValue) / theoValue * 10 ** 6
 
+def getMz(mass, z, radicals):
+    '''
+    Calculates m/z
+    :param (float) mass: neutral mass
+    :param (int) z: charge
+    :param (int) radicals: number of radicals
+    :return: (float) m/z
+    '''
+    if z != 0:
+        return abs(mass/z + protMass) + radicals*(eMass + protMass)/z
+    else:
+        return abs(mass) + radicals*(eMass + protMass)
+
 
 class SpectrumHandler(object):
     '''
@@ -43,7 +56,7 @@ class SpectrumHandler(object):
         '''
         Constructor, also processes spectrum
         :param properties: propertyStorage of search
-        :type properties: PropertyStorage
+        :type properties: SearchSettings
         :param precursor: precursor Fragment
         :type precursor: Fragment
         :param (dict[str,Any]) settings: search settings
@@ -172,7 +185,7 @@ class SpectrumHandler(object):
         self.__spectrum = self.__spectrum[np.where(self.__spectrum[:, 0] < (self.findUpperBound() + 10))]
         print("\nmax m/z:", self.__upperBound)
 
-    @staticmethod
+    """@staticmethod
     def getMz(mass, z, radicals):
         '''
         Calculates m/z
@@ -184,7 +197,7 @@ class SpectrumHandler(object):
         if z != 0:
             return abs(mass/z + protMass) + radicals*(eMass + protMass)/z
         else:
-            return abs(mass) + radicals*(eMass + protMass)
+            return abs(mass) + radicals*(eMass + protMass)"""
 
 
     def findUpperBound(self):
@@ -378,7 +391,7 @@ class SpectrumHandler(object):
                 #if self.__settings['dissociation'] in ['ECD', 'EDD', 'ETD'] and fragment.number == 0:
                 #    theoreticalPeaks['mass'] += ((self.protonMass-self.eMass) * (self.__charge - z))
                     #print("heeeeee\n",fragment.getName(),z, theoreticalPeaks['mass'])
-                theoreticalPeaks['m/z'] = self.getMz(theoreticalPeaks['m/z'], z * self.__sprayMode, fragment.getRadicals())
+                theoreticalPeaks['m/z'] = getMz(theoreticalPeaks['m/z'], z * self.__sprayMode, fragment.getRadicals())
                 if (configs['lowerBound'] < theoreticalPeaks[0]['m/z'] < self.__upperBound):
                     self._searchedChargeStates[fragment.getName()].append(z)
                     #make a guess of the ion abundance based on number in range

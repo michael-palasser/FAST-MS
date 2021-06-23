@@ -185,7 +185,7 @@ class ExcelWriter(BasicExcelWriter):
         Write results of top-down MS analysis to xlsx file
         :param (Analyser) analyser: analyser
         :param (IntensityModeller) intensityModeller: intensityModeller
-        :param (PropertyStorage) properties: properties
+        :param (SearchSettings) properties: properties
         :param (list[FragmentIon]) fragmentLibrary: fragmentLibrary
         :param (dict[str:Any]) settings: settings
         :param (SpectrumHandler) spectrumHandler: spectrumHandler

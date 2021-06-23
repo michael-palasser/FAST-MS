@@ -22,7 +22,7 @@ from src.gui.InfoView import InfoView
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.repositories.IsotopePatternRepository import IsotopePatternRepository
 from src.top_down.Analyser import Analyser
-from src.entities.SearchProperties import PropertyStorage
+from src.entities.SearchSettings import SearchSettings
 from src.top_down.LibraryBuilder import FragmentLibraryBuilder
 from src.top_down.SearchService import SearchService
 from src.top_down.SpectrumHandler import SpectrumHandler
@@ -55,8 +55,8 @@ class TD_MainController(object):
                 return
             self.settings = dialog.newSettings
             self.configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
-            self._propStorage = PropertyStorage(self.settings['sequName'], self.settings['fragmentation'],
-                                                self.settings['modifications'])
+            self._propStorage = SearchSettings(self.settings['sequName'], self.settings['fragmentation'],
+                                               self.settings['modifications'])
             self._info = Info(self.settings, self.configs, self._propStorage)
             self.saved = False
             self._savedName = os.path.split(self.settings['spectralData'])[-1][:-4]
@@ -80,8 +80,8 @@ class TD_MainController(object):
                     dlg = OpenSpectralDataDlg(parent)
                     if dlg.exec_() and not dlg.canceled:
                         self.settings['spectralData'] = dlg.getValue()
-                self._propStorage = PropertyStorage(self.settings['sequName'], self.settings['fragmentation'],
-                                                    self.settings['modifications'])
+                self._propStorage = SearchSettings(self.settings['sequName'], self.settings['fragmentation'],
+                                                   self.settings['modifications'])
                 self.libraryBuilder = FragmentLibraryBuilder(self._propStorage, self.settings['nrMod'])
                 self.libraryBuilder.createFragmentLibrary()
 

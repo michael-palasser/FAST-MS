@@ -6,9 +6,15 @@ from src.fastFunctions import getByIndex
 from src.MolecularFormula import MolecularFormula
 
 molFormulaDummy = MolecularFormula('C5H4N3O')
-RNA_formulaDummy = MolecularFormula('C38H48N15O26P3')  # GCAU
+RNA_formulaDummy = MolecularFormula('C38H48N15O26P3')  # GACU
 peptideFormulaDummy = MolecularFormula('C36H56N12O14S')  # GCASDQHPV
 uniFormulaDummy = MolecularFormula('C5H5N5ONa')
+
+RNA_pattern = [(1223.2107777180972, 0.58545685), (1224.2134684, 0.28360589), (1225.21578726, 0.09861313),
+               (1226.21815597, 0.02558403), (1227.22044876, 0.00558521)]
+peptide_pattern = [(912.37596571, 0.59104661), (913.37869526, 0.26946771), (914.37874787, 0.1035717),
+                   (915.37979107, 0.02834297), (916.38113847, 0.00624432)]
+uni_pattern = [(174.03917908, 0.92733003), (175.04099458, 0.06836688), (176.04296025, 0.00412072)]
 
 dict0 = {'C': 5, 'H': 4, 'N': 3, 'O': 1}
 dict1 = {'C': 5, 'H': 4, 'N': 3, 'O': 1, 'S': 10}
@@ -100,11 +106,6 @@ class MolecularFormulaTest(TestCase):
         self.assertAlmostEqual(912.375965, peptideFormulaDummy.calculateMonoIsotopic(), delta=5 * 10 ** (-6))
 
     def test_calculate_isotope_pattern(self):
-        RNA_pattern = [(1223.2107777180972, 0.58545685), (1224.2134684, 0.28360589), (1225.21578726, 0.09861313),
-                       (1226.21815597, 0.02558403), (1227.22044876, 0.00558521)]
-        peptide_pattern = [(912.37596571, 0.59104661), (913.37869526, 0.26946771), (914.37874787, 0.1035717),
-                           (915.37979107, 0.02834297), (916.38113847, 0.00624432)]
-        uni_pattern = [(174.03917908, 0.92733003), (175.04099458, 0.06836688), (176.04296025, 0.00412072)]
         self.testIsotopePattern(RNA_pattern, RNA_formulaDummy.calculateIsotopePattern())
         self.testIsotopePattern(peptide_pattern, peptideFormulaDummy.calculateIsotopePattern())
         print(uniFormulaDummy.calculateIsotopePattern())

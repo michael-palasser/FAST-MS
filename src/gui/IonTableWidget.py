@@ -134,7 +134,7 @@ class IsoPatternIon(IonTableWidget):
 
     def getIntensity(self):
         if self._ions == ((),):
-            return 100
+            return 1000
         try:
             return int(self.item(0,2).text())
         except ValueError:

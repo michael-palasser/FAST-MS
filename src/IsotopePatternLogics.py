@@ -7,7 +7,6 @@ from src.MolecularFormula import MolecularFormula
 from src.FormulaFunctions import stringToFormula
 from src.Services import MoleculeService, FragmentationService, ModificationService, PeriodicTableService
 from src.entities.GeneralEntities import Sequence
-from src.entities.IonTemplates import PrecursorItem
 from src.entities.Ions import Fragment, FragmentIon
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.top_down.IntensityModeller import IntensityModeller
@@ -86,7 +85,7 @@ class IsotopePatternLogics(object):
         Calculates the isotope pattern of the ion
         Parameters fragmentationName, fragTemplName, modifPatternName, modifName, nrMod are only optional if mode is
         'mol. formula'
-        :param (str) mode: molecule
+        :param (str) mode: molecule ('mol. formula' or e.g. 'RNA', 'Protein')
         :param (str) inputString: formula
         :param (int) charge: charge
         :param (int) radicals: nr. of radicals
@@ -103,8 +102,9 @@ class IsotopePatternLogics(object):
         else:
             fragment = self.getFragment(mode, inputString, fragmentationName, fragTemplName, modifPatternName,
                                         modifName, nrMod)
-        if fragment.getFormula() != self._formula:
-            self._formula = fragment.getFormula()
+        formula = fragment.getFormula()
+        if formula != self._formula:
+            self._formula = formula
             #self._fragment = fragment
             if self._formula.calcIsotopePatternSlowly(1)['m/z'][0]>6000:
                 self._isotopePattern = self._formula.calculateIsotopePattern()
@@ -142,7 +142,7 @@ class IsotopePatternLogics(object):
         return formula
 
 
-    def getFragment(self, molecule, sequString, fragmentationName, fragTemplName, modifPatternName, modifName, nrMod):
+    def getFragment(self, moleculeName, sequString, fragmentationName, fragTemplName, modifPatternName, modifName, nrMod):
         '''
         Generates the fragment to the corresponding inputs
         :param (str) molecule: name of the molecule
@@ -154,12 +154,14 @@ class IsotopePatternLogics(object):
         :param (int) nrMod: nr. of modifications
         :return: (Fragment) fragment
         '''
-        molecule = self._moleculeService.get(molecule)
+        molecule = self._moleculeService.get(moleculeName)
         sequenceList = Sequence("",sequString,molecule.getName(),0).getSequenceList()
         #formula = MolecularFormula(molecule.getFormula())
         buildingBlocks = molecule.getBBDict()
         formula = MolecularFormula({})
         for link in sequenceList:
+            if link not in buildingBlocks:
+                raise InvalidInputException(sequString, 'Building Block "'+link+ '" unknown for '+moleculeName )
             formula = formula.addFormula(buildingBlocks[link].getFormula())
         fragmentation = self._fragService.getPatternWithObjects(fragmentationName)
         if fragTemplName in ([precTempl.getName() for precTempl in fragmentation.getItems2()]):

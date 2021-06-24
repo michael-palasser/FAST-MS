@@ -8,6 +8,7 @@ from src.Services import SequenceService
 from src.entities.SearchSettings import SearchSettings
 from src.top_down.LibraryBuilder import FragmentLibraryBuilder
 from tests.top_down.test_LibraryBuilder import initTestSequences
+from tests.test_MolecularFormula import *
 
 
 class TestIsotopePatternLogics(TestCase):
@@ -53,25 +54,34 @@ class TestIsotopePatternLogics(TestCase):
         self.fail()'''
 
     def test_calculate(self):
-        RNA_formulaDummy = MolecularFormula('C38H48N15O26P3')  # GCAU
-        peptideFormulaDummy = MolecularFormula('C36H56N12O14S')  # GCASDQHPV
-        uniFormulaDummy = MolecularFormula('C5H5N5ONa')
-        RNA_pattern = [(1223.2107777180972, 0.58545685), (1224.2134684, 0.28360589), (1225.21578726, 0.09861313),
-                       (1226.21815597, 0.02558403), (1227.22044876, 0.00558521)]
-        peptide_pattern = [(912.37596571, 0.59104661), (913.37869526, 0.26946771), (914.37874787, 0.1035717),
-                           (915.37979107, 0.02834297), (916.38113847, 0.00624432)]
-        uni_pattern = [(174.03917908, 0.92733003), (175.04099458, 0.06836688), (176.04296025, 0.00412072)]
-        self.testIsotopePattern(RNA_pattern, RNA_formulaDummy.calculateIsotopePattern())
-        self.testIsotopePattern(peptide_pattern, peptideFormulaDummy.calculateIsotopePattern())
-        print(uniFormulaDummy.calculateIsotopePattern())
-        self.testIsotopePattern(uni_pattern, uniFormulaDummy.calculateIsotopePattern())
-        self.fail()
+        RNA_ion,RNA_neutralMass = self.getIon('RNA',0)
+        formulaIon, formulaNeutralMass = self.logics.calculate('mol. formula',RNA_formulaDummy.toString()+'(C14H25N3O)2',2, 0,1000)
+        self.assertEqual(RNA_ion.getFormula().toString(), formulaIon.getFormula().toString())
+        #theoIsotopePattern = self.fragmentsRNA['dummyRNA'].getIsotopePattern()
+        self.assertAlmostEqual(RNA_neutralMass,formulaNeutralMass)
+        self.testIsotopePattern(formulaIon.getIsotopePattern(), RNA_ion.getIsotopePattern())
+        #self.testIsotopePattern(theoIsotopePattern, formulaIon.getIsotopePattern())
+        #ToDo
 
+    def getIon(self,mode, radicals):
+        if mode == 'RNA':
+            searchSettings = self.searchSettingsRNA
+            modifPattern = 'CMCT'
+            modif = '+CMCT'
+            nrMod = 2
+        else:
+            searchSettings = self.searchSettingsProt
+            modifPattern = '-'
+            modif = '-'
+            nrMod = 0
+        properties = self.getProperties(searchSettings)
+        return self.logics.calculate(mode, properties['sequString'], 2, radicals,1000, properties['fragmentationName'],
+                                     'Prec', modifPattern, modif, nrMod)
 
     def testIsotopePattern(self, theoIsotopePattern=None, calcIsotopePattern=None):
         if theoIsotopePattern != None:
-            theoIsotopePattern = np.array(theoIsotopePattern, dtype=[('m/z', np.float64), ('calcInt', np.float64)])
-            theoIsotopePattern['calcInt'] *= (calcIsotopePattern['calcInt'][0] / theoIsotopePattern['calcInt'][0])
+            #theoIsotopePattern = np.array(theoIsotopePattern, dtype=[('m/z', np.float64), ('calcInt', np.float64)])
+            #theoIsotopePattern['calcInt'] *= (calcIsotopePattern['calcInt'][0] / theoIsotopePattern['calcInt'][0])
             if len(theoIsotopePattern) > (len(calcIsotopePattern) + 1):
                 raise Exception('Length of calculated isotope pattern to short')
             for i in range(len(theoIsotopePattern)):
@@ -95,6 +105,8 @@ class TestIsotopePatternLogics(TestCase):
     def test_get_fragment(self):
         self.test_get_fragment2('RNA')
         self.test_get_fragment2('Protein')
+        with self.assertRaises(InvalidInputException):
+            self.logics.getFragment('RNA', 'GCHx', 'RNA_CAD', 'c', '-', '-', 0)
 
 
     def test_get_fragment2(self, mode=None):

@@ -1,4 +1,5 @@
 from abc import ABC
+from numpy import sum as npSum
 
 from src.Exceptions import InvalidInputException
 from src.entities.GeneralEntities import Macromolecule, Element, BuildingBlock
@@ -16,26 +17,26 @@ class AbstractService(ABC):
     '''
     def __init__(self, repository, necassaryVals):
         '''
-        :param (AbstractRepository) repository: repository
+        :param (AbstractRepository) repository: _repository
         :param (list[int] | tuple[int]) necassaryVals: specifies (by indices) which columns have to be filled to save/update a table
         '''
-        self.repository = repository
-        self.necessaryValues = necassaryVals
+        self._repository = repository
+        self._necessaryValues = necassaryVals
 
     def getHeaders(self):
-        return self.repository.getItemColumns()
+        return self._repository.getItemColumns()
 
     def get(self, name):
         pass
 
     def getBoolVals(self):
-        return self.repository.getBoolVals()
+        return self._repository.getBoolVals()
 
     def delete(self, name):
-        self.repository.delete(name)
+        self._repository.delete(name)
 
     def close(self):
-        self.repository.close()
+        self._repository.close()
 
 
     def checkFormatOfItem(self, item, *args):
@@ -45,10 +46,10 @@ class AbstractService(ABC):
         :param (tuple[int] | False) args: indices which should be numerical
         :raises InvalidInputException: if necessary value is empty or a numerical value is not numerical
         '''
-        #print(item, self.repository.getIntegers())
+        #print(item, self._repository.getIntegers())
         numericals=args[0]
         for i,val in enumerate(item):
-            if val == "" and i in self.necessaryValues:
+            if val == "" and i in self._necessaryValues:
                 print(i, item[i])
                 raise InvalidInputException(item[0], "No empty values allowed")
             if i in numericals:
@@ -70,10 +71,10 @@ class AbstractServiceForPatterns(AbstractService, ABC):
         pass
 
     def get(self, name):
-        return self.repository.getPattern(name)
+        return self._repository.getPattern(name)
 
     def getAllPatternNames(self):
-        return self.repository.getAllPatternNames()
+        return self._repository.getAllPatternNames()
 
     """def updatePattern(self, *args, **kwargs):
         pass"""
@@ -86,12 +87,12 @@ class AbstractServiceForPatterns(AbstractService, ABC):
         '''
         elementRep = PeriodicTableRepository()
         elements = elementRep.getAllPatternNames()
-        self.checkFormatOfItems(pattern.getItems(), elements, self.repository.getIntegers())
+        self.checkFormatOfItems(pattern.getItems(), elements, self._repository.getIntegers())
         self.checkIfUnique(pattern)
         if pattern.getId() == None:
-            self.repository.createPattern(pattern)
+            self._repository.createPattern(pattern)
         else:
-            self.repository.updatePattern(pattern)
+            self._repository.updatePattern(pattern)
         return self.get(pattern.getName())
 
     def checkIfUnique(self, pattern):
@@ -100,8 +101,8 @@ class AbstractServiceForPatterns(AbstractService, ABC):
         :param (PatternWithItems) pattern: pattern
         :raises InvalidInputException: if name not unique
         '''
-        if pattern.getName() in self.repository.getAllPatternNames():
-            if pattern.getId() != self.repository.getPattern(pattern.getName()).getId():
+        if pattern.getName() in self._repository.getAllPatternNames():
+            if pattern.getId() != self._repository.getPattern(pattern.getName()).getId():
                 raise InvalidInputException(pattern.getName(), "Name must be unique!")
 
     def checkFormatOfItems(self, items, *args):
@@ -141,7 +142,6 @@ class AbstractServiceForPatterns(AbstractService, ABC):
         pattern = self.get(name)
         items = []
         for item in pattern.getItems():
-            print(item)
             items.append(args[0](item))
         pattern.setItems(items)
         return pattern
@@ -165,10 +165,10 @@ class AbstractServiceForPatterns(AbstractService, ABC):
         Creates new tables from the read values with the updated createPattern function
         '''
         patterns = [self.get(name) for name in self.getAllPatternNames()]
-        self.repository.deleteTables()
-        self.repository.makeTables()
+        self._repository.deleteTables()
+        self._repository.makeTables()
         for pattern in patterns:
-            self.repository.createPattern(pattern)
+            self._repository.createPattern(pattern)
 
 
 class PeriodicTableService(AbstractServiceForPatterns):
@@ -189,14 +189,29 @@ class PeriodicTableService(AbstractServiceForPatterns):
         '''
         #print('id', pattern.getId())
         self.checkName(pattern.getName())
-        self.checkFormatOfItems(pattern.getItems(),None, self.repository.getIntegers())
+        self.checkFormatOfItems(pattern.getItems(), None, self._repository.getIntegers())
         self.checkIfUnique(pattern)
         print('id', pattern.getId())
         if pattern.getId() == None:
-            self.repository.createPattern(pattern)
+            self._repository.createPattern(pattern)
         else:
-            self.repository.updatePattern(pattern)
+            self._repository.updatePattern(pattern)
         return self.get(pattern.getName())
+
+    def checkFormatOfItems(self, items, *args):
+        super(PeriodicTableService, self).checkFormatOfItems(items, *args)
+        sumAbundances = 0
+        nucNums = []
+        for item in items:
+            sumAbundances+=item[2]
+            if item[0] in nucNums:
+                raise InvalidInputException(item[0], "one nucleon number must not occur more than once")
+            if isinstance(item[0], float):
+                raise InvalidInputException(item[0], "nucleon number must be an integer")
+            nucNums.append(item[0])
+        if sumAbundances > 1 or sumAbundances <0.98:
+            message = '+'.join([str(item[2]) for item in items]) + " = " + str(sumAbundances)
+            raise InvalidInputException(message, "Relative abundances do not sum up to 1")
 
     def checkName(self, name):
         '''
@@ -212,10 +227,16 @@ class PeriodicTableService(AbstractServiceForPatterns):
     def getFormula(self, item):
         return {}
 
+    def checkFormatOfItem(self, item, *args):
+        super(PeriodicTableService, self).checkFormatOfItem(item, *args)
+        for val in item:
+            if val<0:
+                raise InvalidInputException(val, 'No negative values allowed')
+
     '''def checkFormatOfItem(self, item, *args):
         for val in item:
             try:
-                if val in self.repository.getIntegers():
+                if val in self._repository.getIntegers():
                     float(val)
             except ValueError:
                 raise InvalidInputException(item[0], "Number required: " + val)'''
@@ -228,12 +249,12 @@ class PeriodicTableService(AbstractServiceForPatterns):
         '''
         """elementDict = dict()
         for elem in elements:
-            isotopeTable = np.array(sorted(self.repository.getPattern(elem), key=lambda tup: tup[1], reverse=True)
+            isotopeTable = np.array(sorted(self._repository.getPattern(elem), key=lambda tup: tup[1], reverse=True)
                                     , dtype=[('index', np.float64), ('nr', np.float64), ('nrIso', np.float64),
                                              ('relAb', np.float64), ('mass', np.float64), ('M+', np.float64)])
-            self.repository.getPattern(elem)
+            self._repository.getPattern(elem)
             elementDict[elem] = """
-        return {elem:self.repository.getPattern(elem).getItems() for elem in elements}
+        return {elem:self._repository.getPattern(elem).getItems() for elem in elements}
 
 class MoleculeService(AbstractServiceForPatterns):
     '''
@@ -265,7 +286,7 @@ class MoleculeService(AbstractServiceForPatterns):
             if key not in elements:
                 raise InvalidInputException(pattern.getName(), "Element: " + key + " unknown")
         [self.checkName(bb[0]) for bb in pattern.getItems()]
-        self.checkFormatOfItems(pattern.getItems(),elements, self.repository.getIntegers())
+        self.checkFormatOfItems(pattern.getItems(), elements, self._repository.getIntegers())
         pattern = super(MoleculeService, self).save(pattern)
         elementRep.close()
         return pattern
@@ -293,13 +314,13 @@ class SequenceService(AbstractService):
         return ("", "", "")
 
     def get(self,name):
-        return self.repository.getSequence(name)
+        return self._repository.getSequence(name)
 
     def getSequences(self):
-        return self.repository.getAllSequences()
+        return self._repository.getAllSequences()
 
     def getAllSequenceNames(self):
-        return self.repository.getAllSequenceNames()
+        return self._repository.getAllSequenceNames()
 
     def save(self, sequences):
         '''
@@ -307,8 +328,8 @@ class SequenceService(AbstractService):
         :param (list[Sequence]) sequences: sequences which should be saved/updated
         '''
         newNames = [sequence.getName() for sequence in sequences]
-        savedNames = self.repository.getAllSequenceNames()
-        [self.repository.delete(savedName) for savedName in savedNames if savedName not in newNames]
+        savedNames = self._repository.getAllSequenceNames()
+        [self._repository.delete(savedName) for savedName in savedNames if savedName not in newNames]
         moleculeRepository = MoleculeRepository()
         molecules = moleculeRepository.getAllPatternNames()
         for sequence in sequences:
@@ -323,9 +344,9 @@ class SequenceService(AbstractService):
             self.checkFormatOfItem(sequence, molecules,
                             [mon[0] for mon in moleculeRepository.getPattern(sequence.getMolecule()).getItems()])
             if sequence.getName() in savedNames:
-                self.repository.updateSequence(sequence)
+                self._repository.updateSequence(sequence)
             else:
-                self.repository.createSequence(sequence)
+                self._repository.createSequence(sequence)
         moleculeRepository.close()
 
     def checkFormatOfItem(self, item, *args):
@@ -371,12 +392,12 @@ class FragmentationService(AbstractServiceForPatterns):
         '''
         elementRep = PeriodicTableRepository()
         elements = elementRep.getAllPatternNames()
-        self.checkFormatOfItems(pattern.getItems(), elements, self.repository.getIntegers()[0])
+        self.checkFormatOfItems(pattern.getItems(), elements, self._repository.getIntegers()[0])
         for item in pattern.getItems():
             print(item[5])
             if int(item[5]) not in [1,-1]:
                 raise InvalidInputException(item, "Direction must be 1 or -1 and not " + str(item[5]))
-        self.checkFormatOfItems(pattern.getItems2(), elements, self.repository.getIntegers()[1])
+        self.checkFormatOfItems(pattern.getItems2(), elements, self._repository.getIntegers()[1])
         if pattern.getPrecursor() not in [item[0] for item in pattern.getItems2() if item[5]]==1:
             raise InvalidInputException(pattern.getPrecursor(), 'Precursor not found or not enabled')
         """for key in pattern.getFormula().keys():
@@ -430,7 +451,7 @@ class ModificationService(AbstractServiceForPatterns):
         '''
         elementRep = PeriodicTableRepository()
         elements = elementRep.getAllPatternNames()
-        self.checkFormatOfItems(pattern.getItems(), elements, self.repository.getIntegers()[0])
+        self.checkFormatOfItems(pattern.getItems(), elements, self._repository.getIntegers()[0])
         checkedItems = []
         for item in pattern.getItems():
             checkedItem = item
@@ -492,7 +513,7 @@ class IntactIonService(AbstractServiceForPatterns):
 
 
     """def getPatternWithObjects(self, name):
-        pattern = self.repository.getPattern(name)
+        pattern = self._repository.getPattern(name)
         pattern = self.get('name', name)
         return IntactPattern(pattern[1], pattern[2], pattern[3], self.getItemsAsObjects(pattern[0]), pattern[0])
 

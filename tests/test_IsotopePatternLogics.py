@@ -132,6 +132,9 @@ class TestIsotopePatternLogics(TestCase):
         self.test_get_fragment2('Protein')
         with self.assertRaises(InvalidInputException):
             self.logics.getFragment('RNA', 'GCHx', 'RNA_CAD', 'c', '-', '-', 0)
+        with self.assertRaises(InvalidInputException):
+            self.logics.getFragment('RNA', 'gCA', 'RNA_CAD', 'c', '-', '-', 0)
+
 
 
     def test_get_fragment2(self, mode=None):

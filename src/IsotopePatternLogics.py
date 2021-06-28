@@ -154,6 +154,8 @@ class IsotopePatternLogics(object):
         :param (int) nrMod: nr. of modifications
         :return: (Fragment) fragment
         '''
+        if sequString[0].islower():
+            raise InvalidInputException(sequString, ", Unvalid format, first character in Sequence must not be lower case")
         molecule = self._moleculeService.get(moleculeName)
         sequenceList = Sequence("",sequString,molecule.getName(),0).getSequenceList()
         #formula = MolecularFormula(molecule.getFormula())

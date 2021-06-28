@@ -90,7 +90,7 @@ class Element(PatternWithItems):
         super(Element, self).__init__(name, isotopes, id)
 
 
-class Isotope(object):
+'''class Isotope(object):
     """
     wahrsch zu umstaendlich
     """
@@ -119,7 +119,7 @@ class Isotope(object):
         return self.__relAb
 
     """def getAll(self):
-        return [self.__pNr, self.__isoNr, self.__mass, self.__relAb]"""
+        return [self.__pNr, self.__isoNr, self.__mass, self.__relAb]"""'''
 
 
 

@@ -170,7 +170,7 @@ class MolecularFormula(object):
         '''
         isotopeTable = list()
         for index, elem in enumerate(['C','H','N','O','S']):
-            if elem in self._periodicTable:
+            if elem in self._periodicTable.keys():
                 mono = self._periodicTable[elem][0][0]
                 for isotope in self._periodicTable[elem]:
                     isotopeTable.append((index, self._formulaDict[elem], 0, isotope[2], isotope[1], isotope[0] - mono))
@@ -235,7 +235,7 @@ class MolecularFormula(object):
         Calculates isotope patterns based on molecular formulas without using the numba library
         :return: (ndarray(dtype=[float,float])) isotope pattern1 (structured numpy array: [(mass,relative Abundance)])
         '''
-        self._periodicTable = periodicTableService.getElements(list(self._formulaDict.keys()))
+        #self._periodicTable = periodicTableService.getElements(list(self._formulaDict.keys()))
         isotope_pattern = list()
         if self._formulaDict.keys() == {'C', 'H', 'N', 'O', 'P'}:
             #calculate = sf.calculateNuclFineStructure

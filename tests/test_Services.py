@@ -16,9 +16,16 @@ class TestPeriodicTableService(TestCase):
             with self.assertRaises(InvalidInputException):
                 self.service.checkFormatOfItem(item, numericals)
 
-    def test_save(self):
-        pattern = Element('Xe',[(15,10.,0.4),(16,10.,0.3),(17,10.,0.1)],None)
-        self.fail()
+    def test_save_and_delete(self):
+        name = 'Xeo'
+        assert name not in self.service.getAllPatternNames()
+        pattern = Element(name,[(15,10.,0.5),(16,10.,0.3),(17,10.,0.2)],None)
+        self.service.save(pattern)
+        savedPattern = self.service.get(pattern.getName())
+        self.assertEqual(name,savedPattern.getName())
+        self.assertEqual(pattern.getItems(),savedPattern.getItems())
+        self.service.delete(name)
+        self.assertNotIn(name, self.service.getAllPatternNames())
 
     def test_check_name(self):
         self.service.checkName('He')

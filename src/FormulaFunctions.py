@@ -12,6 +12,10 @@ def stringToFormula(formulaString, formulaDict, sign):
     :return (dict[str:int]): new formula dictionary
     '''
     #everything in parenthesis
+    if formulaString == "" or formulaString == "-":
+        return formulaDict
+    elif formulaString[0].islower():
+        raise InvalidInputException(formulaString, ", Unvalid format, first character in Sequence must not be lower case")
     beginIndizes = [m.start() for m in re.finditer('\(', formulaString)]
     endIndizes = [m.start() for m in re.finditer('\)', formulaString)]
     if len(beginIndizes) != len(endIndizes):
@@ -44,9 +48,18 @@ def stringToFormula2(formulaString, formulaDict, sign):
     '''
     if formulaString == "" or formulaString == "-":
         return formulaDict
+    elif formulaString[0].islower():
+        raise InvalidInputException(formulaString, ", Unvalid format, first character in Sequence must not be lower case")
     for item in re.findall('[A-Z][^A-Z]*', formulaString):
         element = item
         number = 1
+        '''print(item)
+        print(re.findall('[|^&*_]', item))
+        newItem = item
+        match = re.match('[|^&*_]', newItem)
+        if match:
+            element = None
+            newItem = match.group(2)'''
         match = re.match(r"([a-z]+)([0-9]+)", item, re.I)  # re.I: ignore case: ?
         if match:
             element = match.group(1)

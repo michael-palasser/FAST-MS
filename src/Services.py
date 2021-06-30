@@ -1,3 +1,4 @@
+import re
 from abc import ABC
 from numpy import sum as npSum
 
@@ -49,7 +50,7 @@ class AbstractService(ABC):
         #print(item, self._repository.getIntegers())
         numericals=args[0]
         for i,val in enumerate(item):
-            if val == "" and i in self._necessaryValues:
+            if (val == "" or val == '-') and i in self._necessaryValues:
                 print(i, item[i])
                 raise InvalidInputException(item[0], "No empty values allowed")
             if i in numericals:
@@ -118,7 +119,12 @@ class AbstractServiceForPatterns(AbstractService, ABC):
             raise InvalidInputException('', "Values empty")
         elements = args[0]
         numericals = args[1]
+        names = []
         for item in items:
+            name = item[0]
+            if name in names:
+                raise InvalidInputException(name, "No duplicates allowed")
+            names.append(name)
             formula = self.getFormula(item)
             if formula != None:
                 #if (len(formula) < 1 and (item[]:
@@ -126,7 +132,7 @@ class AbstractServiceForPatterns(AbstractService, ABC):
                 for key in formula.keys():
                     if key not in elements:
                         print(item, ", Element: "+ key + " unknown")
-                        raise InvalidInputException(item[0], "Element: " + key + " unknown")
+                        raise InvalidInputException(name, "Element: " + key + " unknown")
             self.checkFormatOfItem(item,numericals)
 
     def getFormula(self, item):
@@ -155,6 +161,9 @@ class AbstractServiceForPatterns(AbstractService, ABC):
         '''
         if (name == '') or (name[0].islower()) or (len(name) > 1 and any(x.isupper() for x in name[1:])):
             raise InvalidInputException(name, "First Letter must be uppercase, all other letters must be lowercase!")
+        specialChars = [char for char in re.findall('[@_!#$%^&*()<>?/|}{~:]', name) if char!='']
+        if len(specialChars) >0 :
+            raise InvalidInputException(name, "Character(s): " + ', '.join(specialChars) + ' are not allowed')
 
 
     def restart(self):
@@ -291,8 +300,11 @@ class MoleculeService(AbstractServiceForPatterns):
         elementRep.close()
         return pattern
 
-    '''def checkName(self, name):
-        if (name[0].islower() or (len(name) > 1 and any(x.isupper() for x in name[1:]))):
+    def checkName(self, name):
+        super(MoleculeService, self).checkName(name)
+        if any(char.isdigit() for char in name):
+            raise InvalidInputException(name, "Building block name must not contain numbers!")
+        '''if (name[0].islower() or (len(name) > 1 and any(x.isupper() for x in name[1:]))):
             raise InvalidInputException(name, "First Letter must be uppercase, all other letters must be lowercase!")'''
 
     """def getItemDict(self, name):

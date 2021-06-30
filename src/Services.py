@@ -3,7 +3,7 @@ from abc import ABC
 from numpy import sum as npSum
 
 from src.Exceptions import InvalidInputException
-from src.entities.GeneralEntities import Macromolecule, Element, BuildingBlock
+from src.entities.GeneralEntities import Macromolecule, Element, BuildingBlock, Sequence
 from src.repositories.TD_Repositories import *
 from src.repositories.MoleculeRepository import MoleculeRepository
 from src.repositories.PeriodicTableRepository import PeriodicTableRepository
@@ -334,27 +334,38 @@ class SequenceService(AbstractService):
     def getAllSequenceNames(self):
         return self._repository.getAllSequenceNames()
 
-    def save(self, sequences):
+    def save(self, sequTuples):
         '''
         Saves the sequences
-        :param (list[Sequence]) sequences: sequences which should be saved/updated
+        :param (list[tuple[str,str,str]]) sequTuples: tuples (name,sequence,molecule name) with sequence information
+            which should be saved/updated
         '''
-        newNames = [sequence.getName() for sequence in sequences]
+        #newNames = [sequence[0] for sequence in sequTuples]
+        newNames=[]
+        for sequTup in sequTuples:
+            if sequTup[0] in newNames:
+                raise InvalidInputException('', "No duplicates allowed")
+            newNames.append(sequTup[0])
         savedNames = self._repository.getAllSequenceNames()
         [self._repository.delete(savedName) for savedName in savedNames if savedName not in newNames]
         moleculeRepository = MoleculeRepository()
         molecules = moleculeRepository.getAllPatternNames()
-        for sequence in sequences:
+        bbs = {}
+        for molecule in molecules:
+            bbs[molecule] = [bb[0] for bb in moleculeRepository.getPattern(molecule).getItems()]
+        for sequTup in sequTuples:
             """if sequenceList.getMolecule() not in molecules:
                 raise InvalidInputException(sequenceList.getName(),sequenceList.getMolecule()+" unknown")
             monomereNames = [item[0] for item in moleculeRepository.getPattern(sequenceList.getMolecule()).getItems()]
             for link in sequenceList.getSequenceList():
                 if link not in monomereNames:
                     raise InvalidInputException(sequenceList.getName(),"Problem in Sequence: "+ link + " unknown")"""
-            if sequence.getMolecule() not in moleculeRepository.getAllPatternNames():
-                raise InvalidInputException(sequence.getName(), "Molecule " + sequence.getMolecule() + ' unknown')
-            self.checkFormatOfItem(sequence, molecules,
-                            [mon[0] for mon in moleculeRepository.getPattern(sequence.getMolecule()).getItems()])
+            '''sequName,sequString,moleculeName = sequTup[0],sequTup[1],sequTup[2]
+            if sequString[0].islower():
+                raise InvalidInputException(sequString,
+                                            "Incorrect format of sequence, first letter must not be lowercase")'''
+            #sequence = Sequence(sequName,sequString,moleculeName, None)
+            sequence = self.checkFormatOfItem(sequTup, bbs)
             if sequence.getName() in savedNames:
                 self._repository.updateSequence(sequence)
             else:
@@ -364,23 +375,34 @@ class SequenceService(AbstractService):
     def checkFormatOfItem(self, item, *args):
         '''
         Checks the values of a sequence
-        :param (Sequence) item: sequence
-        :param (args[0] = (list[str]), args[1] = (list[str])) args: list of stored names of molecules,
-            list of names of stored building blocks
+        :param (tuple[str,str,str]) item: tuple (name,sequence,molecule name) with sequence information
+        :param (dict[str,list[str])) args: dict of molecule names (keys) and names of stored building blocks
         :raises InvalidInputException: if format incorrect (empty values, molecule unknown or sequence contains an
             unknown building block)
+        :return (Sequence): sequence
         '''
-        molecules, monomereNames = args[0], args[1]
-        if item.getMolecule() not in molecules:
-            raise InvalidInputException(item.getName(), item.getMolecule() + " unknown")
-        sequList = item.getSequenceList()
+        sequName, sequString, moleculeName = item[0], item[1], item[2]
+        molecules  = args[0].keys()
+        if sequName == '' or sequName == '-':
+            raise InvalidInputException(sequName,"Name incorrect")
+        if len(sequString)<1:
+            raise InvalidInputException(sequName, "Empty sequence")
+        if sequString[0].islower():
+            raise InvalidInputException(sequString,
+                                        "Incorrect format of sequence, first letter must not be lowercase")
+        if moleculeName not in molecules:
+            raise InvalidInputException(sequName, "Molecule " + moleculeName + ' unknown')
+        monomereNames = args[0][moleculeName]
+        sequence = Sequence(sequName,sequString,moleculeName, None)
+        sequList = sequence.getSequenceList()
         if len(sequList)<1:
-            raise InvalidInputException(item.getName(), "Problem with Sequence: Format incorrect")
-        for link in item.getSequenceList():
+            raise InvalidInputException(sequName, "Problem with Sequence: Format incorrect")
+        for link in sequList:
             if link not in monomereNames:
-                raise InvalidInputException(item.getName(), "Problem in Sequence: " + link + " unknown")
-        if ('+' in item.getName()) or ('-' in item.getName()):
-            raise InvalidInputException(item.getName(), 'Sequence name must not contain "+" or "-"')
+                raise InvalidInputException(sequName, "Problem in Sequence: " + link + " unknown")
+        if ('+' in sequName) or ('-' in sequName):
+            raise InvalidInputException(sequName, 'Sequence name must not contain "+" or "-"')
+        return sequence
 
 
 

@@ -419,7 +419,7 @@ class SequenceEditorController(AbstractSimpleEditorController):
     def save(self):
         sequences = []
         for sequTuple in self.readTable(self.table, self.service.getBoolVals()):
-            sequences.append(Sequence(sequTuple[0], sequTuple[1], sequTuple[2], None))
+            sequences.append((sequTuple[0], sequTuple[1], sequTuple[2]))
         super(SequenceEditorController, self).save(sequences)
 
 

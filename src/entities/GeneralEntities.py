@@ -130,7 +130,7 @@ class Sequence(AbstractPattern):
         :param (str) name
         :param (str) sequenceString: sequence-string
         :param (str) molecule: RNA, DNA, P or other self defined macromolecule
-        :param (int) id
+        :param (int | None) id
         """
         super(Sequence, self).__init__(name, id)
         self.__sequenceString = sequenceString

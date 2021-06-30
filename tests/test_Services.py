@@ -1,8 +1,9 @@
+from copy import deepcopy
 from unittest import TestCase
 
 from src.Exceptions import InvalidInputException
 from src.Services import *
-from src.entities.GeneralEntities import Element
+from src.entities.GeneralEntities import Element, Sequence
 
 
 class TestPeriodicTableService(TestCase):
@@ -102,11 +103,59 @@ class TestMoleculeService(TestCase):
 
 
 class TestSequenceService(TestCase):
+    def setUp(self):
+        self.service = SequenceService()
+
     def test_save(self):
-        self.fail()
+        name = 'dummy'
+        assert name not in self.service.getAllSequenceNames()
+        oldSequences = [(tup[0], tup[1], tup[2]) for tup in self.service.getSequences()]
+        sequences = deepcopy(oldSequences)
+        dummy = (name, 'GACU', 'RNA')
+        sequences.append(dummy)
+        self.service.save(sequences)
+        savedSequence = self.service.get(name)
+        self.assertEqual(name, savedSequence.getName())
+        self.service.delete(name)
+        self.assertNotIn(name, self.service.getAllSequenceNames())
+        self.service.save(sequences)
+        sequences = deepcopy(oldSequences)
+        sequences.append(('dummy1', 'GACUH', 'RNA'))
+        with self.assertRaises(InvalidInputException):
+            self.service.save(sequences)
+        self.assertEqual(len(oldSequences), len(self.service.getAllSequenceNames()))
+        self.assertNotIn('dummy1', self.service.getAllSequenceNames())
+        sequences = deepcopy(oldSequences)
+        sequences.append(('dummy1', 'GACU', 'RNA'))
+        sequences.append(('dummy1', 'GACU', 'RNA'))
+        with self.assertRaises(InvalidInputException):
+            self.service.save(sequences)
+        self.assertEqual(len(oldSequences), len(self.service.getAllSequenceNames()))
+        self.assertNotIn('dummy1', self.service.getAllSequenceNames())
 
     def test_check_format_of_item(self):
-        self.fail()
+        moleculeRepository = MoleculeRepository()
+        molecules = moleculeRepository.getAllPatternNames()
+        bbs = {}
+        for molecule in molecules:
+            bbs[molecule] = [bb[0] for bb in moleculeRepository.getPattern(molecule).getItems()]
+        sequTup = ('dummy1','GACU','RNA')
+        self.service.checkFormatOfItem(sequTup, bbs)
+        sequTup = ('dummy2','GAHP','Protein')
+        self.service.checkFormatOfItem(sequTup, bbs)
+        dummies = [('dummy1', 'GACUH', 'RNA'),
+                   ('dummy4', '', 'RNA'),
+                   ('dummy5', '-', 'RNA'),
+                   ('dummy+6', '-', 'RNA'),
+                   ('dummy7', 'gGACU', 'RNA'),
+                   ('dummy8', 'GACU', ''),
+                   ('dummy9', 'GACU', '-'),
+                   ('dummy10', 'GACU', 'rRNA'),
+                   ('', 'GACU', 'RNA'),
+                   ('-', 'GACU', 'RNA'),]
+        for sequTup in dummies:
+            with self.assertRaises(InvalidInputException):
+                self.service.checkFormatOfItem(sequTup, bbs)
 
 
 class TestFragmentationService(TestCase):

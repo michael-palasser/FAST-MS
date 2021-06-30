@@ -26,6 +26,11 @@ class TestPeriodicTableService(TestCase):
         self.assertEqual(pattern.getItems(),savedPattern.getItems())
         self.service.delete(name)
         self.assertNotIn(name, self.service.getAllPatternNames())
+        with self.assertRaises(InvalidInputException):
+            pattern = Element('h',[(15,10.,0.5),(16,10.,0.3),(17,10.,0.2)],None)
+            self.service.save(pattern)
+            pattern = Element(name,[(1,100,0.5),(2,100,0.4)],None)
+            self.service.save(pattern)
 
     def test_check_name(self):
         self.service.checkName('He')
@@ -53,7 +58,21 @@ class TestMoleculeService(TestCase):
         self.service = MoleculeService()
 
     def test_save(self):
-        self.fail()
+        name = 'Xeo'
+        assert name not in self.service.getAllPatternNames()
+        pattern = Macromolecule(name,'','-',[('Gm', 'CH5N2O', '', ''),('Am', 'C13H5N2OP', '', '')],None)
+        self.service.save(pattern)
+        savedPattern = self.service.get(pattern.getName())
+        self.assertEqual(name,savedPattern.getName())
+        self.assertEqual(pattern.getItems(),savedPattern.getItems())
+        self.service.delete(name)
+        self.assertNotIn(name, self.service.getAllPatternNames())
+        with self.assertRaises(InvalidInputException):
+            pattern = Macromolecule(name, '', '-', [('gm', 'CH5N2O', '', ''), ('Am', 'C13H5N2OP', '', '')], None)
+            self.service.save(pattern)
+            pattern = Macromolecule(name, '', '-', [('Gm', 'CH5N2Ox', '', ''), ('Am', 'C13H5N2OP', '', '')], None)
+            self.service.save(pattern)
+
 
     def test_check_format_of_item(self):
         self.service.checkFormatOfItem(('Gm','CH5N2O','',''),())
@@ -72,7 +91,6 @@ class TestMoleculeService(TestCase):
                    [('Gm', 'CH5N2O', '', ''),('Gm', 'CH5N2O', '', '')],
                    [('Gm', 'CH5N2O', '', ''),('Gn', 'sCH5N2O', '', '')]]
         for dummy in dummies:
-            print(dummy)
             with self.assertRaises(InvalidInputException):
                 self.service.checkFormatOfItems(dummy,knownElements,numericals)
 
@@ -81,6 +99,7 @@ class TestMoleculeService(TestCase):
         for name in ['arg','Arg1','A1rg','1Arg','ARg','ArG', 'Ar_g']:
             with self.assertRaises(InvalidInputException):
                 self.service.checkName(name)
+
 
 class TestSequenceService(TestCase):
     def test_save(self):

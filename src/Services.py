@@ -428,7 +428,6 @@ class FragmentationService(AbstractServiceForPatterns):
         elements = elementRep.getAllPatternNames()
         self.checkFormatOfItems(pattern.getItems(), elements, self._repository.getIntegers()[0])
         for item in pattern.getItems():
-            print(item[5])
             if int(item[5]) not in [1,-1]:
                 raise InvalidInputException(item, "Direction must be 1 or -1 and not " + str(item[5]))
         self.checkFormatOfItems(pattern.getItems2(), elements, self._repository.getIntegers()[1])

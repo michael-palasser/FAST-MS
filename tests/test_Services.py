@@ -159,19 +159,68 @@ class TestSequenceService(TestCase):
 
 
 class TestFragmentationService(TestCase):
+    def setUp(self):
+        self.service = FragmentationService()
 
     def test_save(self):
-        self.fail()
+        name = 'dummy'
+        assert name not in self.service.getAllPatternNames()
+        pattern = FragmentationPattern(name,'Prec',[('a','C5','CH5N2O','-',0,1,1),('y-G','-','CH5N2O','G',0,-1,0)],
+                                       [('Prec','-','-','-',0,1),('Prec-G','C5','-','-',0,0)],None)
+        self.service.save(pattern)
+        savedPattern = self.service.get(pattern.getName())
+        with self.assertRaises(InvalidInputException):
+            self.service.save(pattern)
+        self.assertEqual(name,savedPattern.getName())
+        self.assertEqual(pattern.getItems(),savedPattern.getItems())
+        self.service.delete(name)
+        self.assertNotIn(name, self.service.getAllPatternNames())
+        dummies = [FragmentationPattern(name, 'Prec',
+                                           [('a', 'C5', 'CH5N2O', '-', 0, 1, 1), ('y-G', '-', 'CH5N2O', 'G', 0, -1, 0)],
+                                           [('Prec', '-', '-', '-', 0, 1), ('Prec', 'C5', '-', '-', 0, 0)], None),
+                   FragmentationPattern(name, 'Prec',[('a', 'Cx5', 'CH5N2O', '-', 0, 1, 1)],
+                                        [('Prec', '-', '-', '-', 0, 1)], None),
+                   FragmentationPattern(name, 'Prec', [('a', 'C5', 'CH5N2O', '-', 0, 2, 1)],
+                                        [('Prec', '-', '-', '-', 0, 1)], None),
+                   FragmentationPattern(name, 'Prec-G', [('a', 'C5', 'CH5N2O', '-', 0, 2, 1)],
+                                        [('Prec', '-', '-', '-', 0, 1)], None)
+                   ]
+        for dummy in dummies:
+            with self.assertRaises(InvalidInputException):
+                self.service.save(dummy)
 
     def test_check_format_of_item(self):
-        service = PeriodicTableService()
+        self.service.checkFormatOfItem(('a','','CH5N2O','-',0,1,1),(4,5,6))
+        self.service.checkFormatOfItem(('y-G','-','CH5N2O','G',0,-1,1),(4,5,6))
+        self.service.checkFormatOfItem(('y_G','-','CH5N2O','G',0,-1,1),(4,5,6))
+        for item in [('','','CH5N2O','G',0,1,1), ('-','','CH5N2O','G',0,1,1),('a','','CH5N2O','G','x',1,1),
+                     ('a','','CH5N2O','G',0,'x',1),('a','','CH5N2O','G',0,'-',1)]:
+            with self.assertRaises(InvalidInputException):
+                self.service.checkFormatOfItem(item,(4,5))
 
     def test_check_format_of_items(self):
-        self.fail()
+        knownElements = ('C','H','N','O','P','S')
+        numericals = (4,5)
+        numericalsPrec = (4,)
+        with self.assertRaises(InvalidInputException):
+            self.service.checkFormatOfItems([],knownElements,numericals)
+        self.service.checkFormatOfItems([('a','C5','CH5N2O','-',0,1,1),('y-G','-','CH5N2O','G',0,-1,0)],knownElements,numericals)
+        dummies = [[('a','C5','CH5N2O','-',0,1,1),('a','C5','CH5N2O','-',0,1,1)],
+                   [('a','Cx5','CH5N2O','-',0,1,1)],
+                   [('a','C5','CH5N2O','-',0,'',1)]]
+        for dummy in dummies:
+            with self.assertRaises(InvalidInputException):
+                self.service.checkFormatOfItems(dummy,knownElements,numericals)
+        self.service.checkFormatOfItems([('Prec','C5','CH5N2O','-',0,1),('Prec-G','C5','CH5N2O','-',0,0)],
+                                        knownElements,numericalsPrec)
+        dummies = [[('Prec','C5','CH5N2O','-',0,1),('Prec','C5','CH5N2O','-',0,1)],
+                   [('Prec','Cx5','CH5N2O','-',0,1)],
+                   [('Prec','C5','CH5N2O','-',0,'')]]
+        for dummy in dummies:
+            with self.assertRaises(InvalidInputException):
+                self.service.checkFormatOfItems(dummy,knownElements,numericalsPrec)
 
 
-    def test_check_name(self):
-        self.fail()
 
 class TestModificationService(TestCase):
     def test_save(self):

@@ -9,7 +9,7 @@ from src.MolecularFormula import MolecularFormula
 from src.Services import SequenceService
 from src.entities.GeneralEntities import Sequence
 from src.entities.Ions import Fragment
-from src.entities.SearchProperties import PropertyStorage
+from src.entities.SearchSettings import SearchSettings
 from src.repositories.IsotopePatternRepository import IsotopePatternRepository
 from src.top_down.LibraryBuilder import FragmentLibraryBuilder
 
@@ -30,12 +30,12 @@ class TestIsotopePatternRepository(TestCase):
 
     def initLibrary(self):
         self.sequenceService = SequenceService()
-        propertyStorage = PropertyStorage('dummyRNA', 'RNA_CAD', 'CMCT')
-        self.builderRNA = FragmentLibraryBuilder(PropertyStorage('dummyRNA', 'RNA_CAD', '-'),0)
+        propertyStorage = SearchSettings('dummyRNA', 'RNA_CAD', 'CMCT')
+        self.builderRNA = FragmentLibraryBuilder(SearchSettings('dummyRNA', 'RNA_CAD', '-'), 0)
         self.builderRNA_CMCT0 = FragmentLibraryBuilder(propertyStorage,0)
         self.builderRNA_CMCT1 = FragmentLibraryBuilder(propertyStorage, 1)
         self.builderRNA_CMCT2 = FragmentLibraryBuilder(propertyStorage,2)
-        self.builderProt_ECD = FragmentLibraryBuilder(PropertyStorage('dummyProt', 'Protein_ECD', '-'), 0)
+        self.builderProt_ECD = FragmentLibraryBuilder(SearchSettings('dummyProt', 'Protein_ECD', '-'), 0)
         self.patternRep = IsotopePatternRepository()
 
     '''def test_get_file(self):

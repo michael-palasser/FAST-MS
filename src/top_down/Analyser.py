@@ -35,12 +35,16 @@ class Analyser(object):
         """for type in fragmentList:
             relAbundanceOfSpecies[type] = 0"""
         for ion in self._ions:
-            if (ion.getScore() < 5) or (ion.getQuality()<0.3) or (ion.getNumber() == 0):
-                if ion.getType() not in relAbundanceOfSpecies.keys():
-                    relAbundanceOfSpecies[ion.getType()] = ion.getRelAbundance()
-                else:
-                    relAbundanceOfSpecies[ion.getType()] += ion.getRelAbundance()
-                totalSum += ion.getRelAbundance()
+            #if (ion.getScore() < 5) or (ion.getQuality()<0.3) or (ion.getNumber() == 0):
+            factor = 0.5
+            if ion.getNumber() == 0:
+                factor=1
+            relAb = ion.getRelAbundance() * factor
+            if ion.getType() not in relAbundanceOfSpecies.keys():
+                relAbundanceOfSpecies[ion.getType()] = relAb
+            else:
+                relAbundanceOfSpecies[ion.getType()] += relAb
+            totalSum += relAb
         for species in relAbundanceOfSpecies:
             relAbundanceOfSpecies[species] /= totalSum
         return relAbundanceOfSpecies

@@ -3,7 +3,7 @@ from src.entities.GeneralEntities import BuildingBlock
 from src.entities.IonTemplates import FragItem, ModificationItem
 
 
-class PropertyStorage(object):
+class SearchSettings(object):
     '''
     Container class for storage of search properties (sequence, molecule, fragmentation pattern, modification pattern)
     '''

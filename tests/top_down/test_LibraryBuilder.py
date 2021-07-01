@@ -1,17 +1,15 @@
 from unittest import TestCase
 
-from src.entities.GeneralEntities import Sequence
 from src.top_down.LibraryBuilder import FragmentLibraryBuilder
-from src.entities.SearchProperties import PropertyStorage
+from src.entities.SearchSettings import SearchSettings
 from src.Services import *
 
 
 def initTestSequences(sequenceService=SequenceService()):
-    sequences = [Sequence(tup[0], tup[1], tup[2], i) for i, tup in
-                 enumerate(sequenceService.getSequences())]
-    sequences.append(Sequence('dummyRNA', 'GACU', 'RNA', len(sequences) + 1))
-    sequences.append(Sequence('dummyProt', 'GAPH', 'Protein', len(sequences) + 1))
-    print(sequences)
+    sequences = [(tup[0], tup[1], tup[2]) for tup in sequenceService.getSequences()]
+    names = [tup[0] for tup in sequences]
+    [sequences.append(sequ) for sequ in [('dummyRNA', 'GACU', 'RNA'),('dummyProt', 'GAPH', 'Protein')]
+            if sequ[0] not in names]
     sequenceService.save(sequences)
 
 
@@ -31,14 +29,14 @@ class TestFragmentLibraryBuilder(TestCase):
 
     def initLibrary(self):
         self.sequenceService = SequenceService()
-        self.propertyStorageRNA = PropertyStorage('dummyRNA', 'RNA_CAD', 'CMCT')
-        self.builderRNA = FragmentLibraryBuilder(PropertyStorage('dummyRNA', 'RNA_CAD', '-'), 0)
+        self.propertyStorageRNA = SearchSettings('dummyRNA', 'RNA_CAD', 'CMCT')
+        self.builderRNA = FragmentLibraryBuilder(SearchSettings('dummyRNA', 'RNA_CAD', '-'), 0)
         self.builderRNA_CMCT0 = FragmentLibraryBuilder(self.propertyStorageRNA, 0)
         self.builderRNA_CMCT1 = FragmentLibraryBuilder(self.propertyStorageRNA, 1)
         self.builderRNA_CMCT2 = FragmentLibraryBuilder(self.propertyStorageRNA, 2)
-        self.propertyStorageProtCAD = PropertyStorage('dummyProt', 'Protein_CAD', '-')
+        self.propertyStorageProtCAD = SearchSettings('dummyProt', 'Protein_CAD', '-')
         self.builderProt_CAD = FragmentLibraryBuilder(self.propertyStorageProtCAD, 0)
-        self.builderProt_ECD = FragmentLibraryBuilder(PropertyStorage('dummyProt', 'Protein_ECD', '-'), 0)
+        self.builderProt_ECD = FragmentLibraryBuilder(SearchSettings('dummyProt', 'Protein_ECD', '-'), 0)
 
     def test_build_simple_ladder(self):
         self.initLibrary()

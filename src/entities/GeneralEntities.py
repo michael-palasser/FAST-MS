@@ -90,7 +90,7 @@ class Element(PatternWithItems):
         super(Element, self).__init__(name, isotopes, id)
 
 
-class Isotope(object):
+'''class Isotope(object):
     """
     wahrsch zu umstaendlich
     """
@@ -119,7 +119,7 @@ class Isotope(object):
         return self.__relAb
 
     """def getAll(self):
-        return [self.__pNr, self.__isoNr, self.__mass, self.__relAb]"""
+        return [self.__pNr, self.__isoNr, self.__mass, self.__relAb]"""'''
 
 
 
@@ -130,7 +130,7 @@ class Sequence(AbstractPattern):
         :param (str) name
         :param (str) sequenceString: sequence-string
         :param (str) molecule: RNA, DNA, P or other self defined macromolecule
-        :param (int) id
+        :param (int | None) id
         """
         super(Sequence, self).__init__(name, id)
         self.__sequenceString = sequenceString

@@ -97,6 +97,8 @@ class IsotopePatternLogics(object):
         :param (int) nrMod: nr. of modifications (optional)
         :return: (tuple[FragmentIon, float]) calculated ion, mass of neutral molecule
         '''
+        if inputString[0].islower():
+            raise InvalidInputException(inputString, ", Unvalid format, first character must not be lower case")
         if mode == self.getMolecules()[0]:
             fragment = Fragment('-',0,'',MolecularFormula(self.checkFormula(inputString)),[],radicals)
         else:
@@ -133,8 +135,6 @@ class IsotopePatternLogics(object):
         formula = stringToFormula(formulaString,{},1)
         if formula == {}:
             raise InvalidInputException(formulaString, ", Unvalid format")
-        if formulaString[0].islower():
-            raise InvalidInputException(formulaString, ", Unvalid format, first character must not be lower case")
         for key in formula.keys():
             if key not in self._elements:
                 print("Element: " + key + " unknown")

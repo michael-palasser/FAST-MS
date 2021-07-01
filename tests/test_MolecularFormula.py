@@ -125,7 +125,7 @@ class MolecularFormulaTest(TestCase):
                 raise AssertionError(molFormulaDummy_i.getFormulaDict())
 
     def testIsotopePattern(self, theoIsotopePattern=None, calcIsotopePattern=None):
-        if theoIsotopePattern != None:
+        if theoIsotopePattern is not None:
             #theoIsotopePattern = np.array(theoIsotopePattern, dtype=[('m/z', np.float64), ('calcInt', np.float64)])
             theoIsotopePattern['calcInt'] *= (calcIsotopePattern['calcInt'][0] / theoIsotopePattern['calcInt'][0])
             if len(theoIsotopePattern) > (len(calcIsotopePattern) + 1):

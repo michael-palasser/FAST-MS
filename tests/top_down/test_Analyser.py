@@ -23,37 +23,44 @@ class TestAnalyser(TestCase):
 
 
     def test_calculate_rel_abundance_of_species(self):
-        typeDict = {'a':4,'b':1,'c':5}
+        typeDict = {'a':4,'b':1}#, 'dummyRNA':6}
         ions = []
         for type, val in typeDict.items():
-            for i in range(1,4):
+            for i in range(1,5):
                 ion =FragmentIon(Fragment(type,i,'','',[],0),2.,2,[],10e5)
                 ion.setIntensity(10**7*val)
                 ion.setQuality(0.1)
                 ions.append(ion)
+        ion = FragmentIon(Fragment('dummyRNA', 0, '', '', [], 0), 2., 2, [], 10e5)
+        ion.setIntensity(10 ** 7 * 6)
+        ion.setQuality(0.1)
+        ions.append(ion)
         self.analyser.setIons(ions)
         for type,val in self.analyser.calculateRelAbundanceOfSpecies().items():
-            self.assertAlmostEqual(typeDict[type]/10,val)
+            if type == 'dummyRNA':
+                self.assertAlmostEqual(3/8,val)
+            else:
+                self.assertAlmostEqual(typeDict[type]/8,val)
         ions = []
         for type, val in typeDict.items():
-            for i in range(1,4):
+            for i in range(1,5):
                 z=1
                 if type=='a':
                     z=2
                 ion =FragmentIon(Fragment(type,i,'','',[],0),2.,z,[],10e5)
                 ion.setIntensity(10**7*val)
                 ion.setQuality(0.1)
-                if type=='b':
-                    ion.setQuality(0.5)
                 ions.append(ion)
+        ion = FragmentIon(Fragment('dummyRNA', 0, '', '', [], 0), 2., 3, [], 10e5)
+        ion.setIntensity(10 ** 7 * 6)
+        ion.setQuality(0.1)
+        ions.append(ion)
         self.analyser.setIons(ions)
         for type,val in self.analyser.calculateRelAbundanceOfSpecies().items():
-            if type=='a':
-                self.assertAlmostEqual(typeDict[type]/14,val)
-            elif type=='b':
-                self.assertAlmostEqual(0,val)
+            if type == 'a':
+                self.assertAlmostEqual(0.5,val)
             else:
-                self.assertAlmostEqual(typeDict[type]/7,val)
+                self.assertAlmostEqual(0.25,val)
 
     def test_get_modification_loss(self):
         mod = self.props.getModification().getModification()

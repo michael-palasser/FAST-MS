@@ -1,21 +1,21 @@
 from copy import deepcopy
 from unittest import TestCase
 
-from src.Exceptions import InvalidInputException
 from src.Services import *
-from src.entities.GeneralEntities import Element, Sequence
+from src.entities.GeneralEntities import Element
 
+knownElements = ('C', 'H', 'N', 'O', 'P', 'S')
 
 class TestPeriodicTableService(TestCase):
     def setUp(self):
         self.service = PeriodicTableService()
+        self.numericals = (0,1,2)
 
     def test_check_format_of_item(self):
-        numericals = (0,1,2)
-        self.service.checkFormatOfItem((1,100,0.5),numericals)
+        self.service.checkFormatOfItem((1,100,0.5),self.numericals)
         for item in [(1, '',0.5), (1,100,'-'), ('',100,0.5),(-1,100,0.5)]:
             with self.assertRaises(InvalidInputException):
-                self.service.checkFormatOfItem(item, numericals)
+                self.service.checkFormatOfItem(item, self.numericals)
 
     def test_save_and_delete(self):
         name = 'Xeo'
@@ -43,20 +43,20 @@ class TestPeriodicTableService(TestCase):
         with self.assertRaises(InvalidInputException):
             self.service.checkFormatOfItems([])
         knownElements = self.service.getAllPatternNames()
-        numericals = (0,1,2)
-        self.service.checkFormatOfItems([(1,100,0.5),(2,100,0.49)],knownElements,numericals)
+        self.service.checkFormatOfItems([(1,100,0.5),(2,100,0.49)],knownElements,self.numericals)
         dummies = [[(1,100,0.5),(2,100,0.4)],
                    [(1,100,0.5),(2,100.1,0.51)],
                    [(1,100,0.5),(1,100,0.51)],
                    [(1.1,100,0.5),(2,100,0.49)]]
         for dummy in dummies:
             with self.assertRaises(InvalidInputException):
-                self.service.checkFormatOfItems(dummy,knownElements,numericals)
+                self.service.checkFormatOfItems(dummy,knownElements,self.numericals)
 
 
 class TestMoleculeService(TestCase):
     def setUp(self):
         self.service = MoleculeService()
+        self.numericals = ()
 
     def test_save(self):
         name = 'Xeo'
@@ -83,18 +83,17 @@ class TestMoleculeService(TestCase):
                 self.service.checkFormatOfItem(item,())
 
     def test_check_format_of_items(self):
-        knownElements = ('C','H','N','O','P','S')
-        numericals = ()
         with self.assertRaises(InvalidInputException):
-            self.service.checkFormatOfItems([],knownElements,numericals)
+            self.service.checkFormatOfItems([],knownElements,self.numericals)
 
-        self.service.checkFormatOfItems([('Gm', 'CH5N2O', '', ''),('Am', 'C13H5N2OP', '', '')],knownElements,numericals)
+        self.service.checkFormatOfItems([('Gm', 'CH5N2O', '', ''),('Am', 'C13H5N2OP', '', '')],knownElements,
+                                        self.numericals)
         dummies = [[('Gm', 'CH5N2O', '', ''),('Gm', 'CH5N2Ox', '', '')],
                    [('Gm', 'CH5N2O', '', ''),('Gm', 'CH5N2O', '', '')],
                    [('Gm', 'CH5N2O', '', ''),('Gn', 'sCH5N2O', '', '')]]
         for dummy in dummies:
             with self.assertRaises(InvalidInputException):
-                self.service.checkFormatOfItems(dummy,knownElements,numericals)
+                self.service.checkFormatOfItems(dummy,knownElements,self.numericals)
 
     def test_check_name(self):
         self.service.checkName('Arg')
@@ -162,6 +161,7 @@ class TestSequenceService(TestCase):
 class TestFragmentationService(TestCase):
     def setUp(self):
         self.service = FragmentationService()
+        self.numericals = (4,5)
 
     def test_save(self):
         name = 'dummy'
@@ -195,27 +195,25 @@ class TestFragmentationService(TestCase):
     def test_check_format_of_item(self):
         dummies = [('a','','CH5N2O','-',0,1,1),('y-G','-','CH5N2O','G',0,-1,1),('y_G','-','CH5N2O','G',0,-1,1)]
         for dummy in dummies:
-            self.service.checkFormatOfItem(dummy,(4,5))
+            self.service.checkFormatOfItem(dummy,self.numericals)
         dummies = [('','','CH5N2O','G',0,1,1), ('-','','CH5N2O','G',0,1,1),('a','','CH5N2O','G','x',1,1),
                      ('a','','CH5N2O','G',0,'x',1),('a','','CH5N2O','G',0,'-',1)]
         for item in dummies:
             with self.assertRaises(InvalidInputException):
-                self.service.checkFormatOfItem(item,(4,5))
+                self.service.checkFormatOfItem(item,self.numericals)
 
     def test_check_format_of_items(self):
-        knownElements = ('C','H','N','O','P','S')
-        numericals = (4,5)
         numericalsPrec = (4,)
         with self.assertRaises(InvalidInputException):
-            self.service.checkFormatOfItems([],knownElements,numericals)
-        self.service.checkFormatOfItems([('a','C5','CH5N2O','-',0,1,1),('y-G','-','CH5N2O','G',0,-1,0)],knownElements,numericals)
+            self.service.checkFormatOfItems([],knownElements,self.numericals)
+        self.service.checkFormatOfItems([('a','C5','CH5N2O','-',0,1,1),('y-G','-','CH5N2O','G',0,-1,0)],knownElements,self.numericals)
         dummies = [[('a','C5','CH5N2O','-',0,1,1),('a','C5','CH5N2O','-',0,1,1)],
                    [('a','Cx5','CH5N2O','-',0,1,1)],
                    [('a','C5','CH5N2O',0,0,'',1)],
                    [('a','C5','cCH5N2O',0,0,1,1)]]
         for dummy in dummies:
             with self.assertRaises(InvalidInputException):
-                self.service.checkFormatOfItems(dummy,knownElements,numericals)
+                self.service.checkFormatOfItems(dummy,knownElements,self.numericals)
         self.service.checkFormatOfItems([('Prec','C5','CH5N2O','-',0,1),('Prec-G','C5','CH5N2O','-',0,0)],
                                         knownElements,numericalsPrec)
         dummies = [[('Prec','C5','CH5N2O','-',0,1),('Prec','C5','CH5N2O','-',0,1)],
@@ -230,6 +228,7 @@ class TestFragmentationService(TestCase):
 class TestModificationService(TestCase):
     def setUp(self):
         self.service = ModificationService()
+        self.numericals = (4,5)
 
     def test_save(self):
         name = 'dummy'
@@ -244,12 +243,17 @@ class TestModificationService(TestCase):
         self.assertEqual(pattern.getItems(),savedPattern.getItems())
         self.service.delete(name)
         self.assertNotIn(name, self.service.getAllPatternNames())
+
+        pattern = ModificationPattern(name,name,[('X','CH5N2O','','-',0,0.4,1,1)],[('+X-y-G',)],None)
+        self.service.save(pattern)
+        self.assertEqual('+X', self.service.get(pattern.getName()).getItems()[0][0])
+        self.service.delete(name)
+        self.assertNotIn(name, self.service.getAllPatternNames())
+
         dummies = [ModificationPattern(name,name,[('+X','CH5N2O','','-',0,0.4,1,1),('+X','CH5N2O','','-',0,-0.4,1,1)],
                                        [('+X-y-G',)],None),
                    ModificationPattern(name, name, [('+X', 'CxH5N2O', '', '-', 0, 0.4, 1, 1),
-                                                    ('+X-y', 'CH5N2O', '', '-', 0, -0.4, 1, 1)],
-                                       [('+X-y-G',)], None)
-                   ]
+                                                    ('+X-y', 'CH5N2O', '', '-', 0, -0.4, 1, 1)],[('+X-y-G',)], None)]
         for dummy in dummies:
             with self.assertRaises(InvalidInputException):
                 self.service.save(dummy)
@@ -258,40 +262,64 @@ class TestModificationService(TestCase):
     def test_check_format_of_item(self):
         dummies = [('+X','CH5N2O','','-',0,0.4,1,1),('+X','CH5N2O','C','',0,-0.4,1,1),('+X','CH5N2O','C','',0,-0.4,1,0)]
         for dummy in dummies:
-            self.service.checkFormatOfItem(dummy,(4,5))
+            self.service.checkFormatOfItem(dummy,self.numericals)
         dummies = [('','CH5N2O','','-',0,0.4,1,1),('+X','CH5N2O','C','','-',-0.4,1,1),('+X','CH5N2O','C','',0,'-',1,0)]
         for item in dummies:
             with self.assertRaises(InvalidInputException):
                 self.service.checkFormatOfItem(item,(4,5))
 
     def test_check_format_of_items(self):
-        knownElements = ('C','H','N','O','P','S')
-        numericals = (4,5)
         with self.assertRaises(InvalidInputException):
-            self.service.checkFormatOfItems([],knownElements,numericals)
+            self.service.checkFormatOfItems([],knownElements,self.numericals)
         self.service.checkFormatOfItems([('+X','CH5N2O','','-',0,0.4,1,1),('+X-y','CH5N2O','','-',0,-0.4,1,1)],
-                                        knownElements,numericals)
+                                        knownElements,self.numericals)
         dummies = [[('+X','CH5N2O','','-',0,0.4,1,1),('+X','CH5N2O','','-',0,0.4,1,1)],
                    [('+X','CxH5N2O','','-',0,0.4,1,1)],
-                   [('+X','sCH5N2O','','-',0,0.4,1,1)]]
+                   [('+X','cCH5N2O','','-',0,0.4,1,1)]]
         for dummy in dummies:
             with self.assertRaises(InvalidInputException):
-                self.service.checkFormatOfItems(dummy,knownElements,numericals)
+                self.service.checkFormatOfItems(dummy,knownElements,self.numericals)
 
 
 class TestIntactIonService(TestCase):
     def setUp(self):
         self.service = IntactIonService()
+        self.numericals = (3,)
 
     def test_save(self):
-        self.fail()
+        name = 'dummy'
+        assert name not in self.service.getAllPatternNames()
+        pattern = IntactPattern(name,[('+X','CH5N2O','',1,1),('+X-y','CH5N2O','C',0,1)],None)
+        self.service.save(pattern)
+        savedPattern = self.service.get(pattern.getName())
+        with self.assertRaises(InvalidInputException):
+            self.service.save(pattern)
+        self.assertEqual(name,savedPattern.getName())
+        self.assertEqual(pattern.getItems(),savedPattern.getItems())
+        self.service.delete(name)
+        self.assertNotIn(name, self.service.getAllPatternNames())
+
+        dummies = [IntactPattern(name,[('+X','CH5N2O','',1,1),('+X','CH5N2O','',1,1),('+X-y','CH5N2O','C',0,1)],None),
+                   IntactPattern(name, [('+X','CxH5N2O','',1,1),('+X-y','CH5N2O','C',0,1)], None)]
+        for dummy in dummies:
+            with self.assertRaises(InvalidInputException):
+                self.service.save(dummy)
+            assert name not in self.service.getAllPatternNames()
 
     def test_check_format_of_item(self):
-        self.fail()
-
+        dummies = [('+X','CH5N2O','',1,1),('+X','CH5N2O','C',0,1),('+X','CH5N2O','-',1,0)]
+        for dummy in dummies:
+            self.service.checkFormatOfItem(dummy,(3,))
+        with self.assertRaises(InvalidInputException):
+            self.service.checkFormatOfItem(('+X','CH5N2O','-','-',1),(3,))
 
     def test_check_format_of_items(self):
-        self.fail()
-
-    def test_check_name(self):
-        self.fail()
+        with self.assertRaises(InvalidInputException):
+            self.service.checkFormatOfItems([],knownElements,self.numericals)
+        self.service.checkFormatOfItems([('+X','CH5N2O','',1,1),('+X-y','CH5N2O','C',0,1)],knownElements,self.numericals)
+        dummies = [[('+X','CH5N2O','',1,1),('+X','CH5N2O','',1,1)],
+                   [('+X','CxH5N2O','',1,1)],
+                   [('+X','cCH5N2O','',1,1)]]
+        for dummy in dummies:
+            with self.assertRaises(InvalidInputException):
+                self.service.checkFormatOfItems(dummy,knownElements,self.numericals)

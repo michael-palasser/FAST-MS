@@ -344,7 +344,7 @@ class SequenceService(AbstractService):
         newNames=[]
         for sequTup in sequTuples:
             if sequTup[0] in newNames:
-                raise InvalidInputException('', "No duplicates allowed")
+                raise InvalidInputException(sequTup[0], "No duplicates allowed")
             newNames.append(sequTup[0])
         savedNames = self._repository.getAllSequenceNames()
         [self._repository.delete(savedName) for savedName in savedNames if savedName not in newNames]

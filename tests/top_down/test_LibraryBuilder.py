@@ -1,17 +1,15 @@
 from unittest import TestCase
 
-from src.entities.GeneralEntities import Sequence
 from src.top_down.LibraryBuilder import FragmentLibraryBuilder
 from src.entities.SearchSettings import SearchSettings
 from src.Services import *
 
 
 def initTestSequences(sequenceService=SequenceService()):
-    sequences = [Sequence(tup[0], tup[1], tup[2], i) for i, tup in
-                 enumerate(sequenceService.getSequences())]
-    sequences.append(Sequence('dummyRNA', 'GACU', 'RNA', len(sequences) + 1))
-    sequences.append(Sequence('dummyProt', 'GAPH', 'Protein', len(sequences) + 1))
-    print(sequences)
+    sequences = [(tup[0], tup[1], tup[2]) for tup in sequenceService.getSequences()]
+    names = [tup[0] for tup in sequences]
+    [sequences.append(sequ) for sequ in [('dummyRNA', 'GACU', 'RNA'),('dummyProt', 'GAPH', 'Protein')]
+            if sequ[0] not in names]
     sequenceService.save(sequences)
 
 

@@ -82,21 +82,33 @@ class TestIsotopePatternLogics(TestCase):
                                for i in range(len(RNA_pattern))]
         theoIsotopePattern= np.array(theoIsotopePattern,dtype=RNA_pattern.dtype)
         self.testIsotopePattern(theoIsotopePattern, formulaIon.getIsotopePattern())
+        with self.assertRaises(InvalidInputException):
+            self.logics.calculate('mol. formula', 'c(C14H25N3O)2',2, 0, 1000)
+        with self.assertRaises(InvalidInputException):
+            self.getIon('bad',0)
 
 
     def getIon(self,mode, radicals):
+        bad = ''
         if mode == 'RNA':
             searchSettings = self.searchSettingsRNA
             modifPattern = 'CMCT'
             modif = '+CMCT'
             nrMod = 2
-        else:
+        elif mode == 'Protein':
             searchSettings = self.searchSettingsProt
             modifPattern = '-'
             modif = '-'
             nrMod = 0
+        else:
+            mode='RNA'
+            searchSettings = self.searchSettingsProt
+            modifPattern = '-'
+            modif = '-'
+            nrMod = 0
+            bad = 'g'
         properties = self.getProperties(searchSettings)
-        return self.logics.calculate(mode, properties['sequString'], 2, radicals,1000, properties['fragmentationName'],
+        return self.logics.calculate(mode,bad+properties['sequString'], 2, radicals,1000, properties['fragmentationName'],
                                      'Prec', modifPattern, modif, nrMod)
 
     def testIsotopePattern(self,calcIsotopePattern1=None, calcIsotopePattern2=None):
@@ -120,8 +132,6 @@ class TestIsotopePatternLogics(TestCase):
         with self.assertRaises(InvalidInputException):
             self.logics.checkFormula('CxH5')
         with self.assertRaises(InvalidInputException):
-            self.logics.checkFormula('cH4')
-        with self.assertRaises(InvalidInputException):
             self.logics.checkFormula('')
         molFormulaDummy = MolecularFormula('C5H4N3O')
         dict0 = {'C': 5, 'H': 4, 'N': 3, 'O': 1}
@@ -132,8 +142,6 @@ class TestIsotopePatternLogics(TestCase):
         self.test_get_fragment2('Protein')
         with self.assertRaises(InvalidInputException):
             self.logics.getFragment('RNA', 'GCHx', 'RNA_CAD', 'c', '-', '-', 0)
-        with self.assertRaises(InvalidInputException):
-            self.logics.getFragment('RNA', 'gCA', 'RNA_CAD', 'c', '-', '-', 0)
 
 
 

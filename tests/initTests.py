@@ -12,6 +12,7 @@ from tests.intact.test_IntactLibraryBuilder import IntactLibraryBuilder
 from tests.intact.test_IntactFinder import TestFinder
 from tests.intact.test_IntactAnalyser import TestIntactAnalyser
 from tests.test_IsotopePatternLogics import TestIsotopePatternLogics
+from tests.test_Services import *
 
 if __name__ == '__main__':
     unittest.main()

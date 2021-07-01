@@ -125,23 +125,26 @@ class MolecularFormula(object):
             isotopeTable = self.makeIsotopeTable()
             #print(isotopeTable)
         sumInt = 0
-        while(sumInt <0.996):              #ToDo:Parameter
-            setIsotopeTable(isotopeTable)
-            #print(isoPeak, isotopeTable)
-            ultrafineStruct = np.array(calculate(isoPeak, isotopeTable))
-            prop = np.sum(ultrafineStruct[:,1])
-            M_iso = np.sum(ultrafineStruct[:,0]*ultrafineStruct[:,1])/prop
-            isotope_pattern.append((M_iso,prop))
-            isoPeak += 1
-            sumInt += prop
-            #if prop > mostAbundant:
-                #mostAbundant = prop
-            """if args and args[0]:
-                if isoPeak == args[0]:
-                    return np.array(isotope_pattern, dtype=[('m/z', np.float64), ('calcInt', np.float64)])"""
-        """iso = np.array(isotope_pattern, dtype=[('m/z',np.float64),('calcInt', np.float64)])
-        print(np.sum(iso['calcInt']))"""
-        return np.array(isotope_pattern, dtype=[('m/z',np.float64),('calcInt', np.float64)])
+        with open('ultrafineStruct.txt', 'w') as f:
+            while(sumInt <0.996):              #ToDo:Parameter
+                setIsotopeTable(isotopeTable)
+                #print(isoPeak, isotopeTable)
+                ultrafineStruct = np.array(calculate(isoPeak, isotopeTable))
+                for row in ultrafineStruct:
+                    f.write(','.join([str(val) for val in row])+'\n')
+                prop = np.sum(ultrafineStruct[:,1])
+                M_iso = np.sum(ultrafineStruct[:,0]*ultrafineStruct[:,1])/prop
+                isotope_pattern.append((M_iso,prop))
+                isoPeak += 1
+                sumInt += prop
+                #if prop > mostAbundant:
+                    #mostAbundant = prop
+                """if args and args[0]:
+                    if isoPeak == args[0]:
+                        return np.array(isotope_pattern, dtype=[('m/z', np.float64), ('calcInt', np.float64)])"""
+            """iso = np.array(isotope_pattern, dtype=[('m/z',np.float64),('calcInt', np.float64)])
+            print(np.sum(iso['calcInt']))"""
+            return np.array(isotope_pattern, dtype=[('m/z',np.float64),('calcInt', np.float64)])
 
 
     def makeNucIsotopeTable(self):
@@ -264,14 +267,17 @@ class MolecularFormula(object):
             #prop = 1
             isoPeak=0
             sumInt = 0
-            while(sumInt <0.996):                           #ToDo:Parameter# ToDo:Parameter
-                setIsotopeTable(isotopeTable)
-                ultrafineStruct = np.array(calculate(isoPeak, isotopeTable))
-                prop = np.sum(ultrafineStruct[:, 1])
-                M_iso = np.sum(ultrafineStruct[:, 0] * ultrafineStruct[:, 1]) / prop
-                isotope_pattern.append((M_iso, prop))
-                isoPeak += 1
-                sumInt += prop
-                #if prop > mostAbundant:
-                #    mostAbundant = prop
+            with open('ultrafineStruct_acet.txt', 'w') as f:
+                while(sumInt <0.996):                           #ToDo:Parameter# ToDo:Parameter
+                    setIsotopeTable(isotopeTable)
+                    ultrafineStruct = np.array(calculate(isoPeak, isotopeTable))
+                    for row in ultrafineStruct:
+                        f.write(','.join([str(val) for val in row])+'\n')
+                    prop = np.sum(ultrafineStruct[:, 1])
+                    M_iso = np.sum(ultrafineStruct[:, 0] * ultrafineStruct[:, 1]) / prop
+                    isotope_pattern.append((M_iso, prop))
+                    isoPeak += 1
+                    sumInt += prop
+                    #if prop > mostAbundant:
+                    #    mostAbundant = prop
         return np.array(isotope_pattern, dtype=[('m/z',np.float64),('calcInt', np.float64)])

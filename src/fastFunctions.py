@@ -155,6 +155,7 @@ def calculateNuclFineStructure(isotopePeak, isotopeTable):
                                 isotopeTable[i]['nrIso']=nrIsoList[i]
                             #massI, propI = calculatePercentage(isotopeTable)
                             #fineStructure.append((massI,propI))
+
                             fineStructure.append(calculatePercentage(isotopeTable))
     return fineStructure
 

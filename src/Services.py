@@ -431,7 +431,7 @@ class FragmentationService(AbstractServiceForPatterns):
             if int(item[5]) not in [1,-1]:
                 raise InvalidInputException(item, "Direction must be 1 or -1 and not " + str(item[5]))
         self.checkFormatOfItems(pattern.getItems2(), elements, self._repository.getIntegers()[1])
-        if pattern.getPrecursor() not in [item[0] for item in pattern.getItems2() if item[5]]==1:
+        if pattern.getPrecursor() not in [item[0] for item in pattern.getItems2() if item[5]==1]:
             raise InvalidInputException(pattern.getPrecursor(), 'Precursor not found or not enabled')
         """for key in pattern.getFormula().keys():
             if key not in elements:

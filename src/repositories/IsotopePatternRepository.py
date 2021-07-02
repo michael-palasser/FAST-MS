@@ -107,7 +107,6 @@ class IsotopePatternRepository(object):
             if abs(newPattern[i]['m/z'] - savedPattern[i]['m/z']) > 10 ** (-6):
                 raise InvalidIsotopePatternException(fragment.getName(), "mass incorrect " +
                                                      str(newPattern[i]['m/z']) + " != " + str(savedPattern[i]['m/z']))
-            print(newPattern[i]['calcInt'] - savedPattern[i]['calcInt'])
             if abs(newPattern[i]['calcInt'] - savedPattern[i]['calcInt']) > 10 ** (-6):
                 raise InvalidIsotopePatternException(fragment.getName(), '(' + str(i) + ") relative Abundance incorrect " +
                                                      str(newPattern[i]['calcInt']) + " != " + str(savedPattern[i]['calcInt']))

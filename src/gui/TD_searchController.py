@@ -144,7 +144,7 @@ class TD_MainController(object):
         print("\n********** Importing spectral pattern from:", self.settings['spectralData'], "**********")
         self.spectrumHandler = SpectrumHandler(self._propStorage, self.libraryBuilder.getPrecursor(), self.settings)
         """Finding fragments"""
-        print("\n********** Search for spectrum **********")
+        print("\n********** Search for ions **********")
         start = time.time()
         self.spectrumHandler.findIons(self.libraryBuilder.getFragmentLibrary())
         print("\ndone\nexecution time: ", round((time.time() - start) / 60, 3), "min\n")
@@ -159,7 +159,7 @@ class TD_MainController(object):
         self.spectrumHandler.emptyLists()
         print("\ndone\nexecution time: ", round((time.time() - start) / 60, 3), "min\n")
 
-        """Handle spectrum with same monoisotopic peak and charge"""
+        """Handle ions with same monoisotopic peak and charge"""
         print("\n********** Handling overlaps **********")
         sameMonoisotopics = self._intensityModeller.findSameMonoisotopics()
         print('mono', sameMonoisotopics)

@@ -212,7 +212,6 @@ class GeneralPeakWidget(QtWidgets.QTableWidget):
             df['int. (calc.)']= self._peaks['calcInt']
             df['error /ppm']= self._peaks['error']
             df.to_clipboard(index=False,header=True)
-            print(df)
 
     def readTable(self):
         itemList = []
@@ -238,6 +237,8 @@ class IsoPatternPeakWidget(GeneralPeakWidget):
     def __init__(self, parent, peaks):
         super(IsoPatternPeakWidget, self).__init__(parent, ('m/z','int. (spectrum)','int. (calc.)', 'used'),
                                          ('{:10.5f}','{:11d}', '{:11d}', ''), peaks)
+
+
     def readTable(self):
         itemList = []
         for row in range(self.rowCount()):
@@ -260,3 +261,13 @@ class IsoPatternPeakWidget(GeneralPeakWidget):
             df['int. (spectrum)']= self._peaks['relAb']
             df['int. (calc.)']= self._peaks['calcInt']
             df.to_clipboard(index=False,header=True)
+
+    def updateTable(self, newPeaks):
+        self._peaks = newPeaks
+        rowCount = self.rowCount()
+        nrRows = len(self._peaks)-rowCount
+        if nrRows>0:
+            [self.insertRow(rowCount+i) for i in range(nrRows)]
+        elif nrRows<0:
+            [self.removeRow(rowCount-i-1) for i in range(abs(nrRows))]
+        self.fill()

@@ -12,6 +12,8 @@ Created on 3 Jul 2020
 '''
 
 periodicTableService = PeriodicTableService()
+isoTableDtype= np.dtype([('index', float), ('nr', float), ('nrIso', float),('relAb',float), ('mass',float), ('M+',float)])
+isoPatternDtype = np.dtype([('m/z',float),('calcInt', float)])
 
 class MolecularFormula(object):
     '''
@@ -98,11 +100,26 @@ class MolecularFormula(object):
                 returnedString += element + str(self._formulaDict[element])
         return returnedString
 
-    def determineSystem(self, elements, theElements):
+    def checkSystem(self, elements, theoElements):
         for elem in elements:
-            if elem not in theElements:
+            if elem not in theoElements:
                 return False
         return True
+
+    def determineSystem(self):
+        elements = [key for key,val in self._formulaDict.items() if val>0]
+        #if self.checkSystem(elements, {'C', 'H', 'N', 'O', 'P'}):
+        if self._formulaDict.keys() == {'C', 'H', 'N', 'O', 'P'} or self._formulaDict.keys() == {'C', 'H', 'N', 'O'}:
+            calculate = calculateNuclFineStructure
+            isotopeTable = self.makeNucIsotopeTable()
+        #elif self.checkSystem(elements, {'C', 'H', 'N', 'O', 'S'}):
+        if self._formulaDict.keys() == {'C', 'H', 'N', 'O', 'S'}:
+            calculate = calculatePeptFineStructure
+            isotopeTable = self.makeProteinIsotopeTable()
+        else:
+            calculate = calculateFineStructure
+            isotopeTable = self.makeIsotopeTable()
+        return calculate, isotopeTable
 
     def calculateIsotopePattern(self):
         '''
@@ -113,17 +130,7 @@ class MolecularFormula(object):
         #prop = 1
         isoPeak=0
         isotope_pattern = list()
-        elements = [key for key,val in self._formulaDict.items() if val>0]
-        if self.determineSystem(elements, {'C', 'H', 'N', 'O', 'P'}):
-            calculate = calculateNuclFineStructure
-            isotopeTable = self.makeNucIsotopeTable()
-        elif self.determineSystem(elements, {'C', 'H', 'N', 'O', 'S'}):
-            calculate = calculatePeptFineStructure
-            isotopeTable = self.makeProteinIsotopeTable()
-        else:
-            calculate = calculateFineStructure
-            isotopeTable = self.makeIsotopeTable()
-            #print(isotopeTable)
+        calculate, isotopeTable = self.determineSystem()
         sumInt = 0
         while(sumInt <0.996):              #ToDo:Parameter
             setIsotopeTable(isotopeTable)
@@ -141,7 +148,8 @@ class MolecularFormula(object):
                     return np.array(isotope_pattern, dtype=[('m/z', np.float64), ('calcInt', np.float64)])"""
         """iso = np.array(isotope_pattern, dtype=[('m/z',np.float64),('calcInt', np.float64)])
         print(np.sum(iso['calcInt']))"""
-        return np.array(isotope_pattern, dtype=[('m/z',np.float64),('calcInt', np.float64)])
+        [print(row[0],row[1]) for row in isotope_pattern]
+        return np.array(isotope_pattern, dtype=isoPatternDtype)
 
 
     def makeNucIsotopeTable(self):
@@ -157,8 +165,7 @@ class MolecularFormula(object):
                 mono = self._periodicTable[elem][0][0]
                 for isotope in self._periodicTable[elem]:
                     isotopeTable.append((index, self._formulaDict[elem], 0, isotope[2], isotope[1], isotope[0] - mono))
-        return np.array(isotopeTable,dtype = [('index',np.float64), ('nr',np.float64), ('nrIso',np.float64),
-             ('relAb',np.float64), ('mass',np.float64), ('M+',np.float64)])
+        return np.array(isotopeTable, dtype = isoTableDtype)
 
 
     def makeProteinIsotopeTable(self):
@@ -174,8 +181,7 @@ class MolecularFormula(object):
                 mono = self._periodicTable[elem][0][0]
                 for isotope in self._periodicTable[elem]:
                     isotopeTable.append((index, self._formulaDict[elem], 0, isotope[2], isotope[1], isotope[0] - mono))
-        return np.array(isotopeTable,dtype = [('index',np.float64), ('nr',np.float64), ('nrIso',np.float64),
-             ('relAb',np.float64), ('mass',np.float64), ('M+',np.float64)])
+        return np.array(isotopeTable, dtype = isoTableDtype)
 
 
     def makeIsotopeTable(self):
@@ -194,8 +200,7 @@ class MolecularFormula(object):
                 #if self._formulaDict[elem] != 0:
                 isotopeTable.append((index, self._formulaDict[elem], 0, isotope[2], isotope[1], isotope[0] - mono))
         isotopeTable = np.array(sorted(isotopeTable,key=lambda tup: tup[1], reverse=True)
-                                , dtype=[('index', np.float64), ('nr', np.float64), ('nrIso', np.float64),
-                                         ('relAb', np.float64), ('mass', np.float64), ('M+', np.float64)])
+                                , dtype=isoTableDtype)
         """isotopeTable = np.array(isotopeTable
                                 , dtype=[('index', np.float64), ('nr', np.float64), ('nrIso', np.float64),
                                          ('relAb', np.float64), ('mass', np.float64), ('M+', np.float64)])"""
@@ -230,6 +235,8 @@ class MolecularFormula(object):
             monoisotopic += val*monoMass"""
         return monoisotopic
 
+
+
     def calcIsotopePatternSlowly(self, *args):
         '''
         Calculates isotope patterns based on molecular formulas without using the numba library
@@ -237,7 +244,8 @@ class MolecularFormula(object):
         '''
         #self._periodicTable = periodicTableService.getElements(list(self._formulaDict.keys()))
         isotope_pattern = list()
-        if self._formulaDict.keys() == {'C', 'H', 'N', 'O', 'P'}:
+        '''if self._formulaDict.keys() == {'C', 'H', 'N', 'O', 'P'}:
+            print('normal')
             #calculate = sf.calculateNuclFineStructure
             calculate = calculateNuclFineStructure
             isotopeTable = self.makeNucIsotopeTable()
@@ -250,7 +258,8 @@ class MolecularFormula(object):
             calculate = calculateFineStructure
             isotopeTable = self.makeIsotopeTable()
         isotopeTable = isotopeTable.astype([('index',np.int32), ('nr',np.int32), ('nrIso',np.int32),
-             ('relAb',np.float64), ('mass',np.float64), ('M+',np.int32)])
+             ('relAb',np.float64), ('mass',np.float64), ('M+',np.int32)])'''
+        calculate, isotopeTable = self.determineSystem()
         if args and args[0]:
             for isoPeak in range(args[0]):
                 #sf.setIsotopeTable(isotopeTable)
@@ -274,4 +283,5 @@ class MolecularFormula(object):
                 sumInt += prop
                 #if prop > mostAbundant:
                 #    mostAbundant = prop
-        return np.array(isotope_pattern, dtype=[('m/z',np.float64),('calcInt', np.float64)])
+        [print(row[0],row[1]) for row in isotope_pattern]
+        return np.array(isotope_pattern, dtype=isoPatternDtype)

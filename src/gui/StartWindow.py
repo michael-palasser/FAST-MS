@@ -83,11 +83,6 @@ class Window(AbstractMainWindow):
         btn.setGeometry(QtCore.QRect(xPos, 40, width, 150))
         return xPos+width+40
 
-    """def startFragmentHunter(self):
-        dialog = TDStartDialog(self)
-        dialog.show()
-        if dialog.exec_() and dialog.ok:
-            TD_MainController(self).start()"""
 
     def startIntactIonSearch(self):
         dialog = IntactStartDialog(self)

@@ -11,7 +11,7 @@ from src.entities.Ions import Fragment, FragmentIon
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.top_down.IntensityModeller import IntensityModeller
 from src.top_down.LibraryBuilder import FragmentLibraryBuilder
-from src.top_down.SpectrumHandler import getMz
+from src.top_down.SpectrumHandler import eMass, protMass
 
 
 class IsotopePatternLogics(object):
@@ -79,7 +79,7 @@ class IsotopePatternLogics(object):
         '''
         return self._neutralMass
 
-    def calculate(self, mode, inputString, charge, radicals, intensity, fragmentationName=None, fragTemplName=None,
+    def calculate(self, mode, inputString, charge, electrons, intensity, fragmentationName=None, fragTemplName=None,
                   modifPatternName=None, modifName=None, nrMod=None):
         '''
         Calculates the isotope pattern of the ion
@@ -88,7 +88,7 @@ class IsotopePatternLogics(object):
         :param (str) mode: molecule ('mol. formula' or e.g. 'RNA', 'Protein')
         :param (str) inputString: formula
         :param (int) charge: charge
-        :param (int) radicals: nr. of radicals
+        :param (int) electrons: nr. of electrons
         :param (int | float) intensity: intensity of the ion
         :param (str) fragmentationName: name of fragmentation pattern (optional)
         :param (str) fragTemplName: name of fragment template (optional)
@@ -100,7 +100,7 @@ class IsotopePatternLogics(object):
         if inputString[0].islower():
             raise InvalidInputException(inputString, ", Unvalid format, first character must not be lower case")
         if mode == self.getMolecules()[0]:
-            fragment = Fragment('-',0,'',MolecularFormula(self.checkFormula(inputString)),[],radicals)
+            fragment = Fragment('-',0,'',MolecularFormula(self.checkFormula(inputString)),[],electrons)
         else:
             fragment = self.getFragment(mode, inputString, fragmentationName, fragTemplName, modifPatternName,
                                         modifName, nrMod)
@@ -108,14 +108,15 @@ class IsotopePatternLogics(object):
         if formula != self._formula:
             self._formula = formula
             #self._fragment = fragment
-            if self._formula.calcIsotopePatternSlowly(1)['m/z'][0]>6000:
-                self._isotopePattern = self._formula.calculateIsotopePattern()
+            tempFormula=self._formula.addFormula({'H':charge})
+            if tempFormula.calcIsotopePatternSlowly(1)['m/z'][0]>6000:
+                self._isotopePattern = tempFormula.calculateIsotopePattern()
             else:
-                self._isotopePattern = self._formula.calcIsotopePatternSlowly()
+                self._isotopePattern = tempFormula.calcIsotopePatternSlowly()
         isotopePattern = copy.deepcopy(self._isotopePattern)
         isotopePattern['calcInt'] *= intensity
         self._neutralMass = isotopePattern['m/z'][0]
-        isotopePattern['m/z'] = getMz(isotopePattern['m/z'],charge,radicals)
+        isotopePattern['m/z'] = self.getMz(isotopePattern['m/z'],charge,electrons)
         peaks = []
         for row in isotopePattern:
             peaks.append((row['m/z'],0,row['calcInt'],1))
@@ -124,6 +125,19 @@ class IsotopePatternLogics(object):
         self._ion.setQuality(0)
         return self._ion, self._neutralMass
 
+    @staticmethod
+    def getMz(mass, z, electrons):
+        '''
+        Calculates m/z
+        :param (float) mass: neutral mass
+        :param (int) z: charge
+        :param (int) electrons: number of electrons
+        :return: (float) m/z
+        '''
+        if z != 0:
+            return abs((mass+electrons*(protMass+eMass)-z*eMass) / z)
+        else:
+            return abs(mass+electrons*(protMass+eMass))
 
     def checkFormula(self,formulaString):
         '''

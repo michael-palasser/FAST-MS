@@ -47,20 +47,20 @@ class MolecularFormulaTest(TestCase):
     def test_determine_system(self):
         molFormula  = MolecularFormula('C5H4N3O')
         elements= [key for key,val in molFormula.getFormulaDict().items() if val>0]
-        self.assertTrue(molFormula.determineSystem(elements, {'C','H','N','O','P'}))
+        self.assertTrue(molFormula.checkSystem(elements, {'C', 'H', 'N', 'O', 'P'}))
         molFormula  = MolecularFormula('C5H4N3OS0')
         elements= [key for key,val in molFormula.getFormulaDict().items() if val>0]
-        self.assertTrue(molFormula.determineSystem(elements, {'C','H','N','O','P'}))
+        self.assertTrue(molFormula.checkSystem(elements, {'C', 'H', 'N', 'O', 'P'}))
         molFormula  = MolecularFormula('C38H48N15O26P3')
         elements= [key for key,val in molFormula.getFormulaDict().items() if val>0]
-        self.assertTrue(molFormula.determineSystem(elements, {'C','H','N','O','P'}))
+        self.assertTrue(molFormula.checkSystem(elements, {'C', 'H', 'N', 'O', 'P'}))
         molFormula  = MolecularFormula('C36H56N12O14S')
         elements= [key for key,val in molFormula.getFormulaDict().items() if val>0]
-        self.assertTrue(molFormula.determineSystem(elements, {'C','H','N','O','S'}))
+        self.assertTrue(molFormula.checkSystem(elements, {'C', 'H', 'N', 'O', 'S'}))
         molFormula  = MolecularFormula('C5H5N5ONa')
         elements= [key for key,val in molFormula.getFormulaDict().items() if val>0]
-        self.assertFalse(molFormula.determineSystem(elements, {'C','H','N','O','P'}))
-        self.assertFalse(molFormula.determineSystem(elements, {'C','H','N','O','S'}))
+        self.assertFalse(molFormula.checkSystem(elements, {'C', 'H', 'N', 'O', 'P'}))
+        self.assertFalse(molFormula.checkSystem(elements, {'C', 'H', 'N', 'O', 'S'}))
 
 
     def testIsotopeTable(self, isotopeTable=None, values=None):

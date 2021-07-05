@@ -37,6 +37,7 @@ class AbstractMainWindow(QtWidgets.QMainWindow):
     def createMenu(self, name, options, separatorPosition):
         menu = QtWidgets.QMenu(self.menubar)
         menu.setTitle(self._translate(self.objectName(), name))
+        menu.setToolTipsVisible(True)
         menuActions = dict()
         pos = len(options)
         for option, vals in options.items():

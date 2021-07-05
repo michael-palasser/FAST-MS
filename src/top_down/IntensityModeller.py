@@ -167,7 +167,7 @@ class IntensityModeller(object):
             self._correctedIons[correctedIon.getHash()] = correctedIon
             self._monoisotopicList.append(np.array(
                 [(correctedIon.getName(), correctedIon.getCharge(), ion.getMonoisotopic())],
-                dtype=[('name','U32'),('charge', np.uint8),('mono',np.float64)]))
+                dtype=[('name','U32'),('charge', np.uint8),('mono',float)]))
             '''self._monoisotopicList.append(
                 (correctedIon.getName(), correctedIon.getCharge(), ion.getMonoisotopic()))'''
             print('\tqual',correctedIon.getQuality())
@@ -193,7 +193,7 @@ class IntensityModeller(object):
         sameMonoisotopics = list()
         print(np.array(self._monoisotopicList))
         self._monoisotopicList = np.array(self._monoisotopicList,
-                                          dtype=[('name','U32'),('charge', np.uint8),('mono',np.float64)])
+                                          dtype=[('name','U32'),('charge', np.uint8),('mono',float)])
         for elem in self._monoisotopicList:
             same_mono_index = np.where((abs(calculateError(self._monoisotopicList['mono'], elem['mono']))
                  < getErrorLimit(elem['mono'])) & \

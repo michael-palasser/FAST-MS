@@ -265,6 +265,10 @@ class PeriodicTableService(AbstractServiceForPatterns):
             elementDict[elem] = """
         return {elem:self._repository.getPattern(elem).getItems() for elem in elements}
 
+    def getAllElements(self):
+        return {elem:self._repository.getPattern(elem).getItems() for elem in self.getAllPatternNames()}
+
+
 class MoleculeService(AbstractServiceForPatterns):
     '''
     Service handling a MoleculeRepository and Macromolecule entities.

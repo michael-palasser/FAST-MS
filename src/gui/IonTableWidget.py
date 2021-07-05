@@ -152,6 +152,10 @@ class IsoPatternIon(IonTableWidget):
             df = pd.DataFrame(data=self._ions, columns=self.getHeaders())
             df.to_clipboard(index=False, header=True)
 
+    def updateTable(self, newIons):
+        self._ions = newIons
+        for i, ion in enumerate(newIons):
+            self.fill(i, ion)
 
 
 class TickIonTableWidget(IonTableWidget):

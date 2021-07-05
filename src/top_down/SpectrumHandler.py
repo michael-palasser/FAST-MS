@@ -14,6 +14,7 @@ from scipy.constants import R
 from scipy.constants import electron_mass, proton_mass, N_A
 
 from src.Exceptions import InvalidInputException
+from src.MolecularFormula import MolecularFormula
 from src.entities.Ions import FragmentIon
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 
@@ -78,8 +79,8 @@ class SpectrumHandler(object):
         self._ionsInNoise = list()
         self._searchedChargeStates = dict()
         #self.expectedChargeStates = dict()
-        self._peaksArrType = np.dtype([('m/z', np.float64), ('relAb', np.float64),
-                                       ('calcInt', np.float64), ('error', np.float32), ('used', np.bool_)])
+        self._peaksArrType = np.dtype([('m/z', float), ('relAb', float),
+                                       ('calcInt', float), ('error', np.float32), ('used', bool)])
 
     def calcPrecCharge(self, charge, radicals):
         return abs(charge - radicals)
@@ -364,7 +365,6 @@ class SpectrumHandler(object):
         return range(lowZ,highZ+1)
 
 
-    #ToDo: Refactor
     def findIons(self, fragmentLibrary):
         '''
         Assigns peaks in spectrum to isotope peaks of corresponding ion
@@ -378,20 +378,15 @@ class SpectrumHandler(object):
         np.set_printoptions(suppress=True)
         precModCharge = self.getModCharge(self.precursor)
         self._normalizationFactor = self.getNormalizationFactor()
+        self._protonIsoPatterns = self.getProtonIsotopePatterns()
         for fragment in fragmentLibrary:
             self._searchedChargeStates[fragment.getName()] = []
-            #fragment.setIsotopePattern(np.sort(fragment.getIsotopePattern(), order='calcInt')[::-1])
             sortedPattern = np.sort(fragment.getIsotopePattern(), order='calcInt')[::-1]
             zRange = self.getChargeRange(fragment, precModCharge)
             peakQuantitiy = fragment.getNumberOfHighestIsotopes()
-            #if zRange == None:
-            #    continue
+            radicals = fragment.getRadicals()
             for z in zRange:
-                theoreticalPeaks = copy.deepcopy(sortedPattern)
-                #if self.__settings['dissociation'] in ['ECD', 'EDD', 'ETD'] and fragment.number == 0:
-                #    theoreticalPeaks['mass'] += ((self.protonMass-self.eMass) * (self.__charge - z))
-                    #print("heeeeee\n",fragment.getName(),z, theoreticalPeaks['mass'])
-                theoreticalPeaks['m/z'] = getMz(theoreticalPeaks['m/z'], z * self.__sprayMode, fragment.getRadicals())
+                theoreticalPeaks = self.getIsotopePattern(sortedPattern,z,radicals)
                 if (configs['lowerBound'] < theoreticalPeaks[0]['m/z'] < self.__upperBound):
                     self._searchedChargeStates[fragment.getName()].append(z)
                     #make a guess of the ion abundance based on number in range
@@ -399,26 +394,18 @@ class SpectrumHandler(object):
                     sumIntTheo = 0
                     foundMainPeaks = list()
                     for i in range(peakQuantitiy):
-                        '''searchMask = np.where(abs(self.calculateError(self.__spectrum[:, 0], theoreticalPeaks[i]['m/z']))
-                                              < getErrorLimit(self.__spectrum[:, 0]))
-                        spectralPeak = self.getCorrectPeak(self.__spectrum[searchMask], theoreticalPeaks[i])'''
                         spectralPeak = self.findPeak(theoreticalPeaks[i])
                         sumInt += spectralPeak[1]
                         foundMainPeaks.append(spectralPeak)
                         sumIntTheo += theoreticalPeaks[i]['calcInt']
                     if sumInt > 0:
                         noise = self.calculateNoise(theoreticalPeaks[0]['m/z'], 4)
-                        #print('\twent through',round(noise))
                         sumInt += (peakQuantitiy - len(foundMainPeaks)) * noise * 0.5              #if one or more isotope peaks were not found noise added #parameter
                         notInNoise = np.where(theoreticalPeaks['calcInt'] >noise*
                                               configs['thresholdFactor'] / (sumInt/sumIntTheo))
                         if theoreticalPeaks[notInNoise].size > len(foundMainPeaks):
                             foundPeaks = [self.findPeak(theoPeak) for theoPeak in theoreticalPeaks[notInNoise]]
                             #find other isotope Peaks
-                            '''for theoPeak in theoreticalPeaks[notInNoise]:
-                                searchMask = np.where(abs(self.calculateError(self.__spectrum[:, 0], theoPeak['m/z']))
-                                                      < (getErrorLimit(self.__spectrum[:, 0]) + configs['errorTolerance']))
-                                foundPeaks.append(self.getCorrectPeak(self.__spectrum[searchMask], theoPeak))'''
                             foundPeaksArr = np.sort(np.array(foundPeaks, dtype=self._peaksArrType), order=['m/z'])
                             if not np.all(foundPeaksArr['relAb']==0):
                                 self._foundIons.append(FragmentIon(fragment, np.min(theoreticalPeaks['m/z']), z, foundPeaksArr, noise))
@@ -432,6 +419,39 @@ class SpectrumHandler(object):
                             [print("\t",np.around(peak['m/z'],4),"\t",peak['relAb']) for peak in foundMainPeaksArr if peak['relAb']>0]
                         else:
                             self.addToDeletedIons(fragment, foundMainPeaks, noise, np.min(theoreticalPeaks['m/z']), z)
+
+    def getProtonIsotopePatterns(self):
+        '''
+        Calculates the isotope patterns (rel.abundances) of various numbers of protons
+        :return: (ndArray[float,float]) array with 2 columns: rows represent proton nr + 1, column 1: monoisotopic,
+            column 2: M+1 peak
+        '''
+        maxZ = abs(self.__settings['charge'])
+        protonIsotopePatterns = np.zeros((maxZ,2))
+        for i in range(maxZ):
+            protonIsotopePatterns[i] = MolecularFormula({'H':i+1}).calcIsotopePatternSlowly(2)['calcInt']
+        return protonIsotopePatterns
+
+    def getIsotopePattern(self, neutralPattern,z, radicals):
+        '''
+        Calculates the final theoretical isotope pattern of an ion
+        :param (ndArray) neutralPattern: isotope pattern of the neutral species,
+                structured numpy-array: [m/z, intensity, m/z_theo, calcInt, error (ppm), used (for modelling)]
+        :param (int) z: charge of the ion
+        :param (int) radicals: nr of radicals of the ion
+        :return: (ndArray) isotope pattern of the ion,
+                structured numpy-array: [m/z, intensity, m/z_theo, calcInt, error (ppm), used (for modelling)]
+        '''
+        theoreticalPeaks = copy.deepcopy(neutralPattern)
+        theoreticalPeaks['m/z'] = getMz(theoreticalPeaks['m/z'], z * self.__sprayMode, radicals)
+        theoreticalPeaks['calcInt'][0] *= self._protonIsoPatterns[z-1][0] ** self.__sprayMode
+        if self.__sprayMode == 1:
+            regressionVals = neutralPattern['calcInt']
+        else:
+            regressionVals = theoreticalPeaks['calcInt']
+        for i in range(1,len(theoreticalPeaks)):
+            theoreticalPeaks['calcInt'][i] += self._protonIsoPatterns[z-1][1]*regressionVals[i-1]*self.__sprayMode
+        return theoreticalPeaks
 
     def findPeak(self, theoPeak):
         searchMask = np.where(abs(calculateError(self.__spectrum[:, 0], theoPeak['m/z']))

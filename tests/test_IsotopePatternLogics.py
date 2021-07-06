@@ -1,3 +1,4 @@
+from copy import deepcopy
 from unittest import TestCase
 import numpy as np
 
@@ -56,40 +57,45 @@ class TestIsotopePatternLogics(TestCase):
 
     def test_calculate(self):
         RNA_ion,RNA_neutralMass = self.getIon('RNA',0)
-        #z = 2
         formulaIon, formulaNeutralMass = self.logics.calculate('mol. formula',RNA_formulaDummy.toString()+'(C14H25N3O)2',
-                                                               2, 0,1000)
+                                                               -2, 0,1000)
         self.assertEqual(RNA_ion.getFormula().toString(), formulaIon.getFormula().toString())
-        #theoIsotopePattern = self.fragmentsRNA['dummyRNA'].getIsotopePattern()
         self.assertAlmostEqual(RNA_neutralMass,formulaNeutralMass)
         self.testIsotopePattern(formulaIon.getIsotopePattern(), RNA_ion.getIsotopePattern())
+
         pepIon,pepNeutralMass = self.getIon('Protein',1)
-        #z = 2
-        formulaIon, formulaNeutralMass = self.logics.calculate('mol. formula','C16H24N6O5',
-                                                               2, 1,1000)
+        formulaIon, formulaNeutralMass = self.logics.calculate('mol. formula','C16H24N6O5', 2, 1,1000)
         self.assertEqual(pepIon.getFormula().toString(), formulaIon.getFormula().toString())
-        #theoIsotopePattern = self.fragmentsRNA['dummyRNA'].getIsotopePattern()
         self.assertAlmostEqual(pepNeutralMass,formulaNeutralMass)
         self.testIsotopePattern(formulaIon.getIsotopePattern(), pepIon.getIsotopePattern())
 
-        formulaIon, formulaNeutralMass = self.logics.calculate('mol. formula',RNA_formulaDummy.toString(),
-                                                               2, 0,1000)
-        #print(getMz(RNA_pattern['m/z'],2,0).reshape(len(RNA_pattern),1), RNA_pattern['calcInt']/1000)
-        """theoIsotopePattern = np.concatenate((getMz(RNA_pattern['m/z'],2,0),
-                                       RNA_pattern['calcInt']/1000),axis=0).reshape(len(RNA_pattern),2)
-        print(theoIsotopePattern, theoIsotopePattern.dtype)"""
-        theoIsotopePattern = [(getMz(RNA_pattern[i]['m/z'],2,0),RNA_pattern[i]['calcInt']*1000)
-                               for i in range(len(RNA_pattern))]
-        theoIsotopePattern= np.array(theoIsotopePattern,dtype=RNA_pattern.dtype)
-        self.testIsotopePattern(theoIsotopePattern, formulaIon.getIsotopePattern())
+        formulaIon, formulaNeutralMass = self.logics.calculate('mol. formula',RNA_formulaDummy.toString(),-2, 0,1000)
+        #print([(getMz(RNA_pattern[i]['m/z'],2,0),RNA_pattern[i]['calcInt']*1000) for i in range(len(RNA_pattern))])
+        theoIsotopePattern= np.array(self.getIonPattern(RNA_pattern,2,-1,0),dtype=RNA_pattern.dtype)
+        #print(theoIsotopePattern)
+        #print(formulaIon.getIsotopePattern())
+        self.testIsotopePattern(theoIsotopePattern, formulaIon.getIsotopePattern(), 10e-4)
         with self.assertRaises(InvalidInputException):
             self.logics.calculate('mol. formula', 'c(C14H25N3O)2',2, 0, 1000)
         with self.assertRaises(InvalidInputException):
             self.getIon('bad',0)
 
+    def getIonPattern(self, neutralPattern, z, sprayMode, radicals):
+        protonIsotopePattern = MolecularFormula({'H': z}).calcIsotopePatternSlowly(2)['calcInt']
+        theoreticalPeaks = deepcopy(neutralPattern)
+        theoreticalPeaks['m/z'] = getMz(theoreticalPeaks['m/z'], z * sprayMode, radicals)
+        theoreticalPeaks['calcInt'][0] *= protonIsotopePattern[0] ** sprayMode
+        if sprayMode == 1:
+            regressionVals = neutralPattern['calcInt']
+        else:
+            regressionVals = theoreticalPeaks['calcInt']
+        for i in range(1,len(theoreticalPeaks)):
+            theoreticalPeaks['calcInt'][i] += protonIsotopePattern[1]*regressionVals[i-1]*sprayMode
+        return theoreticalPeaks
 
     def getIon(self,mode, radicals):
         bad = ''
+        charge = -2
         if mode == 'RNA':
             searchSettings = self.searchSettingsRNA
             modifPattern = 'CMCT'
@@ -100,6 +106,7 @@ class TestIsotopePatternLogics(TestCase):
             modifPattern = '-'
             modif = '-'
             nrMod = 0
+            charge = 2
         else:
             mode='RNA'
             searchSettings = self.searchSettingsProt
@@ -108,25 +115,27 @@ class TestIsotopePatternLogics(TestCase):
             nrMod = 0
             bad = 'g'
         properties = self.getProperties(searchSettings)
-        return self.logics.calculate(mode,bad+properties['sequString'], 2, radicals,1000, properties['fragmentationName'],
+        return self.logics.calculate(mode,bad+properties['sequString'], charge, radicals,1000, properties['fragmentationName'],
                                      'Prec', modifPattern, modif, nrMod)
 
-    def testIsotopePattern(self,calcIsotopePattern1=None, calcIsotopePattern2=None):
+    def testIsotopePattern(self,calcIsotopePattern1=None, calcIsotopePattern2=None, delta=5*10**(-6)):
         if calcIsotopePattern1 is not None:
             #calcIsotopePattern1 = np.array(calcIsotopePattern1, dtype=[('m/z', np.float64), ('calcInt', np.float64)])
             #calcIsotopePattern1['calcInt'] *= (calcIsotopePattern2['calcInt'][0] / calcIsotopePattern1['calcInt'][0])
             #if len(calcIsotopePattern1) > (len(theoIsotopePattern) + 1):
             #    raise Exception('Length of calculated isotope pattern to short')
             self.assertEqual(len(calcIsotopePattern1),len(calcIsotopePattern2))
+            sum1 = np.sum(calcIsotopePattern1['calcInt'])
+            sum2 = np.sum(calcIsotopePattern2['calcInt'])
             #factor = calcIsotopePattern2[0]['calcInt'] / theoIsotopePattern[0]['calcInt'],
             for i in range(len(calcIsotopePattern1)):
                 #self.assertAlmostEqual(getMz(theoIsotopePattern[i]['m/z'], charge, radicals), calcIsotopePattern2[i]['m/z'], delta=5 * 10 ** (-6))
                 #self.assertAlmostEqual(theoIsotopePattern[i]['calcInt']*factor, calcIsotopePattern2[i]['calcInt'],
                 #                       delta=5 * 10 ** (-6))
                 self.assertAlmostEqual(calcIsotopePattern1[i]['m/z'], calcIsotopePattern2[i]['m/z'],
-                                       delta=5 * 10 ** (-6))
-                self.assertAlmostEqual(calcIsotopePattern1[i]['calcInt'], calcIsotopePattern2[i]['calcInt'],
-                                       delta=5 * 10 ** (-6))
+                                       delta=delta)
+                self.assertAlmostEqual(calcIsotopePattern1[i]['calcInt']/sum1, calcIsotopePattern2[i]['calcInt']/sum2,
+                                       delta=delta)
 
     def test_check_formula(self):
         with self.assertRaises(InvalidInputException):

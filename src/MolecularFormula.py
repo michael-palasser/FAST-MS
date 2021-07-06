@@ -148,7 +148,7 @@ class MolecularFormula(object):
                     return np.array(isotope_pattern, dtype=[('m/z', np.float64), ('calcInt', np.float64)])"""
         """iso = np.array(isotope_pattern, dtype=[('m/z',np.float64),('calcInt', np.float64)])
         print(np.sum(iso['calcInt']))"""
-        [print(row[0],row[1]) for row in isotope_pattern]
+        #[print(row[0],row[1]) for row in isotope_pattern]
         return np.array(isotope_pattern, dtype=isoPatternDtype)
 
 
@@ -283,5 +283,5 @@ class MolecularFormula(object):
                 sumInt += prop
                 #if prop > mostAbundant:
                 #    mostAbundant = prop
-        [print(row[0],row[1]) for row in isotope_pattern]
+        #[print(row[0],row[1]) for row in isotope_pattern]
         return np.array(isotope_pattern, dtype=isoPatternDtype)

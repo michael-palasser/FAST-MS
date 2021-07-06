@@ -208,9 +208,15 @@ class IsotopePatternView(QtWidgets.QMainWindow):
         self._ionTable.show()
 
     def makePeakTable(self, peaks):
-        self._peakTable = IsoPatternPeakWidget(self.centralwidget, peaks)
+        scrollArea = QtWidgets.QScrollArea(self)
+        verticalLayout = QtWidgets.QVBoxLayout(scrollArea)
+        scrollArea.setWidgetResizable(True)
+        self._peakTable = IsoPatternPeakWidget(scrollArea, peaks)
         self._peakTable.resizeColumnsToContents()
-        self._vertLayout.insertWidget(5, self._peakTable)
+
+        scrollArea.setWidget(self._peakTable)
+        verticalLayout.addWidget(self._peakTable)
+        self._vertLayout.insertWidget(5, scrollArea)
         self._peakTable.show()
 
 

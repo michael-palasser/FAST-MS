@@ -1,5 +1,3 @@
-import copy
-
 import numpy as np
 
 from src.Exceptions import InvalidInputException
@@ -109,16 +107,20 @@ class IsotopePatternLogics(object):
             self._formula = formula
             #self._fragment = fragment
             tempFormula=self._formula.addFormula({'H':charge})
+            if tempFormula.getFormulaDict()['H']<0:
+                raise InvalidInputException('Nr of H = '+str(tempFormula.getFormulaDict()['H']), 'not enough Hs for deprotonation')
             if tempFormula.calcIsotopePatternSlowly(1)['m/z'][0]>6000:
                 self._isotopePattern = tempFormula.calculateIsotopePattern()
             else:
                 self._isotopePattern = tempFormula.calcIsotopePatternSlowly()
-        isotopePattern = copy.deepcopy(self._isotopePattern)
-        isotopePattern['calcInt'] *= intensity
-        self._neutralMass = isotopePattern['m/z'][0]
-        isotopePattern['m/z'] = self.getMz(isotopePattern['m/z'],charge,electrons)
+        #isotopePattern = copy.deepcopy(self._isotopePattern)
+        self._neutralMass = self._isotopePattern['m/z'][0]
+        if charge != 0:
+            self._neutralMass -= (protMass+eMass)*charge
+        self._isotopePattern['m/z'] = self.getMz(self._isotopePattern['m/z'],charge,electrons)
+        self._isotopePattern['calcInt'] *= intensity
         peaks = []
-        for row in isotopePattern:
+        for row in self._isotopePattern:
             peaks.append((row['m/z'],0,row['calcInt'],1))
         peaks = np.array(peaks, dtype=self._peakDtype)
         self._ion = FragmentIon(fragment, np.min(peaks['m/z']), charge, peaks,0)

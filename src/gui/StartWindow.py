@@ -37,6 +37,8 @@ class Window(AbstractMainWindow):
                          'Compare Analysis':
                              (lambda: spectrumComparator(self), 'Compares the ion lists of multiple spectra', None)},
                         None)
+        #[print(action.toolTip()) for action in menuActions.values()]
+        #print(menu.toolTipsVisible())
         self.createMenu('Top-Down Configurations',
                         {'Edit Parameters':(self.editTopDownConfig, 'Edit configurations', None),
                          'Edit Fragments':(lambda: self.editData(FragmentEditorController), 'Edit fragment patterns', None),

@@ -16,16 +16,17 @@ class AbstractMainWindow(QtWidgets.QMainWindow):
         elif toAdjust < 0:
             [comboBox.addItem("") for i in range(-1 * toAdjust)]
         for i, option in enumerate(newOptions):
-            comboBox.setItemText(i, self._translate(self.mainWindow.objectName(), option))
+            comboBox.setItemText(i, self._translate(self.objectName(), option))
 
-    def makePushBtn(self, parent, name, fun):
+    '''def makePushBtn(self, parent, name, fun, geom):
         button = QtWidgets.QPushButton(parent)
-        sizePolicy = self.setNewSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHeightForWidth(self._defaultButton.sizePolicy().hasHeightForWidth())
-        button.setSizePolicy(sizePolicy)
+        #sizePolicy = self.setNewSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        #sizePolicy.setHeightForWidth(self._defaultButton.sizePolicy().hasHeightForWidth())
+        #button.setSizePolicy(sizePolicy)
         #self._defaultButton.setMinimumSize(QtCore.QSize(113, 0))
         button.setText(self._translate(self.objectName(), name))
         button.clicked.connect(fun)
+        button.setGeometry(geom)'''
 
     def createMenuBar(self):
         self.menubar = QtWidgets.QMenuBar(self)

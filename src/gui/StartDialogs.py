@@ -1,4 +1,3 @@
-import sys
 import traceback
 
 from PyQt5 import QtWidgets, QtCore
@@ -13,6 +12,9 @@ from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 
 
 class TDStartDialog(StartDialog):
+    '''
+    Dialog which pops up when top-down analysis is started. Values are stored in settings_top_down.json
+    '''
     def __init__(self, parent):
         super().__init__(parent, "Settings")
         self._formLayout = self.makeFormLayout(self)
@@ -100,6 +102,9 @@ class TDStartDialog(StartDialog):
 
 
 class IntactStartDialog(DialogWithTabs, StartDialog):
+    '''
+    Dialog which pops up when intact ion search is started. Values are stored in configurations_intact.json.
+    '''
     def __init__(self, parent=None):
         super().__init__(parent,"Intact FragmentIon Search")
         self.configHandler = ConfigurationHandlerFactory.getIntactHandler()
@@ -184,6 +189,9 @@ class IntactStartDialog(DialogWithTabs, StartDialog):
 
 
 class SpectrumComparatorStartDialog(AbstractDialog):
+    '''
+    Dialog which pops up when spectrum comparison is started.
+    '''
     def __init__(self, parent):
         super().__init__(parent, "Compare Spectra")
         self.widgets = []
@@ -232,6 +240,9 @@ class SpectrumComparatorStartDialog(AbstractDialog):
 
 
 class OccupancyRecalcStartDialog(AbstractDialog):
+    '''
+    Dialog which pops up when occupancy calculation tool is started.
+    '''
     def __init__(self, parent, sequences):
         super().__init__(parent, "Calculate Occupancies")
         self.sequence = None

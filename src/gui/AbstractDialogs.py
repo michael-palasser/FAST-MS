@@ -11,6 +11,10 @@ from src.gui.Widgets import OpenFileWidget
 
 
 class AbstractDialog(QtWidgets.QDialog):
+    '''
+    Parent class for DialogWithTabs, StartDialog, ExportDialog, OpenDialog, OpenSpectralDataDlg,
+    SaveSearchDialog, SelectSearchDlg, OccupancyRecalcStartDialog, SpectrumComparatorDialog
+    '''
     def __init__(self, parent, title):
         super().__init__(parent)
         #self.setObjectName(dialogName)
@@ -133,6 +137,9 @@ class AbstractDialog(QtWidgets.QDialog):
 
 
 class StartDialog(AbstractDialog):
+    '''
+    Parent dialog for IntactStartDialog, TDStartDialog
+    '''
     def __init__(self, parent, title):
         super(StartDialog, self).__init__(parent, title)
 
@@ -196,6 +203,9 @@ class StartDialog(AbstractDialog):
 
 
 class DialogWithTabs(AbstractDialog):
+    '''
+    Parent class for IntactStartDialog
+    '''
     def __init__(self, parent, title):
         super().__init__(parent, title)
         self.verticalLayout = QtWidgets.QVBoxLayout(self)

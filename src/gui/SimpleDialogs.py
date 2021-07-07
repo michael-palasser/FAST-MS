@@ -9,6 +9,9 @@ from src.gui.Widgets import OpenFileWidget
 dataPath = join(path, 'src', 'data')
 
 class OpenDialog(AbstractDialog):
+    '''
+    Dialog to open stored values (element, fragmentation, etc.)
+    '''
     def __init__(self, title, options):
         super(OpenDialog, self).__init__(parent=None,title=title)
         formLayout = self.makeFormLayout(self)
@@ -18,6 +21,9 @@ class OpenDialog(AbstractDialog):
         self.show()
 
 class SelectSearchDlg(AbstractDialog):
+    '''
+    Dialog to open saved top-down search/analysis
+    '''
     def __init__(self, parent, options, deleteFun, service):
         super(SelectSearchDlg, self).__init__(parent,'Load Analysis')
         self.deleteFun = deleteFun
@@ -58,6 +64,9 @@ class SelectSearchDlg(AbstractDialog):
             return None
 
 class OpenSpectralDataDlg(AbstractDialog):
+    '''
+    Dialog to select the correct spectral data file (if an old top-down search/analysis is loaded)
+    '''
     def __init__(self, parent):
         super(OpenSpectralDataDlg, self).__init__(parent,'Spectral Data not found!')
         formLayout = self.makeFormLayout(self)
@@ -76,6 +85,9 @@ class OpenSpectralDataDlg(AbstractDialog):
         return self.fileWidget.text()
 
 class ExportDialog(AbstractDialog):
+    '''
+    Dialog to export the results of a top-down analysis
+    '''
     def __init__(self, parent):
         super(ExportDialog, self).__init__(parent, 'Export Results')
         formLayout = self.makeFormLayout(self)
@@ -104,6 +116,9 @@ class ExportDialog(AbstractDialog):
         return self.widgets['name'].text()
 
 class SaveSearchDialog(AbstractDialog):
+    '''
+    Dialog to save the results of a top-down search/analysis
+    '''
     def __init__(self, text):
         super(SaveSearchDialog, self).__init__(parent=None,title='Save Analysis')
         formLayout = self.makeFormLayout(self)

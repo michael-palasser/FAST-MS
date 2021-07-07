@@ -7,65 +7,31 @@ import sys
 
 from src.Exceptions import CanceledException
 from src.Services import *
-from src.entities.GeneralEntities import Sequence
-from src.gui.AbstractMainWindows import AbstractMainWindow
+from src.gui.AbstractMainWindows import SimpleMainWindow
 from src.gui.SimpleDialogs import OpenDialog
 from src.gui.Widgets import BoxUpdateWidget
 
 
 class AbstractSimpleEditorController(ABC):
+    '''
+    Abstract controller class: parent class of AbstractEditorController and SequenceEditorController
+    '''
     def __init__(self, service, pattern, title, options):
         self.service = service
         self.pattern = pattern
         #self.pattern = self.service.makeNew()
         self.setUpUi(title)
-        self.createMenuBar(options)
+        self.mainWindow.createMenuBar()
+        self.fileMenu, self.fileMenuActions = self.mainWindow.createMenu("File", options, 3)
 
     def setUpUi(self, title):
-        self.mainWindow = AbstractMainWindow(None, title)
+        self.mainWindow = SimpleMainWindow(None, title)
         #self.mainWindow.setObjectName(title)
         self._translate = QtCore.QCoreApplication.translate
-        '''self.mainWindow.setWindowTitle(self._translate(self.mainWindow.objectName(), title))
-        self.centralwidget = QtWidgets.QWidget(self.mainWindow)
-
-        self.mainWindow.setCentralWidget(self.centralwidget)'''
         self.centralwidget = self.mainWindow.centralwidget
         self.formLayout = QtWidgets.QFormLayout(self.centralwidget)
         self.formLayout.setFieldGrowthPolicy(QtWidgets.QFormLayout.ExpandingFieldsGrow)
-        #self.mainWindow.setStatusBar(QtWidgets.QStatusBar(self.mainWindow))
 
-
-    def createMenuBar(self, options):
-        self.menubar = QtWidgets.QMenuBar(self.mainWindow)
-        self.mainWindow.setMenuBar(self.menubar)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 340, 22))
-        self.fileMenu, self.fileMenuActions = self.createMenu("File", options, 3)
-        #self.editMenu, self.editMenuActions = self.createMenu("Edit", {"Insert Row": self.insertRow}, 1)
-        self.menubar.addAction(self.fileMenu.menuAction())
-        #self.menubar.addAction(self.editMenu.menuAction())
-
-
-    def createMenu(self, name, options, separatorPosition):
-        menu = QtWidgets.QMenu(self.menubar)
-        menu.setTitle(self._translate(self.mainWindow.objectName(), name))
-        menuActions = dict()
-        pos = len(options)
-        for option, function in options.items():
-            if pos == separatorPosition:
-                menu.addSeparator()
-            action = QtWidgets.QAction(self.mainWindow)
-            action.setText(self._translate(self.mainWindow.objectName(),option))
-            if 'Open' in option:
-                action.setShortcut("Ctrl+O")
-            elif option == 'Save':
-                action.setShortcut("Ctrl+S")
-            elif option == 'Close':
-                action.setShortcut("Ctrl+Q")
-            action.triggered.connect(function)
-            menuActions[option] = action
-            menu.addAction(action)
-            pos -= 1
-        return menu, menuActions
 
     def createTableWidget(self, parent, data, headers, bools):
         tableWidget = QtWidgets.QTableWidget(parent)
@@ -110,7 +76,6 @@ class AbstractSimpleEditorController(ABC):
         return tableWidget
 
     def save(self, *args):
-        print('args_simple',args)
         try:
             self.pattern = self.service.save(args[0])
         except InvalidInputException as e:
@@ -189,6 +154,10 @@ class AbstractSimpleEditorController(ABC):
 
 
 class AbstractEditorController(AbstractSimpleEditorController, ABC):
+    '''
+    Abstract controller class to edit patterns with items: parent class of AbstractEditorControllerWithTabs,
+    ElementEditorController, IntactIonEditorController, MoleculeEditorController
+    '''
     def __init__(self, service, title, name):
         self.service = service
         pattern = self.open('Open ' + name)
@@ -196,10 +165,10 @@ class AbstractEditorController(AbstractSimpleEditorController, ABC):
             self.service.close()
             raise CanceledException("Closing")
         super(AbstractEditorController, self).__init__(service, pattern, title,
-                   {#"tableWidget
-                    "Open " + name: self.openAgain,
-                    "Delete " + name: self.delete,
-                    "Save": self.save, "Save As": self.saveNew, "Close": self.close})
+                   {"Open " + name: (self.openAgain, None,"Ctrl+O"), "Delete " + name: (self.delete,None,None),
+                    "Save": (self.save,None,"Ctrl+S"), "Save As": (self.saveNew,None,None),
+                    "Close": (self.close,None,"Ctrl+Q")})
+
 
     def createWidgets(self, parent, formLayout, labels, widgets, initialValues):
         """
@@ -300,6 +269,10 @@ class AbstractEditorController(AbstractSimpleEditorController, ABC):
 
 
 class AbstractEditorControllerWithTabs(AbstractEditorController, ABC):
+    '''
+    Abstract controller class to edit patterns with multiple item classes: parent class of FragmentEditorController,
+    ModificationEditorController
+    '''
     def setUpUi(self, title):
         self.mainWindow = QtWidgets.QMainWindow()
         self.mainWindow.setObjectName(title)
@@ -350,6 +323,9 @@ class AbstractEditorControllerWithTabs(AbstractEditorController, ABC):
 
 
 class MoleculeEditorController(AbstractEditorController):
+    '''
+    Controller class to edit molecules
+    '''
     def __init__(self):
         super(MoleculeEditorController, self).__init__(MoleculeService(), "Edit Molecular Properties", "Molecule")
         self.createWidgets(self.centralwidget, self.formLayout, ["Name: ", "Gain: ", "Loss: "],
@@ -380,6 +356,9 @@ class MoleculeEditorController(AbstractEditorController):
 
 
 class ElementEditorController(AbstractEditorController):
+    '''
+    Controller class to edit elements
+    '''
     def __init__(self):
         super(ElementEditorController, self).__init__(PeriodicTableService(), "Edit Elements", "Element")
         """self.pattern = self.open('Open Element')
@@ -394,17 +373,18 @@ class ElementEditorController(AbstractEditorController):
         self.mainWindow.show()
 
     def save(self, *args):
-        print('args', args)
         id = self.pattern.getId()
         if args and args[0] == None:
             id = None
-            print(id)
         super(ElementEditorController, self).save(Element(self.widgets["name"].text(),
                                           self.readTable(self.table, self.service.getBoolVals()), id))
 
 
 
 class SequenceEditorController(AbstractSimpleEditorController):
+    '''
+    Controller class to edit sequences
+    '''
     def __init__(self):
         service = SequenceService()
         super(SequenceEditorController, self).__init__(service, service.getSequences(), "Edit Sequences",
@@ -424,6 +404,9 @@ class SequenceEditorController(AbstractSimpleEditorController):
 
 
 class FragmentEditorController(AbstractEditorControllerWithTabs):
+    '''
+    Controller class to edit fragmentations
+    '''
     def __init__(self):
         super(FragmentEditorController, self).__init__(FragmentationService(), "Edit Fragments", "Fragment-Pattern")
         upperWidget = self.makeUpperWidget()
@@ -467,6 +450,9 @@ class FragmentEditorController(AbstractEditorControllerWithTabs):
 
 
 class ModificationEditorController(AbstractEditorControllerWithTabs):
+    '''
+    Controller class to edit modification patterns
+    '''
     def __init__(self):
         super(ModificationEditorController, self).__init__(ModificationService(), "Edit Modifications",
                                                            "Modification-Pattern")
@@ -506,6 +492,9 @@ class ModificationEditorController(AbstractEditorControllerWithTabs):
 
 
 class IntactIonEditorController(AbstractEditorController):
+    '''
+    Controller class to intact ion patterns
+    '''
     def __init__(self):
         super(IntactIonEditorController, self).__init__(IntactIonService(),
                                                         "Edit Intact Ions", "Modification")

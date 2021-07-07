@@ -17,13 +17,12 @@ from src.intact.Main import run as IntactIonsSearch
 from src.gui.TD_searchController import TD_MainController
 
 
-class Window(AbstractMainWindow):
+class Window(SimpleMainWindow):
+    '''
+    Main window which pops up when SAUSAGE is started
+    '''
     def __init__(self):
         super(Window, self).__init__(None, 'SAUSAGE')
-        #self.setWindowTitle('SAUSAGE')
-        #self.menubar = QtWidgets.QMenuBar(self)
-        #self.setMenuBar(self.menubar)
-        #self.menubar.setGeometry(QtCore.QRect(0, 0, 340, 22))
         self.createMenuBar()
         self.createMenu('Top-Down Tools',
                         {'Analyse Spectrum':

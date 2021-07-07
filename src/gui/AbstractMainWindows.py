@@ -1,9 +1,13 @@
 from PyQt5 import QtWidgets, QtCore
 
 
-class AbstractMainWindow(QtWidgets.QMainWindow):
+
+class SimpleMainWindow(QtWidgets.QMainWindow):
+    '''
+    Used as by TD_searchController, EditorControllers; parent class of StartWindow, IsotopePatternView
+    '''
     def __init__(self, parent, title):
-        super(AbstractMainWindow, self).__init__(parent)
+        super(SimpleMainWindow, self).__init__(parent)
         self._translate = QtCore.QCoreApplication.translate
         self.setWindowTitle(self._translate(self.objectName(), title))
         self.centralwidget = QtWidgets.QWidget(self)
@@ -57,3 +61,4 @@ class AbstractMainWindow(QtWidgets.QMainWindow):
             pos -= 1
         self.menubar.addAction(menu.menuAction())
         return menu, menuActions
+

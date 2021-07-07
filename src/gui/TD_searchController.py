@@ -18,6 +18,7 @@ from PyQt5.QtWidgets import QAbstractItemView
 from src import path
 from src.Exceptions import InvalidIsotopePatternException, InvalidInputException
 from src.entities.Info import Info
+from src.gui.AbstractMainWindows import SimpleMainWindow
 from src.gui.InfoView import InfoView
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.repositories.IsotopePatternRepository import IsotopePatternRepository
@@ -47,6 +48,9 @@ def sortIonsByName(ionList):
 
 #if __name__ == '__main__':
 class TD_MainController(object):
+    '''
+    Controller class for starting, saving, exporting and loading a top-down search/analysis
+    '''
     def __init__(self, parent, new):
         if new:
             dialog = TDStartDialog(None)
@@ -93,11 +97,6 @@ class TD_MainController(object):
                                           self._propStorage.getModificationName())
                 self.saved = True
                 self.setUpUi(parent)
-                '''for ion in observedIons:
-                    print(ion.getName())
-                    print(ion.toStorage())
-                    print(ion.getPeakValues())
-                    print()'''
 
     @staticmethod
     def deleteSearch(name, searchService):
@@ -195,14 +194,10 @@ class TD_MainController(object):
 
     def setUpUi(self, parent):
         self._openWindows = []
-        self.mainWindow = QtWidgets.QMainWindow(parent)
+        self.mainWindow = SimpleMainWindow(parent, 'Results:  ' + os.path.split(self.settings['spectralData'])[-1])
         self._translate = QtCore.QCoreApplication.translate
-        self.mainWindow.setWindowTitle(self._translate(self.mainWindow.objectName(),
-                                                       'Results:  '+os.path.split(self.settings['spectralData'])[-1]))
-        self.centralwidget = QtWidgets.QWidget(self.mainWindow)
+        self.centralwidget = self.mainWindow.centralWidget()
         self.verticalLayout = QtWidgets.QVBoxLayout(self.centralwidget)
-        # self.verticalLayout.addWidget(self.tabWidget)
-        self.mainWindow.setCentralWidget(self.centralwidget)
         self.tabWidget = QtWidgets.QTabWidget(self.centralwidget)
         self._infoView = InfoView(None, self._info)
         self.createMenuBar()
@@ -215,26 +210,23 @@ class TD_MainController(object):
         self.mainWindow.show()
 
     def createMenuBar(self):
-        self.menubar = QtWidgets.QMenuBar(self.mainWindow)
-        self.mainWindow.setMenuBar(self.menubar)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 340, 22))
+        self.mainWindow.createMenuBar()
         self._actions = dict()
-        self.createMenu("File", {'Save': self.saveAnalysis, 'Export': self.export,
-                                 'Close': self.close}, ['', '', ''], ["Ctrl+S", '', "Ctrl+Q"])
-        self.createMenu("Edit", {'Repeat ovl. modelling': self.repeatModellingOverlaps},
-                        ['Repeat overlap modelling involving user inputs'], [""])
-        self.createMenu("Show",
-                {'Results': self.mainWindow.show,
-                 'Occupancy-Plot': self.showOccupancyPlot,
-                 'Charge-Plot': lambda: self.showChargeDistrPlot(False),
-                 'Reduced Charge-Plot':lambda: self.showChargeDistrPlot(True),
-                 'Sequence Coverage': self.dumb, 'Original Values':self.showRemodelledIons,
-                 'Info File':self._infoView.show},
-                ['Show lists of observed and deleted ions' ,'Show occupancies as a function of sequence pos.',
-                 'Show av. charge as a function of sequence pos. (Calculated with Int. values)',
-                 'Show av. charge as a function of sequence pos. (Calculated with Int./z values)',
-                 'Show sequence coverage', 'Show original values of overlapping ions', 'Show Protocol'],
-                ['',"", "", '', '', '', ''])
+        _,actions = self.mainWindow.createMenu("File", {'Save': (self.saveAnalysis,None,"Ctrl+S"),
+                                'Export': (self.export,None,None), 'Close': (self.close,None,"Ctrl+Q")}, None)
+        self._actions.update(actions)
+        _,actions = self.mainWindow.createMenu("Edit", {'Repeat ovl. modelling':
+                            (self.repeatModellingOverlaps,'Repeat overlap modelling involving user inputs',None)},None)
+        self._actions.update(actions)
+        _,actions = self.mainWindow.createMenu("Show",
+                {'Results': (self.mainWindow.show,'Show lists of observed and deleted ions',None),
+                 'Occupancy-Plot': (self.showOccupancyPlot,'Show occupancies as a function of sequence pos.',None),
+                 'Charge-Plot': (lambda: self.showChargeDistrPlot(False),'Show av. charge as a function of sequence pos. (Calculated with Int. values)',None),
+                 'Reduced Charge-Plot':(lambda: self.showChargeDistrPlot(True),'Show av. charge as a function of sequence pos. (Calculated with Int./z values)',None),
+                 'Sequence Coverage': (self.dumb,'Show sequence coverage',None),
+                 'Original Values':(self.showRemodelledIons,'Show original values of overlapping ions',None),
+                 'Info File':(self._infoView.show,'Show Protocol',None)},None)
+        self._actions.update(actions)
         if self.settings['modifications'] == '-':
             self._actions['Occupancy-Plot'].setDisabled(True)
         if len(self.configs['interestingIons'])<1:
@@ -242,26 +234,6 @@ class TD_MainController(object):
                 self._actions[action].setDisabled(True)
                 self._actions[action].setToolTip('Choose ions of interest within "Edit Parameters" menu to use this function')
 
-    def createMenu(self, name, options, tooltips, shortcuts):
-        menu = QtWidgets.QMenu(self.menubar)
-        menu.setTitle(self._translate(self.mainWindow.objectName(), name))
-        menu.setToolTipsVisible(True)
-        #menuActions = dict()
-        pos = len(options)
-        for i, option in enumerate(options.keys()):
-            action = QtWidgets.QAction(self.mainWindow)
-            action.setText(self._translate(self.mainWindow.objectName(),option))
-            if tooltips[i] != "":
-                action.setToolTip(tooltips[i])
-            if shortcuts[i] != "":
-                action.setShortcut(shortcuts[i])
-            action.triggered.connect(options[option])
-            #menuActions[option] = action
-            menu.addAction(action)
-            pos -= 1
-            self._actions[option] = action
-        self.menubar.addAction(menu.menuAction())
-        return menu#, menuActions
 
     def fillUi(self):
         self.tables = []

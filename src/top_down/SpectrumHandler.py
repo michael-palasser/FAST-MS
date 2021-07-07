@@ -6,7 +6,7 @@ Created on 27 Jul 2020
 from math import exp
 from re import findall
 from subprocess import call
-
+import logging
 import numpy as np
 import copy
 from scipy.constants import R
@@ -19,6 +19,7 @@ from src.entities.Ions import FragmentIon
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 
 configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
+logging.basicConfig(level=logging.INFO)
 
 def getErrorLimit(mz):
     return configs['k']/1000 * mz + configs['d']
@@ -211,16 +212,21 @@ class SpectrumHandler(object):
         currentMz = configs['minUpperBound']
         #tolerance = 50
         peaksHigherThanNoise = list()
+        logging.debug('********** Calculating noise **********\nm/z\tnoise')
         while currentMz < 2500:
             noise = self.calculateNoise(currentMz,windowSize)
+            logging.debug(str(currentMz)+'\t'+ str(noise))
             currentWindow = self.getPeaksInWindow(self.__spectrum, currentMz, windowSize)
             peaksHigherThanNoise.append((currentMz, currentWindow[np.where(currentWindow > (noise * 5))].size))
             currentMz += 1
         peaksHigherThanNoise = np.array(peaksHigherThanNoise)
         windowSize, currentMz = 100 , 1200
+        logging.info('********** Finding upper bound m/z - Window in spectralFile containing fragments **********\n'
+                     'm/z\tpeaks')
         while currentMz < 2500:
             currentWindow = self.getPeaksInWindow(peaksHigherThanNoise, currentMz, windowSize)
             numPeaks = np.sum(currentWindow[:, 1])
+            logging.info(str(currentMz)+'\t'+ str(numPeaks))
             print(currentMz, numPeaks)
             if numPeaks < 5:
                 currentMz += configs['upperBoundTolerance']
@@ -362,6 +368,7 @@ class SpectrumHandler(object):
         if (probableZ+tolerance)< highZ:
             highZ = round(probableZ + tolerance)
         print(fragment.getName(),lowZ,round(probableZ,2),highZ)
+        logging.info(fragment.getName(), str(lowZ),str(round(probableZ,2)), str(highZ))
         return range(lowZ,highZ+1)
 
 

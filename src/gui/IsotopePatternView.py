@@ -2,13 +2,17 @@ from PyQt5 import QtWidgets, QtCore
 
 from src.IsotopePatternLogics import IsotopePatternLogics
 from src.Services import *
-from src.gui.AbstractMainWindows import AbstractMainWindow
+from src.gui.AbstractMainWindows import SimpleMainWindow
 from src.gui.IonTableWidget import IsoPatternIon
 from src.gui.PeakViews import IsoPatternPeakWidget
+from src.gui.SimpleDialogs import OpenDialog
 from src.gui.SpectrumView import TheoSpectrumView
 
 
-class IsotopePatternView(AbstractMainWindow):
+class IsotopePatternView(SimpleMainWindow):
+    '''
+    Main window for Isotope Pattern Tool
+    '''
     def __init__(self, parent):
         super(IsotopePatternView, self).__init__(parent, 'Isotope Pattern Tool')
         self._controller = IsotopePatternLogics()
@@ -76,14 +80,9 @@ class IsotopePatternView(AbstractMainWindow):
         self._upperW.setMinimumHeight(325)
         self.centralwidget.setLayout(self._vertLayout)
         self.setGeometry(QtCore.QRect(100,50,width, 400))
-        '''self.createMenuBar()
-        self.createMenu('File',
-                        {'Load Sequence':
-                             (lambda:TD_MainController(self, True), 'Starts analysis of top-down spectrum', None),},
-                        None)'''
+        self.createMenuBar()
+        self.createMenu('File', {'Load Sequence': (self.loadSequence, '', "Ctrl+O"),}, None)
         self.show()
-
-
 
     def makeOptions(self):
         self._frame = QtWidgets.QFrame(self._upperW)
@@ -126,6 +125,16 @@ class IsotopePatternView(AbstractMainWindow):
         [box.model().item(i).setEnabled(True) for i in range(box.count())]
         self.updateComboBox(box,options1+['']+options2)
         box.model().item(len(options1)).setEnabled(False)'''
+
+    def loadSequence(self):
+        service = SequenceService()
+        openDialog = OpenDialog('Sequences', service.getAllSequenceNames())
+        openDialog.show()
+        if openDialog.exec_() and openDialog.accepted:
+            sequence = service.get(openDialog.comboBox.currentText())
+            self._inputForm.setText(''.join(sequence.getSequenceString()))
+            self._modeBox.setCurrentText(sequence.getMolecule())
+            #self.activateFrame()
 
 
     def activateFrame(self):

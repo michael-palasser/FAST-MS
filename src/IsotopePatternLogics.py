@@ -30,6 +30,7 @@ class IsotopePatternLogics(object):
         self._isotopePattern = None
         self._ion = None
         self._neutralMass = None
+        self._avMass = None
 
     def getMolecules(self):
         '''
@@ -77,6 +78,12 @@ class IsotopePatternLogics(object):
         '''
         return self._neutralMass
 
+    def getAvMass(self):
+        '''
+        :return: (float) average mass
+        '''
+        return self._avMass
+
     def calculate(self, mode, inputString, charge, electrons, intensity, fragmentationName=None, fragTemplName=None,
                   modifPatternName=None, modifName=None, nrMod=None):
         '''
@@ -115,6 +122,8 @@ class IsotopePatternLogics(object):
                 self._isotopePattern = tempFormula.calcIsotopePatternSlowly()
         #isotopePattern = copy.deepcopy(self._isotopePattern)
         self._neutralMass = self._isotopePattern['m/z'][0]
+        self._avMass = np.sum(self._isotopePattern['calcInt']*self._isotopePattern['m/z']) / \
+                       np.sum(self._isotopePattern['calcInt'])
         if charge != 0:
             self._neutralMass -= (protMass+eMass)*charge
         self._isotopePattern['m/z'] = self.getMz(self._isotopePattern['m/z'],charge,electrons)
@@ -125,7 +134,7 @@ class IsotopePatternLogics(object):
         peaks = np.array(peaks, dtype=self._peakDtype)
         self._ion = FragmentIon(fragment, np.min(peaks['m/z']), charge, peaks,0)
         self._ion.setQuality(0)
-        return self._ion, self._neutralMass
+        return self._ion, self._neutralMass, self._avMass
 
     @staticmethod
     def getMz(mass, z, electrons):

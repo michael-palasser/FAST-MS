@@ -208,20 +208,6 @@ class FragmentIon(Fragment):
         '''
         return self.getValues()+[round(self.getScore(), 1), self._comment]
 
-    '''def getPeaks(self):
-        peaks = []
-        for i, peak in enumerate(self.isotopePattern):
-            peaks.append((peak['m/z'], self._charge, round(peak['calcInt']), peak['error'], peak['used']))
-            #indizes.append(i)
-        return peaks''' #pd.DataFrame(data=peaks, columns=['mz', 'z', 'int', 'name', 'error', 'used'])
-
-    '''def getPeakValues(self):
-        peaks = []
-        for i, peak in enumerate(self._isotopePattern):
-            peaks.append([round(peak['m/z'],5), round(peak['relAb']), round(peak['calcInt']), round(peak['error'],2),
-                         peak['used']])
-        print(self._isotopePattern, self._isotopePattern.dtype)
-        return self._isotopePattern'''
 
     def toStorage(self):
         '''
@@ -231,10 +217,6 @@ class FragmentIon(Fragment):
         return [self._type, self._number, self._modification, self._formula, self._sequence, self._radicals,
                 self._monoisotopicRaw, self._charge, int(round(self._noise)), int(round(self._intensity)),
                 float(self._error), self._quality, self._comment]
-    '''def fromStorage(self):
-        return [self.type, self.number, self.modification, self.formula, self.sequence, self.radicals,
-               self._monoisotopicRaw, self._charge, self.noise, self.intensity,
-                self.error, self.quality, self._comment]'''
 
     def peaksToStorage(self):
         '''
@@ -245,6 +227,7 @@ class FragmentIon(Fragment):
         for i, peak in enumerate(self._isotopePattern):
             peaks.append([peak['m/z'], round(peak['relAb']), round(peak['calcInt']), float(peak['error']), int(peak['used'])])
         return peaks
+
 
 class IntactIon(object):
     def __init__(self, name, modification, mz,theoMz, charge, intensity, nrOfModifications):

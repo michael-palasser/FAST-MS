@@ -104,10 +104,10 @@ class IonTableWidget(QTableWidget):
 
 class IsoPatternIon(IonTableWidget):
     def getFormat(self):
-        return ['{:10.5f}','{:2d}', '{:12d}', '','{:4.2f}', '', '{:10.4f}']
+        return ['{:10.5f}','{:2d}', '{:12d}', '','{:4.2f}', '', '{:10.4f}','{:10.4f}']
 
     def getHeaders(self):
-        return ['m/z','z','intensity','name','quality', 'formula', 'neutral mass']
+        return ['m/z','z','intensity','name','quality', 'formula', 'neutral mass', 'av.mass']
 
     def fill(self, row, ion):
         formats=self.getFormat()

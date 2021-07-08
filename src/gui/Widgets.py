@@ -14,14 +14,14 @@ class OpenFileWidget(QtWidgets.QWidget):
 
         self.horizontalLayout.addWidget(self.lineEdit)
         self.pushButton = QtWidgets.QPushButton(self)
-        #self.pushButton.setGeometry(QtCore.QRect(width-32, 0, 36, 30))
+        #self._pushButton.setGeometry(QtCore.QRect(width-32, 0, 36, 30))
         self.pushButton.setIcon(QtGui.QIcon('open.png'))
         self.pushButton.setIconSize(QtCore.QSize(26,26))
         self.pushButton.setMaximumSize(26,26)
-        #self.pushButton.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum))
-        #self.pushButton.setGeometry(QtCore.QRect(250, yPos, 26, 26))
+        #self._pushButton.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum))
+        #self._pushButton.setGeometry(QtCore.QRect(250, yPos, 26, 26))
         #_translate = QtCore.QCoreApplication.translate
-        #self.pushButton.setText(_translate(self.objectName(), "O"))
+        #self._pushButton.setText(_translate(self.objectName(), "O"))
         self.horizontalLayout.addWidget(self.pushButton)
         self.__startPath = startPath
         self.__title = title
@@ -30,16 +30,16 @@ class OpenFileWidget(QtWidgets.QWidget):
         """sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.pushButton.sizePolicy().hasHeightForWidth())
-        self.pushButton.setSizePolicy(sizePolicy)"""
+        sizePolicy.setHeightForWidth(self._pushButton.sizePolicy().hasHeightForWidth())
+        self._pushButton.setSizePolicy(sizePolicy)"""
         #lineEdit.setObjectName(name)
         #self.widgets[self.lineEdit.objectName()] = self.lineEdit
-        #pushButton.setObjectName(name)
+        #_pushButton.setObjectName(name)
         self.pushButton.clicked.connect(lambda: self.getFileNames(mode))
-        #self.buttons[pushButton.objectName()] = pushButton
+        #self.buttons[_pushButton.objectName()] = _pushButton
 
     def getFileNames(self, mode):
-        #files = self.openFileNamesDialog(self.__title, self.__formats)
+        #_files = self.openFileNamesDialog(self.__title, self.__formats)
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
         if mode == 2:
@@ -55,7 +55,7 @@ class OpenFileWidget(QtWidgets.QWidget):
                 dir = QtCore.QDir.toNativeSeparators(dir)
                 print(dir)
             self.lineEdit.setText(dir)
-        #self.__files = files
+        #self.__files = _files
 
     #ToDo different Versions:File/Files, title, file formats
 

@@ -18,7 +18,7 @@ class Ui_startDialog(object):
         self.buttonBox = QtWidgets.QDialogButtonBox(startDialog)
         self.buttonBox.setGeometry(QtCore.QRect(210, 260, 164, 32))
         self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
-        self.buttonBox.setObjectName("buttonBox")
+        self.buttonBox.setObjectName("_buttonBox")
         self.layoutWidget = QtWidgets.QWidget(startDialog)
         self.layoutWidget.setGeometry(QtCore.QRect(30, 20, 351, 216))
         self.layoutWidget.setObjectName("layoutWidget")
@@ -80,7 +80,7 @@ class Ui_startDialog(object):
         sizePolicy.setHeightForWidth(self.defaultButton.sizePolicy().hasHeightForWidth())
         self.defaultButton.setSizePolicy(sizePolicy)
         self.defaultButton.setMinimumSize(QtCore.QSize(113, 0))
-        self.defaultButton.setObjectName("defaultButton")
+        self.defaultButton.setObjectName("_defaultButton")
 
         self.retranslateUi(startDialog)
         QtCore.QMetaObject.connectSlotsByName(startDialog)

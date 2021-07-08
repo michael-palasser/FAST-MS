@@ -35,10 +35,10 @@ def run(mainWindow):
     service = SequenceService()
     dlg = OccupancyRecalcStartDialog(mainWindow, service.getAllSequenceNames())
     dlg.exec_()
-    if dlg and dlg.sequence != None:
-        sequenceName = dlg.sequence
-        sequence = service.get(dlg.sequence).getSequenceList()
-        modification = dlg.modification
+    if dlg and dlg.getSequence() != None:
+        sequenceName = dlg.getSequence()
+        sequence = service.get(sequenceName).getSequenceList()
+        modification = dlg.getModification()
 
         """import ion-list"""
         spectralFile = os.path.join(path, 'Spectral_data/Occupancies_in.csv')

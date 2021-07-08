@@ -2,11 +2,11 @@ from functools import partial
 
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtGui import QMovie
-from PyQt5.QtWidgets import QLabel, QMainWindow
+from PyQt5.QtWidgets import QLabel
 import numpy as np
 
-from src.gui.IonTableWidget import IonTableWidget, TickIonTableWidget
-from src.gui.PeakViews import SimplePeakView
+from src.gui.IonTableWidgets import IonTableWidget, TickIonTableWidget
+from src.gui.ShowPeaksViews import SimplePeakView
 from src.gui.SpectrumView import SpectrumView
 
 

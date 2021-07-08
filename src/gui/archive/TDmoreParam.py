@@ -196,7 +196,7 @@ class Ui_configDialog(object):
         sizePolicy.setHeightForWidth(self.buttonBox.sizePolicy().hasHeightForWidth())
         self.buttonBox.setSizePolicy(sizePolicy)
         self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
-        self.buttonBox.setObjectName("buttonBox")
+        self.buttonBox.setObjectName("_buttonBox")
         self.verticalLayout.addWidget(self.buttonBox, 0, QtCore.Qt.AlignHCenter)
 
         self.retranslateUi(configDialog)

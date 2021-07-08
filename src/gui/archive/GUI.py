@@ -7,7 +7,7 @@ class Ui_MainWindow(object):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(250, 250)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
-        self.centralwidget.setObjectName("centralwidget")
+        self.centralwidget.setObjectName("_centralwidget")
 
         # create label
         self.label = QtWidgets.QLabel(self.centralwidget)

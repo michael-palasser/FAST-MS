@@ -91,12 +91,12 @@ class AbstractSpectrumView(QtWidgets.QWidget):
         #self.spinBox.setGeometry(QtCore.QRect(65, 10, 65, 26))
         self.spinBox.setToolTip("Change Width of Peaks (in Da)")
         self.spinBox.setStepType(QtWidgets.QAbstractSpinBox.AdaptiveDecimalStepType)
-        '''self.pushButton = QtWidgets.QPushButton(self.widthWidget)
-        self.pushButton.setGeometry(QtCore.QRect(0, 22, 70, 32))
-        #self.pushButton.setGeometry(QtCore.QRect(60, 32, 70, 32))
-        self.pushButton.setText(self._translate(self.objectName(), "Update"))
-        self.pushButton.setToolTip("Change Width of Peaks (in Da)")
-        self.pushButton.clicked.connect(lambda: self.changeWidth(self.peakBars))'''
+        '''self._pushButton = QtWidgets.QPushButton(self.widthWidget)
+        self._pushButton.setGeometry(QtCore.QRect(0, 22, 70, 32))
+        #self._pushButton.setGeometry(QtCore.QRect(60, 32, 70, 32))
+        self._pushButton.setText(self._translate(self.objectName(), "Update"))
+        self._pushButton.setToolTip("Change Width of Peaks (in Da)")
+        self._pushButton.clicked.connect(lambda: self.changeWidth(self.peakBars))'''
 
     def plot(self, width):
         self.peakBars = pg.BarGraphItem(x=self.peaks[:,0], height=self.peaks[:,1], width=width, brush='k')
@@ -170,8 +170,8 @@ class TheoSpectrumView(AbstractSpectrumView):
         self.spinBox.move(width-70,0)
         #self.resize(500, 400)
         #self.spinBox.setValue(0.4)
-        #self.pushButton.clicked.disconnect()
-        #self.pushButton.clicked.connect(lambda: self.changeWidth(self.modelledBars))
+        #self._pushButton.clicked.disconnect()
+        #self._pushButton.clicked.connect(lambda: self.changeWidth(self.modelledBars))
 
     def plot(self, width):
         #self.legend = pg.LegendItem(offset=(0., .5), labelTextSize='12pt')

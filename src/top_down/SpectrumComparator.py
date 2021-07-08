@@ -49,8 +49,8 @@ def run(mainWindow):
     print(path)
     dlg = SpectrumComparatorStartDialog(mainWindow)
     dlg.exec_()
-    if dlg and len(dlg.files) >0:
-        spectralFiles = dlg.files
+    if dlg and len(dlg.getFiles()) >0:
+        spectralFiles = dlg.getFiles()
         spectra = list()
         ions = dict()
         for spectralFile in spectralFiles:

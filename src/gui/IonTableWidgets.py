@@ -32,6 +32,7 @@ class IonTableWidget(QTableWidget):
         self.resizeColumnsToContents()
         self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.setSortingEnabled(True)
+        self.customContextMenuRequested['QPoint'].connect(partial(self.showOptions, self))
         # self.customContextMenuRequested['QPoint'].connect(partial(self.editRow, self, bools))
 
     def getFormat(self):
@@ -101,6 +102,23 @@ class IonTableWidget(QTableWidget):
             if ion.getName() == self.item(row, 3).text() and ion.getCharge() == int(self.item(row, 1).text()):
                 return ion
 
+    def showOptions(self, table, pos):
+        menu = QtWidgets.QMenu()
+        copyAllAction = menu.addAction("Copy Table")
+        copyAction = menu.addAction("Copy Cell")
+        action = menu.exec_(table.viewport().mapToGlobal(pos))
+        if action == copyAction:
+            it = table.indexAt(pos)
+            if it is None:
+                return
+            selectedCol = it.column()
+            df = pd.DataFrame([self._ions[0][selectedCol]])
+            df.to_clipboard(index=False, header=False)
+        elif action == copyAllAction:
+            df = pd.DataFrame(data=self._ions, columns=self.getHeaders())
+            df.to_clipboard(index=False, header=True)
+
+
 
 class IsoPatternIon(IonTableWidget):
     '''
@@ -133,7 +151,7 @@ class IsoPatternIon(IonTableWidget):
                     newItem.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
             self.setItem(row, j, newItem)
         self.resizeRowsToContents()
-        self.customContextMenuRequested['QPoint'].connect(partial(self.showOptions, self))
+        #self.customContextMenuRequested['QPoint'].connect(partial(self.showOptions, self))
 
     def getIntensity(self):
         if self._ions == ((),):
@@ -147,7 +165,7 @@ class IsoPatternIon(IonTableWidget):
     def getIon(self, row):
         return self._ions[row]
 
-    def showOptions(self, table, pos):
+    '''def showOptions(self, table, pos):
         menu = QtWidgets.QMenu()
         copyAllAction = menu.addAction("Copy Table")
         copyAction = menu.addAction("Copy Cell")
@@ -161,7 +179,7 @@ class IsoPatternIon(IonTableWidget):
             df.to_clipboard(index=False, header=False)
         elif action == copyAllAction:
             df = pd.DataFrame(data=self._ions, columns=self.getHeaders())
-            df.to_clipboard(index=False, header=True)
+            df.to_clipboard(index=False, header=True)'''
 
     def updateTable(self, newIons):
         self._ions = newIons

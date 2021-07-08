@@ -5,7 +5,7 @@ try:
     from Tkinter import Tk
 except ImportError:
     from tkinter import Tk
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtGui
 from PyQt5.QtCore import Qt
 
 

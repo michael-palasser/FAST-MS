@@ -10,8 +10,8 @@ class SimpleMainWindow(QtWidgets.QMainWindow):
         super(SimpleMainWindow, self).__init__(parent)
         self._translate = QtCore.QCoreApplication.translate
         self.setWindowTitle(self._translate(self.objectName(), title))
-        self.centralwidget = QtWidgets.QWidget(self)
-        self.setCentralWidget(self.centralwidget)
+        self._centralwidget = QtWidgets.QWidget(self)
+        self.setCentralWidget(self._centralwidget)
 
     def updateComboBox(self, comboBox, newOptions):
         toAdjust = comboBox.count() - len(newOptions)
@@ -33,14 +33,14 @@ class SimpleMainWindow(QtWidgets.QMainWindow):
         button.setGeometry(geom)'''
 
     def createMenuBar(self):
-        self.menubar = QtWidgets.QMenuBar(self)
-        self.setMenuBar(self.menubar)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 340, 22))
+        self._menubar = QtWidgets.QMenuBar(self)
+        self.setMenuBar(self._menubar)
+        self._menubar.setGeometry(QtCore.QRect(0, 0, 340, 22))
         #self.fileMenu, self.fileMenuActions = self.createMenu("File", options, 3)
 
 
     def createMenu(self, name, options, separatorPosition):
-        menu = QtWidgets.QMenu(self.menubar)
+        menu = QtWidgets.QMenu(self._menubar)
         menu.setTitle(self._translate(self.objectName(), name))
         menu.setToolTipsVisible(True)
         menuActions = dict()
@@ -59,6 +59,6 @@ class SimpleMainWindow(QtWidgets.QMainWindow):
             menuActions[option] = action
             menu.addAction(action)
             pos -= 1
-        self.menubar.addAction(menu.menuAction())
+        self._menubar.addAction(menu.menuAction())
         return menu, menuActions
 

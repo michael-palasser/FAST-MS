@@ -3,8 +3,8 @@ from PyQt5 import QtWidgets, QtCore
 from src.IsotopePatternLogics import IsotopePatternLogics
 from src.Services import *
 from src.gui.AbstractMainWindows import SimpleMainWindow
-from src.gui.IonTableWidget import IsoPatternIon
-from src.gui.PeakViews import IsoPatternPeakWidget
+from src.gui.IonTableWidgets import IsoPatternIon
+from src.gui.PeakWidgets import IsoPatternPeakWidget
 from src.gui.SimpleDialogs import OpenDialog
 from src.gui.SpectrumView import TheoSpectrumView
 
@@ -19,8 +19,8 @@ class IsotopePatternView(SimpleMainWindow):
         self._fragmentationOpts = self._controller.getFragmentationNames()
         self._modifPatternOpts = self._controller.getModifPatternNames()
         self._intensity = None
-        self._vertLayout = QtWidgets.QVBoxLayout(self.centralwidget)
-        self._upperW =QtWidgets.QWidget(self.centralwidget)
+        self._vertLayout = QtWidgets.QVBoxLayout(self._centralwidget)
+        self._upperW =QtWidgets.QWidget(self._centralwidget)
 
         self._inputForm = QtWidgets.QLineEdit(self._upperW)
         self._inputForm.setGeometry(QtCore.QRect(15, 20, 185, 21))
@@ -68,7 +68,7 @@ class IsotopePatternView(SimpleMainWindow):
         self._spaceItem = QtWidgets.QSpacerItem(0, 10, QtWidgets.QSizePolicy.Expanding)
         self._vertLayout.addItem(self._spaceItem)
         # self.ionTable.setGeometry(QtCore.QRect(20, 335, 550, 50))
-        self._peakLabel = QtWidgets.QLabel(self.centralwidget)
+        self._peakLabel = QtWidgets.QLabel(self._centralwidget)
         self._peakLabel.setGeometry(QtCore.QRect(25, 415, 60, 16))
         self._peakLabel.setText(self._translate(self.objectName(), "Peaks:"))
         self._vertLayout.addWidget(self._peakLabel)
@@ -78,7 +78,7 @@ class IsotopePatternView(SimpleMainWindow):
         width = 615
         self._upperW.setGeometry(QtCore.QRect(0,0,width,335))
         self._upperW.setMinimumHeight(325)
-        self.centralwidget.setLayout(self._vertLayout)
+        self._centralwidget.setLayout(self._vertLayout)
         self.setGeometry(QtCore.QRect(100,50,width, 400))
         self.createMenuBar()
         self.createMenu('File', {'Load Sequence': (self.loadSequence, '', "Ctrl+O"),}, None)
@@ -131,7 +131,7 @@ class IsotopePatternView(SimpleMainWindow):
         openDialog = OpenDialog('Sequences', service.getAllSequenceNames())
         openDialog.show()
         if openDialog.exec_() and openDialog.accepted:
-            sequence = service.get(openDialog.comboBox.currentText())
+            sequence = service.get(openDialog.getName())
             self._inputForm.setText(''.join(sequence.getSequenceString()))
             self._modeBox.setCurrentText(sequence.getMolecule())
             #self.activateFrame()
@@ -190,7 +190,7 @@ class IsotopePatternView(SimpleMainWindow):
         self._spectrumView.hide()
         del self._spectrumView
         isotopePattern = self._controller.getIsotopePattern(ion)
-        self._spectrumView = TheoSpectrumView(self.centralwidget, isotopePattern, 365)
+        self._spectrumView = TheoSpectrumView(self._centralwidget, isotopePattern, 365)
         self._spectrumView.setGeometry(QtCore.QRect(250, 50, 365, 300))
 
     def getIonVals(self, ion, neutralMass, avMass):
@@ -200,7 +200,7 @@ class IsotopePatternView(SimpleMainWindow):
                 ion.getQuality(),ion.getFormula().toString(), neutralMass, avMass)
 
     def makeIonTable(self, ion, neutralMass, avMass):
-        self._ionTable = IsoPatternIon(self.centralwidget, (self.getIonVals(ion, neutralMass,avMass),), 0)
+        self._ionTable = IsoPatternIon(self._centralwidget, (self.getIonVals(ion, neutralMass, avMass),), 0)
         self._ionTable.resizeColumnsToContents()
         self._vertLayout.insertWidget(2,self._ionTable)
         self._ionTable.show()

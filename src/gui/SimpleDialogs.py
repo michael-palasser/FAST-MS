@@ -15,10 +15,13 @@ class OpenDialog(AbstractDialog):
     def __init__(self, title, options):
         super(OpenDialog, self).__init__(parent=None,title=title)
         formLayout = self.makeFormLayout(self)
-        self.comboBox = self.createComboBox(self, options)
-        index = self.fill(self, formLayout, ("Enter Name:",), {'name':(self.comboBox, '')})
-        formLayout.setWidget(index+1, QtWidgets.QFormLayout.SpanningRole, self.buttonBox)
+        self._comboBox = self.createComboBox(self, options)
+        index = self.fill(self, formLayout, ("Enter Name:",), {'name':(self._comboBox, '')})
+        formLayout.setWidget(index + 1, QtWidgets.QFormLayout.SpanningRole, self._buttonBox)
         self.show()
+
+    def getName(self):
+        return self._comboBox.currentText()
 
 class SelectSearchDlg(AbstractDialog):
     '''
@@ -26,13 +29,13 @@ class SelectSearchDlg(AbstractDialog):
     '''
     def __init__(self, parent, options, deleteFun, service):
         super(SelectSearchDlg, self).__init__(parent,'Load Analysis')
-        self.deleteFun = deleteFun
+        self._deleteFun = deleteFun
         self._service = service
         formLayout = self.makeFormLayout(self)
         self._options = options
         #self._options = ['search1, 23.01.1992, 08:12', 'search2, 28.01.1992, 08:12']
-        self.comboBox = self.createComboBox(self, self._options)
-        index = self.fill(self, formLayout, ("Enter Name:",), {'name':(self.comboBox, '')})
+        self._comboBox = self.createComboBox(self, self._options)
+        index = self.fill(self, formLayout, ("Enter Name:",), {'name':(self._comboBox, '')})
 
         self._delBtn = QtWidgets.QPushButton(self)
         #sizePolicy = self.setNewSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
@@ -43,23 +46,23 @@ class SelectSearchDlg(AbstractDialog):
         self._delBtn.setText(self._translate(self.objectName(), "Delete"))
 
         formLayout.setWidget(index+1, QtWidgets.QFormLayout.LabelRole, self._delBtn)
-        formLayout.setWidget(index+2, QtWidgets.QFormLayout.SpanningRole, self.buttonBox)
+        formLayout.setWidget(index + 2, QtWidgets.QFormLayout.SpanningRole, self._buttonBox)
         self.show()
 
     def delete(self):
-        name = self.comboBox.currentText()
+        name = self._comboBox.currentText()
         choice = QtWidgets.QMessageBox.question(self, "Deleting", "Do you really want to permanently delete analysis "
                                                 +name+'\nWarning: This cannot be undone',
                                                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
         if choice == QtWidgets.QMessageBox.Yes:
-            self.deleteFun(name,self._service)
+            self._deleteFun(name, self._service)
             index = self._options.index(name)
             del self._options[index]
-            self.comboBox.removeItem(index)
+            self._comboBox.removeItem(index)
 
     def getName(self):
         if self.accepted:
-            return self.comboBox.currentText()
+            return self._comboBox.currentText()
         else:
             return None
 
@@ -74,15 +77,15 @@ class OpenSpectralDataDlg(AbstractDialog):
         label.setText(self._translate(self.objectName(), 'File with spectral data could not be found.\n'
                                                                     'Select the location of the file.'))
         formLayout.setWidget(0, QtWidgets.QFormLayout.SpanningRole, label)
-        self.fileWidget = OpenFileWidget(parent, 1, join(path, 'Spectral_data','top-down'), "Open File",
+        self._fileWidget = OpenFileWidget(parent, 1, join(path, 'Spectral_data', 'top-down'), "Open File",
                                            "Plain Text Files (*txt);;Comma Separated Values (*csv);;All Files (*)")
-        self.fill(self, formLayout, ("File name:",), {'spectralData':(self.fileWidget,
+        self.fill(self, formLayout, ("File name:",), {'spectralData':(self._fileWidget,
                                   'Name of the file with spectral peaks (txt or csv format)')})
-        formLayout.setWidget(2, QtWidgets.QFormLayout.SpanningRole, self.buttonBox)
+        formLayout.setWidget(2, QtWidgets.QFormLayout.SpanningRole, self._buttonBox)
         self.show()
 
     def getValue(self):
-        return self.fileWidget.text()
+        return self._fileWidget.text()
 
 class ExportDialog(AbstractDialog):
     '''
@@ -97,23 +100,23 @@ class ExportDialog(AbstractDialog):
                    'name': (QtWidgets.QLineEdit(self), "Name of the output-file\n"
                                                        "(default: name of spectral input file + _out)")})
         formLayout.addItem(QtWidgets.QSpacerItem(0,1))
-        formLayout.setWidget(index+1, QtWidgets.QFormLayout.FieldRole, self.buttonBox)
+        formLayout.setWidget(index + 1, QtWidgets.QFormLayout.FieldRole, self._buttonBox)
         self.show()
 
     def accept(self):
-        dir = self.widgets['dir'].text()
+        dir = self._widgets['dir'].text()
         if (dir != '') and not isdir(dir):
-            raise InvalidInputException(self.widgets['dir'].text(), "not found")
+            raise InvalidInputException(self._widgets['dir'].text(), "not found")
         super(ExportDialog, self).accept()
 
     '''def getFormat(self):
-        return self.widgets['format'].currentText()'''
+        return self._widgets['format'].currentText()'''
 
     def getDir(self):
-        return self.widgets['dir'].text()
+        return self._widgets['dir'].text()
 
     def getFilename(self):
-        return self.widgets['name'].text()
+        return self._widgets['name'].text()
 
 class SaveSearchDialog(AbstractDialog):
     '''
@@ -125,7 +128,7 @@ class SaveSearchDialog(AbstractDialog):
         self._lineEdit = QtWidgets.QLineEdit(self)
         self._lineEdit.setText(text)
         index = self.fill(self, formLayout, ("Enter Name:",), {'name':(self._lineEdit, 'Enter the name')})
-        formLayout.setWidget(index+1, QtWidgets.QFormLayout.SpanningRole, self.buttonBox)
+        formLayout.setWidget(index + 1, QtWidgets.QFormLayout.SpanningRole, self._buttonBox)
         self.show()
 
     def getText(self):

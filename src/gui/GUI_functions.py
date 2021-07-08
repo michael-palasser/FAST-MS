@@ -20,7 +20,7 @@ def createComboBox(parent, options):
     return comboBox
 
 
-class AbstractMainWindow(QtWidgets.QMainWindow):
+"""class AbstractMainWindow(QtWidgets.QMainWindow):
     def __init__(self, title):
         super(AbstractMainWindow, self).__init__()
         self._translate = QtCore.QCoreApplication.translate
@@ -62,12 +62,12 @@ class AbstractMainWindow(QtWidgets.QMainWindow):
         return menu, menuActions
 
     def createWidgetsInFormLayout(self, labels, widgets, initYPos, widgetWith, initialValues):
-        """
+        '''
 
         :param labels: list of Strings
         :param widgets: dict of {name:widget}
         :return:
-        """
+        '''
         maxWidth = 0
         yPos = initYPos
         for i, labelName in enumerate(labels):
@@ -107,6 +107,6 @@ class AbstractDialog(QtWidgets.QDialog):
         self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
-        self.newSettings = None
+        self._newSettings = None
         self.move(300,100)
-        self.canceled = False
+        self.canceled = False"""

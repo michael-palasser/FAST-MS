@@ -11,7 +11,7 @@ from src import path
 
 class ConfigHandler(object):
     '''
-    Class that reads and writes configuration-files (json-format) and stores it as dictionary
+    Class that reads and writes configuration-_files (json-format) and stores it as dictionary
     '''
     def __init__(self, configFile):
         '''

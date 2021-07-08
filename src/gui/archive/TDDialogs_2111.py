@@ -131,7 +131,7 @@ class TDStartDialog(AbstractDialog):
         self.sizePolicy.setHeightForWidth(self.defaultButton.sizePolicy().hasHeightForWidth())
         self.defaultButton.setSizePolicy(self.sizePolicy)
         self.defaultButton.setMinimumSize(QtCore.QSize(113, 0))
-        #self.defaultButton.setObjectName("defaultButton")
+        #self._defaultButton.setObjectName("_defaultButton")
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
         self.defaultButton.clicked.connect(self.backToLast)
@@ -351,7 +351,7 @@ class TD_configurationDialog(AbstractDialog):
         self.sizePolicy.setHeightForWidth(self.buttonBox.sizePolicy().hasHeightForWidth())
         self.buttonBox.setSizePolicy(self.sizePolicy)
         self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
-        #self.buttonBox.setObjectName("buttonBox")
+        #self._buttonBox.setObjectName("_buttonBox")
         self.verticalLayout.addWidget(self.buttonBox, 0, QtCore.Qt.AlignHCenter)
 
         self.digitDict = {self.lowerBound:'lowerBound', self.minUpperBound:'minUpperBound', self.upperBoundTolerance:

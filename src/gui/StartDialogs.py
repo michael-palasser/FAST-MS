@@ -18,7 +18,7 @@ class TDStartDialog(StartDialog):
     def __init__(self, parent):
         super().__init__(parent, "Settings")
         self._formLayout = self.makeFormLayout(self)
-        self.configHandler = ConfigurationHandlerFactory.getTD_SettingHandler()
+        self._configHandler = ConfigurationHandlerFactory.getTD_SettingHandler()
         self.setupUi()
 
     def setupUi(self):
@@ -44,48 +44,47 @@ class TDStartDialog(StartDialog):
                     #"Name of the output Excel file\ndefault: name of spectral pattern file + _out.xlsx"))
         index = self.fill(self, self._formLayout, labelNames, widgets)
         #xPos, yPos = self.createWidgets(widgets,200,linewidth)
-        self.widgets['charge'].setMinimum(-99)
-        self.widgets['noiseLimit'].setMinimum(0.01)
-        self.widgets['modifications'].currentTextChanged.connect(self.changeNrOfMods)
-        #self.buttonBox.setGeometry(QtCore.QRect(210, yPos+20, 164, 32))
-        #self.widgets['_charge'].setValue(2)
-        if self.configHandler.getAll() != None:
+        self._widgets['charge'].setMinimum(-99)
+        self._widgets['noiseLimit'].setMinimum(0.01)
+        self._widgets['modifications'].currentTextChanged.connect(self.changeNrOfMods)
+        #self._buttonBox.setGeometry(QtCore.QRect(210, yPos+20, 164, 32))
+        #self._widgets['_charge'].setValue(2)
+        if self._configHandler.getAll() != None:
             try:
-                self.widgets["fragmentation"].setCurrentText(self.configHandler.get('fragmentation'))
-                self.widgets["modifications"].setCurrentText(self.configHandler.get('modifications'))
+                self._widgets["fragmentation"].setCurrentText(self._configHandler.get('fragmentation'))
+                self._widgets["modifications"].setCurrentText(self._configHandler.get('modifications'))
                 self.changeNrOfMods()
-                #self.widgets["nrMod"].setValue(self.configHandler.get('nrMod'))
+                #self._widgets["nrMod"].setValue(self._configHandler.get('nrMod'))
             except KeyError:
                 traceback.print_exc()
         #self.makeButtonBox(self)
         self._formLayout.addItem(QtWidgets.QSpacerItem(0,1))
-        self.defaultButton = self.makeDefaultButton(self)
-        self._formLayout.setWidget(index+1, QtWidgets.QFormLayout.FieldRole, self.buttonBox)
+        self._defaultButton = self.makeDefaultButton(self)
+        self._formLayout.setWidget(index + 1, QtWidgets.QFormLayout.FieldRole, self._buttonBox)
         self._formLayout.setWidget(index+1, QtWidgets.QFormLayout.LabelRole, self._defaultButton)
 
     def changeNrOfMods(self):
-        if self.widgets['modifications'].currentText() == '-':
-            self.widgets['nrMod'].setValue(0)
-            self.widgets['nrMod'].setEnabled(False)
-        elif 'nrMod' in self.configHandler.getAll().keys():
-            self.widgets['nrMod'].setEnabled(True)
-            self.widgets["nrMod"].setValue(self.configHandler.get('nrMod'))
+        if self._widgets['modifications'].currentText() == '-':
+            self._widgets['nrMod'].setValue(0)
+            self._widgets['nrMod'].setEnabled(False)
+        elif 'nrMod' in self._configHandler.getAll().keys():
+            self._widgets['nrMod'].setEnabled(True)
+            self._widgets["nrMod"].setValue(self._configHandler.get('nrMod'))
         else:
-            self.widgets['nrMod'].setEnabled(True)
-            self.widgets["nrMod"].setValue(1)
-
+            self._widgets['nrMod'].setEnabled(True)
+            self._widgets["nrMod"].setValue(1)
 
     def backToLast(self):
         super(TDStartDialog, self).backToLast()
-        self.setValueOfWidget(self.widgets['noiseLimit'], self.configHandler.get('noiseLimit') / 10**6)
+        self.setValueOfWidget(self._widgets['noiseLimit'], self._configHandler.get('noiseLimit') / 10 ** 6)
 
     def accept(self):
-        self.newSettings = self.getNewSettings() #self.makeDictToWrite()
-        #self.checkValues(newSettings)
-        self.newSettings['noiseLimit']*=10**6
-        self.configHandler.write(self.newSettings)
-        print(self.newSettings)
-        #self.newSettings = newSettings
+        self._newSettings = self.getNewSettings() #self.makeDictToWrite()
+        #self.checkValues(_newSettings)
+        self._newSettings['noiseLimit']*= 10 ** 6
+        self._configHandler.write(self._newSettings)
+        print(self._newSettings)
+        #self._newSettings = _newSettings
         #self.startProgram(Main.run)
         super(TDStartDialog, self).accept()
 
@@ -107,27 +106,27 @@ class IntactStartDialog(DialogWithTabs, StartDialog):
     '''
     def __init__(self, parent=None):
         super().__init__(parent,"Intact FragmentIon Search")
-        self.configHandler = ConfigurationHandlerFactory.getIntactHandler()
+        self._configHandler = ConfigurationHandlerFactory.getIntactHandler()
         self.setupUi()
 
     def setupUi(self):
-        self.settingTab = self.createTab("Settings")
-        settingLayout = self.makeFormLayout(self.settingTab)
-        self.configTab = self.createTab("Configurations")
-        configLayout = self.makeFormLayout(self.configTab)
-        self.fill(self.settingTab, settingLayout,
+        self._settingTab = self.createTab("Settings")
+        settingLayout = self.makeFormLayout(self._settingTab)
+        self._configTab = self.createTab("Configurations")
+        configLayout = self.makeFormLayout(self._configTab)
+        self.fill(self._settingTab, settingLayout,
                   ("Sequence Name", "Modification", "Spectral File", "Spray Mode", "Output"),
                   {"sequName": (QtWidgets.QLineEdit(), "Name of sequenceList"),
                    "modification": (QtWidgets.QLineEdit(), "Modification of precursor ion"),
-                   "spectralData": (OpenFileWidget(self.settingTab, 1, join(path, 'Spectral_data', 'intact'), "Open File",
+                   "spectralData": (OpenFileWidget(self._settingTab, 1, join(path, 'Spectral_data', 'intact'), "Open File",
                                    "Plain Text Files (*txt);;All Files (*)"),
                                     "Name of the file with monoisotopic pattern (txt format)"),
-                   "sprayMode": (self.createComboBox(self.settingTab, ("negative", "positive")), "Spray mode"),
-                   "output": (QtWidgets.QLineEdit(self.settingTab),
+                   "sprayMode": (self.createComboBox(self._settingTab, ("negative", "positive")), "Spray mode"),
+                   "output": (QtWidgets.QLineEdit(self._settingTab),
                     "Name of the output txt file\ndefault: name of spectral pattern file + _out.txt")})
-        if self.configHandler.getAll() != None:
-            self.widgets['sprayMode'].setCurrentText(self._translate(self.objectName(), self.configHandler.get('sprayMode')))
-        self.fill(self.configTab,configLayout,
+        if self._configHandler.getAll() != None:
+            self._widgets['sprayMode'].setCurrentText(self._translate(self.objectName(), self._configHandler.get('sprayMode')))
+        self.fill(self._configTab, configLayout,
                   ("min. m/z", "max. m/z", "max. raw error", "slope (k) of error", "intercept (d) of error"),
                   {"minMz": (QtWidgets.QSpinBox(), "m/z where search starts"),
                    "maxMz": (QtWidgets.QSpinBox(), "m/z where search ends"),
@@ -137,29 +136,29 @@ class IntactStartDialog(DialogWithTabs, StartDialog):
                    "d": (QtWidgets.QDoubleSpinBox(),
                          "max. ppm error intercept in calbratied spectrum (ppm = k/1000 + d)")})
         #xMax, yMax = self.createWidgets(configWidgets, 200, 80)
-        self.widgets['minMz'].setMaximum(9999)
-        self.widgets['maxMz'].setMaximum(9999)
-        self.widgets["d"].setMinimum(-9.99)
+        self._widgets['minMz'].setMaximum(9999)
+        self._widgets['maxMz'].setMaximum(9999)
+        self._widgets["d"].setMinimum(-9.99)
         self.backToLast()
 
         '''self.createLabels(("Sequence Name", "Modification", "Spectral File", "Spray Mode", "Output"),
-                          self.settingTab, 10, 150)
-        settingWidgets = ((QtWidgets.QLineEdit(self.settingTab), "sequName", "Name of sequenceList"),
-                   (QtWidgets.QLineEdit(self.settingTab), "modification","Modification of precursor ion"),
-                   (OpenFileWidget(self.settingTab,linewidth, 0, 1, join(path, 'Spectral_data','intact'),  "Open File",
+                          self._settingTab, 10, 150)
+        settingWidgets = ((QtWidgets.QLineEdit(self._settingTab), "sequName", "Name of sequenceList"),
+                   (QtWidgets.QLineEdit(self._settingTab), "modification","Modification of precursor ion"),
+                   (OpenFileWidget(self._settingTab,linewidth, 0, 1, join(path, 'Spectral_data','intact'),  "Open File",
                                "Plain Text Files (*txt);;All Files (*)"), "spectralData",
                         "Name of the file with monoisotopic pattern (txt format)"),
-                   (self.createComboBox(self.settingTab,("negative","positive")), "sprayMode", "Spray mode"),
-                   (QtWidgets.QLineEdit(self.settingTab), "output",
+                   (self.createComboBox(self._settingTab,("negative","positive")), "sprayMode", "Spray mode"),
+                   (QtWidgets.QLineEdit(self._settingTab), "output",
                         "Name of the output txt file\ndefault: name of spectral pattern file + _out.txt"))
         xPos, yPos = self.createWidgets(settingWidgets,120,linewidth)
         if yMax<yPos:
             yMax=yPos'''
 
-        #self.defaultButton = self.makeDefaultButton(self)
+        #self._defaultButton = self.makeDefaultButton(self)
 
-        #self.defaultButton.setGeometry(QtCore.QRect(30, yMax + 56, 110, 32))
-        self.verticalLayout.addWidget(self.makeButtonWidget(self), 0, QtCore.Qt.AlignRight)
+        #self._defaultButton.setGeometry(QtCore.QRect(30, yMax + 56, 110, 32))
+        self._verticalLayout.addWidget(self.makeButtonWidget(self), 0, QtCore.Qt.AlignRight)
         #startDialog.resize(340, yMax+100)
         #QtCore.QMetaObject.connectSlotsByName(startDialog)
 
@@ -167,19 +166,19 @@ class IntactStartDialog(DialogWithTabs, StartDialog):
     def makeButtonWidget(self, parent):
         widget = QtWidgets.QWidget(parent)
         horizontLayout = QtWidgets.QHBoxLayout(widget)
-        self.buttonBox.setParent(widget)
-        self.defaultButton = self.makeDefaultButton(widget)
-        horizontLayout.addWidget(self.defaultButton)
+        self._buttonBox.setParent(widget)
+        self._defaultButton = self.makeDefaultButton(widget)
+        horizontLayout.addWidget(self._defaultButton)
         horizontLayout.addSpacing(50)
-        horizontLayout.addWidget(self.buttonBox)
+        horizontLayout.addWidget(self._buttonBox)
         return widget
 
     def accept(self):
         newSettings = self.getNewSettings() #self.makeDictToWrite()
-        """if (newSettings['spectralData'][-4:] != '.txt') and (newSettings['spectralData'][-4:] != '.csv'):
-            newSettings['spectralData'] += '.txt'
-        self.checkValues(newSettings)"""
-        self.configHandler.write(newSettings)
+        """if (_newSettings['spectralData'][-4:] != '.txt') and (_newSettings['spectralData'][-4:] != '.csv'):
+            _newSettings['spectralData'] += '.txt'
+        self.checkValues(_newSettings)"""
+        self._configHandler.write(newSettings)
         super(IntactStartDialog, self).accept()
 
 
@@ -194,46 +193,49 @@ class SpectrumComparatorStartDialog(AbstractDialog):
     '''
     def __init__(self, parent):
         super().__init__(parent, "Compare Spectra")
-        self.widgets = []
-        self.verticalLayout = QtWidgets.QVBoxLayout(self)
+        self._widgets = []
+        self._verticalLayout = QtWidgets.QVBoxLayout(self)
         label1 = QtWidgets.QLabel(self)
         label1.setText(self._translate(self.objectName(),
                                       'Enter the file name containing the ions which you want to compare:'))
-        self.verticalLayout.addWidget(label1)
+        self._verticalLayout.addWidget(label1)
         widget = QtWidgets.QWidget(self)
         horizLayout = QtWidgets.QHBoxLayout(widget)
         label2 = QtWidgets.QLabel(widget)
-        label2.setText(self._translate(self.objectName(),'The format in the files must be:\t"m/z   z   int.   name"\n'
+        label2.setText(self._translate(self.objectName(),'The format in the _files must be:\t"m/z   z   int.   name"\n'
                                                          '\t-with tab stops between each value'))
         horizLayout.addWidget(label2)
-        self.startPath = join(path, 'Spectral_data', 'comparison')
-        self.pushButton = QtWidgets.QPushButton(widget)
-        self.pushButton.resize(52, 32)
-        self.pushButton.setText(self._translate(self.objectName(), "+"))
-        self.pushButton.clicked.connect(self.createInputWidget)
-        horizLayout.addWidget(self.pushButton)
-        self.verticalLayout.addWidget(widget)
-        self.files = []
+        self._startPath = join(path, 'Spectral_data', 'comparison')
+        self._pushButton = QtWidgets.QPushButton(widget)
+        self._pushButton.resize(52, 32)
+        self._pushButton.setText(self._translate(self.objectName(), "+"))
+        self._pushButton.clicked.connect(self.createInputWidget)
+        horizLayout.addWidget(self._pushButton)
+        self._verticalLayout.addWidget(widget)
+        self._files = []
         for i in range(3):
             self.createInputWidget()
-        self.verticalLayout.addWidget(self.buttonBox)
+        self._verticalLayout.addWidget(self._buttonBox)
         self.show()
 
+    def getFiles(self):
+        return self._files
+
     def createInputWidget(self):
-        widget = OpenFileWidget(self, 2, self.startPath, "Open File to Compare",
+        widget = OpenFileWidget(self, 2, self._startPath, "Open File to Compare",
                                 "Plain Text Files (*txt);;All Files (*)")
-        widget.setToolTip("Names of text files containing ion data")
-        self.verticalLayout.removeWidget(self.buttonBox)
-        self.verticalLayout.addWidget(widget)
-        self.verticalLayout.addWidget(self.buttonBox)
-        self.widgets.append(widget)
+        widget.setToolTip("Names of text _files containing ion data")
+        self._verticalLayout.removeWidget(self._buttonBox)
+        self._verticalLayout.addWidget(widget)
+        self._verticalLayout.addWidget(self._buttonBox)
+        self._widgets.append(widget)
         widget.show()
 
 
     def accept(self):
-        for widget in self.widgets:
+        for widget in self._widgets:
             if widget.getFiles()!= ['']:
-                self.files += widget.getFiles()
+                self._files += widget.getFiles()
         super(SpectrumComparatorStartDialog, self).accept()
 
 
@@ -245,8 +247,8 @@ class OccupancyRecalcStartDialog(AbstractDialog):
     '''
     def __init__(self, parent, sequences):
         super().__init__(parent, "Calculate Occupancies")
-        self.sequence = None
-        self.modification = None
+        self._sequence = None
+        self._modification = None
         formLayout = self.makeFormLayout(self)
         index = self.fill(self, formLayout, ("Sequence Name: ", "Modification: "),
                           {"sequName": (self.createComboBox(self, sequences), "Name of the sequence"),
@@ -254,12 +256,16 @@ class OccupancyRecalcStartDialog(AbstractDialog):
                                            "search for.\nIf you want to search for a special number of modifications, "
                                               "enter the number as a prefix without any spaces")})
         formLayout.addItem(QtWidgets.QSpacerItem(0,1))
-        formLayout.setWidget(index+1, QtWidgets.QFormLayout.FieldRole, self.buttonBox)
+        formLayout.setWidget(index + 1, QtWidgets.QFormLayout.FieldRole, self._buttonBox)
         self.show()
 
+    def getSequence(self):
+        return self._sequence
+    def getModification(self):
+        return self._modification
 
     def accept(self):
-        self.sequence = self.widgets['sequName'].currentText()
-        self.modification = self.widgets['modification'].text()
+        self._sequence = self._widgets['sequName'].currentText()
+        self._modification = self._widgets['modification'].text()
         super(OccupancyRecalcStartDialog, self).accept()
 

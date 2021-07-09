@@ -26,14 +26,18 @@ class IonTableWidget(QTableWidget):
         self.setRowCount(len(ions))
         self._smallFnt = QFont()
         self._smallFnt.setPointSize(10)
+        self._ionValues = []
         for i, ion in enumerate(ions):
             self.fill(i, ion)
         self.setHorizontalHeaderLabels(self.getHeaders())
         self.resizeColumnsToContents()
-        self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        #self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.setSortingEnabled(True)
-        self.customContextMenuRequested['QPoint'].connect(partial(self.showOptions, self))
+        #self.customContextMenuRequested['QPoint'].connect(partial(self.showOptions, self))
         # self.customContextMenuRequested['QPoint'].connect(partial(self.editRow, self, bools))
+
+    def getIonValues(self):
+        return self._ionValues
 
     def getFormat(self):
         return ['{:10.5f}','{:2d}', '{:12d}', '','{:4.2f}', '{:6.1f}', '{:4.2f}', '']
@@ -47,7 +51,9 @@ class IonTableWidget(QTableWidget):
     def fill(self, row, ion):
         #print(self.getValue(ion))
         formats=self.getFormat()
+        ionVal = []
         for j, item in enumerate(self.getValue(ion)):
+            ionVal.append(item)
             if j == 3 or j==7:
                 newItem = QtWidgets.QTableWidgetItem(str(item))
                 newItem.setTextAlignment(QtCore.Qt.AlignLeft)
@@ -96,27 +102,30 @@ class IonTableWidget(QTableWidget):
                 args[0][newItem] = ion"""
         #self.resizeColumnsToContents()
         self.resizeRowsToContents()
+        self._ionValues.append(ionVal)
 
     def getIon(self, row):
         for ion in self._ions:
             if ion.getName() == self.item(row, 3).text() and ion.getCharge() == int(self.item(row, 1).text()):
                 return ion
 
-    def showOptions(self, table, pos):
+    '''def showOptions(self, table, pos):
         menu = QtWidgets.QMenu()
         copyAllAction = menu.addAction("Copy Table")
         copyAction = menu.addAction("Copy Cell")
         action = menu.exec_(table.viewport().mapToGlobal(pos))
+        #ToDo
         if action == copyAction:
             it = table.indexAt(pos)
             if it is None:
                 return
+            selectedRow = it.row()
             selectedCol = it.column()
-            df = pd.DataFrame([self._ions[0][selectedCol]])
+            df = pd.DataFrame([self._ionValues[selectedRow][selectedCol]])
             df.to_clipboard(index=False, header=False)
-        elif action == copyAllAction:
-            df = pd.DataFrame(data=self._ions, columns=self.getHeaders())
-            df.to_clipboard(index=False, header=True)
+        if action == copyAllAction:
+            df = pd.DataFrame(data=self._ionValues, columns=self.getHeaders())
+            df.to_clipboard(index=False, header=True)'''
 
 
 

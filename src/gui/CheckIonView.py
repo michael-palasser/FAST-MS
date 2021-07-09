@@ -4,6 +4,7 @@ from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtGui import QMovie
 from PyQt5.QtWidgets import QLabel
 import numpy as np
+import pandas as pd
 
 from src.gui.IonTableWidgets import IonTableWidget, TickIonTableWidget
 from src.gui.ShowPeaksViews import SimplePeakView
@@ -123,13 +124,15 @@ class AbstractIonView(QtWidgets.QDialog):
         it = table.itemAt(pos)
         if it is None:
             return
-        selectedRowIndex = it.row()
+        selectedRow = it.row()
         columnCount = table.columnCount()
-        item_range = QtWidgets.QTableWidgetSelectionRange(0, selectedRowIndex, columnCount - 1, selectedRowIndex)
+        item_range = QtWidgets.QTableWidgetSelectionRange(0, selectedRow, columnCount - 1, selectedRow)
         table.setRangeSelected(item_range, True)
         menu = QtWidgets.QMenu()
         showAction = menu.addAction("Show in Spectrum")
         peakAction = menu.addAction("Show Peaks")
+        copyAllAction = menu.addAction("Copy Table")
+        copyAction = menu.addAction("Copy Cell")
         action = menu.exec_(table.viewport().mapToGlobal(pos))
         if action == showAction:
             """index = None
@@ -153,7 +156,17 @@ class AbstractIonView(QtWidgets.QDialog):
             view = SpectrumView(None, peaks, ions, minLimit, maxLimit, YLimit)
         elif action == peakAction:
             global peakview
-            peakview = SimplePeakView(None, table.getIon(selectedRowIndex))
+            peakview = SimplePeakView(None, table.getIon(selectedRow))
+        elif action == copyAction:
+            it = table.indexAt(pos)
+            if it is None:
+                return
+            selectedCol = it.column()
+            df = pd.DataFrame([table.getIonValues()[selectedRow][selectedCol]])
+            df.to_clipboard(index=False, header=False)
+        elif action == copyAllAction:
+            df = pd.DataFrame(data=table.getIonValues(), columns=table.getHeaders())
+            df.to_clipboard(index=False, header=True)
 
     def getIons(self, *args):
         index = None

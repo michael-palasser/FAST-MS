@@ -1,10 +1,10 @@
 from math import log10
 
 
-try:
+'''try:
     from Tkinter import Tk
 except ImportError:
-    from tkinter import Tk
+    from tkinter import Tk'''
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtCore import Qt
 
@@ -48,9 +48,11 @@ class AbstractTableModel(QtCore.QAbstractTableModel):
         self.layoutAboutToBeChanged.emit()
         #self._data = self._data.sort_values(self._headers[Ncol], ascending=order == Qt.AscendingOrder)
         if order == Qt.AscendingOrder:
-            self._data.sort(key= lambda tup:tup[Ncol])
+            #self._data.sort(key= lambda tup:tup[Ncol])
+            self._data = sorted(self._data, key= lambda tup:tup[Ncol])
         else:
-            self._data.sort(key= lambda tup:tup[Ncol], reverse=True)
+            #self._data.sort(key= lambda tup:tup[Ncol], reverse=True)
+            self._data = sorted(self._data,key= lambda tup:tup[Ncol], reverse=True)
         self.layoutChanged.emit()
 
 

@@ -89,11 +89,21 @@ class SimplePeakView(QtWidgets.QWidget):
 
     def showOptions(self, table, pos):
         menu = QtWidgets.QMenu()
-        copyAction = menu.addAction("Copy Table")
+        copyAllAction = menu.addAction("Copy Table")
+        copyAction = menu.addAction("Copy Cell")
         action = menu.exec_(table.viewport().mapToGlobal(pos))
-        if action == copyAction:
-            df=pd.DataFrame(data=self._peaks, columns=self._table.model().getHeaders())
+        if action == copyAllAction:
+            data = [[str(val) for val in row] for row in self._peaks]
+            df=pd.DataFrame(data=data, columns=table.model().getHeaders())
             df.to_clipboard(index=False,header=True)
+        if action == copyAction:
+            it = table.indexAt(pos)
+            if it is None:
+                return
+            selectedRow = it.row()
+            selectedCol = it.column()
+            df = pd.DataFrame([self._peaks[selectedRow][selectedCol]])
+            df.to_clipboard(index=False, header=False)
 
 
 class PeakView(QtWidgets.QMainWindow):

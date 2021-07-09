@@ -5,8 +5,9 @@ from src import path
 from os.path import join
 
 from src.Services import FragmentationService, ModificationService, SequenceService
-from src.gui.AbstractDialogs import StartDialog, DialogWithTabs, AbstractDialog
-from src.gui.Widgets import OpenFileWidget
+from src.gui.dialogs.AbstractDialogs import StartDialog, DialogWithTabs, AbstractDialog
+from src.gui.GUI_functions import createComboBox
+from src.gui.widgets.Widgets import OpenFileWidget
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 
 
@@ -27,10 +28,10 @@ class TDStartDialog(StartDialog):
         fragPatterns = FragmentationService().getAllPatternNames()
         modPatterns = ModificationService().getAllPatternNames()
         sequences = SequenceService().getAllSequenceNames()
-        widgets = {"sequName": (self.createComboBox(self,sequences), "Name of the sequence"),
+        widgets = {"sequName": (createComboBox(self,sequences), "Name of the sequence"),
                    "charge": (QtWidgets.QSpinBox(self), "Charge of the precursor ion"),
-                    "fragmentation": (self.createComboBox(self,fragPatterns), "Name of the fragmentation - pattern"),
-                    "modifications": (self.createComboBox(self,modPatterns), "Name of the modification/ligand - pattern"),
+                    "fragmentation": (createComboBox(self,fragPatterns), "Name of the fragmentation - pattern"),
+                    "modifications": (createComboBox(self,modPatterns), "Name of the modification/ligand - pattern"),
                     "nrMod": (QtWidgets.QSpinBox(self), "How often is the precursor ion modified?"),
                     "spectralData": (OpenFileWidget(self,1, join(path, 'Spectral_data','top-down'),
                                     "Open File","Plain Text Files (*txt);;Comma Separated Values (*csv);;All Files (*)"),
@@ -121,7 +122,7 @@ class IntactStartDialog(DialogWithTabs, StartDialog):
                    "spectralData": (OpenFileWidget(self._settingTab, 1, join(path, 'Spectral_data', 'intact'), "Open File",
                                    "Plain Text Files (*txt);;All Files (*)"),
                                     "Name of the file with monoisotopic pattern (txt format)"),
-                   "sprayMode": (self.createComboBox(self._settingTab, ("negative", "positive")), "Spray mode"),
+                   "sprayMode": (createComboBox(self._settingTab, ("negative", "positive")), "Spray mode"),
                    "output": (QtWidgets.QLineEdit(self._settingTab),
                     "Name of the output txt file\ndefault: name of spectral pattern file + _out.txt")})
         if self._configHandler.getAll() != None:
@@ -148,7 +149,7 @@ class IntactStartDialog(DialogWithTabs, StartDialog):
                    (OpenFileWidget(self._settingTab,linewidth, 0, 1, join(path, 'Spectral_data','intact'),  "Open File",
                                "Plain Text Files (*txt);;All Files (*)"), "spectralData",
                         "Name of the file with monoisotopic pattern (txt format)"),
-                   (self.createComboBox(self._settingTab,("negative","positive")), "sprayMode", "Spray mode"),
+                   (createComboBox(self._settingTab,("negative","positive")), "sprayMode", "Spray mode"),
                    (QtWidgets.QLineEdit(self._settingTab), "output",
                         "Name of the output txt file\ndefault: name of spectral pattern file + _out.txt"))
         xPos, yPos = self.createWidgets(settingWidgets,120,linewidth)
@@ -251,7 +252,7 @@ class OccupancyRecalcStartDialog(AbstractDialog):
         self._modification = None
         formLayout = self.makeFormLayout(self)
         index = self.fill(self, formLayout, ("Sequence Name: ", "Modification: "),
-                          {"sequName": (self.createComboBox(self, sequences), "Name of the sequence"),
+                          {"sequName": (createComboBox(self, sequences), "Name of the sequence"),
                            "modification": (QtWidgets.QLineEdit(self), "Name of the modification/ligand you want to "
                                            "search for.\nIf you want to search for a special number of modifications, "
                                               "enter the number as a prefix without any spaces")})

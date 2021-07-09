@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import QMessageBox
 from src import path
 from src.Exceptions import InvalidInputException
 from src.Services import SequenceService
-from src.gui.Widgets import OpenFileWidget
+from src.gui.widgets.Widgets import OpenFileWidget
 
 
 class AbstractDialog(QtWidgets.QDialog):
@@ -76,12 +76,12 @@ class AbstractDialog(QtWidgets.QDialog):
         self._widgets[widgetName] = widget
         formLayout.setWidget(yPos, QtWidgets.QFormLayout.FieldRole, widget)
 
-    def createComboBox(self, parent, options):
+    '''def createComboBox(self, parent, options):
         comboBox = QtWidgets.QComboBox(parent)
         for i, option in enumerate(options):
             comboBox.addItem("")
             comboBox.setItemText(i, self._translate(self.objectName(), option))
-        return comboBox
+        return comboBox'''
 
     def makeButtonBox(self, parent):
         self._buttonBox = QtWidgets.QDialogButtonBox(parent)

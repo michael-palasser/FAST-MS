@@ -2,7 +2,7 @@ from PyQt5 import QtCore, QtWidgets
 from os.path import join
 
 from src import path
-from src.gui.AbstractDialogs import DialogWithTabs
+from src.gui.dialogs.AbstractDialogs import DialogWithTabs
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 
 dataPath = join(path, 'src', 'data')

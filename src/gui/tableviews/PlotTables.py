@@ -5,15 +5,18 @@ import pandas as pd
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import Qt
 
-from src.gui.ResultView import AbstractTableModel
+from src.gui.tableviews.TableModels import AbstractTableModel
 
 
 class PlotTableModel(AbstractTableModel):
+    '''
+    TableModel for QTableView in PlotTableView for occupancies, average charges,...
+    '''
     def __init__(self, data, keys, precision):
-        self.ionTypes = len(keys)
+        self._ionTypes = len(keys)
         #print(data, '\n', data[0][len(data)-1])
         valFormat = '{:2.'+str(precision)+'f}'
-        format = ['','{:2d}']+self.ionTypes*[valFormat]+['{:2d}','',]
+        format = ['','{:2d}'] + self._ionTypes * [valFormat] + ['{:2d}', '', ]
         headers = ['sequ. (f)','cleav.side (f)'] + keys + ['cleav.side (b)','sequ. (b)']
         super(PlotTableModel, self).__init__(data,format, headers)
 
@@ -31,32 +34,35 @@ class PlotTableModel(AbstractTableModel):
 
 
 class PlotTableView(QtWidgets.QWidget):
+    '''
+    Widget with QTableView showing occupancies, av. charges, ... of each fragment
+    '''
     def __init__(self, data, keys, title, precision):
         super().__init__(parent=None)
         verticalLayout = QtWidgets.QVBoxLayout(self)
         scrollArea = QtWidgets.QScrollArea(self)
-        #scrollArea.setGeometry(QtCore.QRect(10, 10, len(data[0])*50+200, len(data)*22+25))
+        #_scrollArea.setGeometry(QtCore.QRect(10, 10, len(data[0])*50+200, len(data)*22+25))
         scrollArea.setWidgetResizable(True)
-        # scrollArea.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
-        # scrollArea.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        # _scrollArea.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        # _scrollArea.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
         model = PlotTableModel(data, keys,precision)
-        self.table = QtWidgets.QTableView(self)
-        self.table.setSortingEnabled(True)
-        self.table.setModel(model)
-        self.table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
-        self.table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        #self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self.table.customContextMenuRequested['QPoint'].connect(partial(self.showOptions, self.table))
-        scrollArea.setWidget(self.table)
+        self._table = QtWidgets.QTableView(self)
+        self._table.setSortingEnabled(True)
+        self._table.setModel(model)
+        self._table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        self._table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        #self._table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self._table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self._table.customContextMenuRequested['QPoint'].connect(partial(self.showOptions, self._table))
+        scrollArea.setWidget(self._table)
         #self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        #self.table.move(0,0)
+        #self._table.move(0,0)
         self.setObjectName(title)
         self._translate = QtCore.QCoreApplication.translate
         self.setWindowTitle(self._translate(self.objectName(), self.objectName()))
-        self.table.resizeColumnsToContents()
-        self.table.resizeRowsToContents()
+        self._table.resizeColumnsToContents()
+        self._table.resizeRowsToContents()
         verticalLayout.addWidget(scrollArea)
         #self.resize(len(data[0])*50+200, len(data)*22+25)
         self.show()
@@ -66,5 +72,5 @@ class PlotTableView(QtWidgets.QWidget):
         copyAction = menu.addAction("Copy Table")
         action = menu.exec_(table.viewport().mapToGlobal(pos))
         if action == copyAction:
-            df=pd.DataFrame(data=self.table.model().getData(), columns=self.table.model().getHeaders())
+            df=pd.DataFrame(data=self._table.model().getData(), columns=self._table.model().getHeaders())
             df.to_clipboard(index=False,header=True)

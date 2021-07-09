@@ -13,13 +13,12 @@ import time
 from functools import partial
 import pandas as pd
 from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtWidgets import QAbstractItemView
 
 from src import path
 from src.Exceptions import InvalidIsotopePatternException, InvalidInputException
 from src.entities.Info import Info
 from src.gui.AbstractMainWindows import SimpleMainWindow
-from src.gui.InfoView import InfoView
+from src.gui.widgets.InfoView import InfoView
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.repositories.IsotopePatternRepository import IsotopePatternRepository
 from src.top_down.Analyser import Analyser
@@ -29,15 +28,15 @@ from src.top_down.SearchService import SearchService
 from src.top_down.SpectrumHandler import SpectrumHandler
 from src.top_down.IntensityModeller import IntensityModeller
 from src.top_down.ExcelWriter import ExcelWriter
-from src.gui.CheckIonView import CheckMonoisotopicOverlapView, CheckOverlapsView
-from src.gui.ResultView import IonTableModel
-from src.gui.PlotTables import PlotTableView
-from src.gui.ShowPeaksViews import PeakView, SimplePeakView
-from src.gui.SequencePlots import PlotFactory
-from src.gui.SimpleDialogs import ExportDialog, SelectSearchDlg, OpenSpectralDataDlg, SaveSearchDialog
+from src.gui.dialogs.CheckIonView import CheckMonoisotopicOverlapView, CheckOverlapsView
+from src.gui.tableviews.TableModels import IonTableModel
+from src.gui.tableviews.PlotTables import PlotTableView
+from src.gui.tableviews.ShowPeaksViews import PeakView, SimplePeakView
+from src.gui.widgets.SequencePlots import PlotFactory
+from src.gui.dialogs.SimpleDialogs import ExportDialog, SelectSearchDlg, OpenSpectralDataDlg, SaveSearchDialog
 #from src.gui.ParameterDialogs import TDStartDialog
-from src.gui.StartDialogs import TDStartDialog
-from src.gui.SpectrumView import SpectrumView
+from src.gui.dialogs.StartDialogs import TDStartDialog
+from src.gui.widgets.SpectrumView import SpectrumView
 
 
 def sortIonsByName(ionList):
@@ -171,7 +170,7 @@ class TD_MainController(object):
             view = CheckMonoisotopicOverlapView(sameMonoisotopics, self._spectrumHandler.getSpectrum())
             print("User Input requested")
             view.exec_()
-            if view and not view.canceled:
+            if view and not view.canceled():
                 dumpList = view.getDumplist()
                 [self._info.deleteMonoisotopic(ion) for ion in dumpList]
                 self._intensityModeller.deleteSameMonoisotopics(dumpList)
@@ -185,7 +184,7 @@ class TD_MainController(object):
             view = CheckOverlapsView(complexPatterns, self._spectrumHandler.getSpectrum())
             print("User Input requested")
             view.exec_()
-            if view and not view.canceled:
+            if view and not view.canceled():
                 dumpList = view.getDumplist()
                 [self._info.deleteIon(ion) for ion in dumpList]
                 self._intensityModeller.remodelComplexPatterns(complexPatterns, dumpList)
@@ -260,14 +259,14 @@ class TD_MainController(object):
         #self._tabWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         #tab.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
-        # scrollArea.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        # _scrollArea.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
     def makeScrollArea(self, parent, data, fun):
         scrollArea = QtWidgets.QScrollArea(parent)
-        #scrollArea.setGeometry(QtCore.QRect(10, 10, 1150, 800))
+        #_scrollArea.setGeometry(QtCore.QRect(10, 10, 1150, 800))
         scrollArea.setWidgetResizable(True)
-        # scrollArea.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
-        # scrollArea.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        # _scrollArea.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        # _scrollArea.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         table = self.makeTable(scrollArea, data, fun)
 
         table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
@@ -287,7 +286,7 @@ class TD_MainController(object):
         #table.setModel(self.proxyModel)
         table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         table.customContextMenuRequested['QPoint'].connect(partial(fun, table))
-        table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        #table.setSelectionBehavior(QAbstractItemView.SelectRows)
         table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         return table
@@ -483,6 +482,8 @@ class TD_MainController(object):
             self._openWindows.append(view)
         elif action == peakAction:
             #PeakView(self._mainWindow, selectedIon, self._intensityModeller.remodelSingleIon, self.saveSingleIon)
+            #global peakView
+            #peakView = SimplePeakView(self._mainWindow, selectedIon)
             self._openWindows.append(SimplePeakView(self._mainWindow, selectedIon))
         elif action == formulaAction:
             text = 'Ion:\t' + selectedIon.getName()+\

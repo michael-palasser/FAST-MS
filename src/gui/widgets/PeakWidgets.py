@@ -2,24 +2,28 @@ from functools import partial
 from math import log10
 import pandas as pd
 
-from qtpy import QtWidgets, QtCore
+from PyQt5 import QtWidgets, QtCore
 
 from src.Exceptions import InvalidInputException
 
 
 class GeneralPeakWidget(QtWidgets.QTableWidget):
+    '''
+    QTableWidget which shows peak values. Parent class of IsoPatternPeakWidget and PeakWidget.
+    Spectral intensity column is interactive.
+    '''
     def __init__(self, parent, headers, format, peaks):
         super(GeneralPeakWidget, self).__init__(parent)
-        self.headers = headers
+        self._headers = headers
         self._format = format
         self._peaks = peaks
         self.setWindowTitle('')
-        self.setColumnCount(len(self.headers))
+        self.setColumnCount(len(self._headers))
         self.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.setRowCount(len(self._peaks))
         self.fill()
-        self.setHorizontalHeaderLabels(self.headers)
+        self.setHorizontalHeaderLabels(self._headers)
         self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.setSortingEnabled(True)
         self.customContextMenuRequested['QPoint'].connect(partial(self.showOptions, self))
@@ -62,7 +66,7 @@ class GeneralPeakWidget(QtWidgets.QTableWidget):
         action = menu.exec_(table.viewport().mapToGlobal(pos))
         if action == copyAllAction:
             #peaks.astype(float)
-            '''df=pd.DataFrame(data=self._peaks, columns=self.headers)
+            '''df=pd.DataFrame(data=self._peaks, columns=self._headers)
             df['int. (spectrum)']= self._peaks['relAb']
             df['int. (calc.)']= self._peaks['calcInt']
             df['error /ppm']= self._peaks['error']'''
@@ -78,7 +82,7 @@ class GeneralPeakWidget(QtWidgets.QTableWidget):
             df.to_clipboard(index=False, header=False)
 
     def getDataframe(self):
-        df = pd.DataFrame(data=self._peaks, columns=self.headers)
+        df = pd.DataFrame(data=self._peaks, columns=self._headers)
         df['int. (spectrum)'] = self._peaks['relAb']
         df['int. (calc.)'] = self._peaks['calcInt']
         df['error /ppm'] = self._peaks['error']
@@ -99,12 +103,18 @@ class GeneralPeakWidget(QtWidgets.QTableWidget):
 
 
 class PeakWidget(GeneralPeakWidget):
+    '''
+    QTableWidget which shows peak values. Used by PeakView (in top-down search)
+    '''
     def __init__(self, parent, peaks):
         super(PeakWidget, self).__init__(parent, ('m/z','int. (spectrum)','int. (calc.)','error /ppm', 'used'),
                                          ('{:10.5f}','{:11d}', '{:11d}', '{:4.2f}', ''), peaks)
 
 
 class IsoPatternPeakWidget(GeneralPeakWidget):
+    '''
+    QTableWidget which shows peak values. Used by IsotopePatternView (for isotope pattern tool)
+    '''
     def __init__(self, parent, peaks):
         super(IsoPatternPeakWidget, self).__init__(parent, ('m/z','int. (spectrum)','int. (calc.)', 'used'),
                                          ('{:10.5f}','{:11d}', '{:11d}', ''), peaks)
@@ -119,12 +129,12 @@ class IsoPatternPeakWidget(GeneralPeakWidget):
                     intensity = int(self.item(row, 1).text())
                 itemList.append((intensity, int(self.item(row, 3).checkState()/2)==1, float(self.item(row, 0).text())))
             except ValueError:
-                raise InvalidInputException('Intensities must be numbers', self.item(row, 1).text())
+                raise InvalidInputException('Intensities must be numbers', 'Incorrect entry: '+self.item(row, 1).text())
         return itemList
 
 
     def getDataframe(self):
-        df = pd.DataFrame(data=self._peaks, columns=self.headers)
+        df = pd.DataFrame(data=self._peaks, columns=self._headers)
         df['int. (spectrum)'] = self._peaks['relAb']
         df['int. (calc.)'] = self._peaks['calcInt']
         return df

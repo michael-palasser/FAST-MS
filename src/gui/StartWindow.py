@@ -8,8 +8,8 @@ from PyQt5.QtWidgets import QApplication, QPushButton, QAction
 
 from src.gui.IsotopePatternView import IsotopePatternView
 from src.gui.EditorController import *
-from src.gui.ParameterDialogs import TD_configurationDialog
-from src.gui.StartDialogs import IntactStartDialog
+from src.gui.dialogs.ParameterDialogs import TD_configurationDialog
+from src.gui.dialogs.StartDialogs import IntactStartDialog
 from src.top_down.ModellingTool import main as modellingTool
 from src.top_down.OccupancyRecalculator import run as occupancyRecalculator
 from src.top_down.SpectrumComparator import run as spectrumComparator

@@ -103,10 +103,10 @@ class AbstractDialog(QtWidgets.QDialog):
         #self.sizePolicy = self.setNewSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         self._translate = QtCore.QCoreApplication.translate
         self.setWindowTitle(self._translate(dialogName, title))
-        self.buttonBox = QtWidgets.QDialogButtonBox(self)
-        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
-        self.buttonBox.accepted.connect(self.accept)
-        self.buttonBox.rejected.connect(self.reject)
+        self._buttonBox = QtWidgets.QDialogButtonBox(self)
+        self._buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
+        self._buttonBox.accepted.connect(self.accept)
+        self._buttonBox.rejected.connect(self.reject)
         self._newSettings = None
         self.move(300,100)
-        self.canceled = False"""
+        self._canceled = False"""

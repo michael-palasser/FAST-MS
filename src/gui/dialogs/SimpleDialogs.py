@@ -3,8 +3,9 @@ from os.path import join, isdir
 
 from src import path
 from src.Exceptions import InvalidInputException
-from src.gui.AbstractDialogs import AbstractDialog
-from src.gui.Widgets import OpenFileWidget
+from src.gui.dialogs.AbstractDialogs import AbstractDialog
+from src.gui.GUI_functions import createComboBox
+from src.gui.widgets.Widgets import OpenFileWidget
 
 dataPath = join(path, 'src', 'data')
 
@@ -15,7 +16,7 @@ class OpenDialog(AbstractDialog):
     def __init__(self, title, options):
         super(OpenDialog, self).__init__(parent=None,title=title)
         formLayout = self.makeFormLayout(self)
-        self._comboBox = self.createComboBox(self, options)
+        self._comboBox = createComboBox(self, options)
         index = self.fill(self, formLayout, ("Enter Name:",), {'name':(self._comboBox, '')})
         formLayout.setWidget(index + 1, QtWidgets.QFormLayout.SpanningRole, self._buttonBox)
         self.show()

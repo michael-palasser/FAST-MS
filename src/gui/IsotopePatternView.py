@@ -3,10 +3,10 @@ from PyQt5 import QtWidgets, QtCore
 from src.IsotopePatternLogics import IsotopePatternLogics
 from src.Services import *
 from src.gui.AbstractMainWindows import SimpleMainWindow
-from src.gui.IonTableWidgets import IsoPatternIon
-from src.gui.PeakWidgets import IsoPatternPeakWidget
-from src.gui.SimpleDialogs import OpenDialog
-from src.gui.SpectrumView import TheoSpectrumView
+from src.gui.widgets.IonTableWidgets import IsoPatternIon
+from src.gui.widgets.PeakWidgets import IsoPatternPeakWidget
+from src.gui.dialogs.SimpleDialogs import OpenDialog
+from src.gui.widgets.SpectrumView import TheoSpectrumView
 
 
 class IsotopePatternView(SimpleMainWindow):
@@ -219,11 +219,11 @@ class IsotopePatternView(SimpleMainWindow):
 
 
     def modelInt(self):
-        inputVals = sorted(self._peakTable.readTable(), key=lambda tup:tup[2])
-        peaks = []
-        for i, peak in enumerate(self._peakTable.getPeaks()):
-            peaks.append((peak[0],inputVals[i][0], peak[2], inputVals[i][1]))
         try:
+            inputVals = sorted(self._peakTable.readTable(), key=lambda tup: tup[2])
+            peaks = []
+            for i, peak in enumerate(self._peakTable.getPeaks()):
+                peaks.append((peak[0], inputVals[i][0], peak[2], inputVals[i][1]))
             ion = self._controller.model(peaks)
             self._intensity = round(ion.getIntensity())
         except InvalidInputException as e:

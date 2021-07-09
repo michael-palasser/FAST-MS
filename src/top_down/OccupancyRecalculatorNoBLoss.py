@@ -1,15 +1,12 @@
 import subprocess
-import sys
 
 import numpy as np
 import os
 from re import findall
 from datetime import datetime
-from PyQt5 import QtWidgets
 
 from src.Services import SequenceService
 from src.entities.Ions import Fragment,FragmentIon
-from src.gui.StartDialogs import OccupancyRecalcStartDialog
 from src.top_down.Analyser import Analyser
 from src.top_down.ExcelWriter import BasicExcelWriter
 from src import path

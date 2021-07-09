@@ -1,61 +1,12 @@
 import copy
 from functools import partial
-from math import log10
 
 import pandas as pd
 from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtCore import Qt
 
-from src.gui.IonTableWidgets import IonTableWidget
-from src.gui.PeakWidgets import PeakWidget
-from src.gui.ResultView import AbstractTableModel
-
-
-class PeakTableModel(AbstractTableModel):
-    '''
-    TableModel for QTableView in SimplePeakView, used to show original peak values of remodelled ions
-    '''
-    def __init__(self, data):
-        super(PeakTableModel, self).__init__(data, ('{:10.5f}', '{:11d}', '{:11d}', '{:4.2f}', ''),
-                         ('m/z', 'int. (spectrum)', 'int. (calc.)', 'error /ppm', 'used'))
-        self._data = data
-        #print('data',data)
-        #self._format = ['{:10.5f}', '{:11d}', '{:11d}','{:4.2f}', '']
-
-    def flags(self, index):
-        return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
-
-
-    def data(self, index, role):
-        if index.isValid():
-            if role == Qt.DisplayRole:
-                col = index.column()
-                item = self._data[index.row()][col]
-                #print(item)
-                formatString = self._format[col]
-                if col == 1 or col ==2:
-                    item = int(round(item))
-                    if item >= 10 ** 12:
-                        lg10 = str(int(log10(item) + 1))
-                        formatString = '{:' + lg10 + 'd}'
-                elif col==4:
-                    if item:
-                        return 'True'
-                    return 'False'
-                return formatString.format(item)
-        if role == Qt.TextAlignmentRole:
-            return Qt.AlignRight
-
-    """def rowCount(self, index):
-        return len(self._data.values)
-
-    def columnCount(self, index):
-        return self._data.columns.size
-
-    def headerData(self, section, orientation, role):
-        if role == QtCore.Qt.DisplayRole:
-            if orientation == QtCore.Qt.Horizontal:
-                return ('m/z','z','intensity','fragment','error /ppm', 'used')[section]"""
+from src.gui.widgets.IonTableWidgets import IonTableWidget
+from src.gui.widgets.PeakWidgets import PeakWidget
+from src.gui.tableviews.TableModels import PeakTableModel
 
 
 class SimplePeakView(QtWidgets.QWidget):
@@ -64,6 +15,7 @@ class SimplePeakView(QtWidgets.QWidget):
     '''
     def __init__(self, parent, ion):
         super().__init__(parent)
+        print(ion.getIsotopePattern())
         self._peaks = ion.getIsotopePattern()
         model = PeakTableModel(self._peaks)
         # self.proxyModel = QSortFilterProxyModel()

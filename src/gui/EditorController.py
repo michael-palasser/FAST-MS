@@ -1,5 +1,4 @@
 import traceback
-from abc import ABC
 from functools import partial
 
 from PyQt5 import QtWidgets, QtCore
@@ -8,8 +7,8 @@ import sys
 from src.Exceptions import CanceledException
 from src.Services import *
 from src.gui.AbstractMainWindows import SimpleMainWindow
-from src.gui.SimpleDialogs import OpenDialog
-from src.gui.Widgets import BoxUpdateWidget
+from src.gui.dialogs.SimpleDialogs import OpenDialog
+from src.gui.widgets.Widgets import BoxUpdateWidget
 
 
 class AbstractSimpleEditorController(ABC):

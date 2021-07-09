@@ -17,7 +17,7 @@ class IonTableWidget(QTableWidget):
     '''
     def __init__(self, parent, ions, yPos):
         super(IonTableWidget, self).__init__(parent)
-        #self.headers = ['m/z', 'z', 'I', 'fragment', 'error /ppm', 'S/N', 'qual.']
+        #self._headers = ['m/z', 'z', 'I', 'fragment', 'error /ppm', 'S/N', 'qual.']
         self._ions = ions
         self.setColumnCount(len(self.getHeaders()))
         self.move(20, yPos)  # 70
@@ -198,10 +198,10 @@ class IsoPatternIon(IonTableWidget):
 
 class TickIonTableWidget(IonTableWidget):
     '''
-    Interactive ion table table for checking overlapping ion clusters.
+    Interactive ion table table for checking overlapping ion clusters. Ticked ions are deleted.
     '''
     def __init__(self, parent, data, yPos):
-        #self.headers = ['m/z', 'z', 'I', 'fragment', 'error /ppm', 'S/N', 'qual.']
+        #self._headers = ['m/z', 'z', 'I', 'fragment', 'error /ppm', 'S/N', 'qual.']
         self.checkBoxes = []
         super(TickIonTableWidget, self).__init__(parent, data, yPos)
 

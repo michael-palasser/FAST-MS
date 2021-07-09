@@ -1,5 +1,8 @@
 from PyQt5 import QtWidgets, QtGui, QtCore
-from PyQt5.QtWidgets import QFileDialog
+from PyQt5.QtGui import QMovie
+from PyQt5.QtWidgets import QFileDialog, QLabel
+
+from src.gui.GUI_functions import createComboBox
 
 
 class OpenFileWidget(QtWidgets.QWidget):
@@ -15,7 +18,7 @@ class OpenFileWidget(QtWidgets.QWidget):
         self.horizontalLayout.addWidget(self.lineEdit)
         self.pushButton = QtWidgets.QPushButton(self)
         #self._pushButton.setGeometry(QtCore.QRect(width-32, 0, 36, 30))
-        self.pushButton.setIcon(QtGui.QIcon('open.png'))
+        self.pushButton.setIcon(QtGui.QIcon('../open.png'))
         self.pushButton.setIconSize(QtCore.QSize(26,26))
         self.pushButton.setMaximumSize(26,26)
         #self._pushButton.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum))
@@ -76,10 +79,11 @@ class BoxUpdateWidget(QtWidgets.QWidget):
         self._translate = QtCore.QCoreApplication.translate
         self._horizontalLayout = QtWidgets.QHBoxLayout(self)
         self._horizontalLayout.setContentsMargins(0,0,0,0)
-        self._comboBox = QtWidgets.QComboBox(self)
+        self._comboBox = createComboBox(self,options)
+        '''self._comboBox = QtWidgets.QComboBox(self)
         for i, option in enumerate(options):
             self._comboBox.addItem('')
-            self._comboBox.setItemText(i, self._translate(self.objectName(), option))
+            self._comboBox.setItemText(i, self._translate(self.objectName(), option))'''
         self._horizontalLayout.addWidget(self._comboBox)
 
         self._button = QtWidgets.QPushButton(self)
@@ -108,3 +112,16 @@ class BoxUpdateWidget(QtWidgets.QWidget):
             [self._comboBox.addItem("") for i in range(-1 * toAdjust)]
         for i, option in enumerate(newOptions):
             self._comboBox.setItemText(i, self._translate(self.objectName(), option))
+
+
+class LoadingWidget(QtWidgets.QWidget):
+    def __init__(self, parent):
+        super(LoadingWidget, self).__init__(parent)
+        self.loading_lbl = QLabel(self)
+        loading_movie = QMovie("../loading.gif")  # some gif in here
+        self.loading_lbl.setMovie(loading_movie)
+        loading_movie.start()
+
+        self.setGeometry(50, 50, 100, 100)
+        self.setMinimumSize(10, 10)
+        self.show()

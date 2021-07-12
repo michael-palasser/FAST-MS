@@ -48,34 +48,36 @@ modelled = \
         super().setOpts(**opts)"""
 
 class AbstractSpectrumView(QtWidgets.QWidget):
+    '''
+    QWidget which shows a part of the spectrum. Superclass of SpectrumView and TheoSpectrumView.
+    '''
     def __init__(self, parent, peaks, ions, minRange, maxRange, maxY, lblSize):
         super(AbstractSpectrumView, self).__init__(parent)
-        self.peaks = peaks
-        self.ions = ions
-        self.int = int
+        self._peaks = peaks
+        self._ions = ions
         self._translate = QtCore.QCoreApplication.translate
         #self.width = 700
         #self.hight = 400
         #self.resize(self.width,self.hight)
         width = 0.02
-        self.layout=QtWidgets.QVBoxLayout(self)
+        self._layout=QtWidgets.QVBoxLayout(self)
         styles = {"black": "#f00", "font-size": lblSize}
-        self.graphWidget = pg.PlotWidget(self)
-        #self.setCentralWidget(self.graphWidget)
-        #self.vb = pg.GraphicsLayout().addViewBox(self.graphWidget)
+        self._graphWidget = pg.PlotWidget(self)
+        #self.setCentralWidget(self._graphWidget)
+        #self.vb = pg.GraphicsLayout().addViewBox(self._graphWidget)
         #self.vb.setLimits(yMin=0)
-        self.graphWidget.setLabel('left', 'Rel.Ab.in au', **styles)
-        self.graphWidget.setLabel("bottom", "m/z", **styles)
-        self.graphWidget.setBackground('w')
-        self.graphWidget.setXRange(minRange, maxRange, padding=0)
-        self.graphWidget.setYRange(0, maxY*1.1, padding=0)
+        self._graphWidget.setLabel('left', 'Rel.Ab.in au', **styles)
+        self._graphWidget.setLabel("bottom", "m/z", **styles)
+        self._graphWidget.setBackground('w')
+        self._graphWidget.setXRange(minRange, maxRange, padding=0)
+        self._graphWidget.setYRange(0, maxY * 1.1, padding=0)
         baseLine = pg.InfiniteLine(pos=0,angle=0,pen='k',movable=False)
-        self.graphWidget.addItem(baseLine)
+        self._graphWidget.addItem(baseLine)
 
         self.plot(width) #ToDo: Correct Width (linear fct)
         self.makeWidthWidgets(width)
 
-        self.layout.addWidget(self.graphWidget)
+        self._layout.addWidget(self._graphWidget)
         self.show()
 
     #def setLabels(self):
@@ -83,33 +85,33 @@ class AbstractSpectrumView(QtWidgets.QWidget):
     def makeWidthWidgets(self, width):
         '''self.widthWidget = QtWidgets.QWidget(self)
         self.widthWidget.setGeometry(QtCore.QRect(65, 10, 70, 58))'''
-        self.spinBox = QtWidgets.QDoubleSpinBox(self)
-        self.spinBox.setDecimals(3)
-        self.spinBox.setValue(width)
-        #self.spinBox.move(65,10)
-        self.spinBox.setGeometry(QtCore.QRect(70, 10, 65, 26))
-        #self.spinBox.setGeometry(QtCore.QRect(65, 10, 65, 26))
-        self.spinBox.setToolTip("Change Width of Peaks (in Da)")
-        self.spinBox.setStepType(QtWidgets.QAbstractSpinBox.AdaptiveDecimalStepType)
+        self._spinBox = QtWidgets.QDoubleSpinBox(self)
+        self._spinBox.setDecimals(3)
+        self._spinBox.setValue(width)
+        #self._spinBox.move(65,10)
+        self._spinBox.setGeometry(QtCore.QRect(70, 10, 65, 26))
+        #self._spinBox.setGeometry(QtCore.QRect(65, 10, 65, 26))
+        self._spinBox.setToolTip("Change Width of Peaks (in Da)")
+        self._spinBox.setStepType(QtWidgets.QAbstractSpinBox.AdaptiveDecimalStepType)
         '''self._pushButton = QtWidgets.QPushButton(self.widthWidget)
         self._pushButton.setGeometry(QtCore.QRect(0, 22, 70, 32))
         #self._pushButton.setGeometry(QtCore.QRect(60, 32, 70, 32))
         self._pushButton.setText(self._translate(self.objectName(), "Update"))
         self._pushButton.setToolTip("Change Width of Peaks (in Da)")
-        self._pushButton.clicked.connect(lambda: self.changeWidth(self.peakBars))'''
+        self._pushButton.clicked.connect(lambda: self.changeWidth(self._peakBars))'''
 
     def plot(self, width):
-        self.peakBars = pg.BarGraphItem(x=self.peaks[:,0], height=self.peaks[:,1], width=width, brush='k')
-        self.graphWidget.addItem(self.peakBars)
+        self._peakBars = pg.BarGraphItem(x=self._peaks[:, 0], height=self._peaks[:, 1], width=width, brush='k')
+        self._graphWidget.addItem(self._peakBars)
         colours = ['b','r','g', 'c', 'm', 'y']
         markers = ['o','t', 's', 'p','h', 'star', '+', 'd', 'x', 't1','t2', 't3']
-        self.legend = pg.LegendItem(offset=(0., .5), labelTextSize='12pt')
-        self.legend.setParentItem(self.graphWidget.graphicsItem())
-        #self.legend.addItem(self.aps_model, '')
+        self._legend = pg.LegendItem(offset=(0., .5), labelTextSize='12pt')
+        self._legend.setParentItem(self._graphWidget.graphicsItem())
+        #self._legend.addItem(self.aps_model, '')
         noise = []
         markerIndex = 0
         colourIndex = 0
-        for ion in self.ions:
+        for ion in self._ions:
             if colourIndex == len(colours):
                 colourIndex = 0
                 markerIndex += 1
@@ -124,14 +126,14 @@ class AbstractSpectrumView(QtWidgets.QWidget):
             """scatter = pg.ScatterPlotItem(x=self.ions[ion][:,0], y=self.ions[ion][:,1], symbol=markers[markerIndex],
                                          pen =pg.mkPen(color=colours[colourIndex], width=2),
                                          brush=(50,50,200,50), size=10, pxMode=True) #Todo resize"""
-            self.graphWidget.addItem(scatter)
-            self.legend.addItem(scatter, ion.getId())
+            self._graphWidget.addItem(scatter)
+            self._legend.addItem(scatter, ion.getId())
             colourIndex += 1
-            #self.graphWidget.plot(ion[:,0], ion[:,1], symbol='o', symbolSize=30, symbolBrush=('b'))
+            #self._graphWidget.plot(ion[:,0], ion[:,1], symbol='o', symbolSize=30, symbolBrush=('b'))
         noise = np.array(noise)
-        noiseLine = self.graphWidget.plot(noise[:,0],noise[:,1], pen='r')
-        #self.graphWidget.addItem(noiseLine)
-        self.legend.addItem(noiseLine, 'noise')
+        noiseLine = self._graphWidget.plot(noise[:, 0], noise[:, 1], pen='r')
+        #self._graphWidget.addItem(noiseLine)
+        self._legend.addItem(noiseLine, 'noise')
 
     def changeWidth(self, bars):
         """width, ok = QInputDialog.getDouble(self, "Change Peak Width", "Enter Peak Width in Da: ")
@@ -140,54 +142,63 @@ class AbstractSpectrumView(QtWidgets.QWidget):
                     and 0 < pos.y() < self.bars.height[i]:"""
             #w = self.peak
             #b[i] = pg.QtGui.QColor(255, 255, 255)
-        self.graphWidget.removeItem(bars)
-        self.plot(self.spinBox.value())
-        #self.peakBars = pg.BarGraphItem(x=self.peaks[:,0], height=self.peaks[:,1], width=self.spinBox.value(), brush='k')
-        #self.graphWidget.addItem(self.peakBars)
+        self._graphWidget.removeItem(bars)
+        self.plot(self._spinBox.value())
+        #self._peakBars = pg.BarGraphItem(x=self.peaks[:,0], height=self.peaks[:,1], width=self._spinBox.value(), brush='k')
+        #self._graphWidget.addItem(self._peakBars)
         self.show()
         #print('clicked on bar ' + str(i))
 
 class SpectrumView(AbstractSpectrumView):
+    '''
+    QWidget which shows a part of the spectrum. Observed peaks are illustrated as black bars and isotope peaks with
+     modelled intensities are shown as scatter plots.
+    Used in top-down search.
+    '''
     def __init__(self, parent, peaks, ions, minRange, maxRange, maxY):
         super(SpectrumView, self).__init__(parent, peaks, ions, minRange-1, maxRange+1, maxY, '18px')
-        self.spinBox.valueChanged.connect(lambda: self.changeWidth(self.peakBars))
+        self._spinBox.valueChanged.connect(lambda: self.changeWidth(self._peakBars))
         self.resize(700,400)
 
 class TheoSpectrumView(AbstractSpectrumView):
+    '''
+    QWidget which shows a modelled peaks as red bars. Spectral intensities of this peaks are indicated by grey stars.
+    Used in isotope pattern tool.
+    '''
     def __init__(self, parent, peaks, width):
         spectrPeaks = np.array([(peak['m/z'],peak['relAb']) for peak in peaks])
         tolerance = (np.max(peaks['m/z'])-np.min(peaks['m/z']))*0.2
         super(TheoSpectrumView, self).__init__(parent, spectrPeaks, peaks,
                np.min(peaks['m/z'])-tolerance, np.max(peaks['m/z'])+tolerance, np.max(peaks['calcInt']), "14px")
-        self.spinBox.valueChanged.connect(lambda: self.changeWidth(self.modelledBars))
+        self._spinBox.valueChanged.connect(lambda: self.changeWidth(self._modelledBars))
         #styles = {"black": "#f00", "font-size": "14px"}
-        #self.setCentralWidget(self.graphWidget)
-        #self.vb = pg.GraphicsLayout().addViewBox(self.graphWidget)
+        #self.setCentralWidget(self._graphWidget)
+        #self.vb = pg.GraphicsLayout().addViewBox(self._graphWidget)
         #self.vb.setLimits(yMin=0)
-        #self.graphWidget.setLabel('left', 'Rel.Ab.in au', **styles)
-        #self.graphWidget.setLabel("bottom", "m/z", **styles)
+        #self._graphWidget.setLabel('left', 'Rel.Ab.in au', **styles)
+        #self._graphWidget.setLabel("bottom", "m/z", **styles)
         #self.setGeometry(QtCore.QRect(270, 30, 300, 290))
-        self.spinBox.move(width-70,0)
+        self._spinBox.move(width - 70, 0)
         #self.resize(500, 400)
-        #self.spinBox.setValue(0.4)
+        #self._spinBox.setValue(0.4)
         #self._pushButton.clicked.disconnect()
-        #self._pushButton.clicked.connect(lambda: self.changeWidth(self.modelledBars))
+        #self._pushButton.clicked.connect(lambda: self.changeWidth(self._modelledBars))
 
     def plot(self, width):
-        #self.legend = pg.LegendItem(offset=(0., .5), labelTextSize='12pt')
-        #self.legend.setParentItem(self.graphWidget.graphicsItem())
-        self.modelledBars = pg.BarGraphItem(x=self.ions['m/z'], height=self.ions['calcInt'],
-                                            pen =pg.mkPen(color='r', width=0.4), width=width, brush='r')
-        self.graphWidget.addItem(self.modelledBars)
-        if len(self.peaks)>0:
-            self.peakScatter = pg.ScatterPlotItem(x=self.peaks[:,0], y=self.peaks[:,1], symbol='star',
-                                                  pen=pg.mkPen(color='k', width=0.2), size=12, pxMode=True)
-            self.graphWidget.addItem(self.peakScatter)
-        #self.legend.addItem(self.modelledBars, 'modelled')
+        #self._legend = pg.LegendItem(offset=(0., .5), labelTextSize='12pt')
+        #self._legend.setParentItem(self._graphWidget.graphicsItem())
+        self._modelledBars = pg.BarGraphItem(x=self._ions['m/z'], height=self._ions['calcInt'],
+                                             pen =pg.mkPen(color='r', width=0.4), width=width, brush='r')
+        self._graphWidget.addItem(self._modelledBars)
+        if len(self._peaks)>0:
+            self._peakScatter = pg.ScatterPlotItem(x=self._peaks[:, 0], y=self._peaks[:, 1], symbol='star',
+                                                   pen=pg.mkPen(color='k', width=0.2), size=12, pxMode=True)
+            self._graphWidget.addItem(self._peakScatter)
+        #self._legend.addItem(self._modelledBars, 'modelled')
 
     '''def changeWidth(self):
-        self.graphWidget.removeItem(self.modelledBars)
-        self.plot(self.spinBox.value())
+        self._graphWidget.removeItem(self._modelledBars)
+        self.plot(self._spinBox.value())
         self.show()'''
 
 def main():

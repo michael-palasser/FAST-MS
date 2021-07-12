@@ -34,7 +34,7 @@ class Window(SimpleMainWindow):
                          'Calculate Occupancies':
                              (lambda: occupancyRecalculator(self), 'Calculates occupancies of a given ion list', None),
                          'Compare Analysis':
-                             (lambda: spectrumComparator(self), 'Compares the ion lists of multiple spectra', None)},
+                             (self.compareSpectra, 'Compares the ion lists of multiple spectra', None)},
                         None)
         #[print(action.toolTip()) for action in menuActions.values()]
         #print(menu.toolTipsVisible())
@@ -62,8 +62,8 @@ class Window(SimpleMainWindow):
     def addActionToStatusBar(self,menu, name, toolTip, function):
         action = QAction('&'+name, self)
         action.setToolTip(toolTip)
-        action.setWhatsThis(toolTip)
-        action.setStatusTip(toolTip)
+        #action.setWhatsThis(toolTip)
+        #action.setStatusTip(toolTip)
         action.triggered.connect(function)
         menu.addAction(action)
 
@@ -89,6 +89,13 @@ class Window(SimpleMainWindow):
         dialog = IntactStartDialog(self)
         if dialog.exec_() and dialog.ok:
             IntactIonsSearch()
+
+    def compareSpectra(self):
+        try:
+            spectrumComparator(self)
+        except InvalidInputException as e:
+            traceback.print_exc()
+            QtWidgets.QMessageBox.warning(self, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
 
     def close_application(self):
         print('exit')

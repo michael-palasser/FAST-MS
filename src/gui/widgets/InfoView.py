@@ -3,7 +3,7 @@ from PyQt5 import QtWidgets, QtCore
 
 class InfoView(QtWidgets.QWidget):
     '''
-    Widget which shows the protocol text of a top-down search
+    QWidget which shows the protocol text of a top-down search
     '''
     def __init__(self, parent, info):
         super(InfoView, self).__init__(parent)

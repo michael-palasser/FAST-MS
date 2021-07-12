@@ -51,17 +51,17 @@ class TD_MainController(object):
     Controller class for starting, saving, exporting and loading a top-down search/analysis
     '''
     def __init__(self, parent, new):
+        '''
+        Starts either the search or loads a search from the database. Afterwards, result windows are shown.
+        :param parent:
+        :param (bool) new: True if new search, False if old search is loaded
+        '''
         if new:
-            #try:
             dialog = TDStartDialog(None)
             dialog.exec_()
             if dialog.canceled():
                 return
             self._settings = dialog.newSettings()
-            #except InvalidInputException as e:
-            #traceback.print_exc()
-            #QtWidgets.QMessageBox.warning(None, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
-            #return
             self._configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
             self._propStorage = SearchSettings(self._settings['sequName'], self._settings['fragmentation'],
                                                self._settings['modifications'])
@@ -108,6 +108,10 @@ class TD_MainController(object):
 
 
     def search(self):
+        '''
+        Search for ions in spectrum: Calculates theo. isotope patterns, searches for these in the spectrum (peak list),
+        models intensities, fixes problems by overlapping ions (2 user inputs possible for deleting ions)
+        '''
         print("\n********** Creating fragment library **********")
         self._libraryBuilder = FragmentLibraryBuilder(self._propStorage, self._settings['nrMod'])
         self._libraryBuilder.createFragmentLibrary()
@@ -197,6 +201,9 @@ class TD_MainController(object):
         return 0
 
     def setUpUi(self, parent):
+        '''
+        Opens a SimpleMainWindow with the ion lists and a InfoView with the protocol
+        '''
         self._openWindows = []
         self._mainWindow = SimpleMainWindow(parent, 'Results:  ' + os.path.split(self._settings['spectralData'])[-1])
         self._translate = QtCore.QCoreApplication.translate
@@ -205,15 +212,21 @@ class TD_MainController(object):
         self._tabWidget = QtWidgets.QTabWidget(self._centralwidget)
         self._infoView = InfoView(None, self._info)
         self.createMenuBar()
-        self._tables = []
+        self.fillMainWindow()
+        '''self._tables = []
         for data, name in zip((self._intensityModeller.getObservedIons(), self._intensityModeller.getDeletedIons()),
                                ('Observed Ions', 'Deleted Ions')):
             self.makeTabWidget(data, name)
-        self.verticalLayout.addWidget(self._tabWidget)
+        self.verticalLayout.addWidget(self._tabWidget)'''
         self._mainWindow.resize(1000, 900)
         self._mainWindow.show()
 
+
     def createMenuBar(self):
+        '''
+        Makes the QMenuBar
+        :return:
+        '''
         self._mainWindow.createMenuBar()
         self._actions = dict()
         _,actions = self._mainWindow.createMenu("File", {'Save': (self.saveAnalysis, None, "Ctrl+S"),
@@ -239,7 +252,11 @@ class TD_MainController(object):
                 self._actions[action].setToolTip('Choose ions of interest within "Edit Parameters" menu to use this function')
 
 
-    def fillUi(self):
+    def fillMainWindow(self):
+        '''
+        Makes a QTabWidget with the ion tables
+        :return:
+        '''
         self._tables = []
         for table, name in zip((self._intensityModeller.getObservedIons(), self._intensityModeller.getDeletedIons()),
                                ('Observed Ions', 'Deleted Ions')):
@@ -247,6 +264,12 @@ class TD_MainController(object):
         self.verticalLayout.addWidget(self._tabWidget)
 
     def makeTabWidget(self, data, name):
+        '''
+        Makes a tab in the tabwidget
+        :param data:
+        :param name:
+        :return:
+        '''
         tab = QtWidgets.QWidget()
         verticalLayout = QtWidgets.QVBoxLayout(tab)
         #tab.setLayout(_verticalLayout)
@@ -262,6 +285,9 @@ class TD_MainController(object):
         # _scrollArea.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
     def makeScrollArea(self, parent, data, fun):
+        '''
+        Makes QScrollArea for ion tables
+        '''
         scrollArea = QtWidgets.QScrollArea(parent)
         #_scrollArea.setGeometry(QtCore.QRect(10, 10, 1150, 800))
         scrollArea.setWidgetResizable(True)
@@ -275,6 +301,9 @@ class TD_MainController(object):
         return scrollArea, table
 
     def makeTable(self, parent, data,fun):
+        '''
+        Makes an ion table
+        '''
         tableModel = IonTableModel(data,
                                    self._intensityModeller.getPrecRegion(self._settings['sequName'], abs(self._settings['charge'])),
                                    self._configs['shapeMarked'], self._configs['scoreMarked'])
@@ -294,6 +323,9 @@ class TD_MainController(object):
 
 
     def showOptions(self, table, pos):
+        '''
+        Right-click options of an ion table
+        '''
         menu = QtWidgets.QMenu()
         showAction = menu.addAction("Show in Spectrum")
         peakAction = menu.addAction("Show Peaks")
@@ -355,6 +387,9 @@ class TD_MainController(object):
 
 
     def saveSingleIon(self, newIon):
+        '''
+        To save an ion which was changed in PeakView
+        '''
         newIonHash = newIon.getHash()
         if newIonHash in self._intensityModeller.getObservedIons():
             ionDict = self._intensityModeller.getObservedIons()
@@ -380,6 +415,9 @@ class TD_MainController(object):
 
 
     def repeatModellingOverlaps(self):
+        '''
+        To repeat modelling overlaps after manually deleting some ions
+        '''
         self._info.repeatModelling()
         self._saved = False
         self._intensityModeller.remodelOverlaps(True)
@@ -387,7 +425,7 @@ class TD_MainController(object):
         self._tabWidget.hide()
         del self._tabWidget
         self._tabWidget = QtWidgets.QTabWidget(self._centralwidget)
-        self.fillUi()
+        self.fillMainWindow()
 
     def dumb(self):
         print('not yet implemented')
@@ -397,6 +435,9 @@ class TD_MainController(object):
             return
 
     def export(self):
+        '''
+        Exports the results to a xlsx file
+        '''
         dlg = ExportDialog(self._mainWindow)
         dlg.exec_()
         if dlg and not dlg.canceled():
@@ -433,6 +474,9 @@ class TD_MainController(object):
 
 
     def close(self):
+        '''
+        Closes the search
+        '''
         message = ''
         if self._saved == False:
             message = 'Warning: Unsaved Results\n'
@@ -445,6 +489,9 @@ class TD_MainController(object):
             self._infoView.close()
 
     def showRemodelledIons(self):
+        '''
+        Makes a table with the original values of the remodelled ions
+        '''
         remView = QtWidgets.QWidget()
         #title = 'Original Values of Overlapping Ions'
         remView._translate = QtCore.QCoreApplication.translate
@@ -459,6 +506,9 @@ class TD_MainController(object):
         remView.show()
 
     def showRedOptions(self, table, pos):
+        '''
+        Right-click options of an ion table which shows the original values of the remodelled ions
+        '''
         menu = QtWidgets.QMenu()
         showAction = menu.addAction("Show in Spectrum")
         peakAction = menu.addAction("Show Peaks")
@@ -500,6 +550,9 @@ class TD_MainController(object):
         self._infoView.show()'''
 
     def showOccupancyPlot(self):
+        '''
+        Makes a widget with the occupancy plot and a table with the corresponding values
+        '''
         self._analyser.setIons(list(self._intensityModeller.getObservedIons().values()))
         percentageDict = self._analyser.calculateOccupancies(self._configs.get('interestingIons'),
                                                              self._propStorage.getUnimportantModifs())
@@ -520,6 +573,10 @@ class TD_MainController(object):
 
 
     def showChargeDistrPlot(self, reduced):
+        '''
+        Makes a widget with the charge plot and a table with the corresponding values
+        :param (bool) reduced: True if the ion intensities should be divided by their charge
+        '''
         self._analyser.setIons(list(self._intensityModeller.getObservedIons().values()))
         chargeDict, minMaxCharges = self._analyser.analyseCharges(self._configs.get('interestingIons'), reduced)
         plotFactory1 = PlotFactory(self._mainWindow)
@@ -538,6 +595,9 @@ class TD_MainController(object):
                                       self._libraryBuilder.filterByDir(redChargeDict,-1),self._settings['charge'])'''
 
     def saveAnalysis(self):
+        '''
+        Saves the results to the "search" - database
+        '''
         searchService = SearchService()
         names = searchService.getAllSearchNames()
         while True:

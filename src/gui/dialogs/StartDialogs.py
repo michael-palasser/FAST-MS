@@ -4,7 +4,8 @@ from PyQt5 import QtWidgets, QtCore
 from src import path
 from os.path import join
 
-from src.Services import FragmentationService, ModificationService, SequenceService
+from src.Exceptions import InvalidInputException
+from src.Services import FragmentationService, ModificationService, SequenceService, IntactIonService
 from src.gui.dialogs.AbstractDialogs import StartDialog, DialogWithTabs, AbstractDialog
 from src.gui.GUI_functions import createComboBox
 from src.gui.widgets.Widgets import OpenFileWidget
@@ -63,6 +64,7 @@ class TDStartDialog(StartDialog):
         self._defaultButton = self.makeDefaultButton(self)
         self._formLayout.setWidget(index + 1, QtWidgets.QFormLayout.FieldRole, self._buttonBox)
         self._formLayout.setWidget(index+1, QtWidgets.QFormLayout.LabelRole, self._defaultButton)
+        self.backToLast()
 
     def changeNrOfMods(self):
         if self._widgets['modifications'].currentText() == '-':
@@ -80,14 +82,16 @@ class TDStartDialog(StartDialog):
         self.setValueOfWidget(self._widgets['noiseLimit'], self._configHandler.get('noiseLimit') / 10 ** 6)
 
     def accept(self):
-        self._newSettings = self.getNewSettings() #self.makeDictToWrite()
-        #self.checkValues(_newSettings)
-        self._newSettings['noiseLimit']*= 10 ** 6
-        self._configHandler.write(self._newSettings)
-        print(self._newSettings)
-        #self._newSettings = _newSettings
-        #self.startProgram(Main.run)
-        super(TDStartDialog, self).accept()
+        settings = self.getNewSettings()
+        if settings is not None:
+            self._newSettings = settings #self.makeDictToWrite()
+            #self.checkValues(_newSettings)
+            self._newSettings['noiseLimit']*= 10 ** 6
+            self._configHandler.write(self._newSettings)
+            print(self._newSettings)
+            #self._newSettings = _newSettings
+            #self.startProgram(Main.run)
+            super(TDStartDialog, self).accept()
 
 
     def checkValues(self, configs, *args):
@@ -98,7 +102,7 @@ class TDStartDialog(StartDialog):
             print('Just calculating fragment library')
             return False
         else:
-            super(TDStartDialog, self).checkSpectralDataFile(mode, fileName)
+            return super(TDStartDialog, self).checkSpectralDataFile(mode, fileName)
 
 
 class IntactStartDialog(DialogWithTabs, StartDialog):
@@ -115,10 +119,12 @@ class IntactStartDialog(DialogWithTabs, StartDialog):
         settingLayout = self.makeFormLayout(self._settingTab)
         self._configTab = self.createTab("Configurations")
         configLayout = self.makeFormLayout(self._configTab)
+        modPatterns = IntactIonService().getAllPatternNames()
+        sequences = SequenceService().getAllSequenceNames()
         self.fill(self._settingTab, settingLayout,
-                  ("Sequence Name", "Modification", "Spectral File", "Spray Mode", "Output"),
-                  {"sequName": (QtWidgets.QLineEdit(), "Name of sequenceList"),
-                   "modification": (QtWidgets.QLineEdit(), "Modification of precursor ion"),
+                  ("Sequence Name", "Modifications", "Spectral File", "Spray Mode", "Output"),
+                  {"sequName": (createComboBox(self._settingTab,sequences), "Name of sequenceList"),
+                   "modification": (createComboBox(self._settingTab,modPatterns), "Name of the modification pattern"),
                    "spectralData": (OpenFileWidget(self._settingTab, 1, join(path, 'Spectral_data', 'intact'), "Open File",
                                    "Plain Text Files (*txt);;All Files (*)"),
                                     "Name of the file with monoisotopic pattern (txt format)"),
@@ -176,11 +182,12 @@ class IntactStartDialog(DialogWithTabs, StartDialog):
 
     def accept(self):
         newSettings = self.getNewSettings() #self.makeDictToWrite()
-        """if (_newSettings['spectralData'][-4:] != '.txt') and (_newSettings['spectralData'][-4:] != '.csv'):
-            _newSettings['spectralData'] += '.txt'
-        self.checkValues(_newSettings)"""
-        self._configHandler.write(newSettings)
-        super(IntactStartDialog, self).accept()
+        if newSettings is not None:
+            """if (_newSettings['spectralData'][-4:] != '.txt') and (_newSettings['spectralData'][-4:] != '.csv'):
+                _newSettings['spectralData'] += '.txt'
+            self.checkValues(_newSettings)"""
+            self._configHandler.write(newSettings)
+            super(IntactStartDialog, self).accept()
 
 
     def checkValues(self, configs, *args):
@@ -234,10 +241,17 @@ class SpectrumComparatorStartDialog(AbstractDialog):
 
 
     def accept(self):
-        for widget in self._widgets:
-            if widget.getFiles()!= ['']:
-                self._files += widget.getFiles()
-        super(SpectrumComparatorStartDialog, self).accept()
+        try:
+            for widget in self._widgets:
+                if widget.getFiles()!= ['']:
+                    files = widget.getFiles()
+                    for file in files:
+                        self._files.append(self.checkSpectralDataFile('comparison',file))
+                    #self._files += widget.getFiles()
+            super(SpectrumComparatorStartDialog, self).accept()
+        except InvalidInputException as e:
+            traceback.print_exc()
+            QtWidgets.QMessageBox.warning(self, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
 
 
 

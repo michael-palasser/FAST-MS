@@ -6,26 +6,30 @@ from src.gui.GUI_functions import createComboBox
 
 
 class OpenFileWidget(QtWidgets.QWidget):
+    '''
+    QWidget to select (a) file path(s). Used by ExportDialog, OpenSpectralDataDlg, IntactStartDialog,
+    SpectrumComparatorStartDialog, and TDStartDialog
+    '''
     def __init__(self, parent, mode,startPath, title, formats):
         super(OpenFileWidget, self).__init__(parent)
         #self.setGeometry(QtCore.QRect(20, yPos, width, 36))
-        self.horizontalLayout = QtWidgets.QHBoxLayout(self)
-        self.horizontalLayout.setContentsMargins(0,0,0,0)
-        self.lineEdit = QtWidgets.QLineEdit(self)
+        self._horizontalLayout = QtWidgets.QHBoxLayout(self)
+        self._horizontalLayout.setContentsMargins(0, 0, 0, 0)
+        self._lineEdit = QtWidgets.QLineEdit(self)
 
-        #self.lineEdit.setGeometry(QtCore.QRect(0, 5, width-32, 21))
+        #self._lineEdit.setGeometry(QtCore.QRect(0, 5, width-32, 21))
 
-        self.horizontalLayout.addWidget(self.lineEdit)
-        self.pushButton = QtWidgets.QPushButton(self)
+        self._horizontalLayout.addWidget(self._lineEdit)
+        self._pushButton = QtWidgets.QPushButton(self)
         #self._pushButton.setGeometry(QtCore.QRect(width-32, 0, 36, 30))
-        self.pushButton.setIcon(QtGui.QIcon('../open.png'))
-        self.pushButton.setIconSize(QtCore.QSize(26,26))
-        self.pushButton.setMaximumSize(26,26)
+        self._pushButton.setIcon(QtGui.QIcon('open.png'))
+        self._pushButton.setIconSize(QtCore.QSize(32, 32))
+        self._pushButton.setMaximumSize(32, 32)
         #self._pushButton.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum))
         #self._pushButton.setGeometry(QtCore.QRect(250, yPos, 26, 26))
         #_translate = QtCore.QCoreApplication.translate
         #self._pushButton.setText(_translate(self.objectName(), "O"))
-        self.horizontalLayout.addWidget(self.pushButton)
+        self._horizontalLayout.addWidget(self._pushButton)
         self.__startPath = startPath
         self.__title = title
         self.__formats = formats
@@ -35,10 +39,10 @@ class OpenFileWidget(QtWidgets.QWidget):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self._pushButton.sizePolicy().hasHeightForWidth())
         self._pushButton.setSizePolicy(sizePolicy)"""
-        #lineEdit.setObjectName(name)
-        #self.widgets[self.lineEdit.objectName()] = self.lineEdit
+        #_lineEdit.setObjectName(name)
+        #self.widgets[self._lineEdit.objectName()] = self._lineEdit
         #_pushButton.setObjectName(name)
-        self.pushButton.clicked.connect(lambda: self.getFileNames(mode))
+        self._pushButton.clicked.connect(lambda: self.getFileNames(mode))
         #self.buttons[_pushButton.objectName()] = _pushButton
 
     def getFileNames(self, mode):
@@ -47,32 +51,36 @@ class OpenFileWidget(QtWidgets.QWidget):
         options |= QFileDialog.DontUseNativeDialog
         if mode == 2:
             files, _ = QFileDialog.getOpenFileNames(self, self.__title, self.__startPath, self.__formats, options=options)
-            self.lineEdit.setText(',  '.join(files))
+            self._lineEdit.setText(',  '.join(files))
         elif mode == 1:
             file, _ = QFileDialog.getOpenFileName(self, self.__title, self.__startPath, self.__formats, options=options)
-            self.lineEdit.setText(file)
+            self._lineEdit.setText(file)
         else:
             dir = QFileDialog.getExistingDirectory(self, self.__title, self.__startPath)
             print(dir)
             if dir:
                 dir = QtCore.QDir.toNativeSeparators(dir)
                 print(dir)
-            self.lineEdit.setText(dir)
+            self._lineEdit.setText(dir)
         #self.__files = _files
 
     #ToDo different Versions:File/Files, title, file formats
 
     def setText(self, text):
-        self.lineEdit.setText(text)
+        self._lineEdit.setText(text)
 
     def text(self):
-        return self.lineEdit.text()
+        return self._lineEdit.text()
 
     def getFiles(self):
-        return self.lineEdit.text().split(',  ')
+        return self._lineEdit.text().split(',  ')
 
 
-class BoxUpdateWidget(QtWidgets.QWidget):
+"""class BoxUpdateWidget(QtWidgets.QWidget):
+    '''
+    QWidget which is used by FragmentEditorController to select the correct precursor template from a (up-to-date) list
+    of templates
+    '''
     def __init__(self, parent, options):
         super(BoxUpdateWidget, self).__init__(parent)
         self.setContentsMargins(0,0,0,0)
@@ -111,15 +119,18 @@ class BoxUpdateWidget(QtWidgets.QWidget):
         elif toAdjust < 0:
             [self._comboBox.addItem("") for i in range(-1 * toAdjust)]
         for i, option in enumerate(newOptions):
-            self._comboBox.setItemText(i, self._translate(self.objectName(), option))
+            self._comboBox.setItemText(i, self._translate(self.objectName(), option))"""
 
 
 class LoadingWidget(QtWidgets.QWidget):
+    '''
+    QWidget which shows a gif to illustrate an ongoing process.
+    '''
     def __init__(self, parent):
         super(LoadingWidget, self).__init__(parent)
-        self.loading_lbl = QLabel(self)
-        loading_movie = QMovie("../loading.gif")  # some gif in here
-        self.loading_lbl.setMovie(loading_movie)
+        self._loading_lbl = QLabel(self)
+        loading_movie = QMovie("loading.gif")  # some gif in here
+        self._loading_lbl.setMovie(loading_movie)
         loading_movie.start()
 
         self.setGeometry(50, 50, 100, 100)

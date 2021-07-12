@@ -3,6 +3,7 @@ Created on 15 Oct 2020
 
 @author: michael
 '''
+import os
 import subprocess
 import sys
 
@@ -14,6 +15,7 @@ from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QInputDialog
 
 from src import path
+from src.Exceptions import InvalidInputException
 from src.gui.dialogs.StartDialogs import SpectrumComparatorStartDialog
 
 
@@ -56,18 +58,28 @@ def run(mainWindow):
         for spectralFile in spectralFiles:
             spectrum = list()
             with open(spectralFile) as f:
-                for line in f:
+                for i,line in enumerate(f):
                     if line.startswith('m/z'):
                         continue
                     items = tuple(removeEmptyElements(line.rstrip().split()))
-                    spectrum.append(items)
+                    if len(items) !=4:
+                        raise InvalidInputException('Incorrect Format in: '+spectralFile+'(line:'+str(i+1)+': '+line+') ',
+                                                    'Number of columns must 4 but is '+str(len(items)))
+                    '''for j in range(len(items)-1):
+                        if not items[j].isnumeric():'''
+                    try:
+                        spectrum.append(tuple([float(items[j]) for j in range(len(items)-1)]+[items[3]]))
+                    except ValueError:
+                        raise InvalidInputException(
+                            'Incorrect Format in: ' + spectralFile + '(line:' + str(i + 1) + ': ' + line + ') ',
+                            'Values in column 1-3 must be numeric but are ' + ', '.join([items[j] for j in range(len(items)-1)]))
                     ionHash = getHash(items[3],int(items[1]))
                     if ionHash in ions:
                         ions[ionHash].append(spectralFile)
                     else:
                         ions[ionHash] = [spectralFile]
             spectra.append(np.array(spectrum,
-                                    dtype=[('m/z', np.float64), ('z', np.uint8), ('intensity', np.float64), ('name', 'U32')]))
+                                    dtype=[('m/z', float), ('z', np.uint8), ('intensity', float), ('name', 'U32')]))
         outputName = None
         text, ok = QInputDialog.getText(mainWindow, "Results", "Name of the output file:")
         if ok:
@@ -76,10 +88,11 @@ def run(mainWindow):
             return
         #outputName = input('Name of output file: ')
         if outputName == '':
-            date = datetime.now().strftime("%d%m%Y")
-            output = path + 'Spectral_data/comparison/' + date + '_out' + '.xlsx'
+            date = datetime.now().strftime("%d.%m.%Y")
+            print(date)
+            output = os.path.join(path, 'Spectral_data','comparison', date + '_out' + '.xlsx')
         else:
-            output = path + 'Spectral_data/comparison/' + outputName + '.xlsx'
+            output = os.path.join(path, 'Spectral_data','comparison', outputName + '.xlsx')
 
         workbook = xlsxwriter.Workbook(output)
         worksheet = workbook.add_worksheet()

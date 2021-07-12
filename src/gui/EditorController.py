@@ -7,8 +7,8 @@ import sys
 from src.Exceptions import CanceledException
 from src.Services import *
 from src.gui.AbstractMainWindows import SimpleMainWindow
+from src.gui.GUI_functions import createComboBox
 from src.gui.dialogs.SimpleDialogs import OpenDialog
-from src.gui.widgets.Widgets import BoxUpdateWidget
 
 
 class AbstractSimpleEditorController(ABC):
@@ -191,7 +191,10 @@ class AbstractEditorController(AbstractSimpleEditorController, ABC):
             self._widgets[widgetName] = widget
             counter+=1
         for widget, initVal in zip(self._widgets.values(), initialValues):
-            widget.setText(initVal)
+            if isinstance(widget, QtWidgets.QComboBox):
+                widget.setCurrentText(initVal)
+            else:
+                widget.setText(initVal)
         return counter
 
 
@@ -415,14 +418,19 @@ class FragmentEditorController(AbstractEditorControllerWithTabs):
     def __init__(self):
         super(FragmentEditorController, self).__init__(FragmentationService(), "Edit Fragments", "Fragment-Pattern")
         upperWidget = self.makeUpperWidget()
-        precWidget = BoxUpdateWidget(self._centralwidget, [item[0] for item in self._pattern.getItems2()])
-        precWidget.connectBtn(lambda : precWidget.updateBox(self.getPrecNames()))
+        precBox = createComboBox(self._centralwidget, [item[0] for item in self._pattern.getItems2() if item[5]])
+        #precWidget = BoxUpdateWidget(self._centralwidget, [item[0] for item in self._pattern.getItems2()])
+        #precWidget.connectBtn(lambda : precWidget.updatePrecBox(self.getPrecNames()))
         self.createWidgets(upperWidget, upperWidget.layout(), ["Name: ", 'Precursor: '],
-                           {"name": QtWidgets.QLineEdit(self._centralwidget), 'precursor': precWidget},
+                           {"name": QtWidgets.QLineEdit(self._centralwidget), 'precursor': precBox},
                            [self._pattern.getName(), self._pattern.getPrecursor()])
         self._tabWidget = self.makeTabWidget("Fragments", "Precursor-Fragments")
+        self._table2.itemChanged.connect(self.updatePrecBox)
         self._mainWindow.show()
 
+    def updatePrecBox(self):
+        precNames = [item[0] for item in self.readTable(self._table2, self._service.getBoolVals()[1]) if item[5]]
+        self._mainWindow.updateComboBox(self._widgets['precursor'], precNames)
 
     def save(self, *args):
         id = self._pattern.getId()
@@ -444,13 +452,14 @@ class FragmentEditorController(AbstractEditorControllerWithTabs):
         horizontalLayout.addWidget(btn)
         return widget'''
 
-    def getPrecNames(self):
-        return [item[0] for item in self.readTable(self._table2, self._service.getBoolVals()[1])]
+    '''def getPrecNames(self):
+        return [item[0] for item in self.readTable(self._table2, self._service.getBoolVals()[1]) if item[5]]'''
 
     def openAgain(self, *args):
         super(FragmentEditorController, self).openAgain()
-        self._widgets['precursor'].updateBox(self.getPrecNames())
-        self._widgets['precursor'].setText(self._pattern.getPrecursor())
+        #self._widgets['precursor'].updatePrecBox(self.getPrecNames())
+        self.updatePrecBox()
+        self._widgets['precursor'].setCurrentText(self._pattern.getPrecursor())
 
 
 

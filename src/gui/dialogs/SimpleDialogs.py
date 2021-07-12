@@ -35,7 +35,7 @@ class SelectSearchDlg(AbstractDialog):
         formLayout = self.makeFormLayout(self)
         self._options = options
         #self._options = ['search1, 23.01.1992, 08:12', 'search2, 28.01.1992, 08:12']
-        self._comboBox = self.createComboBox(self, self._options)
+        self._comboBox = createComboBox(self, self._options)
         index = self.fill(self, formLayout, ("Enter Name:",), {'name':(self._comboBox, '')})
 
         self._delBtn = QtWidgets.QPushButton(self)

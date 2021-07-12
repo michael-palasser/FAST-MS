@@ -1,5 +1,5 @@
 import traceback
-from os.path import join, isfile
+import os
 
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QMessageBox
@@ -135,8 +135,19 @@ class AbstractDialog(QtWidgets.QDialog):
         print(self._newSettings)
         super(AbstractDialog, self).accept()
 
-    def checkValues(self, configs):
-        pass
+    '''def checkValues(self, configs, *args):
+        if self.checkSpectralDataFile(args[0], configs['spectralData']):
+            configs['spectralData'] = os.path.join(path, 'Spectral_data', args[0], configs['spectralData'])'''
+
+    def checkSpectralDataFile(self, mode, fileName):
+        if not os.path.isfile(fileName):
+            spectralDataPath = os.path.join(path, 'Spectral_data', mode, fileName)
+            if os.path.isfile(spectralDataPath):
+                return spectralDataPath
+            else:
+                #message = QtWidgets.QMessageBox.warning(None, "Problem occured", spectralDataPath+ " not found", QtWidgets.QMessageBox.Ok)
+                raise InvalidInputException(spectralDataPath, "not found")
+        return fileName
 
 
 class StartDialog(AbstractDialog):
@@ -181,32 +192,19 @@ class StartDialog(AbstractDialog):
             newSettings['spectralData'] += '.txt'
         try:
             newSettings = self.checkValues(newSettings)
+            return newSettings
         except InvalidInputException as e:
             traceback.print_exc()
             QMessageBox.warning(self, "Problem occured", e.__str__(), QMessageBox.Ok)
-        return newSettings
 
     def newSettings(self):
         return self._newSettings
 
     def checkValues(self, configs, *args):
+        configs['spectralData'] = self.checkSpectralDataFile(args[0], configs['spectralData'])
         if configs['sequName'] not in SequenceService().getAllSequenceNames():
             raise InvalidInputException(configs['sequName'], "not found")
-        if self.checkSpectralDataFile(args[0], configs['spectralData']):
-            configs['spectralData'] = join(path, 'Spectral_data', args[0], configs['spectralData'])
         return configs
-
-
-    def checkSpectralDataFile(self, mode, fileName):
-        #spectralDataPath = join(path, 'Spectral_data',mode, fileName)
-        if not isfile(fileName):
-            spectralDataPath = join(path, 'Spectral_data', mode, fileName)
-            if isfile(spectralDataPath):
-                return True
-            else:
-                message = QtWidgets.QMessageBox.warning(None, "Problem occured", spectralDataPath+ " not found", QtWidgets.QMessageBox.Ok)
-                #raise InvalidInputException(spectralDataPath, "not found")
-        return False
 
 
 class DialogWithTabs(AbstractDialog):

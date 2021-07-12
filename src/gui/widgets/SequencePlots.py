@@ -1,11 +1,14 @@
 import sys
 import numpy as np
 
-from PyQt5 import QtCore, QtWidgets, QtGui
+from PyQt5 import QtWidgets, QtGui
 import pyqtgraph as pg
 
 
 class PlotFactory(object):
+    '''
+    Factory class which creates PlotWindows showing either occupancies or charges per cleavage site
+    '''
     def __init__(self, parent):
         self._parent = parent
         self._colours = ['r', 'm', 'y', 'c', 'g', 'b']
@@ -28,36 +31,36 @@ class PlotFactory(object):
         self._maxY = maxY
         #self._translate = QtCore.QCoreApplication.translate
         #self.plotWdw.resize(len(sequence) * 30 + 200, 400)
-        self.p = pg.plot()
-        self.p.addLegend(labelTextSize='14pt')
-        self.p.setBackground('w')
-        self.p.showAxis('right')
-        self.p2 = pg.ViewBox()
-        self.p.scene().addItem(self.p2)
-        self.p.getAxis('right').linkToView(self.p2)
-        self.p2.setXLink(self.p)
-        self.p2.setYLink(self.p)
+        self._plot1 = pg.plot()
+        self._plot1.addLegend(labelTextSize='14pt')
+        self._plot1.setBackground('w')
+        self._plot1.showAxis('right')
+        self._plot2 = pg.ViewBox()
+        self._plot1.scene().addItem(self._plot2)
+        self._plot1.getAxis('right').linkToView(self._plot2)
+        self._plot2.setXLink(self._plot1)
+        self._plot2.setYLink(self._plot1)
         styles = {"black": "#f00", "font-size": "20px"}
-        self.p.setLabel('bottom', 'cleavage site', **styles)
+        self._plot1.setLabel('bottom', 'cleavage site', **styles)
         yRange = [-self._maxY*0.05,self._maxY*1.05]
-        self.p.setXRange(0.02, len(self._sequence)+0.02)
-        self.p.plotItem.vb.setLimits(xMin=0,xMax=len(self._sequence)+0.01, yMin=yRange[0], yMax=yRange[1])
-        self.p2.setLimits(xMin=0,xMax=len(self._sequence)+0.01, yMin=yRange[0], yMax=yRange[1])
-        self.p.setRange(yRange=yRange, padding=0)
-        self.p2.setRange(yRange=yRange, padding=0)
-        self.p2.invertY()
+        self._plot1.setXRange(0.02, len(self._sequence) + 0.02)
+        self._plot1.plotItem.vb.setLimits(xMin=0, xMax=len(self._sequence) + 0.01, yMin=yRange[0], yMax=yRange[1])
+        self._plot2.setLimits(xMin=0, xMax=len(self._sequence) + 0.01, yMin=yRange[0], yMax=yRange[1])
+        self._plot1.setRange(yRange=yRange, padding=0)
+        self._plot2.setRange(yRange=yRange, padding=0)
+        self._plot2.invertY()
         self.addSequence()
         #self.legend = pg.LegendItem(offset=(0., .5), labelTextSize='12pt')
         #self.legend.setParentItem(self.p)
         func()
         self.plot()
-        self.p.resize(len(sequence) * 25 + 200, 400)
-        self.p2.resize(2000, 1000) #if too small the second graph will dissapear when scaling up
+        self._plot1.resize(len(sequence) * 25 + 200, 400)
+        self._plot2.resize(2000, 1000) #if too small the second graph will dissapear when scaling up
         #self.p = self.makeAxis(yLabel,forwardVals)
 
     def addSequence(self):
         line = pg.InfiniteLine(pos=0,angle=0,pen=pg.mkPen(color='w', width=0),movable=False)
-        self.p.addItem(line)
+        self._plot1.addItem(line)
         sequMarkers = {}
         for bb in self._sequence:
             if bb not in sequMarkers.keys():
@@ -65,34 +68,34 @@ class PlotFactory(object):
         for i, bb in enumerate(self._sequence):
             scatter = pg.ScatterPlotItem(x=(i+0.5,),y=(0,), symbol=sequMarkers[bb],
                                          pen=pg.mkPen(color='k', width=0.1), size=10, pxMode=True)
-            self.p.addItem(scatter)
+            self._plot1.addItem(scatter)
 
     def formatForCharges(self):
-        self.p.setWindowTitle('Charge Distribution')
+        self._plot1.setWindowTitle('Charge Distribution')
         yLabel = 'average _charge '
         styles = {"black": "#f00", "font-size": "18px"}
-        self.p.setLabel('left', yLabel+','.join(self._forwardVals.keys()), **styles)
-        self.p.setLabel('right', yLabel+','.join(self._backwardVals.keys()), **styles)
+        self._plot1.setLabel('left', yLabel + ','.join(self._forwardVals.keys()), **styles)
+        self._plot1.setLabel('right', yLabel + ','.join(self._backwardVals.keys()), **styles)
 
     def formatForOccupancies(self):
-        self.p.setWindowTitle( 'Occupancies')
+        self._plot1.setWindowTitle('Occupancies')
         yLabel = 'occupancy '
         styles = {"black": "#f00", "font-size": "18px"}
         #self.p.setLabel('left', yLabel+','.join(self._forwardVals.keys()), units='%', **styles)
         #self.p.setLabel('right', yLabel+','.join(self._backwardVals.keys()), units='%', **styles)
-        self.p.setLabel('left', yLabel+','.join(self._forwardVals.keys()), **styles)
-        self.p.setLabel('right', yLabel+','.join(self._backwardVals.keys()), **styles)
+        self._plot1.setLabel('left', yLabel + ','.join(self._forwardVals.keys()), **styles)
+        self._plot1.setLabel('right', yLabel + ','.join(self._backwardVals.keys()), **styles)
 
 
     def plot(self):
         markers = ['t1', 'o', 's', 'p', 'h', 'star', 't2', 't3', '+', 'd', 'x','t']
         sequLength = len(self._sequence)
         #xVals = [i+1 for i in range(sequLength)]
-        self.plotCurve([i+1 for i in range(sequLength)], self._forwardVals, self._colours, markers,self.p)
+        self.plotCurve([i+1 for i in range(sequLength)], self._forwardVals, self._colours, markers, self._plot1)
         self.plotCurve([sequLength-i-1 for i in range(sequLength)], self._backwardVals, self._colours[::-1],
-                       markers[::-1],self.p2)
+                       markers[::-1], self._plot2)
         self.updateViews()
-        self.p.getViewBox().sigResized.connect(self.updateViews)
+        self._plot1.getViewBox().sigResized.connect(self.updateViews)
         #self.setCentralWidget(self.p)
 
 
@@ -100,7 +103,7 @@ class PlotFactory(object):
         i=0
         for key, vals in currentDict.items():
             name = key + '-ions'
-            if parent!=self.p:
+            if parent!=self._plot1:
                 vals = [self._maxY-val for val in vals]
             scatter = pg.ScatterPlotItem(x=xVals, y=vals, symbol=markers[i],
                                          pen =pg.mkPen(color=colours[i], width=2),
@@ -108,8 +111,8 @@ class PlotFactory(object):
             curve = pg.PlotCurveItem(x=xVals, y=vals, pen=pg.mkPen(color=colours[i], width=2))
             #parent.addItem(scatter)
            # parent.addItem(curve)
-            self.p.addItem(scatter)
-            self.p.addItem(curve)
+            self._plot1.addItem(scatter)
+            self._plot1.addItem(curve)
             #if parent != self.p:
             #    self.p.plotItem.legend.addItem(scatter, name)
             #self.graphWidget.plot(xVals, vals, pen=pen, )
@@ -119,23 +122,23 @@ class PlotFactory(object):
     def plotMinMaxVals(self, forwardVals, backwardVals):
         sequLength = len(self._sequence)
 
-        self.plotVals([i+1 for i in range(sequLength)], forwardVals, self._colours, self.p)
-        self.plotVals([sequLength-i-1 for i in range(sequLength)], backwardVals, self._colours[::-1], self.p2)
+        self.plotVals([i+1 for i in range(sequLength)], forwardVals, self._colours, self._plot1)
+        self.plotVals([sequLength-i-1 for i in range(sequLength)], backwardVals, self._colours[::-1], self._plot2)
 
     def plotVals(self, xVals, currentDict, colours, parent):
         i=0
         for key, vals in currentDict.items():
             #name = key + '-ions'
             marker = '+'
-            if parent!=self.p:
+            if parent!=self._plot1:
                 vals = np.array([self._maxY-val for val in vals])
                 marker = 'x'
             #print(key, vals)
             #[print(key,xVal,yVal) for xVal,yVal in zip(xVals,vals)]
-            self.p.addItem(pg.ScatterPlotItem(x=xVals, y=vals[:,0], symbol=marker,
-                                         pen =pg.mkPen(color=colours[i], width=0.8), size=8, pxMode=True))
-            self.p.addItem(pg.ScatterPlotItem(x=xVals, y=vals[:,1], symbol=marker,
-                                         pen =pg.mkPen(color=colours[i], width=0.8), size=8, pxMode=True))
+            self._plot1.addItem(pg.ScatterPlotItem(x=xVals, y=vals[:, 0], symbol=marker,
+                                                   pen =pg.mkPen(color=colours[i], width=0.8), size=8, pxMode=True))
+            self._plot1.addItem(pg.ScatterPlotItem(x=xVals, y=vals[:, 1], symbol=marker,
+                                                   pen =pg.mkPen(color=colours[i], width=0.8), size=8, pxMode=True))
             i+=1
 
     def makeCustomMarker(self, char):
@@ -151,8 +154,8 @@ class PlotFactory(object):
 
 
     def updateViews(self):
-        self.p2.setGeometry(self.p.getViewBox().sceneBoundingRect())
-        self.p2.linkedViewChanged(self.p.getViewBox(), self.p2.XAxis)
+        self._plot2.setGeometry(self._plot1.getViewBox().sceneBoundingRect())
+        self._plot2.linkedViewChanged(self._plot1.getViewBox(), self._plot2.XAxis)
 
         '''self.graphWidget = pg.PlotWidget(self)
         self.setCentralWidget(self.graphWidget)

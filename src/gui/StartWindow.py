@@ -56,27 +56,27 @@ class Window(SimpleMainWindow):
                         None)
         self.move(200,200)
         # self.setWindowIcon(QIcon('pic.png'))
-        self.home()
+        self.showButtons()
 
 
-    def addActionToStatusBar(self,menu, name, toolTip, function):
+    '''def addActionToStatusBar(self,menu, name, toolTip, function):
         action = QAction('&'+name, self)
         action.setToolTip(toolTip)
         #action.setWhatsThis(toolTip)
         #action.setStatusTip(toolTip)
         action.triggered.connect(function)
-        menu.addAction(action)
+        menu.addAction(action)'''
 
 
-    def home(self):
-        xPos = self.createButton('Analyse top-down\nspectrum','Starts analysis of top-down spectrum',40,
-                              lambda:TD_MainController(self, True))
-        xPos = self.createButton('Analyse spectrum\nof intact molecule', 'Starts analysis of normal intact spectrum',
-                             xPos, self.startIntactIonSearch)
+    def showButtons(self):
+        xPos = self.makeButton('Analyse top-down\nspectrum', 'Starts analysis of top-down spectrum', 40,
+                               lambda:TD_MainController(self, True))
+        xPos = self.makeButton('Analyse spectrum\nof intact molecule', 'Starts analysis of normal intact spectrum',
+                               xPos, self.startIntactIonSearch)
         self.setGeometry(50, 50, xPos+40, 230)
         self.show()
 
-    def createButton(self, name, toolTip, xPos, fun):
+    def makeButton(self, name, toolTip, xPos, fun):
         width = 200
         btn = QPushButton(name, self)
         btn.setToolTip(toolTip)

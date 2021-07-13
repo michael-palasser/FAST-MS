@@ -20,73 +20,98 @@ class IsotopePatternView(SimpleMainWindow):
         self._modifPatternOpts = self._controller.getModifPatternNames()
         self._intensity = None
         self._vertLayout = QtWidgets.QVBoxLayout(self._centralwidget)
-        self._upperW =QtWidgets.QWidget(self._centralwidget)
+        widget1,horizLayout1 = self.getHorizWidget(self._centralwidget, self._vertLayout, 15,5)
 
-        self._inputForm = QtWidgets.QLineEdit(self._upperW)
-        self._inputForm.setGeometry(QtCore.QRect(15, 20, 185, 21))
+        self._inputForm = QtWidgets.QLineEdit(widget1)
         self._inputForm.returnPressed.connect(self.calculateIsotopePattern)
-
-        modeLabel = QtWidgets.QLabel(self._upperW)
-        modeLabel.setGeometry(QtCore.QRect(250, 20, 60, 16))
+        horizLayout1.addWidget(self._inputForm)
+        modeLabel = QtWidgets.QLabel(widget1)
         modeLabel.setText(self._translate(self.objectName(), "Mode:"))
-        self._modeBox = QtWidgets.QComboBox(self._upperW)
-        self._modeBox.setGeometry(QtCore.QRect(290, 17, 120, 26))
+        horizLayout1.addWidget(modeLabel)
+        self._modeBox = QtWidgets.QComboBox(widget1)
         self.updateComboBox(self._modeBox, self._controller.getMolecules())
+        horizLayout1.addWidget(self._modeBox)
 
-        chargeLabel = QtWidgets.QLabel(self._upperW)
-        chargeLabel.setGeometry(QtCore.QRect(15, 60, 60, 16))
+        widget2,chargeRadLayout = self.getHorizWidget(self._centralwidget, self._vertLayout,5,15)
+
+        self._leftWidget, self._vertLayoutLeft = self.getVertWidget(widget2, chargeRadLayout)
+        self._leftWidget.setMaximumWidth(260)
+        self._rightWidget, self._vertLayoutRight = self.getVertWidget(widget2, chargeRadLayout)
+        chargeRadWidget, chargeRadLayout = self.getHorizWidget(self._leftWidget, self._vertLayoutLeft)
+        chargeLabel = QtWidgets.QLabel(chargeRadWidget)
         chargeLabel.setText(self._translate(self.objectName(), "Charge:"))
-        self._charge = QtWidgets.QSpinBox(self._upperW)
-        self._charge.setGeometry(QtCore.QRect(70, 57, 50, 24))
+        chargeRadLayout.addWidget(chargeLabel)
+        self._charge = QtWidgets.QSpinBox(chargeRadWidget)
         self._charge.setMinimum(-99)
-        self._charge.valueChanged.connect(self.calculateIsotopePattern)
-        radicalLabel = QtWidgets.QLabel(self._upperW)
-        radicalLabel.setGeometry(QtCore.QRect(130, 60, 60, 16))
+        self._charge.valueChanged.connect(self.calculateByChange)
+        chargeRadLayout.addWidget(self._charge)
+        radicalLabel = QtWidgets.QLabel(chargeRadWidget)
         radicalLabel.setText(self._translate(self.objectName(), "Electrons:"))
-        self._radicals = QtWidgets.QSpinBox(self._upperW)
-        self._radicals.setGeometry(QtCore.QRect(190, 57, 40, 24))
+        chargeRadLayout.addWidget(radicalLabel)
+        self._radicals = QtWidgets.QSpinBox(chargeRadWidget)
         self._radicals.setMinimum(-9)
         self._radicals.setMaximum(9)
-        self._radicals.valueChanged.connect(self.calculateIsotopePattern)
+        self._radicals.valueChanged.connect(self.calculateByChange)
+        chargeRadLayout.addWidget(self._radicals)
+        btnWidget, btnLayout = self.getHorizWidget(self._leftWidget, self._vertLayoutLeft,0,10)
 
-        self._pushCalc = self.makeBtn(60, 100, "Calculate")
-        self._pushCalc.clicked.connect(self.calculateIsotopePattern)
-        self._pushModel = self.makeBtn(140, 100, "Model")
-        self._pushModel.clicked.connect(self.modelInt)
+        self.makeBtn(self._leftWidget, btnLayout, "Calculate", self.calculateIsotopePattern)
+        self.makeBtn(self._leftWidget, btnLayout, "Model",self.modelInt)
+
         self.makeOptions()
 
-        self._spectrumView = QtWidgets.QFrame(self._upperW)
-
-        self._spectrumView.setGeometry(QtCore.QRect(250, 50, 350, 280))
+        self._spectrumView = QtWidgets.QFrame(self._rightWidget)
+        self._spectrumView.setMinimumSize(335, 270)
         self._spectrumView.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self._spectrumView.setAttribute(QtCore.Qt.WA_StyledBackground, True)
         self._spectrumView.setStyleSheet('background-color: white')
-        self._vertLayout.addWidget(self._upperW)
+        self._vertLayoutRight.addWidget(self._spectrumView)
         self._vertLayout.addSpacing(10)
         self.makeIonTable(None, None, None)
-        #self._vertLayout.addWidget(self._ionTable)
-        self._spaceItem = QtWidgets.QSpacerItem(0, 10, QtWidgets.QSizePolicy.Expanding)
-        self._vertLayout.addItem(self._spaceItem)
-        # self.ionTable.setGeometry(QtCore.QRect(20, 335, 550, 50))
+
+        self._vertLayout.addItem(QtWidgets.QSpacerItem(0, 10, QtWidgets.QSizePolicy.Expanding))
+
         self._peakLabel = QtWidgets.QLabel(self._centralwidget)
-        self._peakLabel.setGeometry(QtCore.QRect(25, 415, 60, 16))
         self._peakLabel.setText(self._translate(self.objectName(), "Peaks:"))
         self._vertLayout.addWidget(self._peakLabel)
         self.makePeakTable(((),))
 
-        self._modeBox.currentIndexChanged.connect(self.activateFrame)
-        width = 615
-        self._upperW.setGeometry(QtCore.QRect(0,0,width,335))
-        self._upperW.setMinimumHeight(325)
+        self._modeBox.currentIndexChanged.connect(self.renderFrame)
         self._centralwidget.setLayout(self._vertLayout)
-        self.setGeometry(QtCore.QRect(100,50,width, 400))
         self.createMenuBar()
-        self.createMenu('File', {'Load Sequence': (self.loadSequence, '', "Ctrl+O"),}, None)
+        self.createMenu('Options', {'Load Sequence': (self.loadSequence, None, "Ctrl+O"),
+                                    'Pause Calculation': (self.pauseCalculation, None, None)}, None)
+        self._pause = False
         self.show()
 
+    def getHorizWidget(self, parent, layout, top=0, bottom=0):
+        widget = QtWidgets.QWidget(parent)
+        horizLayout = QtWidgets.QHBoxLayout(widget)
+        horizLayout.setContentsMargins(5, top, 5, bottom)
+        widget.setLayout(horizLayout)
+        layout.addWidget(widget)
+        return widget, horizLayout
+
+    def getVertWidget(self, parent, layout):
+        widget = QtWidgets.QWidget(parent)
+        vertLayout = QtWidgets.QVBoxLayout(widget)
+        vertLayout.setContentsMargins(0,0,0,0)
+        widget.setLayout(vertLayout)
+        layout.addWidget(widget)
+        return widget,vertLayout
+
     def makeOptions(self):
-        self._frame = QtWidgets.QFrame(self._upperW)
-        self._frame.setGeometry(QtCore.QRect(15, 155, 220, 170))
+        '''
+        Constructs the QFrame with the ion options (fragmentation, modification, ...)
+        '''
+        self._frame = QtWidgets.QFrame(self._leftWidget)
+        self._frame.setMinimumSize(230, 180)
+        formlayout = QtWidgets.QFormLayout(self._frame)
+        formlayout.setContentsMargins(5,5,5,5)
+        formlayout.setLabelAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        formlayout.setFormAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignTop)
+        formlayout.setFieldGrowthPolicy(QtWidgets.QFormLayout.ExpandingFieldsGrow)
+        self._frame.setLayout(formlayout)
         self._frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self._frame.setFrameShadow(QtWidgets.QFrame.Raised)
         frameLabels = ("Fragmentation:", "Fragment:", "Modif.Pattern:", "Modification:", "Nr.of Mod.:")
@@ -97,34 +122,32 @@ class IsotopePatternView(SimpleMainWindow):
         self._modPatternBox.currentIndexChanged.connect(self.getModValues)
         self._modifBox = QtWidgets.QComboBox(self._frame)
         self._nrOfMods = QtWidgets.QSpinBox(self._frame)
-        self.fillFrame(frameLabels, (self._fragmentationBox, self._fragmentBox,
-                                     self._modPatternBox, self._modifBox, self._nrOfMods),
-                       ("", "", "", "", ''))
-        self._frame.hide()
+        self._nrOfMods.setValue(0)
+        self._optionWidgets = (self._fragmentationBox, self._fragmentBox,
+                                     self._modPatternBox, self._modifBox, self._nrOfMods)
+        self.fillFrame(formlayout,frameLabels, self._optionWidgets, ("", "", "", "", ''))
+        self._vertLayoutLeft.addWidget(self._frame)
 
-    def makeBtn(self,xPos, yPos, name):
-        btn = QtWidgets.QPushButton(self._upperW)
-        btn.setGeometry(QtCore.QRect(xPos-int(81/2), yPos, 81, 32))
+    def makeBtn(self, parent, layout, name, fun):
+        btn = QtWidgets.QPushButton(parent)
         btn.setText(self._translate(self.objectName(), name))
+        layout.addWidget(btn)
+        btn.clicked.connect(fun)
         return btn
 
-    def fillFrame(self, labelNames, widgets, toolTips):
-        yPos = 10
+    def fillFrame(self,formlayout, labelNames, widgets, toolTips):
+        '''
+        Inserts the ion option (fragmentation, modification, ...) widgets into the QFrame
+        '''
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         for i, labelName in enumerate(labelNames):
             label = QtWidgets.QLabel(self._frame)
-            label.setGeometry(QtCore.QRect(10, yPos, 90, 16))
             label.setText(self._translate(self.objectName(), labelName))
-            widgets[i].setGeometry(QtCore.QRect(100, yPos - 4, 120, 26))
             widgets[i].setToolTip(toolTips[i])
-            yPos += 30
-            if i == 1:
-                yPos += 10
-
-
-    '''def fillFragmentBox(self, box, options1, options2):
-        [box.model().item(i).setEnabled(True) for i in range(box.count())]
-        self.updateComboBox(box,options1+['']+options2)
-        box.model().item(len(options1)).setEnabled(False)'''
+            widgets[i].setDisabled(True)
+            widgets[i].setSizePolicy(sizePolicy)
+            formlayout.setWidget(i, QtWidgets.QFormLayout.LabelRole, label)
+            formlayout.setWidget(i, QtWidgets.QFormLayout.FieldRole, widgets[i])
 
     def loadSequence(self):
         service = SequenceService()
@@ -134,24 +157,32 @@ class IsotopePatternView(SimpleMainWindow):
             sequence = service.get(openDialog.getName())
             self._inputForm.setText(''.join(sequence.getSequenceString()))
             self._modeBox.setCurrentText(sequence.getMolecule())
-            #self.activateFrame()
 
+    def pauseCalculation(self):
+        if self._pause:
+            self._pause = False
+        else:
+            self._pause = True
 
-    def activateFrame(self):
-        if self._frame.isVisible() and self._modeBox.currentIndex() == 0:
-            self._frame.hide()
-        elif not self._frame.isVisible() and self._modeBox.currentIndex() != 0:
+    def renderFrame(self):
+        if self._modeBox.currentIndex() == 0:
+            self._nrOfMods.setValue(0)
+            self._nrOfMods.setDisabled(True)
+            for box in self._optionWidgets[:-1]:
+                box.setCurrentText('')
+                box.setDisabled(True)
+        elif self._modeBox.currentIndex() != 0:
+            for box in self._optionWidgets:
+                box.setDisabled(False)
             self.updateComboBox(self._fragmentationBox, self._fragmentationOpts)
             self.updateComboBox(self._modPatternBox, self._modifPatternOpts)
             self.getFragValues()
             self.getModValues()
-            self._frame.show()
 
 
     def getFragValues(self):
         if self._fragmentationBox.currentText() != "":
             fragItems, precItems = self._controller.getFragItems(self._fragmentationBox.currentText())
-            #self.fillFragmentBox(self._fragmentBox, fragItems, precItems)
             [self._fragmentBox.model().item(i).setEnabled(True) for i in range(self._fragmentBox.count())]
             self.updateComboBox(self._fragmentBox, fragItems + [''] + precItems)
             self._fragmentBox.model().item(len(fragItems)).setEnabled(False)
@@ -159,6 +190,13 @@ class IsotopePatternView(SimpleMainWindow):
     def getModValues(self):
         if (self._modPatternBox.currentText() != "") and (self._modPatternBox.currentText() != "-"):
             self.updateComboBox(self._modifBox, self._controller.getModifItems(self._modPatternBox.currentText()))
+
+    def calculateByChange(self):
+        '''
+        If nr of electrons or charge is changed
+        '''
+        if not self._pause:
+            self.calculateIsotopePattern()
 
     def calculateIsotopePattern(self):
         if self._inputForm.text() == '':
@@ -188,10 +226,12 @@ class IsotopePatternView(SimpleMainWindow):
 
     def renderSpectrumView(self, ion):
         self._spectrumView.hide()
+        self._vertLayoutRight.removeWidget(self._spectrumView)
         del self._spectrumView
         isotopePattern = self._controller.getIsotopePattern(ion)
-        self._spectrumView = TheoSpectrumView(self._centralwidget, isotopePattern, 365)
-        self._spectrumView.setGeometry(QtCore.QRect(250, 50, 365, 300))
+        self._spectrumView = TheoSpectrumView(self._rightWidget, isotopePattern, 365)
+        self._spectrumView.setMinimumSize(365, 300)
+        self._vertLayoutRight.addWidget(self._spectrumView)
 
     def getIonVals(self, ion, neutralMass, avMass):
         if ion is None:
@@ -211,10 +251,9 @@ class IsotopePatternView(SimpleMainWindow):
         scrollArea.setWidgetResizable(True)
         self._peakTable = IsoPatternPeakWidget(scrollArea, peaks)
         self._peakTable.resizeColumnsToContents()
-
         scrollArea.setWidget(self._peakTable)
         verticalLayout.addWidget(self._peakTable)
-        self._vertLayout.insertWidget(5, scrollArea)
+        self._vertLayout.insertWidget(6, scrollArea)
         self._peakTable.show()
 
 

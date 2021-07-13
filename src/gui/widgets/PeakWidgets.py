@@ -30,6 +30,9 @@ class GeneralPeakWidget(QtWidgets.QTableWidget):
 
 
     def fill(self):
+        '''
+        Fills the table with the peak data
+        '''
         #print(self.getValue(ion))
         for row, peak in enumerate(self._peaks):
             for j, item in enumerate(peak):
@@ -60,16 +63,14 @@ class GeneralPeakWidget(QtWidgets.QTableWidget):
 
 
     def showOptions(self, table, pos):
+        '''
+        Right click options of the table
+        '''
         menu = QtWidgets.QMenu()
         copyAllAction = menu.addAction("Copy Table")
         copyAction = menu.addAction("Copy Cell")
         action = menu.exec_(table.viewport().mapToGlobal(pos))
         if action == copyAllAction:
-            #peaks.astype(float)
-            '''df=pd.DataFrame(data=self._peaks, columns=self._headers)
-            df['int. (spectrum)']= self._peaks['relAb']
-            df['int. (calc.)']= self._peaks['calcInt']
-            df['error /ppm']= self._peaks['error']'''
             df = self.getDataframe()
             df.to_clipboard(index=False,header=True)
         if action == copyAction:
@@ -82,6 +83,9 @@ class GeneralPeakWidget(QtWidgets.QTableWidget):
             df.to_clipboard(index=False, header=False)
 
     def getDataframe(self):
+        '''
+        Returns a dataframe with the peak data
+        '''
         df = pd.DataFrame(data=self._peaks, columns=self._headers)
         df['int. (spectrum)'] = self._peaks['relAb']
         df['int. (calc.)'] = self._peaks['calcInt']
@@ -134,6 +138,9 @@ class IsoPatternPeakWidget(GeneralPeakWidget):
 
 
     def getDataframe(self):
+        '''
+        Returns a dataframe with the peak data
+        '''
         df = pd.DataFrame(data=self._peaks, columns=self._headers)
         df['int. (spectrum)'] = self._peaks['relAb']
         df['int. (calc.)'] = self._peaks['calcInt']

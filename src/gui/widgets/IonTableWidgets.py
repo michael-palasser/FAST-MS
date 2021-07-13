@@ -49,6 +49,11 @@ class IonTableWidget(QTableWidget):
         return ion.getValues()
 
     def fill(self, row, ion):
+        '''
+        Fills a row with data of an ion
+        :param (int) row: index of the row
+        :param (FragmentIon) ion:
+        '''
         #print(self.getValue(ion))
         formats=self.getFormat()
         ionVal = []
@@ -70,37 +75,8 @@ class IonTableWidget(QTableWidget):
                     newItem.setData(QtCore.Qt.DisplayRole, formatString.format(item))
                 else:
                     newItem.setData(QtCore.Qt.DisplayRole, formats[j].format(item))
-                '''if j == 0:
-                    newItem.setData(QtCore.Qt.DisplayRole, '{:10.5f}'.format(item))
-                elif j == 1:
-                    newItem.setData(QtCore.Qt.DisplayRole, '{:2d}'.format(item))
-                elif j==2:
-                    if item >= 10**13:
-                        lg10 = str(int(log10(item)+1))
-                        formatString = '{:'+lg10+'d}'
-                        newItem.setData(QtCore.Qt.DisplayRole, formatString.format(item))
-                    else:
-                        newItem.setData(QtCore.Qt.DisplayRole, '{:12d}'.format(item))
-                elif j == 5:
-                    newItem.setData(QtCore.Qt.DisplayRole, '{:6.1f}'.format(item))
-                else:
-                    newItem.setData(QtCore.Qt.DisplayRole, '{:4.2f}'.format(item))
-                newItem.setTextAlignment(QtCore.Qt.AlignRight)'''
-            """if j == 3 or j == 7:
-                newItem = QtWidgets.QTableWidgetItem(item)
-                newItem.setTextAlignment(QtCore.Qt.AlignLeft)
-            else:
-                newItem = QtWidgets.QTableWidgetItem()
-                newItem.setData(QtCore.Qt.DisplayRole, item)
-                newItem.setTextAlignment(QtCore.Qt.AlignRight)"""
             newItem.setFlags(QtCore.Qt.ItemIsEnabled)
             self.setItem(row, j, newItem)
-            """if args[0]:
-                newItem = QtWidgets.QTableWidgetItem()
-                newItem.setCheckState(QtCore.Qt.Unchecked) #QtCore.Qt.Unchecked
-                self.setItem(i, len(ion), newItem)
-                args[0][newItem] = ion"""
-        #self.resizeColumnsToContents()
         self.resizeRowsToContents()
         self._ionValues.append(ionVal)
 
@@ -140,6 +116,11 @@ class IsoPatternIon(IonTableWidget):
         return ['m/z','z','intensity','name','quality', 'formula', 'neutral mass', 'av.mass']
 
     def fill(self, row, ion):
+        '''
+        Fills a row with data of an ion
+        :param (int) row: index of the row
+        :param (FragmentIon) ion:
+        '''
         formats=self.getFormat()
         for j, item in enumerate(ion):
             if j == 3 or j==5:
@@ -209,6 +190,11 @@ class TickIonTableWidget(IonTableWidget):
         return super(TickIonTableWidget, self).getHeaders() + ['del.?']
 
     def fill(self, row, ion):
+        '''
+        Fills a row with data of an ion
+        :param (int) row: index of the row
+        :param (FragmentIon) ion:
+        '''
         super(TickIonTableWidget, self).fill(row, ion)
         checkItem = QtWidgets.QTableWidgetItem()
         checkItem.setCheckState(QtCore.Qt.Unchecked)  # QtCore.Qt.Unchecked

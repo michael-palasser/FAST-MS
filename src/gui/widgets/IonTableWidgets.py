@@ -1,6 +1,4 @@
-from functools import partial
 from math import log10
-import pandas as pd
 
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtGui import QFont
@@ -54,7 +52,6 @@ class IonTableWidget(QTableWidget):
         :param (int) row: index of the row
         :param (FragmentIon) ion:
         '''
-        #print(self.getValue(ion))
         formats=self.getFormat()
         ionVal = []
         for j, item in enumerate(self.getValue(ion)):

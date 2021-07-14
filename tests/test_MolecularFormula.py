@@ -45,23 +45,22 @@ class MolecularFormulaTest(TestCase):
         self.fail()'''
 
     def test_determine_system(self):
-        molFormula  = MolecularFormula('C5H4N3O')
-        elements= [key for key,val in molFormula.getFormulaDict().items() if val>0]
+        molFormula = MolecularFormula('C5H4N3O')
+        elements = [key for key, val in molFormula.getFormulaDict().items() if val > 0]
         self.assertTrue(molFormula.checkSystem(elements, {'C', 'H', 'N', 'O', 'P'}))
-        molFormula  = MolecularFormula('C5H4N3OS0')
-        elements= [key for key,val in molFormula.getFormulaDict().items() if val>0]
+        molFormula = MolecularFormula('C5H4N3OS0')
+        elements = [key for key, val in molFormula.getFormulaDict().items() if val > 0]
         self.assertTrue(molFormula.checkSystem(elements, {'C', 'H', 'N', 'O', 'P'}))
-        molFormula  = MolecularFormula('C38H48N15O26P3')
-        elements= [key for key,val in molFormula.getFormulaDict().items() if val>0]
+        molFormula = MolecularFormula('C38H48N15O26P3')
+        elements = [key for key, val in molFormula.getFormulaDict().items() if val > 0]
         self.assertTrue(molFormula.checkSystem(elements, {'C', 'H', 'N', 'O', 'P'}))
-        molFormula  = MolecularFormula('C36H56N12O14S')
-        elements= [key for key,val in molFormula.getFormulaDict().items() if val>0]
+        molFormula = MolecularFormula('C36H56N12O14S')
+        elements = [key for key, val in molFormula.getFormulaDict().items() if val > 0]
         self.assertTrue(molFormula.checkSystem(elements, {'C', 'H', 'N', 'O', 'S'}))
-        molFormula  = MolecularFormula('C5H5N5ONa')
-        elements= [key for key,val in molFormula.getFormulaDict().items() if val>0]
+        molFormula = MolecularFormula('C5H5N5ONa')
+        elements = [key for key, val in molFormula.getFormulaDict().items() if val > 0]
         self.assertFalse(molFormula.checkSystem(elements, {'C', 'H', 'N', 'O', 'P'}))
         self.assertFalse(molFormula.checkSystem(elements, {'C', 'H', 'N', 'O', 'S'}))
-
 
     def testIsotopeTable(self, isotopeTable=None, values=None):
         if type(isotopeTable) != type(None):
@@ -126,7 +125,7 @@ class MolecularFormulaTest(TestCase):
 
     def testIsotopePattern(self, theoIsotopePattern=None, calcIsotopePattern=None):
         if theoIsotopePattern is not None:
-            #theoIsotopePattern = np.array(theoIsotopePattern, dtype=[('m/z', np.float64), ('calcInt', np.float64)])
+            # theoIsotopePattern = np.array(theoIsotopePattern, dtype=[('m/z', np.float64), ('calcInt', np.float64)])
             theoIsotopePattern['calcInt'] *= (calcIsotopePattern['calcInt'][0] / theoIsotopePattern['calcInt'][0])
             if len(theoIsotopePattern) > (len(calcIsotopePattern) + 1):
                 raise Exception('Length of calculated isotope pattern to short')
@@ -137,9 +136,11 @@ class MolecularFormulaTest(TestCase):
             self.assertAlmostEqual(1.0, float(np.sum(calcIsotopePattern['calcInt'])), delta=0.005)
             self.assertTrue(np.sum(calcIsotopePattern['calcInt']) < 1)
 
-
-
     '''def test_calc_isotope_pattern_slowly(self):
         self.fail()'''
 
 
+    def test_get_poisson_table(self):
+        formula = MolecularFormula('C1000H1000N550O300S10')
+        print(formula.makeIsotopeTable())
+        print(formula.makePoissonTable())

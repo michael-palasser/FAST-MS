@@ -1,10 +1,10 @@
-from functools import partial
 from math import log10
 import pandas as pd
 
 from PyQt5 import QtWidgets, QtCore
 
 from src.Exceptions import InvalidInputException
+from src.gui.GUI_functions import connectTable
 
 
 class GeneralPeakWidget(QtWidgets.QTableWidget):
@@ -24,9 +24,10 @@ class GeneralPeakWidget(QtWidgets.QTableWidget):
         self.setRowCount(len(self._peaks))
         self.fill()
         self.setHorizontalHeaderLabels(self._headers)
-        self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.setSortingEnabled(True)
-        self.customContextMenuRequested['QPoint'].connect(partial(self.showOptions, self))
+        connectTable(self, self.showOptions)
+        '''self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.customContextMenuRequested['QPoint'].connect(partial(self.showOptions, self))'''
 
 
     def fill(self):

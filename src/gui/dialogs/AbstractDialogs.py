@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import QMessageBox
 from src import path
 from src.Exceptions import InvalidInputException
 from src.Services import SequenceService
+from src.gui.GUI_functions import makeFormLayout
 from src.gui.widgets.Widgets import OpenFileWidget
 
 
@@ -20,7 +21,7 @@ class AbstractDialog(QtWidgets.QDialog):
         #self.setObjectName(dialogName)
         #self.lineSpacing = lineSpacing
         self._widgets = dict()
-        #self.sizePolicy = self.setNewSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        #self.sizePolicy = self.makeSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
 
         self._translate = QtCore.QCoreApplication.translate
         self.setWindowTitle(self._translate(self.objectName(), title))
@@ -38,22 +39,27 @@ class AbstractDialog(QtWidgets.QDialog):
         return self._canceled
 
     @staticmethod
-    def setNewSizePolicy(horizontal, vertical):
+    def makeSizePolicy(horizontal, vertical):
         sizePolicy = QtWidgets.QSizePolicy(horizontal, vertical)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         return sizePolicy
 
     def makeFormLayout(self, parent):
-        formLayout = QtWidgets.QFormLayout(parent)
+        formLayout = makeFormLayout(parent)
         formLayout.setHorizontalSpacing(12)
-        #formLayout.setSizeConstraint(QtWidgets.QLayout.SetDefaultConstraint)
-        formLayout.setFieldGrowthPolicy(QtWidgets.QFormLayout.ExpandingFieldsGrow)
-        formLayout.setLabelAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
-        formLayout.setFormAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignTop)
         return formLayout
 
     def fill(self, parent, formLayout, labelNames, widgets, *args):
+        '''
+        Fills a QFormLayout with labels and corresponding widgets
+        :param parent:
+        :param (QFormLayout) formLayout:
+        :param (list[str] | tuple[str]) labelNames:
+        :param (dict[str, tuple[QWidget, str]]) widgets: dict of name (widget, tooltip)
+        :param args: tuple of minimum and maximum width
+        :return:
+        '''
         index = 0
         for labelName, key in zip(labelNames, widgets.keys()):
             self.makeLine(parent, formLayout, index, labelName, key, widgets[key], args)
@@ -61,6 +67,16 @@ class AbstractDialog(QtWidgets.QDialog):
         return index
 
     def makeLine(self, parent, formLayout, yPos, labelName, widgetName, widgetTuple, *args):
+        '''
+        Sets a label and the corresponding widget into a QFormlayout
+        :param parent:
+        :param (QFormLayout) formLayout:
+        :param (int) yPos: row index
+        :param (str) labelName:
+        :param (str) widgetName:
+        :param (tuple[QWidget, str]) widgetTuple: (widget, tooltip)
+        :param (tuple(tuple[int,int])) args: tuple of minimum and maximum width
+        '''
         label = QtWidgets.QLabel(parent)
         label.setText(self._translate(self.objectName(), labelName))
         widget = widgetTuple[0]
@@ -69,19 +85,14 @@ class AbstractDialog(QtWidgets.QDialog):
             widget.setMaximumWidth(args[0][1])
         formLayout.setWidget(yPos, QtWidgets.QFormLayout.LabelRole, label)
         widget.setParent(parent)
-        widget.setObjectName(widgetName)
+        #widget.setObjectName(widgetName)
         widget.setToolTip(self._translate(self.objectName(), widgetTuple[1]))
         self._widgetSizePolicy.setHeightForWidth(widget.sizePolicy().hasHeightForWidth())
         widget.setSizePolicy(self._widgetSizePolicy)
         self._widgets[widgetName] = widget
         formLayout.setWidget(yPos, QtWidgets.QFormLayout.FieldRole, widget)
 
-    '''def createComboBox(self, parent, options):
-        comboBox = QtWidgets.QComboBox(parent)
-        for i, option in enumerate(options):
-            comboBox.addItem("")
-            comboBox.setItemText(i, self._translate(self.objectName(), option))
-        return comboBox'''
+
 
     def makeButtonBox(self, parent):
         self._buttonBox = QtWidgets.QDialogButtonBox(parent)
@@ -115,6 +126,9 @@ class AbstractDialog(QtWidgets.QDialog):
 
 
     def backToLast(self):
+        '''
+        Resets the values of the widgets to the last used ones
+        '''
         if self._configHandler.getAll()!=None:
             for name, item in self._widgets.items():
                 self.setValueOfWidget(item, self._configHandler.get(name))
@@ -132,12 +146,8 @@ class AbstractDialog(QtWidgets.QDialog):
 
     def accept(self):
         self.ok = True
-        print(self._newSettings)
         super(AbstractDialog, self).accept()
 
-    '''def checkValues(self, configs, *args):
-        if self.checkSpectralDataFile(args[0], configs['spectralData']):
-            configs['spectralData'] = os.path.join(path, 'Spectral_data', args[0], configs['spectralData'])'''
 
     def checkSpectralDataFile(self, mode, fileName):
         if not os.path.isfile(fileName):
@@ -157,28 +167,9 @@ class StartDialog(AbstractDialog):
     def __init__(self, parent, title):
         super(StartDialog, self).__init__(parent, title)
 
-    """def startProgram(self, mainMethod):
-        self.makeDictToWrite()
-        #try:
-        mainMethod()"""
-        #    super(StartDialog, self).accept()
-        #except:
-        #    traceback.print_exc()
-         #   QMessageBox.warning(self, "Problem occured", traceback.format_exc(), QMessageBox.Ok)
-
-    '''def makeButtonWidget(self, parent):
-        widget = QtWidgets.QWidget(parent)
-        horizontLayout = QtWidgets.QHBoxLayout(widget)
-        self.makeButtonBox(widget)
-        self._defaultButton = self.makeDefaultButton(widget)
-        horizontLayout.addWidget(self._defaultButton)
-        horizontLayout.addSpacing(50)
-        horizontLayout.addWidget(self._buttonBox)
-        return widget'''
-
     def makeDefaultButton(self, parent):
         self._defaultButton = QtWidgets.QPushButton(parent)
-        sizePolicy = self.setNewSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy = self.makeSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHeightForWidth(self._defaultButton.sizePolicy().hasHeightForWidth())
         self._defaultButton.setSizePolicy(sizePolicy)
         self._defaultButton.setMinimumSize(QtCore.QSize(113, 0))
@@ -218,15 +209,10 @@ class DialogWithTabs(AbstractDialog):
         #self._verticalLayout.setObjectName("_verticalLayout")
         self._tabWidget = QtWidgets.QTabWidget(self)
         self._tabWidget.setEnabled(True)
-        tabSizePolicy = self.setNewSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+        tabSizePolicy = self.makeSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
         tabSizePolicy.setHeightForWidth(self._tabWidget.sizePolicy().hasHeightForWidth())
         self._tabWidget.setSizePolicy(tabSizePolicy)
         self._verticalLayout.addWidget(self._tabWidget)
-
-
-        #self.sizePolicy.setHeightForWidth(self._buttonBox.sizePolicy().hasHeightForWidth())
-        #self._buttonBox.setSizePolicy(self.sizePolicy)
-        #self._buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
 
 
     def createTab(self,name):

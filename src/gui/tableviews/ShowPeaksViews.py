@@ -1,9 +1,9 @@
 import copy
-from functools import partial
 
 import pandas as pd
 from PyQt5 import QtCore, QtWidgets
 
+from src.gui.GUI_functions import connectTable
 from src.gui.widgets.IonTableWidgets import IonTableWidget
 from src.gui.widgets.PeakWidgets import PeakWidget
 from src.gui.tableviews.TableModels import PeakTableModel
@@ -28,7 +28,9 @@ class SimplePeakView(QtWidgets.QWidget):
         self._table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         # self._table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self._table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self._table.customContextMenuRequested['QPoint'].connect(partial(self.showOptions, self._table))
+
+        connectTable(self._table,self.showOptions)
+        #self._table.customContextMenuRequested['QPoint'].connect(partial(self.showOptions, self._table))
         # self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         # self._table.move(0,0)
         #title = peaks[0][3] + ', ' + str(peaks[0][1])
@@ -87,6 +89,11 @@ class PeakView(QtWidgets.QMainWindow):
 
         self._verticalLayout.addWidget(self._ionTable)
         self._verticalLayout.addWidget(self._peakTable)
+
+        connectTable(self._ionTable,self.showOptions)
+        '''self._ionTable.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self._ionTable.customContextMenuRequested['QPoint'].connect(partial(self.showOptions, self._ionTable))'''
+
         self.show()
 
     @staticmethod
@@ -123,3 +130,19 @@ class PeakView(QtWidgets.QMainWindow):
 
     def saveIon(self):
         self._save(self._ion)
+
+    def showOptions(self, table, pos):
+        menu = QtWidgets.QMenu()
+        copyAllAction = menu.addAction("Copy Table")
+        copyAction = menu.addAction("Copy Cell")
+        action = menu.exec_(table.viewport().mapToGlobal(pos))
+        if action == copyAction:
+            it = table.indexAt(pos)
+            if it is None:
+                return
+            selectedCol = it.column()
+            df = pd.DataFrame([self._ion.getValues()[selectedCol]])
+            df.to_clipboard(index=False, header=False)
+        if action == copyAllAction:
+            df = pd.DataFrame(data=[self._ion.getValues()], columns=table.getHeaders())
+            df.to_clipboard(index=False, header=True)

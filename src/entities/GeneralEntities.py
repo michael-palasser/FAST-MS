@@ -84,7 +84,8 @@ class Element(PatternWithItems):
     def __init__(self, name, isotopes, id):
         """
         :param (str) name: name of element
-        :param (list[list[int, float, float] | list[tuple[int, float, float] | Isotope]) isotopes: list of isotopes:
+        :param (list[list[int, float, float] | list[tuple[int, float, float] | Isotope]) isotopes:
+            list of isotopes (tuples of nucNr, mass, relAb)
         :param (int | None) id: id of element
         """
         super(Element, self).__init__(name, isotopes, id)

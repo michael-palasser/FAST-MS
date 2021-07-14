@@ -18,6 +18,7 @@ from src import path
 from src.Exceptions import InvalidIsotopePatternException, InvalidInputException
 from src.entities.Info import Info
 from src.gui.AbstractMainWindows import SimpleMainWindow
+from src.gui.GUI_functions import connectTable
 from src.gui.widgets.InfoView import InfoView
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.repositories.IsotopePatternRepository import IsotopePatternRepository
@@ -313,8 +314,9 @@ class TD_MainController(object):
         table.setModel(tableModel)
         table.setSortingEnabled(True)
         #table.setModel(self.proxyModel)
-        table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        table.customContextMenuRequested['QPoint'].connect(partial(fun, table))
+        '''table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        table.customContextMenuRequested['QPoint'].connect(partial(fun, table))'''
+        connectTable(table, fun)
         #table.setSelectionBehavior(QAbstractItemView.SelectRows)
         table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
@@ -499,7 +501,8 @@ class TD_MainController(object):
         ions = self._intensityModeller.getRemodelledIons()
         verticalLayout = QtWidgets.QVBoxLayout(remView)
         scrollArea, table = self.makeScrollArea(remView, [ion.getMoreValues() for ion in ions], self.showRedOptions)
-        table.customContextMenuRequested['QPoint'].connect(partial(self.showRedOptions, table))
+        #table.customContextMenuRequested['QPoint'].connect(partial(self.showRedOptions, table))
+        connectTable(table, self.showRedOptions)
         verticalLayout.addWidget(scrollArea)
         remView.resize(1000, 750)
         self._openWindows.append(remView)
@@ -531,10 +534,9 @@ class TD_MainController(object):
                                 np.max(selectedIon.getIsotopePattern()['m/z']), np.max(selectedIon.getIsotopePattern()['relAb']))
             self._openWindows.append(view)
         elif action == peakAction:
-            #PeakView(self._mainWindow, selectedIon, self._intensityModeller.remodelSingleIon, self.saveSingleIon)
-            #global peakView
-            #peakView = SimplePeakView(self._mainWindow, selectedIon)
-            self._openWindows.append(SimplePeakView(self._mainWindow, selectedIon))
+            global peakview
+            peakview = SimplePeakView(None, selectedIon)
+            self._openWindows.append(peakview)
         elif action == formulaAction:
             text = 'Ion:\t' + selectedIon.getName()+\
                    '\n\nFormula:\t'+selectedIon.getFormula().toString()

@@ -84,13 +84,9 @@ class TDStartDialog(StartDialog):
     def accept(self):
         settings = self.getNewSettings()
         if settings is not None:
-            self._newSettings = settings #self.makeDictToWrite()
-            #self.checkValues(_newSettings)
+            self._newSettings = settings
             self._newSettings['noiseLimit']*= 10 ** 6
             self._configHandler.write(self._newSettings)
-            print(self._newSettings)
-            #self._newSettings = _newSettings
-            #self.startProgram(Main.run)
             super(TDStartDialog, self).accept()
 
 
@@ -142,32 +138,11 @@ class IntactStartDialog(DialogWithTabs, StartDialog):
                          "max. ppm error slope in calbratied spectrum (ppm = k/1000 + d)"),
                    "d": (QtWidgets.QDoubleSpinBox(),
                          "max. ppm error intercept in calbratied spectrum (ppm = k/1000 + d)")})
-        #xMax, yMax = self.createWidgets(configWidgets, 200, 80)
         self._widgets['minMz'].setMaximum(9999)
         self._widgets['maxMz'].setMaximum(9999)
         self._widgets["d"].setMinimum(-9.99)
         self.backToLast()
-
-        '''self.createLabels(("Sequence Name", "Modification", "Spectral File", "Spray Mode", "Output"),
-                          self._settingTab, 10, 150)
-        settingWidgets = ((QtWidgets.QLineEdit(self._settingTab), "sequName", "Name of sequenceList"),
-                   (QtWidgets.QLineEdit(self._settingTab), "modification","Modification of precursor ion"),
-                   (OpenFileWidget(self._settingTab,linewidth, 0, 1, join(path, 'Spectral_data','intact'),  "Open File",
-                               "Plain Text Files (*txt);;All Files (*)"), "spectralData",
-                        "Name of the file with monoisotopic pattern (txt format)"),
-                   (createComboBox(self._settingTab,("negative","positive")), "sprayMode", "Spray mode"),
-                   (QtWidgets.QLineEdit(self._settingTab), "output",
-                        "Name of the output txt file\ndefault: name of spectral pattern file + _out.txt"))
-        xPos, yPos = self.createWidgets(settingWidgets,120,linewidth)
-        if yMax<yPos:
-            yMax=yPos'''
-
-        #self._defaultButton = self.makeDefaultButton(self)
-
-        #self._defaultButton.setGeometry(QtCore.QRect(30, yMax + 56, 110, 32))
         self._verticalLayout.addWidget(self.makeButtonWidget(self), 0, QtCore.Qt.AlignRight)
-        #startDialog.resize(340, yMax+100)
-        #QtCore.QMetaObject.connectSlotsByName(startDialog)
 
 
     def makeButtonWidget(self, parent):
@@ -181,11 +156,8 @@ class IntactStartDialog(DialogWithTabs, StartDialog):
         return widget
 
     def accept(self):
-        newSettings = self.getNewSettings() #self.makeDictToWrite()
+        newSettings = self.getNewSettings()
         if newSettings is not None:
-            """if (_newSettings['spectralData'][-4:] != '.txt') and (_newSettings['spectralData'][-4:] != '.csv'):
-                _newSettings['spectralData'] += '.txt'
-            self.checkValues(_newSettings)"""
             self._configHandler.write(newSettings)
             super(IntactStartDialog, self).accept()
 
@@ -247,7 +219,6 @@ class SpectrumComparatorStartDialog(AbstractDialog):
                     files = widget.getFiles()
                     for file in files:
                         self._files.append(self.checkSpectralDataFile('comparison',file))
-                    #self._files += widget.getFiles()
             super(SpectrumComparatorStartDialog, self).accept()
         except InvalidInputException as e:
             traceback.print_exc()

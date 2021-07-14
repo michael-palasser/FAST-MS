@@ -39,7 +39,7 @@ class SelectSearchDlg(AbstractDialog):
         index = self.fill(self, formLayout, ("Enter Name:",), {'name':(self._comboBox, '')})
 
         self._delBtn = QtWidgets.QPushButton(self)
-        #sizePolicy = self.setNewSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+        #sizePolicy = self.makeSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
         #sizePolicy.setHeightForWidth(self._delBtn.sizePolicy().hasHeightForWidth())
         #self._delBtn.setSizePolicy(sizePolicy)
         #self._delBtn.setMinimumSize(QtCore.QSize(113, 0))
@@ -67,6 +67,7 @@ class SelectSearchDlg(AbstractDialog):
         else:
             return None
 
+
 class OpenSpectralDataDlg(AbstractDialog):
     '''
     Dialog to select the correct spectral data file (if an old top-down search/analysis is loaded)
@@ -87,6 +88,7 @@ class OpenSpectralDataDlg(AbstractDialog):
 
     def getValue(self):
         return self._fileWidget.text()
+
 
 class ExportDialog(AbstractDialog):
     '''
@@ -118,6 +120,7 @@ class ExportDialog(AbstractDialog):
 
     def getFilename(self):
         return self._widgets['name'].text()
+
 
 class SaveSearchDialog(AbstractDialog):
     '''

@@ -95,7 +95,7 @@ class OpenFileWidget(QtWidgets.QWidget):
         self._horizontalLayout.addWidget(self._comboBox)
 
         self._button = QtWidgets.QPushButton(self)
-        #sizePolicy = self.setNewSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        #sizePolicy = self.makeSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         #sizePolicy.setHeightForWidth(self._defaultButton.sizePolicy().hasHeightForWidth())
         #self._button.setSizePolicy(sizePolicy)
         # self._defaultButton.setMinimumSize(QtCore.QSize(113, 0))

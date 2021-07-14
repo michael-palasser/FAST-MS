@@ -22,21 +22,11 @@ class SimpleMainWindow(QtWidgets.QMainWindow):
         for i, option in enumerate(newOptions):
             comboBox.setItemText(i, self._translate(self.objectName(), option))
 
-    '''def makePushBtn(self, parent, name, fun, geom):
-        button = QtWidgets.QPushButton(parent)
-        #sizePolicy = self.setNewSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-        #sizePolicy.setHeightForWidth(self._defaultButton.sizePolicy().hasHeightForWidth())
-        #button.setSizePolicy(sizePolicy)
-        #self._defaultButton.setMinimumSize(QtCore.QSize(113, 0))
-        button.setText(self._translate(self.objectName(), name))
-        button.clicked.connect(fun)
-        button.setGeometry(geom)'''
 
     def createMenuBar(self):
         self._menubar = QtWidgets.QMenuBar(self)
         self.setMenuBar(self._menubar)
         self._menubar.setGeometry(QtCore.QRect(0, 0, 340, 22))
-        #self.fileMenu, self.fileMenuActions = self.createMenu("File", options, 3)
 
 
     def createMenu(self, name, options, separatorPosition):

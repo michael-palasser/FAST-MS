@@ -2,12 +2,11 @@ import traceback
 from functools import partial
 
 from PyQt5 import QtWidgets, QtCore
-import sys
 
 from src.Exceptions import CanceledException
 from src.Services import *
 from src.gui.AbstractMainWindows import SimpleMainWindow
-from src.gui.GUI_functions import createComboBox
+from src.gui.GUI_functions import createComboBox, connectTable
 from src.gui.dialogs.SimpleDialogs import OpenDialog
 
 

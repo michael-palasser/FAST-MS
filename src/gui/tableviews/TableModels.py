@@ -20,6 +20,9 @@ class AbstractTableModel(QtCore.QAbstractTableModel):
         self._headers = headers
 
     def data(self, index, role):
+        '''
+        Overwrites the data method of QAbstractTableModel to correctly format each value
+        '''
         if index.isValid():
             if role == Qt.DisplayRole:
                 col = index.column()
@@ -47,7 +50,9 @@ class AbstractTableModel(QtCore.QAbstractTableModel):
                 return self._headers[section]
 
     def sort(self, Ncol, order):
-        """Sort table by given column number."""
+        """
+        Sort table by selected column
+        """
         self.layoutAboutToBeChanged.emit()
         #self._data = self._data.sort_values(self._headers[Ncol], ascending=order == Qt.AscendingOrder)
         if order == Qt.AscendingOrder:
@@ -74,6 +79,9 @@ class IonTableModel(AbstractTableModel):
         return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable"""
 
     def data(self, index, role):
+        '''
+        Overwrites the data method of AbstractTableModel to correctly format each value
+        '''
         if index.isValid():
             if role == Qt.DisplayRole:
                 col = index.column()
@@ -146,6 +154,9 @@ class PeakTableModel(AbstractTableModel):
 
 
     def data(self, index, role):
+        '''
+        Overwrites the data method of AbstractTableModel to correctly format each value
+        '''
         if index.isValid():
             if role == Qt.DisplayRole:
                 col = index.column()

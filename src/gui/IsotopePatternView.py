@@ -3,6 +3,7 @@ from PyQt5 import QtWidgets, QtCore
 from src.IsotopePatternLogics import IsotopePatternLogics
 from src.Services import *
 from src.gui.AbstractMainWindows import SimpleMainWindow
+from src.gui.GUI_functions import makeFormLayout
 from src.gui.widgets.IonTableWidgets import IsoPatternIon
 from src.gui.widgets.PeakWidgets import IsoPatternPeakWidget
 from src.gui.dialogs.SimpleDialogs import OpenDialog
@@ -49,12 +50,15 @@ class IsotopePatternView(SimpleMainWindow):
         radicalLabel.setText(self._translate(self.objectName(), "Electrons:"))
         chargeRadLayout.addWidget(radicalLabel)
         self._radicals = QtWidgets.QSpinBox(chargeRadWidget)
-        self._radicals.setMinimum(-9)
-        self._radicals.setMaximum(9)
+        self._radicals.setRange(-9,9)
         self._radicals.valueChanged.connect(self.calculateByChange)
         chargeRadLayout.addWidget(self._radicals)
-        btnWidget, btnLayout = self.getHorizWidget(self._leftWidget, self._vertLayoutLeft,0,10)
 
+        btnWidget, btnLayout = self.getHorizWidget(self._leftWidget, self._vertLayoutLeft,0,10)
+        self._exact = QtWidgets.QCheckBox('Exact',btnWidget)
+        self._exact.setEnabled(False)
+        self._exact.setChecked(True)
+        btnLayout.addWidget(self._exact)
         self.makeBtn(self._leftWidget, btnLayout, "Calculate", self.calculateIsotopePattern)
         self.makeBtn(self._leftWidget, btnLayout, "Model",self.modelInt)
 
@@ -106,26 +110,18 @@ class IsotopePatternView(SimpleMainWindow):
         '''
         self._frame = QtWidgets.QFrame(self._leftWidget)
         self._frame.setMinimumSize(230, 180)
-        formlayout = QtWidgets.QFormLayout(self._frame)
+        formlayout = makeFormLayout(self._frame)
         formlayout.setContentsMargins(5,5,5,5)
-        formlayout.setLabelAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
-        formlayout.setFormAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignTop)
-        formlayout.setFieldGrowthPolicy(QtWidgets.QFormLayout.ExpandingFieldsGrow)
+
         self._frame.setLayout(formlayout)
         self._frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self._frame.setFrameShadow(QtWidgets.QFrame.Raised)
-        frameLabels = ("Fragmentation:", "Fragment:", "Modif.Pattern:", "Modification:", "Nr.of Mod.:")
-        self._fragmentationBox = QtWidgets.QComboBox(self._frame)
-        self._fragmentBox = QtWidgets.QComboBox(self._frame)
-        self._fragmentationBox.currentIndexChanged.connect(self.getFragValues)
-        self._modPatternBox = QtWidgets.QComboBox(self._frame)
-        self._modPatternBox.currentIndexChanged.connect(self.getModValues)
-        self._modifBox = QtWidgets.QComboBox(self._frame)
-        self._nrOfMods = QtWidgets.QSpinBox(self._frame)
-        self._nrOfMods.setValue(0)
-        self._optionWidgets = (self._fragmentationBox, self._fragmentBox,
-                                     self._modPatternBox, self._modifBox, self._nrOfMods)
-        self.fillFrame(formlayout,frameLabels, self._optionWidgets, ("", "", "", "", ''))
+        self._options = {key:QtWidgets.QComboBox(self._frame) for key in ('fragmentation', 'fragment', 'modPattern', 'modif')}
+        self._options['fragmentation'].currentIndexChanged.connect(self.getFragValues)
+        self._options['modPattern'].currentIndexChanged.connect(self.getModValues)
+        self._options['nrMod'] = QtWidgets.QSpinBox(self._frame)
+        self._options['nrMod'].setValue(0)
+        self.fillFrame(formlayout, ("", "", "", "", ''))
         self._vertLayoutLeft.addWidget(self._frame)
 
     def makeBtn(self, parent, layout, name, fun):
@@ -135,19 +131,20 @@ class IsotopePatternView(SimpleMainWindow):
         btn.clicked.connect(fun)
         return btn
 
-    def fillFrame(self,formlayout, labelNames, widgets, toolTips):
+    def fillFrame(self,formlayout, toolTips):
         '''
         Inserts the ion option (fragmentation, modification, ...) widgets into the QFrame
         '''
+        labelNames = ("Fragmentation:", "Fragment:", "Modif.Pattern:", "Modification:", "Nr.of Mod.:")
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
-        for i, labelName in enumerate(labelNames):
+        for i, key in enumerate(self._options.keys()):
             label = QtWidgets.QLabel(self._frame)
-            label.setText(self._translate(self.objectName(), labelName))
-            widgets[i].setToolTip(toolTips[i])
-            widgets[i].setDisabled(True)
-            widgets[i].setSizePolicy(sizePolicy)
+            label.setText(self._translate(self.objectName(), labelNames[i]))
+            self._options[key].setToolTip(toolTips[i])
+            self._options[key].setDisabled(True)
+            self._options[key].setSizePolicy(sizePolicy)
             formlayout.setWidget(i, QtWidgets.QFormLayout.LabelRole, label)
-            formlayout.setWidget(i, QtWidgets.QFormLayout.FieldRole, widgets[i])
+            formlayout.setWidget(i, QtWidgets.QFormLayout.FieldRole, self._options[key])
 
     def loadSequence(self):
         service = SequenceService()
@@ -166,30 +163,30 @@ class IsotopePatternView(SimpleMainWindow):
 
     def renderFrame(self):
         if self._modeBox.currentIndex() == 0:
-            self._nrOfMods.setValue(0)
-            self._nrOfMods.setDisabled(True)
-            for box in self._optionWidgets[:-1]:
+            self._options['nrMod'].setValue(0)
+            self._options['nrMod'].setDisabled(True)
+            for box in self._options.values()[:-1]:
                 box.setCurrentText('')
                 box.setDisabled(True)
         elif self._modeBox.currentIndex() != 0:
-            for box in self._optionWidgets:
+            for box in self._options.values():
                 box.setDisabled(False)
-            self.updateComboBox(self._fragmentationBox, self._fragmentationOpts)
-            self.updateComboBox(self._modPatternBox, self._modifPatternOpts)
+            self.updateComboBox(self._options['fragmentation'], self._fragmentationOpts)
+            self.updateComboBox(self._options['modPattern'], self._modifPatternOpts)
             self.getFragValues()
             self.getModValues()
 
 
     def getFragValues(self):
-        if self._fragmentationBox.currentText() != "":
-            fragItems, precItems = self._controller.getFragItems(self._fragmentationBox.currentText())
-            [self._fragmentBox.model().item(i).setEnabled(True) for i in range(self._fragmentBox.count())]
-            self.updateComboBox(self._fragmentBox, fragItems + [''] + precItems)
-            self._fragmentBox.model().item(len(fragItems)).setEnabled(False)
+        if self._options['fragmentation'].currentText() != "":
+            fragItems, precItems = self._controller.getFragItems(self._options['fragmentation'].currentText())
+            [self._options['fragment'].model().item(i).setEnabled(True) for i in range(self._options['fragment'].count())]
+            self.updateComboBox(self._options['fragment'], fragItems + [''] + precItems)
+            self._options['fragment'].model().item(len(fragItems)).setEnabled(False)
 
     def getModValues(self):
-        if (self._modPatternBox.currentText() != "") and (self._modPatternBox.currentText() != "-"):
-            self.updateComboBox(self._modifBox, self._controller.getModifItems(self._modPatternBox.currentText()))
+        if (self._options['modPattern'].currentText() != "") and (self._options['modPattern'].currentText() != "-"):
+            self.updateComboBox(self._options['modif'], self._controller.getModifItems(self._options['modPattern'].currentText()))
 
     def calculateByChange(self):
         '''
@@ -210,8 +207,8 @@ class IsotopePatternView(SimpleMainWindow):
             else:
                 ion, neutralMass, avMass= self._controller.calculate(self._modeBox.currentText(),
                                                                      self._inputForm.text(), charge, int(self._radicals.text()), self._intensity,
-                                                                     self._fragmentationBox.currentText(), self._fragmentBox.currentText(),
-                                                                     self._modPatternBox.currentText(), self._modifBox.currentText(), self._nrOfMods.value())
+                                                                     self._options['fragmentation'].currentText(), self._options['fragment'].currentText(),
+                                                                     self._options['modPattern'].currentText(), self._options['modif'].currentText(), self._options['nrMod'].value())
         except InvalidInputException as e:
             QtWidgets.QMessageBox.warning(self, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
             return

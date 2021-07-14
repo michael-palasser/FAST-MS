@@ -3,6 +3,7 @@ Created on 20 Oct 2020
 
 @author: michael
 '''
+import sys
 
 from PyQt5.QtWidgets import QApplication, QPushButton, QAction
 

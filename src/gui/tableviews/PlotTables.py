@@ -1,10 +1,10 @@
-from functools import partial
 from math import isnan
 
 import pandas as pd
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import Qt
 
+from src.gui.GUI_functions import connectTable
 from src.gui.tableviews.TableModels import AbstractTableModel
 
 
@@ -21,6 +21,9 @@ class PlotTableModel(AbstractTableModel):
         super(PlotTableModel, self).__init__(data,format, headers)
 
     def data(self, index, role):
+        '''
+        Overwrites the data method of AbstractTableModel to correctly format each value
+        '''
         if index.isValid():
             if role == Qt.DisplayRole:
                 col = index.column()
@@ -53,8 +56,9 @@ class PlotTableView(QtWidgets.QWidget):
         self._table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         self._table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         #self._table.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self._table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self._table.customContextMenuRequested['QPoint'].connect(partial(self.showOptions, self._table))
+        connectTable(self._table,self.showOptions)
+        '''self._table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self._table.customContextMenuRequested['QPoint'].connect(partial(self.showOptions, self._table))'''
         scrollArea.setWidget(self._table)
         #self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         #self._table.move(0,0)

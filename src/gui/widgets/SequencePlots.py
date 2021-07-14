@@ -21,6 +21,16 @@ class PlotFactory(object):
 
 
     def initiatePlot(self, sequence, forwardVals, backwardVals, maxY, func):
+        '''
+        Constructs the corresponding plots. Plot has 2 lines (2 axis) in forward and backward direction
+        :param (list[str]) sequence: sequence of building blocks
+        :param (dict[str,ndarray[float]]) forwardVals: dictionary of
+            {fragment type: proportions [fragment number x proportion]} in forward direction (N-term./5')
+        :param (dict[str,ndarray[float]]) backwardVals: dictionary of
+            {fragment type: proportions [fragment number x proportion]} in backward direction (C-term./3')
+        :param (float) maxY: max. y value
+        :param (callable) func: method which formats the plot
+        '''
         self._forwardVals = forwardVals
         self._backwardVals = backwardVals
         self._sequence = sequence
@@ -50,6 +60,9 @@ class PlotFactory(object):
         self._plot2.resize(2000, 1000) #if too small the second graph will dissapear when scaling up
 
     def addSequence(self):
+        '''
+        Adds building block markers to the plot at the corresponding positions
+        '''
         line = pg.InfiniteLine(pos=0,angle=0,pen=pg.mkPen(color='w', width=0),movable=False)
         self._plot1.addItem(line)
         sequMarkers = {}
@@ -61,7 +74,28 @@ class PlotFactory(object):
                                          pen=pg.mkPen(color='k', width=0.1), size=10, pxMode=True)
             self._plot1.addItem(scatter)
 
+
+    def makeCustomMarker(self, bb):
+        '''
+        Creates a new building block marker
+        :param (str) bb: name of building block
+        :return: marker
+        '''
+        mysymbol = QtGui.QPainterPath()
+        mysymbol.addText(0, 0, QtGui.QFont(), bb)
+        br = mysymbol.boundingRect()
+        scale = min(1. / br.width(), 1. / br.height())
+        tr = QtGui.QTransform()
+        tr.scale(scale, scale)
+        tr.translate(-br.x() - br.width() / 2., -br.y() - br.height() / 2.)
+        return tr.map(mysymbol)
+
+
+
     def formatForCharges(self):
+        '''
+        Formats the plot if it's a charge plot
+        '''
         self._plot1.setWindowTitle('Charge Distribution')
         yLabel = 'average _charge '
         styles = {"black": "#f00", "font-size": "18px"}
@@ -69,6 +103,9 @@ class PlotFactory(object):
         self._plot1.setLabel('right', yLabel + ','.join(self._backwardVals.keys()), **styles)
 
     def formatForOccupancies(self):
+        '''
+        Formats the plot if it's an occupancy plot
+        '''
         self._plot1.setWindowTitle('Occupancies')
         yLabel = 'occupancy '
         styles = {"black": "#f00", "font-size": "18px"}
@@ -77,6 +114,9 @@ class PlotFactory(object):
 
 
     def plot(self):
+        '''
+        Plots the lines on the plot
+        '''
         markers = ['t1', 'o', 's', 'p', 'h', 'star', 't2', 't3', '+', 'd', 'x','t']
         sequLength = len(self._sequence)
         self.plotCurve([i+1 for i in range(sequLength)], self._forwardVals, self._colours, markers, self._plot1)
@@ -87,6 +127,15 @@ class PlotFactory(object):
 
 
     def plotCurve(self, xVals, currentDict, colours, markers, parent):
+        '''
+        Plots a line on the plot
+        :param (list[int]) xVals: cleavage site
+        :param (dict[str,ndarray[float]]) currentDict: dictionary of
+            {fragment type: proportions [fragment number x proportion]}
+        :param (list[str]) colours: colour codes for the lines
+        :param (list[str]) markers: marker codes for the lines
+        :param parent:
+        '''
         i=0
         for key, vals in currentDict.items():
             name = key + '-ions'
@@ -101,12 +150,26 @@ class PlotFactory(object):
             i+=1
 
     def plotMinMaxVals(self, forwardVals, backwardVals):
+        '''
+        Plots the minimum and maximum charge value for each cleavage site
+        :param (dict[str:ndarray[float, float]]]) forwardVals: dictionary with min/max charges
+            {fragment type: charge array[fragment number x (min.charge, max charge)]} in forward direction (N-term./5')
+        :param (dict[str:ndarray[float, float]]]) backwardVals: dictionary with min/max charges
+            {fragment type: charge array[fragment number x (min.charge, max charge)]} in backward direction (C-term./3')
+        '''
         sequLength = len(self._sequence)
-
         self.plotVals([i+1 for i in range(sequLength)], forwardVals, self._colours, self._plot1)
         self.plotVals([sequLength-i-1 for i in range(sequLength)], backwardVals, self._colours[::-1], self._plot2)
 
     def plotVals(self, xVals, currentDict, colours, parent):
+        '''
+        Plots the corresponding values as scatter
+        :param (list[int]) xVals: cleavage site
+        :param (dict[str:ndarray[float, float]]]) currentDict: dictionary with min/max charges
+            {fragment type: charge array[fragment number x (min.charge, max charge)]}
+        :param (list[str]) colours: colour codes for the lines
+        :param parent:
+        '''
         i=0
         for key, vals in currentDict.items():
             marker = '+'
@@ -119,18 +182,11 @@ class PlotFactory(object):
                                                    pen =pg.mkPen(color=colours[i], width=0.8), size=8, pxMode=True))
             i+=1
 
-    def makeCustomMarker(self, char):
-        mysymbol = QtGui.QPainterPath()
-        mysymbol.addText(0, 0, QtGui.QFont(), char)
-        br = mysymbol.boundingRect()
-        scale = min(1. / br.width(), 1. / br.height())
-        tr = QtGui.QTransform()
-        tr.scale(scale, scale)
-        tr.translate(-br.x() - br.width() / 2., -br.y() - br.height() / 2.)
-        return tr.map(mysymbol)
-
 
 
     def updateViews(self):
+        '''
+        Resets the plot window
+        '''
         self._plot2.setGeometry(self._plot1.getViewBox().sceneBoundingRect())
         self._plot2.linkedViewChanged(self._plot1.getViewBox(), self._plot2.XAxis)

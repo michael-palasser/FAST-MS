@@ -1,10 +1,8 @@
-from functools import partial
-
 from PyQt5 import QtWidgets, QtCore
 import numpy as np
 import pandas as pd
 
-from src.gui.GUI_functions import createComboBox
+from src.gui.GUI_functions import createComboBox, connectTable
 from src.gui.widgets.IonTableWidgets import IonTableWidget, TickIonTableWidget
 from src.gui.tableviews.ShowPeaksViews import SimplePeakView
 from src.gui.widgets.SpectrumView import SpectrumView
@@ -15,13 +13,11 @@ class AbstractIonView(QtWidgets.QDialog):
     Dialog which shows overlapping ion patterns. Superclass of CheckMonoisotopicOverlapView and CheckOverlapsView
     '''
     def __init__(self,  patterns, title, message, widths, spectrum):
-        #self._dialog = QtWidgets.QDialog(parrent)
         super(AbstractIonView, self).__init__()
         self.setUpUi(title)
         self._patterns = []
         for pattern in patterns:
             self._patterns.append({self.hash(ion): ion for ion in pattern})
-        #self._headers = ('m/z', 'z', 'I', 'fragment', 'error /ppm', 'S/N', 'qual.', 'del.?')
         self._widths = widths
         self._tables = []
         self._spectrum = spectrum
@@ -45,12 +41,8 @@ class AbstractIonView(QtWidgets.QDialog):
         width = sum(self._widths)
         if yPos > 800:
             finall_y = 800
-            #scrollBar = QtWidgets.QScrollBar(self._scrollArea)
-            #self.resize(width + 80, 900)
         else:
             finall_y = yPos
-            #self._scrollArea.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
-            #self._scrollArea.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self._dumpList = []
 
         self._scrollArea.setWidget(self._contents)
@@ -68,8 +60,7 @@ class AbstractIonView(QtWidgets.QDialog):
         return yPos
 
     def connectTable(self, table):
-        table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        table.customContextMenuRequested['QPoint'].connect(partial(self.showOptions, table))
+        connectTable(table, self.showOptions)
 
     @staticmethod
     def hash(ion):
@@ -126,19 +117,6 @@ class AbstractIonView(QtWidgets.QDialog):
         copyAction = menu.addAction("Copy Cell")
         action = menu.exec_(table.viewport().mapToGlobal(pos))
         if action == showAction:
-            """index = None
-            for i, t in enumerate(self._tables):
-                if t == table:
-                    index = i
-            minLimit = 4000
-            maxLimit = 0
-            for ion in self._patterns[index].values():
-                minMz = np.min(ion.isotopePattern['m/z'])
-                maxMz = np.max(ion.isotopePattern['m/z'])
-                if minLimit > minMz:
-                    minLimit = minMz
-                if maxLimit < maxMz:
-                    maxLimit = maxMz"""
             ions = self.getIons(table)
             minLimit, maxLimit, YLimit = self.getLimits(ions)
             peaks = self._spectrum[
@@ -168,6 +146,11 @@ class AbstractIonView(QtWidgets.QDialog):
 
     @staticmethod
     def getLimits(ions):
+        '''
+        Returns the min and max m/z value and the max relAb of the ions in a table
+        :param (list[FragmentIon]) ions:
+        :return:
+        '''
         minLimit = 4000
         maxLimit = 0
         YLimit = 0
@@ -248,11 +231,7 @@ class CheckMonoisotopicOverlapView(AbstractIonView):
             options.append(key)
             self._optionDict[key] = ion
         comboBox = createComboBox(self._contents, options)
-        '''comboBox = QtWidgets.QComboBox(self._contents)
-        for i, option in enumerate(options):
-            comboBox.addItem("")
-            comboBox.setItemText(i, self._translate(self.objectName(), option))'''
-        comboBox.setGeometry(QtCore.QRect(30, yPos, 180, 26))
+        #comboBox.setGeometry(QtCore.QRect(30, yPos, 180, 26))
         comboBox.setToolTip("Select the ion which you want to keep, the others will be deleted")
         self._comboBoxes.append(comboBox)
         self._formlayout.addWidget(comboBox)

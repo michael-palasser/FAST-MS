@@ -67,6 +67,8 @@ class OpenFileWidget(QtWidgets.QWidget):
     #ToDo different Versions:File/Files, title, file formats
 
     def setText(self, text):
+        if isinstance(text, list):
+            text = ',  '.join(text)
         self._lineEdit.setText(text)
 
     def text(self):

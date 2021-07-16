@@ -343,17 +343,18 @@ def calculatePoissonFineStructure(isotopePeak, isotopeTable, poissonElement):
     #print(isotopePeak)
     fineStructure = [(0.,0.)]
     oldIndex= 1
+    monoVals = calculatePercentage(isotopeTable)
     for iFirst in list(range(isotopePeak + 1))[::-1]:
         #isotopeTable[1]['nrIso'] = iFirst
         #print('first',iFirst)
         if iFirst == isotopePeak:
-            print('hey',calculatePoissonPercentage(poissonElement, iFirst))
             poissonVals = calculatePoissonPercentage(poissonElement, iFirst)
-            vals = calculatePercentage(isotopeTable)
+            #vals = calculatePercentage(isotopeTable)
             #val = np.array(calculatePercentage(isotopeTable))*calculatePoissonPercentage(poissonElement, iFirst)
             #print(isotopeTable['nrIso'])
 
-            fineStructure.append((poissonVals[0]+vals[0], poissonVals[1]*vals[1]))
+            fineStructure.append((poissonVals[0]+monoVals[0], poissonVals[1]*monoVals[1]))
+            print('hey',fineStructure[-1])
             oldIndex+= 1
         else:
             fineStructure = loopThroughIsotopes(isotopePeak-iFirst, isotopeTable, fineStructure, 0)
@@ -361,10 +362,12 @@ def calculatePoissonFineStructure(isotopePeak, isotopeTable, poissonElement):
             #fineStructure = loopThroughIsotopesNew(isotopePeak, isotopeTable, fineStructure, elements)
         val = calculatePoissonPercentage(poissonElement, iFirst)
         size = len(fineStructure)
-        print('hey',val,oldIndex,size)
+        print('hey',val,iFirst,oldIndex,size)
         #fineStructure2 = [(0.,0.)]
         for i in range(oldIndex+1,size):
+            print('vorher',fineStructure[i], monoVals[0])
             fineStructure[i] = (fineStructure[i][0] + val[0], fineStructure[i][1] * val[1])
+            print('nachher',fineStructure[i], iFirst)
             '''if i>oldIndex:
                 fineStructure2.append(fineStructure[i])
             else:
@@ -372,6 +375,7 @@ def calculatePoissonFineStructure(isotopePeak, isotopeTable, poissonElement):
                 
             fineStructure[i][0] + val[0]
             fineStructure[i][1] += val[1]'''
+        #print('hoho', fineStructure)
         oldIndex= size
     return fineStructure[1:]
 
@@ -379,7 +383,7 @@ def calculatePoissonFineStructure(isotopePeak, isotopeTable, poissonElement):
 @njit
 def calculatePoissonPercentage(poissonElement, k):
     prop = poissonElement['lambda']**k / fact(k) * math.exp(-poissonElement['lambda'])
-    return prop*poissonElement['lambda']*poissonElement['mass'], prop
+    return poissonElement['mass']*k, prop
 
 @njit
 def fact(k):

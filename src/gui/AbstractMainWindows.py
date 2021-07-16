@@ -34,7 +34,7 @@ class SimpleMainWindow(QtWidgets.QMainWindow):
         Makes a QMenu
         :param name: name of the menu
         :param dict[str,tuple[Callable,str,str]] options: options of the menu (dict of name : (function, tooltip, shortcut))
-        :param (int) separatorPosition: position of a separator
+        :param (int | None) separatorPosition: position of a separator
         '''
         menu = QtWidgets.QMenu(self._menubar)
         menu.setTitle(self._translate(self.objectName(), name))

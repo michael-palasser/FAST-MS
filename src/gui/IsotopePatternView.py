@@ -84,7 +84,8 @@ class IsotopePatternView(SimpleMainWindow):
         self._centralwidget.setLayout(self._vertLayout)
         self.createMenuBar()
         self.createMenu('Options', {'Load Sequence': (self.loadSequence, None, "Ctrl+O"),
-                                    'Pause Calculation': (self.pauseCalculation, None, None)}, None)
+                                    'Pause Calculation': (self.pauseCalculation, None, None),
+                                    'Close': (self.close, 'Closes Window', 'Ctrl+Q')}, None)
         self._pause = False
         self.show()
 

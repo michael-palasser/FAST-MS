@@ -1,6 +1,8 @@
 import traceback
 
 from PyQt5 import QtWidgets, QtCore
+from PyQt5.QtWidgets import QMessageBox
+
 from src import path
 from os.path import join
 
@@ -89,6 +91,16 @@ class TDStartDialog(StartDialog):
             self._configHandler.write(self._newSettings)
             super(TDStartDialog, self).accept()
 
+    def getNewSettings(self):
+        newSettings = self.makeDictToWrite()
+        if (newSettings['spectralData'][-4:] != '.txt') and (newSettings['spectralData'][-4:] != '.csv') and (newSettings['spectralData']!=""):
+            newSettings['spectralData'] += '.txt'
+        try:
+            newSettings = self.checkValues(newSettings)
+            return newSettings
+        except InvalidInputException as e:
+            traceback.print_exc()
+            QMessageBox.warning(self, "Problem occured", e.__str__(), QMessageBox.Ok)
 
     def checkValues(self, configs, *args):
         return super(TDStartDialog, self).checkValues(configs, 'top-down')
@@ -121,7 +133,7 @@ class IntactStartDialog(DialogWithTabs, StartDialog):
                   ("Sequence Name", "Modifications", "Spectral File", "Spray Mode", "Output"),
                   {"sequName": (createComboBox(self._settingTab,sequences), "Name of sequenceList"),
                    "modification": (createComboBox(self._settingTab,modPatterns), "Name of the modification pattern"),
-                   "spectralData": (OpenFileWidget(self._settingTab, 1, join(path, 'Spectral_data', 'intact'), "Open File",
+                   "spectralData": (OpenFileWidget(self._settingTab, 2, join(path, 'Spectral_data', 'intact'), "Open Files", #changed here
                                    "Plain Text Files (*txt);;All Files (*)"),
                                     "Name of the file with monoisotopic pattern (txt format)"),
                    "sprayMode": (createComboBox(self._settingTab, ("negative", "positive")), "Spray mode"),
@@ -165,7 +177,12 @@ class IntactStartDialog(DialogWithTabs, StartDialog):
     def checkValues(self, configs, *args):
         return super(IntactStartDialog, self).checkValues(configs, 'intact')
 
-
+    def checkSpectralDataFile(self, mode, fileName):
+        files = []
+        for file in fileName.split(',  '):
+            print(file)
+            files.append(super(IntactStartDialog, self).checkSpectralDataFile(mode, file))
+        return files
 
 class SpectrumComparatorStartDialog(AbstractDialog):
     '''

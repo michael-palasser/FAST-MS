@@ -150,6 +150,8 @@ class AbstractDialog(QtWidgets.QDialog):
 
 
     def checkSpectralDataFile(self, mode, fileName):
+        print('hey',fileName)
+        print(os.path.isfile(fileName))
         if not os.path.isfile(fileName):
             spectralDataPath = os.path.join(path, 'Spectral_data', mode, fileName)
             if os.path.isfile(spectralDataPath):

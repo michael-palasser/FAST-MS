@@ -290,6 +290,7 @@ class MolecularFormula(object):
         '''
         #mostAbundant=10**(-10)
         #prop = 1
+        np.set_printoptions(suppress=True)
         isoPeak=0
         isotope_pattern = list()
         calculate, isotopeTable = self.determineSystem()
@@ -305,6 +306,7 @@ class MolecularFormula(object):
                 ultrafineStruct = np.array(calculate(isoPeak, isotopeTable))
             else:
                 ultrafineStruct = np.array(calculatePoissonFineStructure(isoPeak, reducedTable,poissonElement))
+                print('MolForm',ultrafineStruct)
             prop = np.sum(ultrafineStruct[:,1])
             M_iso = np.sum(ultrafineStruct[:,0]*ultrafineStruct[:,1])/prop
             isotope_pattern.append((M_iso,prop))
@@ -352,7 +354,7 @@ class MolecularFormula(object):
                                 , dtype=isoTableDtype)
         if len(getByIndex(isotopeTable, isotopeTable['index'][0])) != 2:
             isotopeTable = self.reorderTable(isotopeTable)
-        poissonElement = np.array((nr1,lambda1,massShift1),
+        poissonElement = np.array((nr1,lambda1,massShift1/lambda1),
                                   dtype=[('nr', float),('lambda',float), ('mass',float)])
         return isotopeTable, poissonElement
 

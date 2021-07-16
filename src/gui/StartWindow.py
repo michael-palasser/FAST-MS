@@ -89,7 +89,12 @@ class Window(SimpleMainWindow):
     def startIntactIonSearch(self):
         dialog = IntactStartDialog(self)
         if dialog.exec_() and dialog.ok:
-            IntactIonsSearch()
+            try:
+                IntactIonsSearch()
+            except InvalidInputException as e:
+                traceback.print_exc()
+                QtWidgets.QMessageBox.warning(self, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
+
 
     def compareSpectra(self):
         try:

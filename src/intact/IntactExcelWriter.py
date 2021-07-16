@@ -31,7 +31,7 @@ class IntactExcelWriter(object):
         self._row += 1
         for key,val in parameters.items():
             self._worksheet1.write_row(self._row, 0, [key, val])
-            #self.worksheet1.write(self.row,1,val)
+            #self._worksheet1.write(self.row,1,val)
             self._row += 1
         self._row += 2
 

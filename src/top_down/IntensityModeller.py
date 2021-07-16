@@ -408,6 +408,7 @@ class IntensityModeller(object):
                             factor = val
                         self._correctedIons[ion].setIsotopePatternPart('calcInt',
                                                        self._correctedIons[ion].getIsotopePattern()['calcInt']*factor)
+                        self._correctedIons[ion].setIntensity(self._correctedIons[ion].getIntensity() * factor)
                         del_ions.append(ion)
                         print("  ", ion, round(val, 2), 'deleted')
                 if len(pattern)-len(del_ions) < 2:

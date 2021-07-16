@@ -97,7 +97,7 @@ class PlotFactory(object):
         Formats the plot if it's a charge plot
         '''
         self._plot1.setWindowTitle('Charge Distribution')
-        yLabel = 'average _charge '
+        yLabel = 'average charge '
         styles = {"black": "#f00", "font-size": "18px"}
         self._plot1.setLabel('left', yLabel + ','.join(self._forwardVals.keys()), **styles)
         self._plot1.setLabel('right', yLabel + ','.join(self._backwardVals.keys()), **styles)

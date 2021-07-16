@@ -9,7 +9,7 @@ from src.entities.Ions import Fragment, FragmentIon
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.top_down.IntensityModeller import IntensityModeller
 from src.top_down.LibraryBuilder import FragmentLibraryBuilder
-from src.top_down.SpectrumHandler import eMass, protMass
+from src.simpleFunctions import eMass, protMass
 
 
 class IsotopePatternLogics(object):

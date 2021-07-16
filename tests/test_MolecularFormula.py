@@ -107,9 +107,11 @@ class MolecularFormulaTest(TestCase):
         self.assertAlmostEqual(912.375965, peptideFormulaDummy.calculateMonoIsotopic(), delta=5 * 10 ** (-6))
 
     def test_calculate_isotope_pattern(self):
+        P2 = MolecularFormula('P2').calculateIsotopePattern()
+        self.assertAlmostEqual(2 * 30.973762, P2['m/z'][0])
+        self.assertAlmostEqual(1, P2['calcInt'][0])
         self.testIsotopePattern(RNA_pattern, RNA_formulaDummy.calculateIsotopePattern())
         self.testIsotopePattern(peptide_pattern, peptideFormulaDummy.calculateIsotopePattern())
-        print(uniFormulaDummy.calculateIsotopePattern())
         self.testIsotopePattern(uni_pattern, uniFormulaDummy.calculateIsotopePattern())
         for i in range(100):
             molFormulaDummy_i = MolecularFormula({'C': randint(5, 50), 'H': randint(10, 100),
@@ -139,8 +141,13 @@ class MolecularFormulaTest(TestCase):
     '''def test_calc_isotope_pattern_slowly(self):
         self.fail()'''
 
-
     def test_get_poisson_table(self):
         formula = MolecularFormula('C1000H1000N550O300S10')
         print(formula.makeIsotopeTable())
         print(formula.makePoissonTable())
+
+
+    def test_calculate_poisson_isotope_pattern(self):
+        formula = MolecularFormula('C100H100N55O30S1')
+        print(formula.makePoissonTable())
+        print(formula.calculatePoissonIsotopePattern(5))

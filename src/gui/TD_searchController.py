@@ -440,10 +440,14 @@ class TD_MainController(object):
         '''
         Exports the results to a xlsx file
         '''
-        dlg = ExportDialog(self._mainWindow)
+        exportConfigHandler = ConfigurationHandlerFactory.getExportHandler()
+        lastOptions= exportConfigHandler.getAll()
+        dlg = ExportDialog(self._mainWindow, lastOptions)
         dlg.exec_()
         if dlg and not dlg.canceled():
             self._info.export()
+            newOptions = dlg.getOptions()
+            exportConfigHandler.write(newOptions)
             outputPath, filename = dlg.getDir(), dlg.getFilename()
             if filename == '':
                 inputFileName = os.path.split(self._settings['spectralData'])[-1]
@@ -453,7 +457,7 @@ class TD_MainController(object):
             if outputPath == '':
                 outputPath = os.path.join(path, 'Spectral_data', 'top-down')
             output = os.path.join(outputPath, filename)
-            excelWriter = ExcelWriter(output, self._configs)
+            excelWriter = ExcelWriter(output, self._configs, newOptions)
             self._analyser.setIons(list(self._intensityModeller.getObservedIons().values()))
             try:
                 excelWriter.toExcel(self._analyser, self._intensityModeller, self._propStorage,

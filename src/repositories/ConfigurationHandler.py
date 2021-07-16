@@ -78,6 +78,9 @@ class ConfigurationHandlerFactory(object):
     def getIntactHandler():
         return ConfigHandler(join(dataPath, "configurations_intact.json"))
 
+    @staticmethod
+    def getExportHandler():
+        return ConfigHandler(join(dataPath, "export_options.json"))
 
 conf = {'sequName' : 'ribA',
     'charge' : -6,

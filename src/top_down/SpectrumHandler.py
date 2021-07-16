@@ -11,12 +11,11 @@ import numpy as np
 import copy
 from scipy.constants import R
 
-from scipy.constants import electron_mass, proton_mass, N_A
-
 from src.Exceptions import InvalidInputException
 from src.MolecularFormula import MolecularFormula
 from src.entities.Ions import FragmentIon
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
+from src.simpleFunctions import eMass, protMass
 
 configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
 logging.basicConfig(level=logging.INFO)
@@ -24,8 +23,6 @@ logging.basicConfig(level=logging.INFO)
 def getErrorLimit(mz):
     return configs['k']/1000 * mz + configs['d']
 
-eMass = electron_mass*N_A*1000
-protMass = proton_mass *N_A*1000
 
 def calculateError(value, theoValue):
         return (value - theoValue) / theoValue * 10 ** 6
@@ -39,7 +36,7 @@ def getMz(mass, z, radicals):
     :return: (float) m/z
     '''
     if z != 0:
-        return abs(mass/z + protMass) + radicals*(eMass + protMass)/z
+        return abs(mass / z + protMass) + radicals * (eMass + protMass) / z
     else:
         return abs(mass) + radicals*(eMass + protMass)
 
@@ -88,6 +85,9 @@ class SpectrumHandler(object):
 
     def setNormalizationFactor(self, factor):
         self._normalizationFactor = factor
+
+    def getSprayMode(self):
+        return self.__sprayMode
 
     def getSpectrum(self, *args):
         '''

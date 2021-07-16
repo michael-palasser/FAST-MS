@@ -136,3 +136,5 @@ class LoadingWidget(QtWidgets.QWidget):
         self.setGeometry(50, 50, 100, 100)
         self.setMinimumSize(10, 10)
         self.show()
+
+

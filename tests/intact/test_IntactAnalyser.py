@@ -25,11 +25,11 @@ class TestIntactAnalyser(TestCase):
         for ion in ions:
             sumInt += ion.getIntensity()
             weigthedCharges += ion.getCharge()*ion.getIntensity()
-        analyser = IntactAnalyser([ions])
+        analyser = IntactAnalyser([[ions]])
         averageCharges, averageErrors, stddevOfErrors = analyser.calculateAvChargeAndError()
-        self.assertAlmostEqual(weigthedCharges/sumInt, averageCharges[0])
-        self.assertAlmostEqual(np.average(errors), averageErrors[0])
-        self.assertAlmostEqual(np.std(errors), stddevOfErrors[0])
+        self.assertAlmostEqual(weigthedCharges/sumInt, averageCharges[0][0])
+        self.assertAlmostEqual(np.average(errors), averageErrors[0][0])
+        self.assertAlmostEqual(np.std(errors), stddevOfErrors[0][0])
 
     def getRandomIons(self, nr):
         errors = np.empty(nr)
@@ -59,8 +59,8 @@ class TestIntactAnalyser(TestCase):
         for ion in ions:
             weigthedMod[ion.getCharge()] += ion.getNrOfModifications()*ion.getIntensity()
             sumInt[ion.getCharge()] += ion.getIntensity()
-        analyser = IntactAnalyser([ions])
-        averageModifications = analyser.calculateAverageModification()[0]
+        analyser = IntactAnalyser([[ions]])
+        averageModifications = analyser.calculateAverageModification()[0][0]
         for z in averageModifications.keys():
             self.assertAlmostEqual(weigthedMod[z]/sumInt[z], averageModifications[z])
 
@@ -88,9 +88,9 @@ class TestIntactAnalyser(TestCase):
         for i in range(self.maxCharge):
             for j,val in enumerate(modifInts[i]):
                 modifRelInts[i,j] = val/np.sum(modifInts[i])
-        analyser = IntactAnalyser([ions])
+        analyser = IntactAnalyser([[ions]])
         analyser.calculateAvChargeAndError()
-        calcModifs = analyser.calculateModifications()[0]
+        calcModifs = analyser.calculateModifications()[0][0]
         for mod,arr in calcModifs.items():
             for row in arr:
                 self.assertAlmostEqual(modifRelInts[int(row[0]-1),mods[mod]],row[1])

@@ -49,10 +49,9 @@ class TestFinder(TestCase):
 
 
     def test_read_data(self):
-        with open(self.RNA_spectrum,'r') as f:
-            self.finderRNA.readData(f)
-        self.assertEqual(4, len(self.finderRNA.getData()))
-        for spectrum in self.finderRNA.getData():
+        self.finderRNA.readData([self.RNA_spectrum])
+        self.assertEqual(4, len(self.finderRNA.getData()[0]))
+        for spectrum in self.finderRNA.getData()[0]:
             self.assertGreater(len(spectrum),0)
             self.assertEqual(np.dtype([('m/z', np.float64), ('z', np.uint8), ('relAb', np.float64)]), spectrum.dtype)
 
@@ -63,24 +62,22 @@ class TestFinder(TestCase):
         self.fail()'''
 
     def test_find_ions(self):
-        with open(self.RNA_spectrum,'r') as f:
-            self.finderRNA.readData(f)
+        self.finderRNA.readData([self.RNA_spectrum])
         self.finderRNA.calibrate()
-        for ionList in self.finderRNA.findIons(self.configRNA.get('k'), self.configRNA.get('d'), True):
+        for ionList in self.finderRNA.findIons(self.configRNA.get('k'), self.configRNA.get('d'), True)[0]:
             self.assertGreater(len(ionList), 0)
 
     '''def test_fun_parabola(self):
         self.fail()'''
 
     def test_calibrate(self):
-        with open(self.RNA_spectrum,'r') as f:
-            self.finderRNA.readData(f)
+        self.finderRNA.readData([self.RNA_spectrum])
         errors1 = []
-        for ionList in self.finderRNA.findIons(0, 50):
+        for ionList in self.finderRNA.findIons(0, 50)[0]:
             errors1.append(np.abs(np.average([ion.calculateError() for ion in ionList])))
         self.finderRNA.calibrate()
         errors2, stddevs = [], []
-        for ionList in self.finderRNA.findIons(0, 50):
+        for ionList in self.finderRNA.findIons(0, 50)[0]:
             errors = np.array([ion.calculateError() for ion in ionList if abs(ion.calculateError()) < 30])
             errors2.append(np.abs(np.average(errors)))
             stddevs.append(np.std(errors))

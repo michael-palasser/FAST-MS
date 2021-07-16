@@ -37,7 +37,7 @@ class Finder(object):
     def readData(self,files):
         '''
         Reads txt files containing ion data (format: m/z    z   relAb) and creates a 2D array (m/z, z, relAb)
-        :param (str) files: paths of files
+        :param (list[str]) files: paths of txt files
         '''
         self._files = files
         dtype = np.dtype([('m/z', np.float64), ('z', np.uint8), ('relAb', np.float64)])

@@ -12,7 +12,7 @@ class IntactAnalyser(object):
     '''
     def __init__(self, listOfIonLists):
         '''
-        :param (list[list[IntactIon]]) listOfIonLists: list of IntactIons in each spectrum
+        :param (list[list[list[IntactIon]]]) listOfIonLists: nested lists of IntactIons (ions in each spectrum in each file)
         '''
         self._listOfIonLists = listOfIonLists
         self._minCharge = 250
@@ -20,8 +20,8 @@ class IntactAnalyser(object):
 
     def calculateAvChargeAndError(self):
         '''
-        Calculates average charges and errors of each spectrum
-        :return: (tuple[list[float], list[float]]) average charges, average errors
+        Calculates average charges and errors of each spectrum in each file
+        :return: (tuple[list[list[float]], list[list[float]]]) average charges, average errors
         '''
         #value changed if reduced intensities are used
         listOfAverageCharges, listOfAverageErrors, listOfStddevOfErrors = [], [], []
@@ -57,8 +57,8 @@ class IntactAnalyser(object):
 
     def calculateAverageModification(self):
         '''
-        Calculates average numbers of modifications for each charge of each spectrum
-        :return: (list[dict[int,float]]) list of {charge:av.modification}
+        Calculates average numbers of modifications for each charge of each spectrum in each file
+        :return: (list[list[dict[int,float]]]) list of {charge:av.modification}
         '''
         listOfAverageModifications = []
         for ionlists in self._listOfIonLists:
@@ -90,8 +90,8 @@ class IntactAnalyser(object):
 
     def calculateModifications(self):
         '''
-        Calculates the abundance of each modification for each charge state in each spectrum
-        :return: (list[dict[str,ndarray(dtype=(int,float)])]) list of dicts {modification: array([charge, percentage])}
+        Calculates the abundance of each modification for each charge state in each spectrum in each file
+        :return: (list[list[dict[str,ndarray(dtype=(int,float)])]]) list of dicts {modification: array([charge, percentage])}
         '''
         listOfModificationsInSpectra = []
         for ionlists in self._listOfIonLists:
@@ -123,8 +123,8 @@ class IntactAnalyser(object):
 
     def getSortedIonList(self):
         '''
-        Returns ionLists with sorted ions
-        :return: (list[list[IntactIon]])
+        Returns lists of ionLists with sorted ions
+        :return: (list[list[list[IntactIon]]])
         '''
         returnedLists = list()
         for ionlists in self._listOfIonLists:

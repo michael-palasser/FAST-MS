@@ -64,16 +64,18 @@ class BasicExcelWriter(object):
             self._worksheet1.write(row, col, val, self._format2digit)
 
 
-    '''def addOccupancies(self, row, sequence, percentageDict, *args):
-        return self.addOccupOrCharges('Occupancies: /%', 'Occupancies', row, sequence, percentageDict,args)'''
+    '''def addOccupancies(self, row, sequence, valueDict, *args):
+        return self.addOccupOrCharges('Occupancies: /%', 'Occupancies', row, sequence, valueDict,args)'''
 
-    def addOccupOrCharges(self, mode, row, sequence, percentageDict, maxVal, *args):
+    def addOccupOrCharges(self, mode, row, sequence, valueDict, maxVal, *args):
         '''#ToDo: DRY
         Writes occupancies in _worksheet1
+        :param (int) mode: 0 for occupancies, 1 for charges, 2 for charges (reduced)
         :param (int) row: row to start writing in sheet
         :param (list[str]) sequence: list of building blocks
-        :param (dict[str,ndarray(dtype=float)]) percentageDict: dict {fragment-type : occupancies},
-            occupancies are ordered by number of corresponding building blocks
+        :param (dict[str,ndarray(dtype=float)]) valueDict: dict {fragment-type : values},
+            values (e.g. occupancies) are ordered by number of corresponding building blocks
+        :param (int) maxVal: maximum value of y-axis (plot)
         :param (list[str]) args: list of forward fragment types, list of backward fragment types
         :return: (int) last row
         '''
@@ -104,15 +106,15 @@ class BasicExcelWriter(object):
         else:
             forwFrags = ['a', 'b', 'c', 'd']
             backFrags = ['w', 'x', 'y', 'z']
-        for key in sorted(list(percentageDict.keys())):
+        for key in sorted(list(valueDict.keys())):
             currentRow = row
             self._worksheet1.write(currentRow, col, key)
             currentRow += 1
             for i in range(len(sequence)):
                 if key in backFrags:
-                    val = percentageDict[key][len(sequence)-i-2]
+                    val = valueDict[key][len(sequence) - i - 2]
                 elif key in forwFrags:
-                    val = percentageDict[key][i]
+                    val = valueDict[key][i]
                 else:
                     raise Exception("Unknown Direction of Fragment:",key)
                 if val != None:
@@ -121,18 +123,21 @@ class BasicExcelWriter(object):
             col+=1
         self._worksheet1.write(row, col, "#3'/C-term.")
         self._worksheet1.write_column(row + 1, col, reversed(list(range(1, len(sequence)))))
-        self.addChart(plotTitle, row,percentageDict, sequence,backFrags, format, maxVal)
+        self.addChart(plotTitle, row, valueDict, sequence, backFrags, format, maxVal)
         return row+len(sequence)
 
 
-    def addChart(self, title, row,percentageDict,sequence, backwardFrags, format, maxVal):
+    def addChart(self, title, row, valueDict, sequence, backwardFrags, format, maxVal):
         '''
-
+        Makes a plot in the xlsx file (occupancy or charge plot)
+        :param (str) title: title of the chart
         :param (int) row: row to place chart
-        :param (dict[str,ndarray(dtype=float)]) percentageDict: dict {fragment-type : occupancies},
-            occupancies are ordered by number of corresponding building blocks
+        :param (dict[str,ndarray(dtype=float)]) valueDict: dict {fragment-type : values},
+            values (e.g. occupancies) are ordered by number of corresponding building blocks
         :param (list[str]) sequence: list of building blocks
         :param (list[str]) backwardFrags: list of backward fragment types
+        :param (str) format: format of the labels
+        :param (int) maxVal: maximum value of y-axis
         :return:
         '''
         chart = self._workbook.add_chart({'type': 'line'})
@@ -142,7 +147,7 @@ class BasicExcelWriter(object):
             backwardFrags = args[0]
         else:
             backwardFrags = ['w', 'x', 'y', 'z']'''
-        for key in sorted(list(percentageDict.keys())):
+        for key in sorted(list(valueDict.keys())):
             if key in backwardFrags:
                 chart.add_series({
                     'name': ['analysis', row, col],
@@ -183,7 +188,7 @@ class BasicExcelWriter(object):
         # Set an Excel chart style. Colors with white outline and shadow.
         chart.set_style(10)
         # Insert the chart into the worksheet (with an offset).
-        self._worksheet1.insert_chart(row, len(percentageDict) + 4, chart, {'x_offset': 25, 'y_offset': 10})
+        self._worksheet1.insert_chart(row, len(valueDict) + 4, chart, {'x_offset': 25, 'y_offset': 10})
 
 
     def closeWorkbook(self):
@@ -294,6 +299,8 @@ class ExcelWriter(BasicExcelWriter):
         :param (dict[str,ndarray(dtype=float)]) reducedCharges: dict {fragment-type : av.charges (reduced)},
             av.charges (reduced) are ordered by number of corresponding building blocks
         :param (list[str]) backFrags: list of backward fragment types
+        :param (int) nrMod: max. nr. of modifications
+        :param (int) maxCharge: abs. value of precursor charge
         '''
         row = self.writeGeneralParameters(0, generalParam)
         row+=1
@@ -320,6 +327,11 @@ class ExcelWriter(BasicExcelWriter):
 
 
     def getAttribute(self,ion):
+        '''
+        Returns a dict of ion attributes
+        :param (FragmentIon) ion:
+        :return: (dict[str, tuple[Any,Any]]) dict of attribute name (key) and tuples of attribute and format
+         '''
         return {'m/z':(ion.getMonoisotopic(),self._format5digit), 'z':(ion.getCharge(),None),
                 'intensity':(round(ion.getIntensity()),None), 'fragment':(ion.getName(),None),
                 'error /ppm':(round(ion.getError(),3), self._format2digit),
@@ -389,7 +401,6 @@ class ExcelWriter(BasicExcelWriter):
             if header in conditons.keys():
                 column = char+str(2)+":"+char+lengthIonList
                 worksheet.conditional_format(column, conditons[header])
-
         '''worksheet.conditional_format('A2:A'+lengthIonList, {'type': 'cell',
                                                'criteria': 'between',
                                                'minimum': precursorArea[0],

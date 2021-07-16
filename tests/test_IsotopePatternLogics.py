@@ -56,20 +56,22 @@ class TestIsotopePatternLogics(TestCase):
         self.fail()'''
 
     def test_calculate(self):
-        RNA_ion,RNA_neutralMass = self.getIon('RNA',0)
-        formulaIon, formulaNeutralMass = self.logics.calculate('mol. formula',RNA_formulaDummy.toString()+'(C14H25N3O)2',
+        RNA_ion,RNA_neutralMass, RNA_averageMass = self.getIon('RNA',0)
+        formulaIon, formulaNeutralMass, formulaAverageMass = self.logics.calculate('mol. formula',RNA_formulaDummy.toString()+'(C14H25N3O)2',
                                                                -2, 0,1000)
         self.assertEqual(RNA_ion.getFormula().toString(), formulaIon.getFormula().toString())
         self.assertAlmostEqual(RNA_neutralMass,formulaNeutralMass)
+        self.assertAlmostEqual(RNA_averageMass,formulaAverageMass)
         self.testIsotopePattern(formulaIon.getIsotopePattern(), RNA_ion.getIsotopePattern())
 
-        pepIon,pepNeutralMass = self.getIon('Protein',1)
-        formulaIon, formulaNeutralMass = self.logics.calculate('mol. formula','C16H24N6O5', 2, 1,1000)
+        pepIon,pepNeutralMass, pepAverageMass = self.getIon('Protein',1)
+        formulaIon, formulaNeutralMass, formulaAverageMass = self.logics.calculate('mol. formula','C16H24N6O5', 2, 1,1000)
         self.assertEqual(pepIon.getFormula().toString(), formulaIon.getFormula().toString())
         self.assertAlmostEqual(pepNeutralMass,formulaNeutralMass)
+        self.assertAlmostEqual(pepAverageMass,formulaAverageMass)
         self.testIsotopePattern(formulaIon.getIsotopePattern(), pepIon.getIsotopePattern())
 
-        formulaIon, formulaNeutralMass = self.logics.calculate('mol. formula',RNA_formulaDummy.toString(),-2, 0,1000)
+        formulaIon, formulaNeutralMass, formulaAverageMass = self.logics.calculate('mol. formula',RNA_formulaDummy.toString(),-2, 0,1000)
         #print([(getMz(RNA_pattern[i]['m/z'],2,0),RNA_pattern[i]['calcInt']*1000) for i in range(len(RNA_pattern))])
         theoIsotopePattern= np.array(self.getIonPattern(RNA_pattern,2,-1,0),dtype=RNA_pattern.dtype)
         #print(theoIsotopePattern)

@@ -11,7 +11,7 @@ from src import path
 
 class ConfigHandler(object):
     '''
-    Class that reads and writes configuration-files (json-format) and stores it as dictionary
+    Class that reads and writes configuration-_files (json-format) and stores it as dictionary
     '''
     def __init__(self, configFile):
         '''
@@ -78,6 +78,9 @@ class ConfigurationHandlerFactory(object):
     def getIntactHandler():
         return ConfigHandler(join(dataPath, "configurations_intact.json"))
 
+    @staticmethod
+    def getExportHandler():
+        return ConfigHandler(join(dataPath, "export_options.json"))
 
 conf = {'sequName' : 'ribA',
     'charge' : -6,

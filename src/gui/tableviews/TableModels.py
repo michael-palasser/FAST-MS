@@ -1,15 +1,18 @@
 from math import log10
 
-
-try:
+'''try:
     from Tkinter import Tk
 except ImportError:
-    from tkinter import Tk
-from PyQt5 import QtCore, QtGui, QtWidgets
+    from tkinter import Tk'''
+from PyQt5 import QtCore, QtGui
 from PyQt5.QtCore import Qt
 
 
 class AbstractTableModel(QtCore.QAbstractTableModel):
+    '''
+    QAbstractTableModel which is the basis for all QTableViews in the program.
+    Superclass of IonTableModel, PeakTableModel, and PlotTableModel
+    '''
     def __init__(self, data, format, headers):
         super(AbstractTableModel, self).__init__()
         self._data = data
@@ -17,6 +20,9 @@ class AbstractTableModel(QtCore.QAbstractTableModel):
         self._headers = headers
 
     def data(self, index, role):
+        '''
+        Overwrites the data method of QAbstractTableModel to correctly format each value
+        '''
         if index.isValid():
             if role == Qt.DisplayRole:
                 col = index.column()
@@ -44,17 +50,24 @@ class AbstractTableModel(QtCore.QAbstractTableModel):
                 return self._headers[section]
 
     def sort(self, Ncol, order):
-        """Sort table by given column number."""
+        """
+        Sort table by selected column
+        """
         self.layoutAboutToBeChanged.emit()
         #self._data = self._data.sort_values(self._headers[Ncol], ascending=order == Qt.AscendingOrder)
         if order == Qt.AscendingOrder:
-            self._data.sort(key= lambda tup:tup[Ncol])
+            #self._data.sort(key= lambda tup:tup[Ncol])
+            self._data = sorted(self._data, key= lambda tup:tup[Ncol])
         else:
-            self._data.sort(key= lambda tup:tup[Ncol], reverse=True)
+            #self._data.sort(key= lambda tup:tup[Ncol], reverse=True)
+            self._data = sorted(self._data,key= lambda tup:tup[Ncol], reverse=True)
         self.layoutChanged.emit()
 
 
 class IonTableModel(AbstractTableModel):
+    '''
+    TableModel for QTableView presenting ion values (in top-down search)
+    '''
     def __init__(self, data, precRegion, maxQual, maxScore):
         super(IonTableModel, self).__init__(data, ('{:10.5f}','{:2d}', '{:12d}', '','{:4.2f}', '{:6.1f}', '{:4.2f}',
                '{:4.1f}', ''), ('m/z','z','intensity','fragment','error /ppm', 'S/N','quality', 'score', 'comment'))
@@ -66,6 +79,9 @@ class IonTableModel(AbstractTableModel):
         return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable"""
 
     def data(self, index, role):
+        '''
+        Overwrites the data method of AbstractTableModel to correctly format each value
+        '''
         if index.isValid():
             if role == Qt.DisplayRole:
                 col = index.column()
@@ -120,3 +136,53 @@ class IonTableModel(AbstractTableModel):
             if row[1]==newRow[1] and row[3]==newRow[3]:
                 self._data[i] = newRow
                 break
+
+
+class PeakTableModel(AbstractTableModel):
+    '''
+    TableModel for QTableView in SimplePeakView, used to show original peak values of remodelled ions
+    '''
+    def __init__(self, data):
+        super(PeakTableModel, self).__init__(data, ('{:10.5f}', '{:11d}', '{:11d}', '{:4.2f}', ''),
+                         ('m/z', 'int. (spectrum)', 'int. (calc.)', 'error /ppm', 'used'))
+        self._data = data
+        #print('data',data)
+        #self._format = ['{:10.5f}', '{:11d}', '{:11d}','{:4.2f}', '']
+
+    def flags(self, index):
+        return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
+
+
+    def data(self, index, role):
+        '''
+        Overwrites the data method of AbstractTableModel to correctly format each value
+        '''
+        if index.isValid():
+            if role == Qt.DisplayRole:
+                col = index.column()
+                item = self._data[index.row()][col]
+                #print(item)
+                formatString = self._format[col]
+                if col == 1 or col ==2:
+                    item = int(round(item))
+                    if item >= 10 ** 12:
+                        lg10 = str(int(log10(item) + 1))
+                        formatString = '{:' + lg10 + 'd}'
+                elif col==4:
+                    if item:
+                        return 'True'
+                    return 'False'
+                return formatString.format(item)
+        if role == Qt.TextAlignmentRole:
+            return Qt.AlignRight
+
+    """def rowCount(self, index):
+        return len(self._data.values)
+
+    def columnCount(self, index):
+        return self._data.columns.size
+
+    def headerData(self, section, orientation, role):
+        if role == QtCore.Qt.DisplayRole:
+            if orientation == QtCore.Qt.Horizontal:
+                return ('m/z','z','intensity','fragment','error /ppm', 'used')[section]"""

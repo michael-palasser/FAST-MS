@@ -4,9 +4,11 @@ Created on 3 Jul 2020
 @author: michael
 '''
 from math import exp
+from numpy import sum as npSum, isnan
 #from numpy import array, dtype
 
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
+from src.simpleFunctions import eMass, protMass
 
 noiseLimit = ConfigurationHandlerFactory.getTD_SettingHandler().get('noiseLimit')
 
@@ -140,6 +142,18 @@ class FragmentIon(Fragment):
         else:
             self._score = exp(10 * self._quality) / 20 * self._quality * self._intensity / noiseLimit
         # return self.score
+
+    def getNeutral(self, mz, mode):
+        return (mz - mode *protMass) * self._charge - self._radicals*(protMass+eMass)
+
+    def getMolecularMass(self, mode):
+        return self.getNeutral(self.getMonoisotopic(),mode)
+
+    def getAverageMass(self, mode):
+        avMass = npSum(self._isotopePattern['m/z']*self._isotopePattern['calcInt'])/npSum(self._isotopePattern['calcInt'])
+        if isnan(self.getNeutral(avMass,mode)):
+            print(self._isotopePattern, avMass, self._isotopePattern['calcInt'])
+        return self.getNeutral(avMass,mode)
 
     def getNoise(self):
         return self._noise

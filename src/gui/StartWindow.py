@@ -3,13 +3,14 @@ Created on 20 Oct 2020
 
 @author: michael
 '''
+import sys
 
 from PyQt5.QtWidgets import QApplication, QPushButton, QAction
 
 from src.gui.IsotopePatternView import IsotopePatternView
 from src.gui.EditorController import *
-from src.gui.ParameterDialogs import TD_configurationDialog
-from src.gui.StartDialogs import IntactStartDialog
+from src.gui.dialogs.ParameterDialogs import TD_configurationDialog
+from src.gui.dialogs.StartDialogs import IntactStartDialog
 from src.top_down.ModellingTool import main as modellingTool
 from src.top_down.OccupancyRecalculator import run as occupancyRecalculator
 from src.top_down.SpectrumComparator import run as spectrumComparator
@@ -17,13 +18,12 @@ from src.intact.Main import run as IntactIonsSearch
 from src.gui.TD_searchController import TD_MainController
 
 
-class Window(AbstractMainWindow):
+class Window(SimpleMainWindow):
+    '''
+    Main window which pops up when SAUSAGE is started
+    '''
     def __init__(self):
         super(Window, self).__init__(None, 'SAUSAGE')
-        #self.setWindowTitle('SAUSAGE')
-        #self.menubar = QtWidgets.QMenuBar(self)
-        #self.setMenuBar(self.menubar)
-        #self.menubar.setGeometry(QtCore.QRect(0, 0, 340, 22))
         self.createMenuBar()
         self.createMenu('Top-Down Tools',
                         {'Analyse Spectrum':
@@ -35,7 +35,7 @@ class Window(AbstractMainWindow):
                          'Calculate Occupancies':
                              (lambda: occupancyRecalculator(self), 'Calculates occupancies of a given ion list', None),
                          'Compare Analysis':
-                             (lambda: spectrumComparator(self), 'Compares the ion lists of multiple spectra', None)},
+                             (self.compareSpectra, 'Compares the ion lists of multiple spectra', None)},
                         None)
         #[print(action.toolTip()) for action in menuActions.values()]
         #print(menu.toolTipsVisible())
@@ -57,27 +57,27 @@ class Window(AbstractMainWindow):
                         None)
         self.move(200,200)
         # self.setWindowIcon(QIcon('pic.png'))
-        self.home()
+        self.showButtons()
 
 
-    def addActionToStatusBar(self,menu, name, toolTip, function):
+    '''def addActionToStatusBar(self,menu, name, toolTip, function):
         action = QAction('&'+name, self)
         action.setToolTip(toolTip)
-        action.setWhatsThis(toolTip)
-        action.setStatusTip(toolTip)
+        #action.setWhatsThis(toolTip)
+        #action.setStatusTip(toolTip)
         action.triggered.connect(function)
-        menu.addAction(action)
+        menu.addAction(action)'''
 
 
-    def home(self):
-        xPos = self.createButton('Analyse top-down\nspectrum','Starts analysis of top-down spectrum',40,
-                              lambda:TD_MainController(self, True))
-        xPos = self.createButton('Analyse spectrum\nof intact molecule', 'Starts analysis of normal intact spectrum',
-                             xPos, self.startIntactIonSearch)
+    def showButtons(self):
+        xPos = self.makeButton('Analyse top-down\nspectrum', 'Starts analysis of top-down spectrum', 40,
+                               lambda:TD_MainController(self, True))
+        xPos = self.makeButton('Analyse spectrum\nof intact molecule', 'Starts analysis of normal intact spectrum',
+                               xPos, self.startIntactIonSearch)
         self.setGeometry(50, 50, xPos+40, 230)
         self.show()
 
-    def createButton(self, name, toolTip, xPos, fun):
+    def makeButton(self, name, toolTip, xPos, fun):
         width = 200
         btn = QPushButton(name, self)
         btn.setToolTip(toolTip)
@@ -89,7 +89,19 @@ class Window(AbstractMainWindow):
     def startIntactIonSearch(self):
         dialog = IntactStartDialog(self)
         if dialog.exec_() and dialog.ok:
-            IntactIonsSearch()
+            try:
+                IntactIonsSearch()
+            except InvalidInputException as e:
+                traceback.print_exc()
+                QtWidgets.QMessageBox.warning(self, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
+
+
+    def compareSpectra(self):
+        try:
+            spectrumComparator(self)
+        except InvalidInputException as e:
+            traceback.print_exc()
+            QtWidgets.QMessageBox.warning(self, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
 
     def close_application(self):
         print('exit')

@@ -300,6 +300,7 @@ def loopThroughIsotopes(isotopePeak, isotopeTable, fineStructure, index):
     if (np.sum(isotopeTable['nrIso']*isotopeTable['M+']) == isotopePeak):
         #if combined nuumber of isotopes of element is not higher than nr of corresponding element atoms in molecule
         if checkIsotopeTable(isotopeTable):
+            print(isotopePeak,isotopeTable)
             massI, propI = calculatePercentage(isotopeTable)
             fineStructure.append((massI, propI))
         return fineStructure #eig sinnlos
@@ -329,9 +330,67 @@ def loopThroughIsotopes(isotopePeak, isotopeTable, fineStructure, index):
             loopThroughIsotopes(isotopePeak, isotopeTable, fineStructure, index + 1)
     return fineStructure
 
+@njit
+def calculatePoissonFineStructure(isotopePeak, isotopeTable, poissonElement):
+    '''
+    Calculates isotopic fine structure of isotope peak for molecules with a general elemental composition
+    :param (int) isotopePeak: number of isotope peak (M+x)
+    :type isotopeTable: ndarray(dtype=[float,float,float,float,float,float])
+    :param isotopeTable: isotope table (index, nr. of atoms of element, nr. of atoms of isotope, rel. abundance of
+        isotope, mass of isotope, nominal mass shift compared to isotope with lowest m/z)
+    :return: (ndarray(dtype=[float,float])) fine structure [(mass,percentage)]
+    '''
+    #print(isotopePeak)
+    fineStructure = [(0.,0.)]
+    oldIndex= 1
+    monoVals = calculatePercentage(isotopeTable)
+    for iFirst in list(range(isotopePeak + 1))[::-1]:
+        #isotopeTable[1]['nrIso'] = iFirst
+        #print('first',iFirst)
+        if iFirst == isotopePeak:
+            poissonVals = calculatePoissonPercentage(poissonElement, iFirst)
+            #vals = calculatePercentage(isotopeTable)
+            #val = np.array(calculatePercentage(isotopeTable))*calculatePoissonPercentage(poissonElement, iFirst)
+            #print(isotopeTable['nrIso'])
+
+            fineStructure.append((poissonVals[0]+monoVals[0], poissonVals[1]*monoVals[1]))
+            print('hey',fineStructure[-1])
+            oldIndex+= 1
+        else:
+            fineStructure = loopThroughIsotopes(isotopePeak-iFirst, isotopeTable, fineStructure, 0)
+            #elements = isotopeTable[np.where(isotopeTable['M+']>1)]
+            #fineStructure = loopThroughIsotopesNew(isotopePeak, isotopeTable, fineStructure, elements)
+        val = calculatePoissonPercentage(poissonElement, iFirst)
+        size = len(fineStructure)
+        print('hey',val,iFirst,oldIndex,size)
+        #fineStructure2 = [(0.,0.)]
+        for i in range(oldIndex+1,size):
+            print('vorher',fineStructure[i], monoVals[0])
+            fineStructure[i] = (fineStructure[i][0] + val[0], fineStructure[i][1] * val[1])
+            print('nachher',fineStructure[i], iFirst)
+            '''if i>oldIndex:
+                fineStructure2.append(fineStructure[i])
+            else:
+                fineStructure2.append((fineStructure[i][0] + val[0]))
+                
+            fineStructure[i][0] + val[0]
+            fineStructure[i][1] += val[1]'''
+        #print('hoho', fineStructure)
+        oldIndex= size
+    return fineStructure[1:]
 
 
+@njit
+def calculatePoissonPercentage(poissonElement, k):
+    prop = poissonElement['lambda']**k / fact(k) * math.exp(-poissonElement['lambda'])
+    return poissonElement['mass']*k, prop
 
+@njit
+def fact(k):
+    fact = 1
+    for i in range(1,k+1):
+        fact *= i
+    return fact
 
 """@njit
 def calculateFineStructure(isotopePeak, isotopeTable):

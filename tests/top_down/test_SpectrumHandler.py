@@ -28,7 +28,7 @@ def initTestLibraryBuilder():
 class TestSpectrumHandler(TestCase):
     def setUp(self):
         '''filePath = os.path.join(path, 'tests', 'dummySpectrum.txt')
-        self.configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
+        self._configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
 
         self.settings = {'sequName': 'dummyRNA', 'charge': -3, 'fragmentation': 'RNA_CAD', 'modifications': 'CMCT',
                     'nrMod': 1, 'spectralData': filePath, 'noiseLimit': 10**5, 'fragLib': ''}

@@ -1,3 +1,4 @@
+from functools import partial
 
 from PyQt5 import QtWidgets, QtCore
 
@@ -19,8 +20,36 @@ def createComboBox(parent, options):
         comboBox.setItemText(i, translate(parent.objectName(), option))
     return comboBox
 
+def makeFormLayout(parent):
+    formLayout = QtWidgets.QFormLayout(parent)
+    formLayout.setHorizontalSpacing(12)
+    formLayout.setFieldGrowthPolicy(QtWidgets.QFormLayout.ExpandingFieldsGrow)
+    formLayout.setLabelAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+    formLayout.setFormAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignTop)
+    return formLayout
 
-class AbstractMainWindow(QtWidgets.QMainWindow):
+
+def connectTable(table, fun):
+    table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+    table.customContextMenuRequested['QPoint'].connect(partial(fun, table))
+
+'''def showCopyOptions(self, table, pos, funs):
+    menu = QtWidgets.QMenu()
+    copyAllAction = menu.addAction("Copy Table")
+    copyAction = menu.addAction("Copy Cell")
+    action = menu.exec_(table.viewport().mapToGlobal(pos))
+    if action == copyAction:
+        it = table.indexAt(pos)
+        if it is None:
+            return
+        selectedCol = it.column()
+        df = pd.DataFrame([self._ion.getValues()[selectedCol]])
+        df.to_clipboard(index=False, header=False)
+    if action == copyAllAction:
+        df = pd.DataFrame(data=[self._ion.getValues()], columns=table.getHeaders())
+        df.to_clipboard(index=False, header=True)'''
+
+"""class AbstractMainWindow(QtWidgets.QMainWindow):
     def __init__(self, title):
         super(AbstractMainWindow, self).__init__()
         self._translate = QtCore.QCoreApplication.translate
@@ -62,12 +91,12 @@ class AbstractMainWindow(QtWidgets.QMainWindow):
         return menu, menuActions
 
     def createWidgetsInFormLayout(self, labels, widgets, initYPos, widgetWith, initialValues):
-        """
+        '''
 
         :param labels: list of Strings
         :param widgets: dict of {name:widget}
         :return:
-        """
+        '''
         maxWidth = 0
         yPos = initYPos
         for i, labelName in enumerate(labels):
@@ -100,13 +129,13 @@ class AbstractDialog(QtWidgets.QDialog):
         self.setObjectName(dialogName)
         self.lineSpacing = lineSpacing
         self.widgets = dict()
-        #self.sizePolicy = self.setNewSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        #self.sizePolicy = self.makeSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         self._translate = QtCore.QCoreApplication.translate
         self.setWindowTitle(self._translate(dialogName, title))
-        self.buttonBox = QtWidgets.QDialogButtonBox(self)
-        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
-        self.buttonBox.accepted.connect(self.accept)
-        self.buttonBox.rejected.connect(self.reject)
-        self.newSettings = None
+        self._buttonBox = QtWidgets.QDialogButtonBox(self)
+        self._buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
+        self._buttonBox.accepted.connect(self.accept)
+        self._buttonBox.rejected.connect(self.reject)
+        self._newSettings = None
         self.move(300,100)
-        self.canceled = False
+        self._canceled = False"""

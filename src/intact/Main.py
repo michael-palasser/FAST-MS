@@ -9,7 +9,7 @@ import subprocess
 import traceback
 from datetime import datetime
 
-
+from src.Exceptions import InvalidInputException
 from src.intact.IntactLibraryBuilder import IntactLibraryBuilder
 from src.intact.IntactFinder import Finder
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
@@ -31,7 +31,9 @@ def run():
     '''
     #dialog = IntactStartDialog()
     configHandler = ConfigurationHandlerFactory.getIntactHandler()
-    spectralFile = os.path.join(path, 'Spectral_data','intact', configHandler.get('spectralData'))
+    #files = [os.path.join(path, 'Spectral_data','intact', file) for file in configHandler.get('spectralData')]
+    #print(files)
+    #spectralFile = os.path.join(path, 'Spectral_data','intact', configHandler.get('spectralData'))
 
     """theoretical values"""
     print("\n********** calculating theoretical values **********")
@@ -40,27 +42,32 @@ def run():
 
     """calibrate spectra"""
     print("\n********** calibrating spectralFile **********")
-    with open(spectralFile) as f:
-        finder.readData(f)
+    #with open(spectralFile) as f:
+    #    finder.readData(f)
+    finder.readData(configHandler.get('spectralData'))
     finder.calibrate()
 
-    """find __spectrum"""
-    print("\n********** finding __spectrum **********")
+    """find ions"""
+    print("\n********** finding ions **********")
     analyser = IntactAnalyser(finder.findIons(configHandler.get('k'), configHandler.get('d'), True))
 
     """output"""
     print("\n********** output **********")
     output = configHandler.get('output')
     if output == '':
-        output = spectralFile[0:-4] + '_out' + '.xlsx'
+        output =  datetime.now().strftime("%d.%m.%Y") + '.xlsx'
     else:
         output = os.path.join(path, 'Spectral_data','intact', output + '.xlsx')
-    parameters = {'pattern:':spectralFile,'date:':datetime.now().strftime("%d/%m/%Y %H:%M")}
-    parameters.update(configHandler.getAll())
+    listOfParameters = []
+    for file in configHandler.get('spectralData'):
+        parameters = {'data:':file,'date:':datetime.now().strftime("%d/%m/%Y %H:%M")}
+        parameters.update(configHandler.getAll())
+        del parameters['spectralData']
+        listOfParameters.append(parameters)
     excelWriter = IntactExcelWriter(output)
     avCharges, avErrors, stddevs = analyser.calculateAvChargeAndError()
     try:
-        excelWriter.writeAnalysis(parameters, analyser.getSortedIonList(),
+        excelWriter.writeAnalysis(listOfParameters, analyser.getSortedIonList(),
                                   avCharges, avErrors, stddevs,
                                   analyser.calculateAverageModification(),
                                   analyser.calculateModifications())
@@ -82,4 +89,4 @@ if __name__ == '__main__':
     #dialog = IntactStartDialog()
     #dialog.exec_()
     run()
-    #sys.exit(app.exec_())
+    #sys.exit(app.exec_())'''

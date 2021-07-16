@@ -4,12 +4,11 @@ import sys
 import numpy as np
 import os
 from re import findall
-from datetime import datetime
 from PyQt5 import QtWidgets
 
 from src.Services import SequenceService
 from src.entities.Ions import Fragment,FragmentIon
-from src.gui.StartDialogs import OccupancyRecalcStartDialog
+from src.gui.dialogs.StartDialogs import OccupancyRecalcStartDialog
 from src.top_down.Analyser import Analyser
 from src.top_down.ExcelWriter import BasicExcelWriter
 from src import path
@@ -35,10 +34,10 @@ def run(mainWindow):
     service = SequenceService()
     dlg = OccupancyRecalcStartDialog(mainWindow, service.getAllSequenceNames())
     dlg.exec_()
-    if dlg and dlg.sequence != None:
-        sequenceName = dlg.sequence
-        sequence = service.get(dlg.sequence).getSequenceList()
-        modification = dlg.modification
+    if dlg and dlg.getSequence() != None:
+        sequenceName = dlg.getSequence()
+        sequence = service.get(sequenceName).getSequenceList()
+        modification = dlg.getModification()
 
         """import ion-list"""
         spectralFile = os.path.join(path, 'Spectral_data/Occupancies_in.csv')
@@ -68,10 +67,10 @@ def run(mainWindow):
             """Analysis and Output"""
             analyser = Analyser(ionList, sequence, 1, modification)
             excelWriter = BasicExcelWriter(os.path.join(path, "Spectral_data","Occupancies_out.xlsx"))
-            date = datetime.now().strftime("%d/%m/%Y %H:%M")
-            excelWriter.worksheet1.write(0,0,date)
+            excelWriter.writeDate()
             row = excelWriter.writeAbundancesOfSpecies(2, analyser.calculateRelAbundanceOfSpecies())
-            excelWriter.writeOccupancies(row, sequence, analyser.calculateOccupancies(speciesList))
+            excelWriter.addOccupOrCharges(0,row, sequence,
+                                  analyser.calculateOccupancies(speciesList),1) #ToDo
             excelWriter.closeWorkbook()
             try:
                 subprocess.call(['open', os.path.join(path, "Spectral_data","Occupancies_out.xlsx")])

@@ -6,6 +6,7 @@ import math
 #from numba import njit
 #from numba.typed import List
 import numpy as np
+from scipy.constants import electron_mass, N_A, proton_mass
 
 
 def getByIndex(isotopeTable, index):
@@ -253,3 +254,6 @@ def loopThroughIsotopes(isotopePeak, isotopeTable, fineStructure, index):
             loopThroughIsotopes(isotopePeak, isotopeTable, fineStructure, index + 1)
     return fineStructure
 
+
+eMass = electron_mass*N_A*1000
+protMass = proton_mass *N_A*1000

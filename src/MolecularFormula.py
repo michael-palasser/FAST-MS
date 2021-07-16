@@ -107,13 +107,13 @@ class MolecularFormula(object):
         return True
 
     def determineSystem(self):
-        elements = [key for key,val in self._formulaDict.items() if val>0]
+        #elements = [key for key,val in self._formulaDict.items() if val>0]
         #if self.checkSystem(elements, {'C', 'H', 'N', 'O', 'P'}):
         if self._formulaDict.keys() == {'C', 'H', 'N', 'O', 'P'} or self._formulaDict.keys() == {'C', 'H', 'N', 'O'}:
             calculate = calculateNuclFineStructure
             isotopeTable = self.makeNucIsotopeTable()
         #elif self.checkSystem(elements, {'C', 'H', 'N', 'O', 'S'}):
-        if self._formulaDict.keys() == {'C', 'H', 'N', 'O', 'S'}:
+        elif self._formulaDict.keys() == {'C', 'H', 'N', 'O', 'S'}:
             calculate = calculatePeptFineStructure
             isotopeTable = self.makeProteinIsotopeTable()
         else:
@@ -152,6 +152,8 @@ class MolecularFormula(object):
         return np.array(isotope_pattern, dtype=isoPatternDtype)
 
 
+
+
     def makeNucIsotopeTable(self):
         '''
         Creates an isotope table for elemental composition CHNOP (RNA/DNA/proteins without S)
@@ -184,6 +186,29 @@ class MolecularFormula(object):
         return np.array(isotopeTable, dtype = isoTableDtype)
 
 
+    '''def makePoissonTable(self):
+        lamdaHNOS = 0
+        massShiftHNOS = 0
+        isotopeTable = list()
+        index = 1
+        for elem in ['C','H','N','O','S','P']:
+            if elem in self._periodicTable.keys():
+                mono = self._periodicTable[elem][0][0]
+                if elem in ('H','N','O','S'):
+                    monoMass = self._periodicTable[elem][0][1]
+                    nr = self._formulaDict[elem]
+                    
+                    for isotope in self._periodicTable[elem]:
+                        if isotope[0]-mono==1:
+                            isotope = 
+                    p=isotope[2]
+                    new_p = nr * p
+                    lamdaHNOS += new_p
+                    massShiftHNOS += new_p * (isotope[0] - monoMass)
+                else:    
+                    for isotope in self._periodicTable[elem]:
+                        isotopeTable.append((index, self._formulaDict[elem], 0, isotope[2], isotope[1], isotope[0] - mono))'''
+
     def makeIsotopeTable(self):
         '''
         Creates an isotope table for universal elemental composition
@@ -205,11 +230,19 @@ class MolecularFormula(object):
                                 , dtype=[('index', np.float64), ('nr', np.float64), ('nrIso', np.float64),
                                          ('relAb', np.float64), ('mass', np.float64), ('M+', np.float64)])"""
         if len(getByIndex(isotopeTable, isotopeTable['index'][0])) != 2:
-            match = None
+            isotopeTable = self.reorderTable(isotopeTable)
+            '''match = None
             for isotope in isotopeTable:
                 if len(getByIndex(isotopeTable, isotope['index'])) == 2:
                     match = isotope
                     break
+            if match is None:
+                for isotope in isotopeTable:
+                    if len(getByIndex(isotopeTable, isotope['index']))>1:
+                        match = isotope
+                        break
+            if match is None:
+                return isotopeTable
             isotopeTable = np.concatenate((getByIndex(isotopeTable, match['index']),
                                           isotopeTable[np.where(isotopeTable['index'] != match['index'])]))
             index = -1
@@ -218,8 +251,114 @@ class MolecularFormula(object):
                 if oldIndex != row['index']:
                     oldIndex = row['index']
                     index += 1
-                row['index'] = index
+                row['index'] = index'''
+
         return isotopeTable
+
+    @staticmethod
+    def reorderTable(isotopeTable):
+        match = None
+        for isotope in isotopeTable:
+            if len(getByIndex(isotopeTable, isotope['index'])) == 2:
+                match = isotope
+                break
+        if match is None:
+            for isotope in isotopeTable:
+                if len(getByIndex(isotopeTable, isotope['index'])) > 1:
+                    match = isotope
+                    break
+        if match is None:
+            return isotopeTable
+        isotopeTable = np.concatenate((getByIndex(isotopeTable, match['index']),
+                                       isotopeTable[np.where(isotopeTable['index'] != match['index'])]))
+        index = -1
+        oldIndex = None
+        for row in isotopeTable:
+            if oldIndex != row['index']:
+                oldIndex = row['index']
+                index += 1
+            row['index'] = index
+        return isotopeTable
+
+
+
+    def calculatePoissonIsotopePattern(self, accelerate):
+        '''
+        Calculates isotope patterns based on molecular formulas
+        :param (int) accelerate: isotopePeak from which the calculation should be accelerated
+        :return: (ndarray(dtype=[float,float])) isotope pattern1 (structured numpy array: [(mass,relative Abundance)])
+        '''
+        #mostAbundant=10**(-10)
+        #prop = 1
+        np.set_printoptions(suppress=True)
+        isoPeak=0
+        isotope_pattern = list()
+        calculate, isotopeTable = self.determineSystem()
+        reducedTable, poissonElement = self.makePoissonTable()
+        if poissonElement['nr']==0:
+            return self.calculateIsotopePattern()
+        sumInt = 0
+        while(sumInt <0.996):              #ToDo:Parameter
+            setIsotopeTable(isotopeTable)
+            #print(isoPeak, isotopeTable)
+            if isoPeak<accelerate:
+                print('not now',isoPeak)
+                ultrafineStruct = np.array(calculate(isoPeak, isotopeTable))
+            else:
+                ultrafineStruct = np.array(calculatePoissonFineStructure(isoPeak, reducedTable,poissonElement))
+                print('MolForm',ultrafineStruct)
+            prop = np.sum(ultrafineStruct[:,1])
+            M_iso = np.sum(ultrafineStruct[:,0]*ultrafineStruct[:,1])/prop
+            isotope_pattern.append((M_iso,prop))
+            isoPeak += 1
+            sumInt += prop
+        return np.array(isotope_pattern, dtype=isoPatternDtype)
+
+
+    def makePoissonTable(self):
+        isotopeTable = list()
+        elements = [elem for elem,val in self._periodicTable.items() if self._formulaDict[elem] > 0]
+        lambda1 = 0
+        massShift1 = 0
+        nr1 = 0
+        for index, elem in enumerate(sorted(elements)):
+            mono = self._periodicTable[elem][0][0]
+            monoMass = self._periodicTable[elem][0][1]
+            nr = self._formulaDict[elem]
+            if (nr>50):# and (maxIso<3):
+                for isotope in self._periodicTable[elem]:
+                    p=isotope[2]
+                    if (isotope[0]-mono==1) and (p<0.05):
+                        new_p = nr*p
+                        lambda1 += new_p
+                        massShift1 +=new_p*(isotope[1]-monoMass)
+                        nr1 += nr
+                    else:
+                        isotopeTable.append((index+1, self._formulaDict[elem], 0, isotope[2], isotope[1], isotope[0] - mono))
+            else:
+                for isotope in self._periodicTable[elem]:
+                    #if self._formulaDict[elem] != 0:
+                    isotopeTable.append((index+1, self._formulaDict[elem], 0, isotope[2], isotope[1], isotope[0] - mono))
+        #lastIndex = index+1
+        #isotopeTable.append((lastIndex, 0, 0, lambda1, massShift1, -100))
+        '''isotopeTable = np.array([(index+1, nr1, 0, lambda1, massShift1, -100)]
+                                +sorted(isotopeTable,key=lambda tup: tup[1], reverse=True), dtype=isoTableDtype)'''
+        '''isotopeTable = np.array(sorted(isotopeTable,key=lambda tup: tup[1], reverse=True)
+                                , dtype=isoTableDtype)'''
+        '''if len(getByIndex(isotopeTable, isotopeTable['index'][0])) != 2:
+            isotopeTable = self.reorderTable(isotopeTable)'''
+        '''isotopeTable = np.concatenate((isotopeTable, np.array([(lastIndex+1, nr1, 0, lambda1, massShift1, -100)], dtype=
+                                                             isoTableDtype)), axis=0)'''
+
+        isotopeTable = np.array(sorted(isotopeTable,key=lambda tup: tup[1], reverse=True)
+                                , dtype=isoTableDtype)
+        if len(getByIndex(isotopeTable, isotopeTable['index'][0])) != 2:
+            isotopeTable = self.reorderTable(isotopeTable)
+        poissonElement = np.array((nr1,lambda1,massShift1/lambda1),
+                                  dtype=[('nr', float),('lambda',float), ('mass',float)])
+        return isotopeTable, poissonElement
+
+
 
     def calculateMonoIsotopic(self):
         '''

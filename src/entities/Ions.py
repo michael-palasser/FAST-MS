@@ -4,7 +4,7 @@ Created on 3 Jul 2020
 @author: michael
 '''
 from math import exp
-from numpy import sum as npSum, isnan
+from numpy import sum as npSum, isnan, nan
 #from numpy import array, dtype
 
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
@@ -40,6 +40,18 @@ class Fragment(object):
         return self._number
     def getModification(self):
         return self._modification
+
+    def getModificationList(self):
+        modifications = []
+        for str1 in self._modification.split('+'):
+            for mod in ('+'+str1).split('-'):
+                if mod[0]=='+':
+                    newMod = mod
+                else:
+                    newMod = '-'+mod
+                if len(newMod)>1:
+                    modifications.append(newMod)
+        return modifications
 
     def getFormula(self):
         return self._formula
@@ -115,6 +127,8 @@ class FragmentIon(Fragment):
 
     def getCharge(self):
         return self._charge
+    def setCharge(self, charge):
+        self._charge = charge
 
     def getIntensity(self):
         return self._intensity
@@ -198,7 +212,10 @@ class FragmentIon(Fragment):
         return self._monoisotopicRaw * (1 + self._error * 10 ** (-6))
 
     def getSignalToNoise(self):
-        return self._intensity / self._noise
+        if self._noise != 0:
+            return self._intensity / self._noise
+        else:
+            return nan
 
     def getRelAbundance(self):
         return self._intensity / self._charge

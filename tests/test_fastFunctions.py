@@ -225,7 +225,7 @@ class fastFunctions_Test(TestCase):
         self.assertEqual(math.factorial(10),f.fact(10))
 
 
-    def test_calculate_poisson_percentage(self):
+    '''def test_calculate_poisson_percentage(self):
         poissonElement = np.array((100,1.2,1.01),
                                   dtype=[('nr', float),('lambda',float), ('mass',float)])
-        self.assertAlmostEqual(poisson.pmf(6,poissonElement['lambda']),f.calculatePoissonPercentage(poissonElement, 6)[1])
+        self.assertAlmostEqual(poisson.pmf(6,poissonElement['lambda']),f.calculatePoissonPercentage(poissonElement, 6)[1])'''

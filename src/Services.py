@@ -496,6 +496,8 @@ class ModificationService(AbstractServiceForPatterns):
                 checkedItem = ['+' + item[0]] + [elem for elem in item[1:]]
             checkedItems.append(checkedItem)
         pattern.setItems(checkedItems)
+        if pattern.getModification()[0] not in ['+','-']:
+            pattern.setModification('+'+pattern.getModification())
         pattern = super(ModificationService, self).save(pattern)
         elementRep.close()
         return pattern

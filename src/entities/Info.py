@@ -58,6 +58,9 @@ class Info(object):
                                '\tnew: ' + ', '.join([str(val) for val in newPeak])
             count += 1
 
+    def addNewIon(self, ion):
+        self._infoString += '\n* manually added ' + self.ionToString(ion)
+
     def repeatModelling(self):
         self._infoString += '\n* Repeated modelling overlaps'
 

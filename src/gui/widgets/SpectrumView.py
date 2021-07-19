@@ -94,8 +94,9 @@ class TheoSpectrumView(AbstractSpectrumView):
     def __init__(self, parent, peaks, width):
         spectrPeaks = np.array([(peak['m/z'],peak['relAb']) for peak in peaks])
         tolerance = (np.max(peaks['m/z'])-np.min(peaks['m/z']))*0.2
+        yMax = max(np.max(peaks['calcInt']),np.max(peaks['relAb']))
         super(TheoSpectrumView, self).__init__(parent, spectrPeaks, peaks,
-               np.min(peaks['m/z'])-tolerance, np.max(peaks['m/z'])+tolerance, np.max(peaks['calcInt']), "14px")
+               np.min(peaks['m/z'])-tolerance, np.max(peaks['m/z'])+tolerance, yMax, "14px")
         self._spinBox.valueChanged.connect(lambda: self.changeWidth(self._modelledBars))
         self._spinBox.move(width - 70, 0)
 

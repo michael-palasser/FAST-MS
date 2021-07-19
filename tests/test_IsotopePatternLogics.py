@@ -205,9 +205,10 @@ class TestIsotopePatternLogics(TestCase):
                                      newFragDict[name].getFormula().getFormulaDict(), fragment.getName() + ', ' + name)
 
     def getProperties(self, searchSettings):
+        print('hey',searchSettings.getModificationName())
         return {'sequString': ''.join(searchSettings.getSequenceList()),
                 'fragmentationName': searchSettings.getFragmentation().getName(),
-                'modifPatternName': searchSettings.getModificationName()}
+                'modifPatternName': searchSettings.getModification().getName()}
 
     '''def test_model(self):
         self.fail()

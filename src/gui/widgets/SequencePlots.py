@@ -12,8 +12,8 @@ class PlotFactory(object):
         self._parent = parent
         self._colours = ['r', 'm', 'y', 'c', 'g', 'b']
 
-    def showOccupancyPlot(self, sequence, forwardVals, backwardVals, maxY):
-        self.initiatePlot(sequence, forwardVals, backwardVals, maxY, self.formatForOccupancies)
+    def showOccupancyPlot(self, sequence, forwardVals, backwardVals, maxY, modification):
+        self.initiatePlot(sequence, forwardVals, backwardVals, maxY, lambda: self.formatForOccupancies(modification))
 
     def showChargePlot(self, sequence, forwardVals, backwardVals, maxY, forwardVals2, backwardVals2):
         self.initiatePlot(sequence, forwardVals, backwardVals, abs(maxY), self.formatForCharges)
@@ -102,15 +102,15 @@ class PlotFactory(object):
         self._plot1.setLabel('left', yLabel + ','.join(self._forwardVals.keys()), **styles)
         self._plot1.setLabel('right', yLabel + ','.join(self._backwardVals.keys()), **styles)
 
-    def formatForOccupancies(self):
+    def formatForOccupancies(self, modification):
         '''
         Formats the plot if it's an occupancy plot
         '''
-        self._plot1.setWindowTitle('Occupancies')
-        yLabel = 'occupancy '
+        self._plot1.setWindowTitle('Occupancies ' +modification)
+        yLabel = '% '+modification + ' ('
         styles = {"black": "#f00", "font-size": "18px"}
-        self._plot1.setLabel('left', yLabel + ','.join(self._forwardVals.keys()), **styles)
-        self._plot1.setLabel('right', yLabel + ','.join(self._backwardVals.keys()), **styles)
+        self._plot1.setLabel('left', yLabel + ','.join(self._forwardVals.keys()) + ')', **styles)
+        self._plot1.setLabel('right', yLabel + ','.join(self._backwardVals.keys()) + ')', **styles)
 
 
     def plot(self):

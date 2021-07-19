@@ -383,7 +383,7 @@ def calculatePoissonFineStructure(isotopePeak, isotopeTable, poissonElement):
 @njit
 def calculatePoissonPercentage(poissonElement, k):
     prop = poissonElement['lambda']**k / fact(k) * math.exp(-poissonElement['lambda'])
-    return poissonElement['mass']*k, prop
+    return poissonElement['deltaMass']*k+poissonElement['monoMass'], prop
 
 @njit
 def fact(k):

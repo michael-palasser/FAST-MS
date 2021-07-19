@@ -3,11 +3,17 @@ Created on 6 Aug 2020
 
 @author: michael
 '''
+import logging
+
 import numpy as np
 from copy import deepcopy
 from scipy.optimize import minimize
 from scipy.optimize import minimize_scalar
 from src.top_down.SpectrumHandler import getErrorLimit, calculateError
+
+
+logging.basicConfig(level=logging.INFO)
+logging.basicConfig(filename='logfile_IntensityModeller.log',level=logging.INFO)
 
 class IntensityModeller(object):
     '''
@@ -34,6 +40,13 @@ class IntensityModeller(object):
 
     def addRemodelledIon(self, ion):
         self._remodelledIons.append(ion)
+        ion.addComment('man.mod.')
+        self._correctedIons[ion.getHash()]= ion
+        return ion
+
+    def addNewIon(self,ion):
+        ion.addComment('new')
+        self._correctedIons[ion.getHash()] = ion
 
     def setMonoisotopicList(self, monoisotopicList):
         self._monoisotopicList = monoisotopicList

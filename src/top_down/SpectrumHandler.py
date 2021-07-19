@@ -19,6 +19,7 @@ from src.simpleFunctions import eMass, protMass
 
 configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
 logging.basicConfig(level=logging.INFO)
+logging.basicConfig(filename='logfile_SpectrumHandler.log',level=logging.INFO)
 
 def getErrorLimit(mz):
     return configs['k']/1000 * mz + configs['d']
@@ -68,8 +69,8 @@ class SpectrumHandler(object):
         if self.__settings['charge'] < 0:
             self.__sprayMode = -1
         self.__upperBound=0
-        self.precursor = precursor
-        self.__charge = self.calcPrecCharge(self.__settings['charge'], self.precursor.getRadicals())
+        self._precursor = precursor
+        self.__charge = self.calcPrecCharge(self.__settings['charge'], self._precursor.getRadicals())
         self._normalizationFactor = None
 
         self.addSpectrum(self.__settings['spectralData'])
@@ -221,13 +222,14 @@ class SpectrumHandler(object):
             currentMz += 1
         peaksHigherThanNoise = np.array(peaksHigherThanNoise)
         windowSize, currentMz = 100 , 1200
-        logging.info('********** Finding upper bound m/z - Window in spectralFile containing fragments **********\n'
-                     'm/z\tpeaks')
+        logging.info('********** Finding upper bound m/z - Window in spectralFile containing fragments **********')
+        logging.info('m/z\tpeaks')
         while currentMz < 2500:
             currentWindow = self.getPeaksInWindow(peaksHigherThanNoise, currentMz, windowSize)
             numPeaks = np.sum(currentWindow[:, 1])
+            #logging.info(str(currentMz)+'\t'+ str(numPeaks))
             logging.info(str(currentMz)+'\t'+ str(numPeaks))
-            print(currentMz, numPeaks)
+            #print(currentMz, numPeaks)
             if numPeaks < 5:
                 currentMz += configs['upperBoundTolerance']
                 break
@@ -235,6 +237,8 @@ class SpectrumHandler(object):
                 currentMz += 2* configs['upperBoundTolerance']
                 break
             currentMz += windowSize / 2
+
+        logging.info('Final upper m/z limit: '+ str(currentMz))
         self.__upperBound = currentMz
         return currentMz
 
@@ -298,7 +302,7 @@ class SpectrumHandler(object):
         '''
         molecule = self.__properties.getMolecule().getName()
         if molecule in ['RNA', 'DNA'] and self.__sprayMode == -1:
-            return self.__charge / self.precursor.getFormula().getFormulaDict()['P']
+            return self.__charge / self._precursor.getFormula().getFormulaDict()['P']
             #return self.__charge / len(self.__sequList)
         #elif molecule == 'Protein' and self.__sprayMode == 1:
          #   return self.__charge / self.getChargeScore(self.__sequList)
@@ -331,6 +335,7 @@ class SpectrumHandler(object):
                 if len(findall(r"(\d+)"+mod, fragment.getModification())) > 0:
                     nrMod = int(findall(r"(\d+)"+mod, fragment.getModification())[0])
                 modCharge += charge * nrMod * self.__sprayMode
+        logging.debug('Charge of modification: '+ str(modCharge))
         return modCharge
 
     #ToDo: Test SearchParameters, Proteins!, Parameters
@@ -367,8 +372,8 @@ class SpectrumHandler(object):
             lowZ = round(probableZ-tolerance)
         if (probableZ+tolerance)< highZ:
             highZ = round(probableZ + tolerance)
-        print(fragment.getName(),lowZ,round(probableZ,2),highZ)
-        logging.info(fragment.getName(), str(lowZ),str(round(probableZ,2)), str(highZ))
+        #print(fragment.getName(),lowZ,round(probableZ,2),highZ)
+        logging.info(fragment.getName()+'\tmin z: '+str(lowZ)+'\tcalc. z: '+str(round(probableZ,2))+'\tmax z: '+str(highZ))
         return range(lowZ,highZ+1)
 
 
@@ -383,16 +388,20 @@ class SpectrumHandler(object):
         :param (list) fragmentLibrary: list of Fragment-objects
         '''
         np.set_printoptions(suppress=True)
-        precModCharge = self.getModCharge(self.precursor)
+        precModCharge = self.getModCharge(self._precursor)
         self._normalizationFactor = self.getNormalizationFactor()
+        logging.debug('Normalisation factor: '+ str(self._normalizationFactor))
         self._protonIsoPatterns = self.getProtonIsotopePatterns()
         for fragment in fragmentLibrary:
+            logging.info(fragment.getName())
             self._searchedChargeStates[fragment.getName()] = []
             sortedPattern = np.sort(fragment.getIsotopePattern(), order='calcInt')[::-1]
             zRange = self.getChargeRange(fragment, precModCharge)
             peakQuantitiy = fragment.getNumberOfHighestIsotopes()
+            logging.debug('* Nr of main peaks:'+str(peakQuantitiy))
             radicals = fragment.getRadicals()
             for z in zRange:
+                logging.debug('* z'+str(z))
                 theoreticalPeaks = self.getIsotopePattern(sortedPattern,z,radicals)
                 if (configs['lowerBound'] < theoreticalPeaks[0]['m/z'] < self.__upperBound):
                     self._searchedChargeStates[fragment.getName()].append(z)
@@ -400,23 +409,32 @@ class SpectrumHandler(object):
                     sumInt = 0
                     sumIntTheo = 0
                     foundMainPeaks = list()
+                    logging.debug('* Main Peaks:')
+                    notFound = 0
                     for i in range(peakQuantitiy):
                         spectralPeak = self.findPeak(theoreticalPeaks[i])
+                        if spectralPeak[1]==0:
+                            notFound+=1
                         sumInt += spectralPeak[1]
                         foundMainPeaks.append(spectralPeak)
                         sumIntTheo += theoreticalPeaks[i]['calcInt']
+                        logging.debug(str(spectralPeak[0])+'\t'+str(spectralPeak[1])+'\t'+str(spectralPeak[2])+'\t'+
+                                      str(spectralPeak[3]))
                     if sumInt > 0:
                         noise = self.calculateNoise(theoreticalPeaks[0]['m/z'], 4)
-                        sumInt += (peakQuantitiy - len(foundMainPeaks)) * noise * 0.5              #if one or more isotope peaks were not found noise added #parameter
+                        logging.debug('Noise:'+str(noise))
+                        sumInt += notFound * noise * 0.5              #if one or more isotope peaks were not found noise added #parameter
                         notInNoise = np.where(theoreticalPeaks['calcInt'] >noise*
                                               configs['thresholdFactor'] / (sumInt/sumIntTheo))
-                        if theoreticalPeaks[notInNoise].size > len(foundMainPeaks):
+                        if theoreticalPeaks[notInNoise].size > peakQuantitiy:
+                            logging.debug('* All Peaks:')
                             foundPeaks = [self.findPeak(theoPeak) for theoPeak in theoreticalPeaks[notInNoise]]
                             #find other isotope Peaks
                             foundPeaksArr = np.sort(np.array(foundPeaks, dtype=self._peaksArrType), order=['m/z'])
                             if not np.all(foundPeaksArr['relAb']==0):
                                 self._foundIons.append(FragmentIon(fragment, np.min(theoreticalPeaks['m/z']), z, foundPeaksArr, noise))
                                 [print("\t",np.around(peak['m/z'],4),"\t",peak['relAb']) for peak in foundPeaksArr if peak['relAb']>0]
+                                [logging.info(fragment.getName()+"\t"+str(z)+"\t"+str(np.around(peak['m/z'],4))+"\t"+str(peak['relAb']) )for peak in foundPeaksArr if peak['relAb']>0]
                             else:
                                 self.addToDeletedIons(fragment, foundMainPeaks, noise, np.min(theoreticalPeaks['m/z']), z)
                         elif theoreticalPeaks[notInNoise].size > 0:
@@ -424,8 +442,12 @@ class SpectrumHandler(object):
                             self._foundIons.append(FragmentIon(fragment, np.min(theoreticalPeaks['m/z']), z,
                                                                foundMainPeaksArr, noise))
                             [print("\t",np.around(peak['m/z'],4),"\t",peak['relAb']) for peak in foundMainPeaksArr if peak['relAb']>0]
+                            [logging.info(fragment.getName()+"\t"+str(z)+"\t"+str(np.around(peak['m/z'], 4)) + "\t" +
+                                          str(peak['relAb'])) for peak in foundMainPeaksArr if peak['relAb'] > 0]
                         else:
+                            print('deleting: '+fragment.getName()+", "+str(z))
                             self.addToDeletedIons(fragment, foundMainPeaks, noise, np.min(theoreticalPeaks['m/z']), z)
+
 
     def getProtonIsotopePatterns(self):
         '''
@@ -437,6 +459,7 @@ class SpectrumHandler(object):
         protonIsotopePatterns = np.zeros((maxZ,2))
         for i in range(maxZ):
             protonIsotopePatterns[i] = MolecularFormula({'H':i+1}).calcIsotopePatternSlowly(2)['calcInt']
+            logging.debug(str(protonIsotopePatterns[i][0])+'\t'+str(protonIsotopePatterns[i][1]))
         return protonIsotopePatterns
 
     def getIsotopePattern(self, neutralPattern,z, radicals):
@@ -497,11 +520,15 @@ class SpectrumHandler(object):
                     calculateError(foundIsotopePeaks[0][0], theoPeak['m/z']), True)
         else:
             lowestError = 100
+            logging.debug('More than one peak found: '+str(len(foundIsotopePeaks)))
             for peak in foundIsotopePeaks: #ToDo
+                logging.debug(str(peak[0]), str(peak[1]))
                 error = calculateError(peak[0], theoPeak[0])
                 if abs(error) < abs(lowestError):
                     lowestError = error
                     lowestErrorPeak = peak
+            logging.debug('Selected Peak: '+'\t'+str(lowestErrorPeak[0])+'\t'+ str(lowestErrorPeak[1])+'\t'+
+                          str(theoPeak['calcInt'])+'\t'+str(lowestError))
             return (lowestErrorPeak[0], lowestErrorPeak[1], theoPeak['calcInt'], lowestError, True)
 
     def setSearchedChargeStates(self, searchedZStates):

@@ -16,22 +16,23 @@ class IsotopePatternView(SimpleMainWindow):
     '''
     def __init__(self, parent):
         super(IsotopePatternView, self).__init__(parent, 'Isotope Pattern Tool')
+        self._ion= None
         self._controller = IsotopePatternLogics()
         self._fragmentationOpts = self._controller.getFragmentationNames()
         self._modifPatternOpts = self._controller.getModifPatternNames()
         self._intensity = None
         self._vertLayout = QtWidgets.QVBoxLayout(self._centralwidget)
-        widget1,horizLayout1 = self.getHorizWidget(self._centralwidget, self._vertLayout, 15,5)
+        self._widget1,self._horizLayout1 = self.getHorizWidget(self._centralwidget, self._vertLayout, 15,5)
 
-        self._inputForm = QtWidgets.QLineEdit(widget1)
+        self._inputForm = QtWidgets.QLineEdit(self._widget1)
         self._inputForm.returnPressed.connect(self.calculateIsotopePattern)
-        horizLayout1.addWidget(self._inputForm)
-        modeLabel = QtWidgets.QLabel(widget1)
+        self._horizLayout1.addWidget(self._inputForm)
+        modeLabel = QtWidgets.QLabel(self._widget1)
         modeLabel.setText(self._translate(self.objectName(), "Mode:"))
-        horizLayout1.addWidget(modeLabel)
-        self._modeBox = QtWidgets.QComboBox(widget1)
+        self._horizLayout1.addWidget(modeLabel)
+        self._modeBox = QtWidgets.QComboBox(self._widget1)
         self.updateComboBox(self._modeBox, self._controller.getMolecules())
-        horizLayout1.addWidget(self._modeBox)
+        self._horizLayout1.addWidget(self._modeBox)
 
         widget2,chargeRadLayout = self.getHorizWidget(self._centralwidget, self._vertLayout,5,15)
 
@@ -203,17 +204,17 @@ class IsotopePatternView(SimpleMainWindow):
             charge = int(self._charge.text())
             self._intensity = self._ionTable.getIntensity()
             if self._modeBox.currentIndex() == 0:
-                ion, neutralMass, avMass = self._controller.calculate(self._modeBox.currentText(),
+                self._ion, neutralMass, avMass = self._controller.calculate(self._modeBox.currentText(),
                                          self._inputForm.text(), charge, int(self._radicals.text()), self._intensity)
             else:
-                ion, neutralMass, avMass= self._controller.calculate(self._modeBox.currentText(),
+                self._ion, neutralMass, avMass= self._controller.calculate(self._modeBox.currentText(),
                                                                      self._inputForm.text(), charge, int(self._radicals.text()), self._intensity,
                                                                      self._options['fragmentation'].currentText(), self._options['fragment'].currentText(),
                                                                      self._options['modPattern'].currentText(), self._options['modif'].currentText(), self._options['nrMod'].value())
         except InvalidInputException as e:
             QtWidgets.QMessageBox.warning(self, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
             return
-        self.renderView(ion, neutralMass, avMass)
+        self.renderView(self._ion, neutralMass, avMass)
 
     def renderView(self, ion, neutralMass, avMass):
         self.renderSpectrumView(ion)
@@ -261,9 +262,42 @@ class IsotopePatternView(SimpleMainWindow):
             peaks = []
             for i, peak in enumerate(self._peakTable.getPeaks()):
                 peaks.append((peak[0], inputVals[i][0], peak[2], inputVals[i][1]))
-            ion = self._controller.model(peaks)
-            self._intensity = round(ion.getIntensity())
+            self._ion = self._controller.model(peaks)
+            self._intensity = round(self._ion.getIntensity())
         except InvalidInputException as e:
             QtWidgets.QMessageBox.warning(self, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
             return
-        self.renderView(ion, self._controller.getNeutralMass(), self._controller.getAvMass())
+        self.renderView(self._ion, self._controller.getNeutralMass(), self._controller.getAvMass())
+
+
+
+class AddIonView(IsotopePatternView):
+    '''
+    QMainWindow which is used to add new ions to ion list in top-down search
+    '''
+    def __init__(self, parent, mode, sequence, fun):
+        super(AddIonView, self).__init__(parent)
+        self._modeBox.setCurrentText(mode)
+        self._modeBox.setEnabled(False)
+        self._inputForm.setText(sequence)
+        self._signal = fun
+        self._saveBtn = self.makeBtn(self._widget1,self._horizLayout1, 'Save', self.accept)
+
+    def getIon(self):
+        return self._ion
+
+    def accept(self):
+        if self._ion == None:
+            dlg = QtWidgets.QMessageBox(QtWidgets.QMessageBox.Information, 'Invalid Request',
+                                        'No input, sequence is empty', QtWidgets.QMessageBox.Ok, self)
+            dlg.show()
+        if self._ion.getIntensity() == 0:
+            dlg = QtWidgets.QMessageBox(QtWidgets.QMessageBox.Information, 'Invalid Request',
+                                        'Intensity of the new ion must not be 0!', QtWidgets.QMessageBox.Ok, self)
+            dlg.show()
+        elif self._ion.getCharge() == 0:
+            dlg = QtWidgets.QMessageBox(QtWidgets.QMessageBox.Information, 'Invalid Request',
+                                        'Charge of the new ion must not be 0!', QtWidgets.QMessageBox.Ok, self)
+            dlg.show()
+        else:
+            self._signal(self)

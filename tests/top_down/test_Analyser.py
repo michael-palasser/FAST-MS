@@ -19,7 +19,7 @@ class TestAnalyser(TestCase):
                 ion = FragmentIon(fragment,1.,z,fragment.getIsotopePattern(),10e5)
                 self.ions[ion.getHash()]=ion
         self.analyser = Analyser([],self.props.getSequenceList(),settings['charge'],
-                                 self.props.getModification().getName())
+                                 self.props.getModification().getModification())
 
 
     def test_calculate_rel_abundance_of_species(self):
@@ -95,7 +95,7 @@ class TestAnalyser(TestCase):
                 intensity = np.random.randint(1,10)*10**7
                 ion.setIntensity(intensity)
                 if ion.getType()==currentType:
-                    if mod in ion.getModification():
+                    if mod in ion.getModificationList():
                         arr[ion.getNumber()-1,1] += intensity/ion.getCharge()
                     arr[ion.getNumber() - 1, 0] += intensity/ion.getCharge()
                 ions.append(ion)
@@ -106,8 +106,9 @@ class TestAnalyser(TestCase):
             self.assertEqual(len(arr), len(occupDict[currentType]))
             for i,val in enumerate(occupDict[currentType]):
                 if arr[i,0] != 0:
+
                     self.assertAlmostEqual(arr[i,1]/arr[i,0],val)
-            occupDict = self.analyser.calculateOccupancies([currentType],['+CMCT'])
+            occupDict = self.analyser.calculateOccupancies([currentType],'+CMCT',['+CMCT'])
             self.assertTrue(currentType in occupDict.keys())
             self.assertEqual(1, len(occupDict.keys()))
             self.assertEqual(len(arr), len(occupDict[currentType]))
@@ -116,12 +117,13 @@ class TestAnalyser(TestCase):
                     self.assertAlmostEqual(0,val)
 
     def test_get_nr_of_modifications(self):
-        self.assertEqual(1, self.analyser.getNrOfModifications('+CMCT'))
-        self.assertEqual(1, self.analyser.getNrOfModifications('+CMCT-G'))
-        for i in range(10):
+        self.assertEqual(1, self.analyser.getNrOfModifications('+CMCT', '+CMCT'))
+        self.assertEqual(1, self.analyser.getNrOfModifications('+CMCT-G','+CMCT'))
+        self.assertEqual(2, self.analyser.getNrOfModifications('+CMCT-2G','-G'))
+        for _ in range(10):
             randNr = np.random.randint(10)
-            self.assertEqual(randNr,self.analyser.getNrOfModifications('+'+str(randNr)+'CMCT'))
-            self.assertEqual(randNr,self.analyser.getNrOfModifications('+'+str(randNr)+'CMCT-A'))
+            self.assertEqual(randNr,self.analyser.getNrOfModifications('+'+str(randNr)+'CMCT', '+CMCT'))
+            self.assertEqual(randNr,self.analyser.getNrOfModifications('+'+str(randNr)+'CMCT-A', '+CMCT'))
 
     '''def test_calculate_proportions(self):
         self.fail()'''

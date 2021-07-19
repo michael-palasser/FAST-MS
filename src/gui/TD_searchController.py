@@ -19,6 +19,7 @@ from src.Exceptions import InvalidIsotopePatternException, InvalidInputException
 from src.entities.Info import Info
 from src.gui.AbstractMainWindows import SimpleMainWindow
 from src.gui.GUI_functions import connectTable
+from src.gui.IsotopePatternView import AddIonView
 from src.gui.widgets.InfoView import InfoView
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.repositories.IsotopePatternRepository import IsotopePatternRepository
@@ -234,7 +235,8 @@ class TD_MainController(object):
                                 'Export': (self.export,None,None), 'Close': (self.close,None,"Ctrl+Q")}, None)
         self._actions.update(actions)
         _,actions = self._mainWindow.createMenu("Edit", {'Repeat ovl. modelling':
-                            (self.repeatModellingOverlaps,'Repeat overlap modelling involving user inputs',None)}, None)
+                            (self.repeatModellingOverlaps,'Repeat overlap modelling involving user inputs',None),
+                                                         'Add new ion':(self.addNewIonView, 'Add an ion manually', None)}, None)
         self._actions.update(actions)
         _,actions = self._mainWindow.createMenu("Show",
                                                 {'Results': (self._mainWindow.show, 'Show lists of observed and deleted ions', None),
@@ -400,7 +402,11 @@ class TD_MainController(object):
             ionDict = self._intensityModeller.getDeletedIons()
             index = 1
         oldIon = ionDict[newIonHash]
-        if oldIon.getIntensity() != newIon.getIntensity():
+        if newIon.getIntensity() == 0:
+            dlg = QtWidgets.QMessageBox(QtWidgets.QMessageBox.Information, 'Invalid Request',
+                                        'New intensity must not be 0', QtWidgets.QMessageBox.Ok, self._mainWindow)
+            dlg.show()
+        elif oldIon.getIntensity() != newIon.getIntensity():
             choice = QtWidgets.QMessageBox.question(self._mainWindow, 'Saving Ion',
                                                     "Please confirm to change the values of ion: " + oldIon.getId(),
                                                     QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
@@ -408,13 +414,33 @@ class TD_MainController(object):
                 self._info.changeIon(oldIon, newIon)
                 self._infoView.update()
                 self._saved = False
-                self._intensityModeller.addRemodelledIon(oldIon)
-                newIon.addComment('man.mod.')
-                ionDict[newIonHash] = newIon
-                self._tables[index].model().updateData(newIon.getMoreValues())
+                #self._intensityModeller.addRemodelledIon(oldIon)
+                #newIon.addComment('man.mod.')
+                #ionDict[newIonHash] = newIon
+                self._tables[index].model().updateData(self._intensityModeller.addRemodelledIon(oldIon).getMoreValues())
                 print('Saved', newIon.getId())
 
 
+    def addNewIonView(self):
+        '''
+        Starts an AddIonView to create a new ion (which was not found by the main search)
+        '''
+        addIonView = AddIonView(self._mainWindow, self._propStorage.getMolecule().getName(),
+                                ''.join(self._propStorage.getSequenceList()), self.addNewIon)
+        self._openWindows.append(addIonView)
+
+    def addNewIon(self, addIonView):
+        '''
+        Adds a new ion to the table
+        '''
+        newIon = addIonView.getIon()
+        newIon.setCharge(abs(newIon.getCharge()))
+        self._intensityModeller.addNewIon(newIon)
+        self._info.addNewIon(newIon)
+        self._infoView.update()
+        self._saved = False
+        self._tables[0].model().addData(newIon.getMoreValues())
+        addIonView.close()
 
     def repeatModellingOverlaps(self):
         '''
@@ -559,23 +585,27 @@ class TD_MainController(object):
         '''
         Makes a widget with the occupancy plot and a table with the corresponding values
         '''
-        self._analyser.setIons(list(self._intensityModeller.getObservedIons().values()))
-        percentageDict = self._analyser.calculateOccupancies(self._configs.get('interestingIons'),
-                                                             self._propStorage.getUnimportantModifs())
-        '''if percentageDict == None:
-            dlg = QtWidgets.QMessageBox(self._mainWindow, title='Unvalid Request',
-                        text='It is not possible to calculate occupancies for an unmodified molecule.',
-                        icon=QtWidgets.QMessageBox.Information, buttons=QtWidgets.QMessageBox.Ok)
-            if dlg == QtWidgets.QMessageBox.Ok:
-                return'''
-        plotFactory = PlotFactory(self._mainWindow)
-        forwardVals = self._propStorage.filterByDir(percentageDict,1)
-        backwardVals = self._propStorage.filterByDir(percentageDict,-1)
-        plotFactory.showOccupancyPlot(self._propStorage.getSequenceList(), forwardVals, backwardVals,
-                                      self._settings['nrMod'])
-        occupView = PlotTableView(self._analyser.toTable(forwardVals.values(), backwardVals.values()),
-                                       list(percentageDict.keys()), 'Occupancies', 3)
-        self._openWindows.append(occupView)
+        #dlg = QtWidgets.QInputDialog()
+        modification,ok = QtWidgets.QInputDialog.getText(self._mainWindow,'Occupancy Plot', 'Enter the modification: ',
+                                                         text=self._propStorage.getModificationName())
+        if ok and modification!='':
+            self._analyser.setIons(list(self._intensityModeller.getObservedIons().values()))
+            percentageDict = self._analyser.calculateOccupancies(self._configs.get('interestingIons'), modification,
+                                                                 self._propStorage.getUnimportantModifs())
+            '''if percentageDict == None:
+                dlg = QtWidgets.QMessageBox(self._mainWindow, title='Unvalid Request',
+                            text='It is not possible to calculate occupancies for an unmodified molecule.',
+                            icon=QtWidgets.QMessageBox.Information, buttons=QtWidgets.QMessageBox.Ok)
+                if dlg == QtWidgets.QMessageBox.Ok:
+                    return'''
+            plotFactory = PlotFactory(self._mainWindow)
+            forwardVals = self._propStorage.filterByDir(percentageDict,1)
+            backwardVals = self._propStorage.filterByDir(percentageDict,-1)
+            plotFactory.showOccupancyPlot(self._propStorage.getSequenceList(), forwardVals, backwardVals,
+                                          self._settings['nrMod'], modification)
+            occupView = PlotTableView(self._analyser.toTable(forwardVals.values(), backwardVals.values()),
+                                           list(percentageDict.keys()), 'Occupancies: '+modification, 3)
+            self._openWindows.append(occupView)
 
 
     def showChargeDistrPlot(self, reduced):

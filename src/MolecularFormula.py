@@ -321,24 +321,27 @@ class MolecularFormula(object):
         lambda1 = 0
         massShift1 = 0
         nr1 = 0
+        monoIsoMass = 0
         for index, elem in enumerate(sorted(elements)):
-            mono = self._periodicTable[elem][0][0]
-            monoMass = self._periodicTable[elem][0][1]
+            monoNuc = self._periodicTable[elem][0][0]
+            monoMassElem = self._periodicTable[elem][0][1]
             nr = self._formulaDict[elem]
-            if (nr>50):# and (maxIso<3):
-                for isotope in self._periodicTable[elem]:
-                    p=isotope[2]
-                    if (isotope[0]-mono==1) and (p<0.05):
-                        new_p = nr*p
-                        lambda1 += new_p
-                        massShift1 +=new_p*(isotope[1]-monoMass)
-                        nr1 += nr
-                    else:
-                        isotopeTable.append((index+1, self._formulaDict[elem], 0, isotope[2], isotope[1], isotope[0] - mono))
+            isotope1 = self._periodicTable[elem][1]
+            if (nr>50) and (len(self._periodicTable[elem])==2) and (isotope1[0]-monoNuc==1) and (isotope1[2]<0.05): #isotope1[2]*15000<nr:# and (maxIso<3):
+                #for isotope in self._periodicTable[elem]:
+                #p=isotope1[2]
+                #if (isotope[0]-monoNuc==1) and (p<0.05):
+                monoIsoMass += monoMassElem*nr
+                new_p = nr*isotope1[2]
+                lambda1 += new_p
+                massShift1 +=new_p*(isotope1[1]-monoMassElem)
+                nr1 += nr
+                    #else:
+                    #    isotopeTable.append((index+1, self._formulaDict[elem], 0, isotope[2], isotope[1], isotope[0] - monoNuc))
             else:
                 for isotope in self._periodicTable[elem]:
                     #if self._formulaDict[elem] != 0:
-                    isotopeTable.append((index+1, self._formulaDict[elem], 0, isotope[2], isotope[1], isotope[0] - mono))
+                    isotopeTable.append((index+1, self._formulaDict[elem], 0, isotope[2], isotope[1], isotope[0] - monoNuc))
         #lastIndex = index+1
         #isotopeTable.append((lastIndex, 0, 0, lambda1, massShift1, -100))
         '''isotopeTable = np.array([(index+1, nr1, 0, lambda1, massShift1, -100)]
@@ -354,8 +357,8 @@ class MolecularFormula(object):
                                 , dtype=isoTableDtype)
         if len(getByIndex(isotopeTable, isotopeTable['index'][0])) != 2:
             isotopeTable = self.reorderTable(isotopeTable)
-        poissonElement = np.array((nr1,lambda1,massShift1/lambda1),
-                                  dtype=[('nr', float),('lambda',float), ('mass',float)])
+        poissonElement = np.array((nr1,monoIsoMass, lambda1,massShift1/lambda1),
+                                  dtype=[('nr', float),('monoMass', float),('lambda',float), ('deltaMass',float)])
         return isotopeTable, poissonElement
 
 

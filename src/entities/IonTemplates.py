@@ -119,6 +119,9 @@ class ModificationPattern(PatternWithItems):
     def getModification(self):
         return self.__modification
 
+    def setModification(self, modification):
+        self.__modification=modification
+
     def getItems2(self):
         return self.__items2
 

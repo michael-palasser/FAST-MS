@@ -169,9 +169,9 @@ class FragmentLibraryBuilder(object):
         sequenceName = self.__sequence.getName()
         species, precName = self.processTemplateName(self.__fragmentation.getPrecursor())
         if self.__maxMod == 1:
-            precName = "+" + self.__modifPattern.getModification()
+            precName = self.__modifPattern.getModification()
         elif self.__maxMod > 1:
-            precName = "+" +  str(self.__maxMod) + self.__modifPattern.getModification()
+            precName = self.__modifPattern.getModification()[0] +  str(self.__maxMod) + self.__modifPattern.getModification()[1:]
         #return
         basicFormula = simpleFormula.addFormula(self.__molecule.getFormula())
         for precTemplate in self.__fragmentation.getItems2():

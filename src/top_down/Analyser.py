@@ -66,51 +66,59 @@ class Analyser(object):
         return 1 - modifiedSum / totalSum
 
 
-    def calculateOccupancies(self, interestingIons, *args):
+    def calculateOccupancies(self, interestingIons, modification=None, unImportantMods=None):
         '''
         Calculates the modified proportion for each fragment
         :param (list of str) interestingIons: fragment types which should be analysed
-        :param (list of str) args: list of modifications which should not be used for the calculation (optional)
+        :param (str) modification: name of the modification (optional)
+        :param (list of str) unImportantMods: list of modifications which should not be used for the calculation (optional)
         :return: (dict[str,ndarray[float]]) dictionary {fragment type: proportions [fragment number x proportion]}
             of modified proportions for every (interesting) fragment type
         '''
-        if self._modification == "":
+        if modification == "":
             return None
+        elif modification is None:
+            modification=self._modification
         temp = dict()
         for ion in self._ions:
             if ion.getType() in interestingIons:
-                if args:
-                    if len([mod for mod in args[0] if mod in ion.getModification()])>0:
+                if unImportantMods is not None:
+                    if len([mod for mod in unImportantMods if mod in ion.getModification()])>0:
                         #print('not', ion.getName())
                         continue
                 if ion.getType() not in temp.keys():
                     temp[ion.getType()] = np.zeros((len(self._sequence), 3))
-                if self._modification in ion.getModification():
+                #if self._modification in ion.getModification():
+                print(modification, ion.getModificationList())
+                if modification in ion.getModificationList():
                     temp[ion.getType()][ion.getNumber() - 1] += \
                         np.array([ion.getRelAbundance(),
-                                  ion.getRelAbundance() * self.getNrOfModifications(ion.getModification()), 0])
+                                  ion.getRelAbundance() * self.getNrOfModifications(ion.getModification(), modification), 0])
                     #print('\t', ion.getName(), ion.getRelAbundance()*int(self.getNrOfModifications(ion.getModification())), 'mod')
                 else:
                     temp[ion.getType()][ion.getNumber() - 1] += \
                         np.array([ion.getRelAbundance(),0,0])
                     #print('\t', ion.getName(), ion.getRelAbundance())
         for key,vals in temp.items():
-            print('sequ.\t',key+'_free\t', key+'+'+self._modification)
+            print('sequ.\t',key+'_free\t', key+'+'+modification)
             [print(str(i+1), '\t',val[0]-val[1], '\t', val[1]) for i,val in enumerate(vals)]
         return self.calculateProportions(temp)#dict()
 
 
-    def getNrOfModifications(self, modificationString):
+    @staticmethod
+    def getNrOfModifications(modificationString, modification):
         '''
         Determines how often an ion is modified
         :param (str) modificationString: (raw) modification string of an ion
         :return: (int) number of modifications of ion
         '''
+        modification = modification[1:]
         nrOfModif = 1
-        if modificationString[modificationString.find(self._modification) - 1].isdigit():
-            nrOfModif = modificationString[modificationString.find(self._modification) - 1]
-            if modificationString[modificationString.find(self._modification) - 2].isdigit():
-                nrOfModif += (10 * modificationString[modificationString.find(self._modification) - 2])
+        if modificationString[modificationString.find(modification) - 1].isdigit():
+            nrOfModif = modificationString[modificationString.find(modification) - 1]
+            if modificationString[modificationString.find(modification) - 2].isdigit():
+                nrOfModif += (10 * modificationString[modificationString.find(modification) - 2])
+        print(modificationString, nrOfModif)
         return int(nrOfModif)
 
     def calculateProportions(self, tempDict):

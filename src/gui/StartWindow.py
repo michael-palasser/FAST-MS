@@ -48,7 +48,7 @@ class Window(SimpleMainWindow):
         self.createMenu('Other Tools', {'Analyse Intact Ions': (lambda: self.editData(self.startIntactIonSearch),
                                                  'Starts analysis of spectrum with unfragmented ions', None),
                          'Edit Intact Ions': (lambda: self.editData(IntactIonEditorController), 'Edit Intact Ions', None),
-                         'Isotope Pattern Tool':
+                         'Model Isotope Pattern':
                              (lambda: IsotopePatternView(self), 'Calculates the isotope pattern of an ion', None)},None)
         self.createMenu('Edit data',
                         {'Elements': (lambda: self.editData(ElementEditorController), 'Edit element table', None),
@@ -58,15 +58,6 @@ class Window(SimpleMainWindow):
         self.move(200,200)
         # self.setWindowIcon(QIcon('pic.png'))
         self.showButtons()
-
-
-    '''def addActionToStatusBar(self,menu, name, toolTip, function):
-        action = QAction('&'+name, self)
-        action.setToolTip(toolTip)
-        #action.setWhatsThis(toolTip)
-        #action.setStatusTip(toolTip)
-        action.triggered.connect(function)
-        menu.addAction(action)'''
 
 
     def showButtons(self):

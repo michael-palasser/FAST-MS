@@ -121,7 +121,7 @@ class MolecularFormula(object):
             isotopeTable = self.makeIsotopeTable()
         return calculate, isotopeTable
 
-    def calculateIsotopePattern(self):
+    def calculateIsotopePattern(self, maxIso=-1):
         '''
         Calculates isotope patterns based on molecular formulas
         :return: (ndarray(dtype=[float,float])) isotope pattern1 (structured numpy array: [(mass,relative Abundance)])
@@ -132,7 +132,7 @@ class MolecularFormula(object):
         isotope_pattern = list()
         calculate, isotopeTable = self.determineSystem()
         sumInt = 0
-        while(sumInt <0.996):              #ToDo:Parameter
+        while(sumInt <0.996 and isoPeak!=maxIso):              #ToDo:Parameter
             setIsotopeTable(isotopeTable)
             #print(isoPeak, isotopeTable)
             ultrafineStruct = np.array(calculate(isoPeak, isotopeTable))
@@ -150,7 +150,6 @@ class MolecularFormula(object):
         print(np.sum(iso['calcInt']))"""
         #[print(row[0],row[1]) for row in isotope_pattern]
         return np.array(isotope_pattern, dtype=isoPatternDtype)
-
 
 
 
@@ -427,3 +426,66 @@ class MolecularFormula(object):
                 #    mostAbundant = prop
         #[print(row[0],row[1]) for row in isotope_pattern]
         return np.array(isotope_pattern, dtype=isoPatternDtype)
+
+
+    def makeFFTTable(self,monoMass):
+        '''
+                Creates an isotope table for universal elemental composition
+                :return: (ndarray(dtype=[float,float,float,float,float,float])) isotope table:
+                    isotope table (index, nr. of atoms of element, nr. of atoms of isotope, rel. abundance of isotope,
+                    mass of isotope, nominal mass shift compared to isotope with lowest m/z)
+                '''
+        maxMass = int(monoMass)+100
+        elements = [elem for elem, val in self._periodicTable.items() if self._formulaDict[elem] > 0]
+        numElements = len(elements)
+        abundanceTable = np.zeros((numElements,maxMass))
+        #massTable = np.zeros((numElements,maxMass))
+        elemNrs = np.zeros(numElements)
+        #averageMasses = np.zeros(numElements)
+        #stdDevs = np.zeros(numElements)
+        dm = []
+        for i,elem in enumerate(elements):
+            mono = self._periodicTable[elem][0]
+            elemNrs[i] = self._formulaDict[elem]
+            #averageMasses[i] = np.sum(self._periodicTable[elem][:,1]*self._periodicTable[elem][:,2])
+            #stdDevs[i] =
+            for isotope in self._periodicTable[elem]:
+                # if self._formulaDict[elem] != 0:
+                abundanceTable[i][isotope[0]] = isotope[2]
+                if isotope[0]-mono[0] != 0:
+                    dm_i = isotope[1]-mono[1]
+                    dm.append((dm_i/round(dm_i)*elemNrs[i]*isotope[2],elemNrs[i]*isotope[2]))
+                #massTable[i][isotope[0]] = isotope[1] - mono
+        #print('av',averageMasses, np.sqrt(np.sum(elemNrs*averageMasses))/np.sqrt(np.sum(elemNrs*averageMasses.astype(int))))
+        #sigmaFactor = np.sqrt(np.sum(elemNrs*averageMasses))/np.sqrt(np.sum(elemNrs*averageMasses.astype(int)))
+        #avM = np.sum(elemNrs*averageMasses)
+        dm =np.array(dm)
+        return abundanceTable, elemNrs, np.sum(dm[:,0])/np.sum(dm[:,1])#, sigmaFactor, avM
+
+    def calculateIsotopePatternFFT(self, accelerate):
+        '''
+        Calculates isotope patterns based on molecular formulas
+        :return: (ndarray(dtype=[float,float])) isotope pattern1 (structured numpy array: [(mass,relative Abundance)])
+        '''
+        #mostAbundant=10**(-10)
+        #prop = 1
+        exactPattern= self.calculateIsotopePattern(accelerate)
+        abundanceTable, elemNrs, dm = self.makeFFTTable(exactPattern['m/z'][0])
+        #isotope_pattern = calculateFFTFineStructure(abundanceTable, elemNrs)
+        isotope_pattern =  np.array(calculateFFTFineStructure(abundanceTable, elemNrs), dtype=isoPatternDtype)
+        #print(calculateFFTFineStructure(abundanceTable, elemNrs))
+        #isotope_pattern['m/z'] = (isotope_pattern['m/z']+(monoMass-isotope_pattern['m/z'][0]))
+        #isotope_pattern['m/z'] = sigmaFactor*isotope_pattern['m/z'] + sigmaFactor*()
+        sumInt=np.sum(exactPattern['calcInt'])
+        isoPeak = len(exactPattern)
+        print(exactPattern['m/z'][-1])
+        isotope_pattern['m/z'] =(isotope_pattern['m/z']-isotope_pattern['m/z'][isoPeak-1])*dm+exactPattern['m/z'][-1]
+        finalPattern = [row for row in exactPattern]
+        while sumInt <0.996:
+            print('hey',isotope_pattern[isoPeak])
+            finalPattern.append(isotope_pattern[isoPeak])
+            sumInt+=isotope_pattern[isoPeak]['calcInt']
+            isoPeak+=1
+        return np.array(finalPattern, dtype=isoPatternDtype)
+
+

@@ -1,9 +1,11 @@
+import time
 from unittest import TestCase
 import numpy as np
 from random import randint
 from src.fastFunctions import getByIndex
 
 from src.MolecularFormula import MolecularFormula
+from src.top_down.SpectrumHandler import calculateError
 
 molFormulaDummy = MolecularFormula('C5H4N3O')
 RNA_formulaDummy = MolecularFormula('C38H48N15O26P3')  # GACU
@@ -146,8 +148,29 @@ class MolecularFormulaTest(TestCase):
         print(formula.makeIsotopeTable())
         print(formula.makePoissonTable())
 
-
     def test_calculate_poisson_isotope_pattern(self):
         formula = MolecularFormula('C100H100N55O30S1')
         print(formula.makePoissonTable())
         print(formula.calculatePoissonIsotopePattern(5))
+
+    def test_make_ffttable(self):
+        formula = MolecularFormula('C100H100N55O30S1')
+        for i in formula.makeFFTTable(formula.calculateMonoIsotopic()):
+            print(i)
+
+
+    def test_calculate_isotope_pattern_fft(self):
+        np.set_printoptions(suppress=True)
+        formula = MolecularFormula('C1000H1000N550O300S10')
+        #formula = MolecularFormula('C100H100N55O30S1')
+        start = time.time()
+        normArr = formula.calculateIsotopePattern()
+        normArr['calcInt'] /= np.sum(normArr['calcInt'])
+        start2 = time.time()
+        fftArr = formula.calculateIsotopePatternFFT(5)[:len(normArr)]
+        fftArr['calcInt'] /= np.sum(fftArr['calcInt'])
+        print('fft: ', time.time()-start2)
+        print('normal: ', start2-start)
+        for fft, norm in zip(fftArr,normArr):
+            print(fft,'\t',norm, '\t', fft['calcInt']/norm['calcInt'], '\t', calculateError(fft['m/z'],norm['m/z']))
+        print()

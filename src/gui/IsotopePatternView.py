@@ -57,8 +57,8 @@ class IsotopePatternView(SimpleMainWindow):
 
         btnWidget, btnLayout = self.getHorizWidget(self._leftWidget, self._vertLayoutLeft,0,10)
         self._exact = QtWidgets.QCheckBox('Exact',btnWidget)
-        self._exact.setEnabled(False)
-        self._exact.setChecked(True)
+        #self._exact.setEnabled(False)
+        #self._exact.setChecked(True)
         btnLayout.addWidget(self._exact)
         self.makeBtn(self._leftWidget, btnLayout, "Calculate", self.calculateIsotopePattern)
         self.makeBtn(self._leftWidget, btnLayout, "Model",self.modelInt)
@@ -203,14 +203,19 @@ class IsotopePatternView(SimpleMainWindow):
         try:
             charge = int(self._charge.text())
             self._intensity = self._ionTable.getIntensity()
+            accelerate = 5
+            if self._exact.isChecked():
+                accelerate = None
             if self._modeBox.currentIndex() == 0:
                 self._ion, neutralMass, avMass = self._controller.calculate(self._modeBox.currentText(),
-                                         self._inputForm.text(), charge, int(self._radicals.text()), self._intensity)
+                                         self._inputForm.text(), charge, int(self._radicals.text()), self._intensity,
+                                                                            accelerate=accelerate)
             else:
                 self._ion, neutralMass, avMass= self._controller.calculate(self._modeBox.currentText(),
                                                                      self._inputForm.text(), charge, int(self._radicals.text()), self._intensity,
                                                                      self._options['fragmentation'].currentText(), self._options['fragment'].currentText(),
-                                                                     self._options['modPattern'].currentText(), self._options['modif'].currentText(), self._options['nrMod'].value())
+                                                                     self._options['modPattern'].currentText(), self._options['modif'].currentText(), self._options['nrMod'].value(),
+                                                                           accelerate)
         except InvalidInputException as e:
             QtWidgets.QMessageBox.warning(self, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
             return

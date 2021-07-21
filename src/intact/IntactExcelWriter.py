@@ -29,11 +29,9 @@ class IntactExcelWriter(object):
         Writes all user defined parameters to xlsx file
         :param (dict[str,Any]) parameters: {(str) name: value}
         '''
-        print(parameters)
         worksheet.write(self._row, 0, 'parameters:')
         self._row += 1
         for key,val in parameters.items():
-            print(key,val)
             worksheet.write_row(self._row, 0, [key, val])
             #worksheet.write(self.row,1,val)
             self._row += 1
@@ -139,7 +137,6 @@ class IntactExcelWriter(object):
             self._row = 0
             self._lastRow = 0
             self._col = 0
-            print(i,worksheet)
             self.writeParameters(worksheet, listOfParameters[i])
             for j in range(len(avCharges[i])):
                 worksheet.write(self._row, 0, 'spectralFile ' + str(j + 1))

@@ -5,6 +5,8 @@ Module for calculating isotope patterns using numba library
 import math
 from numba import njit
 import numpy as np
+from scipy.fft import fft, ifft
+
 
 @njit
 def getByIndex(isotopeTable, index):
@@ -391,6 +393,32 @@ def fact(k):
     for i in range(1,k+1):
         fact *= i
     return fact
+
+
+def calculateFFTFineStructure(abundanceTable, formula):
+    MAX_ELEMENTS = abundanceTable.shape[0]
+    MAX_MASS = abundanceTable.shape[1]
+    abundanceTable_trans = fft(abundanceTable, axis=1)
+    ptA = np.ones(MAX_MASS, dtype=complex)
+    for i in range(MAX_ELEMENTS):
+        ptA *= (abundanceTable_trans[i, :] ** formula[i])
+    riptA = ifft(ptA).real
+    riptA/=np.sum(riptA)
+    '''massTable_trans = fft(massTable, axis=1)
+    ptM = np.zeros(MAX_MASS, dtype=complex)
+    for i in range(MAX_ELEMENTS):
+        ptM += (massTable_trans[i, :] ** formula[i])
+    riptM = ifft(ptM).real'''
+
+    masses = np.arange(1.0, MAX_MASS + 1, 1)#+riptM
+    notZero = np.where(riptA >= 10e-10)
+    #print(riptM[notZero])
+    '''final = np.array([(mass_i, riptA_i) for mass_i, riptA_i in zip(masses[notZero],riptA[notZero])])
+    print('j',[(mass_i, riptA_i) for mass_i, riptA_i in zip(masses[notZero],riptA[notZero])])
+    #final = np.stack((masses[notZero], riptA[notZero]), axis = 1)
+    #final.reshape((final.shape[0],2))
+    print('j2',final)'''
+    return [(mass_i, riptA_i) for mass_i, riptA_i in zip(masses[notZero],riptA[notZero])]
 
 """@njit
 def calculateFineStructure(isotopePeak, isotopeTable):

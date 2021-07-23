@@ -5,7 +5,6 @@ Module for calculating isotope patterns using numba library
 import math
 from numba import njit
 import numpy as np
-from scipy.fft import fft, ifft
 
 
 @njit
@@ -302,7 +301,7 @@ def loopThroughIsotopes(isotopePeak, isotopeTable, fineStructure, index):
     if (np.sum(isotopeTable['nrIso']*isotopeTable['M+']) == isotopePeak):
         #if combined nuumber of isotopes of element is not higher than nr of corresponding element atoms in molecule
         if checkIsotopeTable(isotopeTable):
-            print(isotopePeak,isotopeTable)
+            #print(isotopePeak,isotopeTable)
             massI, propI = calculatePercentage(isotopeTable)
             fineStructure.append((massI, propI))
         return fineStructure #eig sinnlos
@@ -332,7 +331,7 @@ def loopThroughIsotopes(isotopePeak, isotopeTable, fineStructure, index):
             loopThroughIsotopes(isotopePeak, isotopeTable, fineStructure, index + 1)
     return fineStructure
 
-@njit
+"""@njit
 def calculatePoissonFineStructure(isotopePeak, isotopeTable, poissonElement):
     '''
     Calculates isotopic fine structure of isotope peak for molecules with a general elemental composition
@@ -392,10 +391,10 @@ def fact(k):
     fact = 1
     for i in range(1,k+1):
         fact *= i
-    return fact
+    return fact"""
 
 
-def calculateFFTFineStructure(abundanceTable, formula):
+"""def calculateFFTFineStructure(abundanceTable, formula):
     MAX_ELEMENTS = abundanceTable.shape[0]
     MAX_MASS = abundanceTable.shape[1]
     abundanceTable_trans = fft(abundanceTable, axis=1)
@@ -415,10 +414,9 @@ def calculateFFTFineStructure(abundanceTable, formula):
     #print(riptM[notZero])
     '''final = np.array([(mass_i, riptA_i) for mass_i, riptA_i in zip(masses[notZero],riptA[notZero])])
     print('j',[(mass_i, riptA_i) for mass_i, riptA_i in zip(masses[notZero],riptA[notZero])])
-    #final = np.stack((masses[notZero], riptA[notZero]), axis = 1)
-    #final.reshape((final.shape[0],2))
-    print('j2',final)'''
+    #final.reshape((final.shape[0],2))'''
     return [(mass_i, riptA_i) for mass_i, riptA_i in zip(masses[notZero],riptA[notZero])]
+    #return np.stack((masses[notZero], riptA[notZero]), axis = 1)"""
 
 """@njit
 def calculateFineStructure(isotopePeak, isotopeTable):

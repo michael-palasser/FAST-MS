@@ -41,9 +41,9 @@ class TDStartDialog(StartDialog):
                                 "Name of the file with spectral peaks (txt or csv format)\n"
                                  "If no file is stated, the program will just calculate the fragment library"),
                     'noiseLimit': (QtWidgets.QDoubleSpinBox(self), "Minimal noise level"),
-                    "fragLib": (QtWidgets.QLineEdit(self), "Name of csv file in the folder 'Fragment_lists' "
-                            "containing the isotope patterns of the fragments\n"
-                            "If no file is stated, the program will search for the corresponing file or create a new one")}
+                    "fragLib": (QtWidgets.QLineEdit(self), "If the fragment list has / should have a special name.\n"
+                            "If no file is stated, the program will search for the file with the standard name or create"
+                                                           " a new one with that name")}
                #(QtWidgets.QLineEdit(startDialog), "output",
                     #"Name of the output Excel file\ndefault: name of spectral pattern file + _out.xlsx"))
         index = self.fill(self, self._formLayout, labelNames, widgets)
@@ -103,6 +103,8 @@ class TDStartDialog(StartDialog):
             QMessageBox.warning(self, "Problem occured", e.__str__(), QMessageBox.Ok)
 
     def checkValues(self, configs, *args):
+        if self._widgets['charge'].value() == 0:
+            raise InvalidInputException('Invalid Input','Charge must not be 0')
         return super(TDStartDialog, self).checkValues(configs, 'top-down')
 
     def checkSpectralDataFile(self, mode, fileName):

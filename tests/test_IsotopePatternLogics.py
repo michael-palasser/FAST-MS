@@ -83,7 +83,7 @@ class TestIsotopePatternLogics(TestCase):
             self.getIon('bad',0)
 
     def getIonPattern(self, neutralPattern, z, sprayMode, radicals):
-        protonIsotopePattern = MolecularFormula({'H': z}).calcIsotopePatternSlowly(2)['calcInt']
+        protonIsotopePattern = MolecularFormula({'H': z}).calcIsotopePatternPart(2)['calcInt']
         theoreticalPeaks = deepcopy(neutralPattern)
         theoreticalPeaks['m/z'] = getMz(theoreticalPeaks['m/z'], z * sprayMode, radicals)
         theoreticalPeaks['calcInt'][0] *= protonIsotopePattern[0] ** sprayMode

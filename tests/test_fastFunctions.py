@@ -220,8 +220,8 @@ class fastFunctions_Test(TestCase):
         isotopeTable = MolecularFormula('C5H5N5OP').makeIsotopeTable()
         self.assertEqual(2, len(f.loopThroughIsotopes(0, isotopeTable, [(0., 0.)], 0)))
 
-    def test_fact(self):
-        self.assertEqual(math.factorial(10), f.fact(10))
+    """def test_fact(self):
+        self.assertEqual(math.factorial(10), f.fact(10))"""
 
     '''def test_calculate_poisson_percentage(self):
         poissonElement = np.array((100,1.2,1.01),
@@ -229,15 +229,3 @@ class fastFunctions_Test(TestCase):
         self.assertAlmostEqual(poisson.pmf(6,poissonElement['lambda']),f.calculatePoissonPercentage(poissonElement, 6)[1])'''
 
 
-    def test_calculate_fftfine_structure(self):
-        np.set_printoptions(suppress=True)
-        formula = MolecularFormula('C100H100N55O30S1')
-        abundanceTable, elemNrs = formula.makeFFTTable(formula.calculateMonoIsotopic())
-        normArr = formula.calculateIsotopePattern()
-        normArr['calcInt'] /= np.sum(normArr['calcInt'])
-        fftArr = f.calculateFFTFineStructure(abundanceTable, massTable, elemNrs)[:len(normArr)]
-        fftArr[:,1] /= np.sum(fftArr[:,1])
-        print()
-        for fft, norm in zip(fftArr,normArr):
-            print(fft,'\t',norm, '\t', fft[1]/norm['calcInt'], '\t', fft[1]/norm['calcInt'])
-        print()

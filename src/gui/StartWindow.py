@@ -40,7 +40,7 @@ class Window(SimpleMainWindow):
         #[print(action.toolTip()) for action in menuActions.values()]
         #print(menu.toolTipsVisible())
         self.createMenu('Top-Down Configurations',
-                        {'Edit Parameters':(self.editTopDownConfig, 'Edit configurations', None),
+                        {'Edit Configurations':(self.editTopDownConfig, 'Edit configurations', None),
                          'Edit Fragments':(lambda: self.editData(FragmentEditorController), 'Edit fragment patterns', None),
                          'Edit Modifications':
                              (lambda: self.editData(ModificationEditorController), 'Edit modification/ligand patterns',

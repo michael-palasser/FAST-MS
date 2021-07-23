@@ -458,7 +458,7 @@ class SpectrumHandler(object):
         maxZ = abs(self.__settings['charge'])
         protonIsotopePatterns = np.zeros((maxZ,2))
         for i in range(maxZ):
-            protonIsotopePatterns[i] = MolecularFormula({'H':i+1}).calcIsotopePatternSlowly(2)['calcInt']
+            protonIsotopePatterns[i] = MolecularFormula({'H':i+1}).calcIsotopePatternPart(2)['calcInt']
             logging.debug(str(protonIsotopePatterns[i][0])+'\t'+str(protonIsotopePatterns[i][1]))
         return protonIsotopePatterns
 

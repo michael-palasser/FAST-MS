@@ -42,7 +42,6 @@ class Finder(object):
         self._files = files
         dtype = np.dtype([('m/z', np.float64), ('z', np.uint8), ('relAb', np.float64)])
         for path in files:
-            print(path)
             data = []
             spectrum = list()
             with open(path) as file:
@@ -50,17 +49,16 @@ class Finder(object):
                     line = line.rstrip()
                     if line.startswith('m/z'): #ToDo
                         if len(spectrum) != 0:
-                            print('hey',spectrum)
                             data.append(np.array(spectrum, dtype=dtype))
                             spectrum = list()
                     else:
                         try:
                             lineList = line.split()
-                            spectrum.append((lineList[0], lineList[1][:-1], lineList[2]))
+                            charge = lineList[1].replace('+','').replace('-','')
+                            spectrum.append((lineList[0], charge, lineList[2]))
                         except:
                             print("problem in spectral pattern file: \nline", line)
                             continue
-            print('hey',spectrum)
             data.append(np.array(spectrum, dtype=dtype))
             self._data.append(data)
 

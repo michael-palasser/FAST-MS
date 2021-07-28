@@ -89,8 +89,11 @@ class Analyser(object):
                 if ion.getType() not in temp.keys():
                     temp[ion.getType()] = np.zeros((len(self._sequence), 3))
                 #if self._modification in ion.getModification():
-                print(modification, ion.getModificationList())
-                if modification in ion.getModificationList():
+                if ('+' in modification) or ('-' in modification):
+                    modifications = ion.getModification()
+                else:
+                    modifications = ion.getModificationList()
+                if modification in modifications:
                     temp[ion.getType()][ion.getNumber() - 1] += \
                         np.array([ion.getRelAbundance(),
                                   ion.getRelAbundance() * self.getNrOfModifications(ion.getModification(), modification), 0])

@@ -417,7 +417,7 @@ class TD_MainController(object):
                 #self._intensityModeller.addRemodelledIon(oldIon)
                 #newIon.addComment('man.mod.')
                 #ionDict[newIonHash] = newIon
-                self._tables[index].model().updateData(self._intensityModeller.addRemodelledIon(oldIon).getMoreValues())
+                self._tables[index].model().updateData(self._intensityModeller.addRemodelledIon(newIon, index).getMoreValues())
                 print('Saved', newIon.getId())
 
 
@@ -656,7 +656,7 @@ class TD_MainController(object):
         searchService.saveSearch(self._savedName, self._settings, self._intensityModeller.getObservedIons().values(),
                                  self._intensityModeller.getDeletedIons().values(),
                                  self._intensityModeller.getRemodelledIons(),
-                                 self._spectrumHandler.getSearchedChargeStates(), self._info)
+                                 self._spectrumHandler.getSearchedChargeStates(), self._info.toString())
         self._saved = True
         print('done')
         self._infoView.update()

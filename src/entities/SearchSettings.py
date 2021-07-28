@@ -58,11 +58,8 @@ class SearchSettings(object):
         Finds and returns modifications where the occupancy should be calculated
         :return: list[str] unimportant modifications
         '''
-        unimportantModifications = []
-        '''for modification in self.__modifPattern.getItems():
-            if not modification.getCalcOccupancy():
-                unimportantModifications.append(modification.getName())'''
-        return unimportantModifications
+        return [modification.getName() for modification in self.__modifPattern.getItems()
+                if not modification.getCalcOccupancy()]
 
     def getFragItemDict(self):
         '''

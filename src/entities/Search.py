@@ -13,7 +13,7 @@ class Search(object):
         :param (list[FragmentIon]) remIons: list of remodelled ions
         :param (dict[str:list[int]]) searchedZStates: dictionary {fragment-name: possible charge states} of calculated
             charge state for each fragment
-        :param (str) info: informations about user inputs
+        :param (str) info: information about user inputs
         '''
         self._name = vals[1]
         self._date = vals[2]
@@ -30,8 +30,6 @@ class Search(object):
         self._remIons = remIons
         self._searchedZStates = searchedZStates
         self._info = info
-        print(self.getVals())
-        print(self.getSettings())
 
     def getName(self):
         return self._name

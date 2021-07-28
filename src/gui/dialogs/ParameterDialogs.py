@@ -123,8 +123,8 @@ class TD_configurationDialog(DialogWithTabs):
 
         self._errorBox=self.fillBox(self._threshold1Tab, "error threshold: threshold [ppm] = k/1000 * (m/z) +d",
                                     ("k", "d", "tolerance for isotope peaks"),
-                                    {"k": (QtWidgets.QDoubleSpinBox(), "slope of error threshold function"),
-                           "d": (QtWidgets.QDoubleSpinBox(), "intercept of ppm error"),
+                                    {"k": (QtWidgets.QDoubleSpinBox(), "slope of ppm error threshold function"),
+                           "d": (QtWidgets.QDoubleSpinBox(), "intercept of ppm error threshold function"),
                            "errorTolerance": (QtWidgets.QDoubleSpinBox(),
                                               "tolerance for isotope peak search in ppm")})
         self._widgets["d"].setMinimum(-9.99)
@@ -145,15 +145,15 @@ class TD_configurationDialog(DialogWithTabs):
         self._searchIntensityBox = self.fillBox(self._threshold2Tab, "ion search and modelling",
                                                 ("charge tolerance", "outlier peak threshold"),
                                                 {"zTolerance": (QtWidgets.QDoubleSpinBox(),
-                              "ions with charge states between the calculated charge +/- threshold are searched for"),
+                              "program searches for ions with charge states between the calculated charge +/- tolerance"),
                              "outlierLimit": (QtWidgets.QDoubleSpinBox(),
                               "isotope peaks with higher values are not used for intensity modelling")})
         self._remodellingBox = self.fillBox(self._threshold2Tab, "modelling overlaps",
-                                            ("max. nr. of overlapping ions","threshold tolerance"),
+                                            ("max. nr. of overlapping ions","threshold"),
                                             {"manualDeletion": (QtWidgets.QSpinBox(),
-                              "if overlap-pattern1 contains more ions, user is asked to manually delete ions"),
+                              "if more ions are overlapping in one pattern, the program will ask the user to manually delete ions"),
                              "overlapThreshold": (QtWidgets.QDoubleSpinBox(),
-                              "ions which have a lower proportion in overlap pattern1 are deleted")})
+                              "ions which have a lower proportion in overlap pattern are deleted")})
         self._interestingIonsBox = self.fillInterestingIonsBox(self._outputTab)
         self._verticalLayout.addWidget(self._buttonBox, 0, QtCore.Qt.AlignHCenter)
         self.backToLast()

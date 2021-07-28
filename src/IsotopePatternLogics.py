@@ -85,7 +85,7 @@ class IsotopePatternLogics(object):
         return self._avMass
 
     def calculate(self, mode, inputString, charge, electrons, intensity, fragmentationName=None, fragTemplName=None,
-                  modifPatternName=None, modifName=None, nrMod=None):
+                  modifPatternName=None, modifName=None, nrMod=None, accelerate=None):
         '''
         Calculates the isotope pattern of the ion
         Parameters fragmentationName, fragTemplName, modifPatternName, modifName, nrMod are only optional if mode is
@@ -116,10 +116,13 @@ class IsotopePatternLogics(object):
             tempFormula=self._formula.addFormula({'H':charge})
             if tempFormula.getFormulaDict()['H']<0:
                 raise InvalidInputException('Nr of H = '+str(tempFormula.getFormulaDict()['H']), 'not enough Hs for deprotonation')
-            if tempFormula.calcIsotopePatternSlowly(1)['m/z'][0]>6000:
+            #if tempFormula.calcIsotopePatternSlowly(1)['m/z'][0]>6000:
+            if accelerate is None:
                 self._isotopePattern = tempFormula.calculateIsotopePattern()
             else:
-                self._isotopePattern = tempFormula.calcIsotopePatternSlowly()
+                self._isotopePattern = tempFormula.calculateIsotopePatternFFT(accelerate)
+            '''else:
+                self._isotopePattern = tempFormula.calcIsotopePatternSlowly()'''
         #isotopePattern = copy.deepcopy(self._isotopePattern)
         self._neutralMass = self._isotopePattern['m/z'][0]
         self._avMass = np.sum(self._isotopePattern['calcInt']*self._isotopePattern['m/z']) / \

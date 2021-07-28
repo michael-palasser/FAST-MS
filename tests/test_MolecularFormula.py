@@ -1,9 +1,11 @@
+import time
 from unittest import TestCase
 import numpy as np
 from random import randint
 from src.fastFunctions import getByIndex
 
 from src.MolecularFormula import MolecularFormula
+from src.top_down.SpectrumHandler import calculateError
 
 molFormulaDummy = MolecularFormula('C5H4N3O')
 RNA_formulaDummy = MolecularFormula('C38H48N15O26P3')  # GACU
@@ -125,29 +127,98 @@ class MolecularFormulaTest(TestCase):
                 print(calcIsotopePattern)
                 raise AssertionError(molFormulaDummy_i.getFormulaDict())
 
-    def testIsotopePattern(self, theoIsotopePattern=None, calcIsotopePattern=None):
+    def testIsotopePattern(self, theoIsotopePattern=None, calcIsotopePattern=None, complete=True, max_ppm=0.5,
+                           deltaCalcInt=5*10e-6):
         if theoIsotopePattern is not None:
             # theoIsotopePattern = np.array(theoIsotopePattern, dtype=[('m/z', np.float64), ('calcInt', np.float64)])
             theoIsotopePattern['calcInt'] *= (calcIsotopePattern['calcInt'][0] / theoIsotopePattern['calcInt'][0])
             if len(theoIsotopePattern) > (len(calcIsotopePattern) + 1):
                 raise Exception('Length of calculated isotope pattern to short')
-            for i in range(len(theoIsotopePattern)):
-                self.assertAlmostEqual(theoIsotopePattern[i]['m/z'], calcIsotopePattern[i]['m/z'], delta=5 * 10 ** (-6))
+            for i in range(min(len(theoIsotopePattern),len(calcIsotopePattern))):
+                self.assertLess(np.abs(calculateError(theoIsotopePattern[i]['m/z'], calcIsotopePattern[i]['m/z'])),max_ppm)
+                #self.assertAlmostEqual(theoIsotopePattern[i]['m/z'], calcIsotopePattern[i]['m/z'], delta=5 * 10 ** (-6))
                 self.assertAlmostEqual(theoIsotopePattern[i]['calcInt'], calcIsotopePattern[i]['calcInt'],
-                                       delta=5 * 10 ** (-6))
-            self.assertAlmostEqual(1.0, float(np.sum(calcIsotopePattern['calcInt'])), delta=0.005)
+                                       delta=deltaCalcInt)
+            if complete:
+                self.assertAlmostEqual(1.0, float(np.sum(calcIsotopePattern['calcInt'])), delta=0.005)
             self.assertTrue(np.sum(calcIsotopePattern['calcInt']) < 1)
 
-    '''def test_calc_isotope_pattern_slowly(self):
-        self.fail()'''
 
-    def test_get_poisson_table(self):
+    def test_make_ffttables(self):
+        formDict = {'C': 100, 'H': 100, 'N': 55, 'O': 30, 'S': 1, 'Na': 1}
+        formula = MolecularFormula(formDict)
+        abundanceTable, elemNrs,dm = formula.makeFFTTables(formula.calculateMonoIsotopic())
+        periodicTable = formula.getPeriodicTable()
+        checked = []
+        for i in range(len(abundanceTable)):
+            elem = list(formDict.keys())[i]
+            for isotope in periodicTable[elem]:
+                self.assertAlmostEqual(isotope[2], abundanceTable[i,int(round(isotope[1]))])
+                checked.append((i,int(round(isotope[1]))))
+            self.assertAlmostEqual(1,np.sum(abundanceTable[i]), delta=10e-4)
+        for valForm, valTable in zip(formDict.values(),elemNrs):
+            self.assertEqual(valForm,valTable)
+        self.assertAlmostEqual(self.getDm(formula), dm)
+
+    def getDm(self,formula):
+        formDict=formula.getFormulaDict()
+        periodicTable = formula.getPeriodicTable()
+        dm = []
+        for i,elem in enumerate(formDict.keys()):
+            mono = periodicTable[elem][0]
+            for isotope in periodicTable[elem]:
+                if formDict[elem] != 0:
+                    if isotope[0]-mono[0] != 0:
+                        dm_i = isotope[1]-mono[1]
+                        dm.append((dm_i/round(dm_i)*formDict[elem]*isotope[2],formDict[elem]*isotope[2]))
+        dm =np.array(dm)
+        return np.sum(dm[:, 0]) / np.sum(dm[:, 1])
+
+    def test_calculate_abundances_fft(self):
+        for i in range(20):
+            molFormulaDummy_i = MolecularFormula({'C': randint(5, 50), 'H': randint(10, 100),
+                                                  'N': randint(1, 40), 'O': randint(1, 40),
+                                                  'P': randint(0, 2), 'S': randint(0, 2)})
+            #exactIsotopePattern = molFormulaDummy_i.calculateIsotopePattern()
+            abundanceTable, elemNrs, _ = molFormulaDummy_i.makeFFTTables(molFormulaDummy_i.calculateMonoIsotopic())
+            fastIsotopePattern = molFormulaDummy.calculateAbundancesFFT(abundanceTable, elemNrs)
+            try:
+                sumInt = np.sum(np.array(fastIsotopePattern)[:,1])
+                self.assertAlmostEqual(1.0, sumInt, delta=0.004)
+                self.assertTrue(sumInt < 1)
+            except AssertionError:
+                print(fastIsotopePattern)
+                raise AssertionError(molFormulaDummy_i.getFormulaDict())
+
+    def test_calculate_isotope_pattern_fft(self):
+        for i in range(5):
+            molFormulaDummy_i = MolecularFormula({'C': randint(50, 500), 'H': randint(100, 1000),
+                                                  'N': randint(10, 400), 'O': randint(10, 400),
+                                                  'P': randint(0, 20), 'S': randint(0, 20)})
+            exactIsotopePattern = molFormulaDummy_i.calculateIsotopePattern()
+            fastIsotopePattern = molFormulaDummy_i.calculateIsotopePatternFFT(1)
+            '''print(molFormulaDummy_i)
+            print(exactIsotopePattern)
+            print(fastIsotopePattern)'''
+            self.testIsotopePattern(exactIsotopePattern,fastIsotopePattern,max_ppm=1, deltaCalcInt=10e-4)
+
+
+
+    def test_calc_isotope_pattern_slowly(self):
+        length = 2
+        isotopePattern = RNA_formulaDummy.calcIsotopePatternPart(length)
+        self.assertEqual(length,len(isotopePattern))
+        self.testIsotopePattern(RNA_pattern[:length], isotopePattern, False)
+
+    '''def test_get_poisson_table(self):
         formula = MolecularFormula('C1000H1000N550O300S10')
         print(formula.makeIsotopeTable())
         print(formula.makePoissonTable())
 
-
     def test_calculate_poisson_isotope_pattern(self):
         formula = MolecularFormula('C100H100N55O30S1')
         print(formula.makePoissonTable())
-        print(formula.calculatePoissonIsotopePattern(5))
+        print(formula.calculatePoissonIsotopePattern(5))'''
+
+
+

@@ -96,7 +96,7 @@ class IsotopePatternRepository(object):
         :raises InvalidIsotopePatternException if not equal
         '''
         #newPattern = fragment.getFormula().calcIsotopePatternSlowly(3)
-        newPattern = fragment.getFormula().calcIsotopePatternSlowly(3)
+        newPattern = fragment.getFormula().calculateIsotopePattern(3)
         '''if len(savedPattern)!=len(newPattern):
             raise InvalidIsotopePatternException(fragment.getName(), " length of fragment pattern incorrect " +
                                                 str(len(savedPattern)) + "(old) != " + str(len(newPattern)))'''

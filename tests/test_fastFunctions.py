@@ -220,12 +220,12 @@ class fastFunctions_Test(TestCase):
         isotopeTable = MolecularFormula('C5H5N5OP').makeIsotopeTable()
         self.assertEqual(2, len(f.loopThroughIsotopes(0, isotopeTable, [(0., 0.)], 0)))
 
-
-    def test_fact(self):
-        self.assertEqual(math.factorial(10),f.fact(10))
-
+    """def test_fact(self):
+        self.assertEqual(math.factorial(10), f.fact(10))"""
 
     '''def test_calculate_poisson_percentage(self):
         poissonElement = np.array((100,1.2,1.01),
                                   dtype=[('nr', float),('lambda',float), ('mass',float)])
         self.assertAlmostEqual(poisson.pmf(6,poissonElement['lambda']),f.calculatePoissonPercentage(poissonElement, 6)[1])'''
+
+

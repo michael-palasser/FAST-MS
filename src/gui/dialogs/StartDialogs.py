@@ -97,6 +97,8 @@ class TDStartDialog(StartDialog):
             newSettings['spectralData'] += '.txt'
         try:
             newSettings = self.checkValues(newSettings)
+            if newSettings['nrMod'] == 0:
+                newSettings['modifications'] = '-'
             return newSettings
         except InvalidInputException as e:
             traceback.print_exc()

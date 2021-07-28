@@ -102,6 +102,7 @@ class SearchRepository(AbstractRepository):
             elif ionVals[14] == 1:
                 delIons.append(ion)
             else:
+                print('rep', ionVals[14], ion.getHash(), ion.getComment())
                 remIons.append(ion)
         searchedZStates = {ionVals[1]:ionVals[2] for ionVals in self.getItems(searchVals[0], 'chargeStates')}
         print(self.getItems(searchVals[0], 'logs'))
@@ -131,7 +132,7 @@ class SearchRepository(AbstractRepository):
         searchId = self.create(search.getVals())
         self.insertItems(searchId, search.getIons(), 0)
         self.insertItems(searchId, search.getDeletedIons(), 1)
-        self.insertItems(searchId, search.getIons(), 2)
+        self.insertItems(searchId, search.getRemIons(), 2)
         self.createItem('logs', (search.getInfo().toString(), searchId))
         [self.createItem('chargeStates', [frag,zList, searchId]) for frag,zList in search.getSearchedZStates().items()]
 

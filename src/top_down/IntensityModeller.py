@@ -38,11 +38,15 @@ class IntensityModeller(object):
     def getRemodelledIons(self):
         return self._remodelledIons
 
-    def addRemodelledIon(self, ion):
-        self._remodelledIons.append(ion)
-        ion.addComment('man.mod.')
-        self._correctedIons[ion.getHash()]= ion
-        return ion
+    def addRemodelledIon(self, newIon, index):
+        newIon.addComment('man.mod.')
+        if index == 0:
+            self._remodelledIons.append(self._correctedIons[newIon.getHash()])
+            self._correctedIons[newIon.getHash()]= newIon
+        else:
+            self._remodelledIons.append(self._deletedIons[newIon.getHash()])
+            self._deletedIons[newIon.getHash()]= newIon
+        return newIon
 
     def addNewIon(self,ion):
         ion.addComment('new')
@@ -224,7 +228,7 @@ class IntensityModeller(object):
 
     def deleteSameMonoisotopics(self, ions):
         for ion in ions:
-            self.deleteIon(ion.getHash(), "mono.,")
+            self.deleteIon(ion.getHash(), "mono.")
 
     def deleteIon(self, ionHash, comment):
         self._correctedIons[ionHash].addComment(comment)
@@ -415,7 +419,7 @@ class IntensityModeller(object):
                         overlapThreshold = 0
                     if val * len(undeletedIons) < overlapThreshold:
                         self._remodelledIons.append(deepcopy(self._correctedIons[ion]))
-                        self._correctedIons[ion].addComment("low:" + str(round(val, 2))+',')
+                        self._correctedIons[ion].addComment("low:" + str(round(val, 2)))
                         factor=0
                         if val > 0:
                             factor = val
@@ -434,16 +438,16 @@ class IntensityModeller(object):
                 else:
                     sum_int = 0
                     for ion, val in zip(undeletedIons,solution.x):
+                        self._remodelledIons.append(deepcopy(self._correctedIons[ion]))
                         if val < 1.05:  # no outlier calculation during remodelling --> results can be higher than without remodelling
                             factor = val
                         elif 'high' not in self._correctedIons[ion].getComment():
                             factor = 1.05
                             print("  ", ion, " not remodeled (val=", round(val,2), ")")
-                            self._correctedIons[ion].addComment("high," + str(round(val, 2)) + ',')
+                            self._correctedIons[ion].addComment("high," + str(round(val, 2)))
                         else:
                             factor = 1
                             print("  ", ion, " not remodeled (val=", round(val,2), ")")
-                        self._remodelledIons.append(deepcopy(self._correctedIons[ion]))
                         self._correctedIons[ion].setIsotopePatternPart('calcInt',
                             self._correctedIons[ion].getIsotopePattern()['calcInt'] * factor)
                         self._correctedIons[ion].setIntensity(self._correctedIons[ion].getIntensity() * factor)
@@ -466,10 +470,10 @@ class IntensityModeller(object):
         '''
         hash = ion.getHash()
         if hash in self._correctedIons.keys():
-            comment = 'man.del.,'
+            comment = 'man.del.'
             oldDict, newDict = self._correctedIons, self._deletedIons
         elif hash in self._deletedIons.keys():
-            comment = 'man.undel.,'
+            comment = 'man.undel.'
             oldDict, newDict = self._deletedIons, self._correctedIons
         else:
             raise Exception("Ion " + ion.getName() + ", " + str(ion.getCharge()) + " unknown!")
@@ -556,6 +560,7 @@ class IntensityModeller(object):
         :return: (float) modelled intensity of the ion
         '''
         values = np.array(values)
+        print(ion.getIntensity(), values)
         ion.setIsotopePatternPart('relAb', values[:,0])
         ion.setIsotopePatternPart('used', values[:,1])
         return self.modelIon(ion)[0]

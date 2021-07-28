@@ -135,7 +135,7 @@ class MolecularFormulaTest(TestCase):
             if len(theoIsotopePattern) > (len(calcIsotopePattern) + 1):
                 raise Exception('Length of calculated isotope pattern to short')
             for i in range(min(len(theoIsotopePattern),len(calcIsotopePattern))):
-                self.assertLess(calculateError(theoIsotopePattern[i]['m/z'], calcIsotopePattern[i]['m/z']),max_ppm)
+                self.assertLess(np.abs(calculateError(theoIsotopePattern[i]['m/z'], calcIsotopePattern[i]['m/z'])),max_ppm)
                 #self.assertAlmostEqual(theoIsotopePattern[i]['m/z'], calcIsotopePattern[i]['m/z'], delta=5 * 10 ** (-6))
                 self.assertAlmostEqual(theoIsotopePattern[i]['calcInt'], calcIsotopePattern[i]['calcInt'],
                                        delta=deltaCalcInt)

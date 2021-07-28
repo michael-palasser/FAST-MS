@@ -219,7 +219,6 @@ class ExcelWriter(BasicExcelWriter):
         self._format5digit = self._workbook.add_format({'num_format': '0.00000'})
 
 
-
     def toExcel(self, analyser, intensityModeller, properties, fragmentLibrary, settings, spectrumHandler, infoString):
         '''
         Write results of top-down MS analysis to xlsx file

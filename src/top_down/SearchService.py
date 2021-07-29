@@ -45,7 +45,7 @@ class SearchService(object):
         :param (list[FragmentIon]) deletedIons: deleted ions
         :param (list[FragmentIon]) remIons: remodelled ions
         :param (dict[str, list[int]]) searchedZStates: calculated charge states per fragment
-        :param (str) info: information log
+        :param (Info) info: information log
         '''
         ions = [self.ionToDB(ion) for ion in ions]
         deletedIons = [self.ionToDB(ion) for ion in deletedIons]

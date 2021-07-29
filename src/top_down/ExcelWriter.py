@@ -95,7 +95,7 @@ class BasicExcelWriter(object):
             format = '0.0'
         self._worksheet1.write(row, 0, title)
         row+=1
-        self._worksheet1.write(row, 0, "base'")
+        self._worksheet1.write(row, 0, "building block'")
         self._worksheet1.write_column(row + 1, 0, sequence)
         self._worksheet1.write(row, 1, "#5'/N-term.")
         self._worksheet1.write_column(row + 1, 1, list(range(1, len(sequence) + 1)))
@@ -104,7 +104,7 @@ class BasicExcelWriter(object):
             forwFrags = args[0]
             backFrags = args[1]
         else:
-            forwFrags = ['a', 'b', 'c', 'd']
+            forwFrags = ['a', 'b', 'c', 'd']  #ToDo
             backFrags = ['w', 'x', 'y', 'z']
         for key in sorted(list(valueDict.keys())):
             currentRow = row
@@ -307,7 +307,7 @@ class ExcelWriter(BasicExcelWriter):
         self._worksheet1.write(row, 0, ("analysis:"))
         row+=1
         if modLoss != None:
-            self._worksheet1.write(row, 0, 'modification_loss:')
+            self._worksheet1.write(row, 0, 'modification loss:')
             self._worksheet1.write(row, 1, modLoss, self._percentFormat)
             row +=1
         row +=1

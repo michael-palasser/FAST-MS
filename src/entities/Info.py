@@ -64,6 +64,10 @@ class Info(object):
     def repeatModelling(self):
         self._infoString += '\n* Repeated modelling overlaps'
 
+    def resetIon(self, ion):
+        self._infoString += '\n* reset ' + self.ionToString(ion)
+
+
     def export(self):
         self._infoString += '\n* Exported to Excel: ' + datetime.now().strftime("%d/%m/%Y %H:%M")
 

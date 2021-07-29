@@ -10,7 +10,6 @@ import os
 
 import numpy as np
 import time
-from functools import partial
 import pandas as pd
 from PyQt5 import QtWidgets, QtCore
 
@@ -20,6 +19,7 @@ from src.entities.Info import Info
 from src.gui.AbstractMainWindows import SimpleMainWindow
 from src.gui.GUI_functions import connectTable
 from src.gui.IsotopePatternView import AddIonView
+from src.gui.tableviews.FragmentationTable import FragmentationTable
 from src.gui.widgets.InfoView import InfoView
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.repositories.IsotopePatternRepository import IsotopePatternRepository
@@ -239,13 +239,15 @@ class TD_MainController(object):
                                                          'Add new ion':(self.addNewIonView, 'Add an ion manually', None)}, None)
         self._actions.update(actions)
         _,actions = self._mainWindow.createMenu("Show",
-                                                {'Results': (self._mainWindow.show, 'Show lists of observed and deleted ions', None),
+                {'Results': (self._mainWindow.show, 'Show lists of observed and deleted ions', None),
+                 'Original Values':(self.showRemodelledIons,'Show original values of overlapping ions',None),
+                 'Info File':(self._infoView.show,'Show Protocol',None)}, None)
+        _,actions = self._mainWindow.createMenu("Analysis",
+                {'Fragmentation': (self.showFragmentation, 'Show fragmentation efficiencies (% of each fragment type)', None),
                  'Occupancy-Plot': (self.showOccupancyPlot,'Show occupancies as a function of sequence pos.',None),
                  'Charge-Plot': (lambda: self.showChargeDistrPlot(False),'Show av. charge as a function of sequence pos. (Calculated with Int. values)',None),
                  'Reduced Charge-Plot':(lambda: self.showChargeDistrPlot(True),'Show av. charge as a function of sequence pos. (Calculated with Int./z values)',None),
-                 'Sequence Coverage': (self.dumb,'Show sequence coverage',None),
-                 'Original Values':(self.showRemodelledIons,'Show original values of overlapping ions',None),
-                 'Info File':(self._infoView.show,'Show Protocol',None)}, None)
+                 'Sequence Coverage': (self.dumb,'Show sequence coverage',None)}, None)
         self._actions.update(actions)
         if self._settings['modifications'] == '-':
             self._actions['Occupancy-Plot'].setDisabled(True)
@@ -381,12 +383,23 @@ class TD_MainController(object):
                     self._info.deleteIon(selectedIon)
                 else:
                     self._info.restoreIon(selectedIon)
-                self._infoView.update()
                 self._saved = False
-                self._intensityModeller.switchIon(selectedIon)
+                ovHash = self._intensityModeller.switchIon(selectedIon)
                 table.model().removeData(selectedRow)
                 self._tables[other].model().addData(selectedIon.getMoreValues())
                 print(actionStrings[mode]+"d",selectedRow, selectedHash)
+                if ovHash is not None:
+                    choice = QtWidgets.QMessageBox.question(self._mainWindow, "Attention",
+                                                            'Deleted Ion overlapped with '+ovHash[0]+', '+str(ovHash[1])+'\n'+
+                                                            'Should this ion be updated?',
+                                                            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+                    if choice == QtWidgets.QMessageBox.Yes:
+                        ion = self._intensityModeller.resetIon(ovHash)
+                        self._info.resetIon(ion)
+                        self._tables[mode].model().updateData(ion.getMoreValues())
+                self._infoView.update()
+
+
 
 
 
@@ -484,7 +497,7 @@ class TD_MainController(object):
                 outputPath = os.path.join(path, 'Spectral_data', 'top-down')
             output = os.path.join(outputPath, filename)
             excelWriter = ExcelWriter(output, self._configs, newOptions)
-            self._analyser.setIons(list(self._intensityModeller.getObservedIons().values()))
+            self._analyser.setIons(self.getIonList())
             try:
                 excelWriter.toExcel(self._analyser, self._intensityModeller, self._propStorage,
                                     self._libraryBuilder.getFragmentLibrary(), self._settings, self._spectrumHandler,
@@ -581,6 +594,15 @@ class TD_MainController(object):
     '''def showLogFile(self):
         self._infoView.show()'''
 
+    def getIonList(self):
+        return list(self._intensityModeller.getObservedIons().values())
+
+    def showFragmentation(self):
+        self._analyser.setIons(self.getIonList())
+        fragmentationView = FragmentationTable([(type,val) for type,val in
+                                                self._analyser.calculateRelAbundanceOfSpecies().items()])
+        self._openWindows.append(fragmentationView)
+
     def showOccupancyPlot(self):
         '''
         Makes a widget with the occupancy plot and a table with the corresponding values
@@ -589,7 +611,7 @@ class TD_MainController(object):
         modification,ok = QtWidgets.QInputDialog.getText(self._mainWindow,'Occupancy Plot', 'Enter the modification: ',
                                                          text=self._propStorage.getModificationName())
         if ok and modification!='':
-            self._analyser.setIons(list(self._intensityModeller.getObservedIons().values()))
+            self._analyser.setIons(self.getIonList())
             percentageDict = self._analyser.calculateOccupancies(self._configs.get('interestingIons'), modification,
                                                                  self._propStorage.getUnimportantModifs())
             '''if percentageDict == None:
@@ -604,7 +626,8 @@ class TD_MainController(object):
             plotFactory.showOccupancyPlot(self._propStorage.getSequenceList(), forwardVals, backwardVals,
                                           self._settings['nrMod'], modification)
             occupView = PlotTableView(self._analyser.toTable(forwardVals.values(), backwardVals.values()),
-                                           list(percentageDict.keys()), 'Occupancies: '+modification, 3)
+                                           list(percentageDict.keys()), 'Occupancies: '+modification, 3,
+                                      self._analyser.getModificationLoss())
             self._openWindows.append(occupView)
 
 
@@ -613,7 +636,7 @@ class TD_MainController(object):
         Makes a widget with the charge plot and a table with the corresponding values
         :param (bool) reduced: True if the ion intensities should be divided by their charge
         '''
-        self._analyser.setIons(list(self._intensityModeller.getObservedIons().values()))
+        self._analyser.setIons(self.getIonList())
         chargeDict, minMaxCharges = self._analyser.analyseCharges(self._configs.get('interestingIons'), reduced)
         plotFactory1 = PlotFactory(self._mainWindow)
         #plotFactory2 = PlotFactory(self._mainWindow)
@@ -656,7 +679,7 @@ class TD_MainController(object):
         searchService.saveSearch(self._savedName, self._settings, self._intensityModeller.getObservedIons().values(),
                                  self._intensityModeller.getDeletedIons().values(),
                                  self._intensityModeller.getRemodelledIons(),
-                                 self._spectrumHandler.getSearchedChargeStates(), self._info.toString())
+                                 self._spectrumHandler.getSearchedChargeStates(), self._info)
         self._saved = True
         print('done')
         self._infoView.update()

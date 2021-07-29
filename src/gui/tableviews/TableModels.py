@@ -186,3 +186,6 @@ class PeakTableModel(AbstractTableModel):
         if role == QtCore.Qt.DisplayRole:
             if orientation == QtCore.Qt.Horizontal:
                 return ('m/z','z','intensity','fragment','error /ppm', 'used')[section]"""
+
+
+

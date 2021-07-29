@@ -102,10 +102,8 @@ class SearchRepository(AbstractRepository):
             elif ionVals[14] == 1:
                 delIons.append(ion)
             else:
-                print('rep', ionVals[14], ion.getHash(), ion.getComment())
                 remIons.append(ion)
         searchedZStates = {ionVals[1]:ionVals[2] for ionVals in self.getItems(searchVals[0], 'chargeStates')}
-        print(self.getItems(searchVals[0], 'logs'))
         log = self.getItems(searchVals[0], 'logs')[0][1]
         return Search(searchVals, ions, delIons, remIons, searchedZStates, log)
 
@@ -227,3 +225,13 @@ class SearchRepository(AbstractRepository):
         '''
         #id = super(AbstractRepositoryWith2Items, self).delete(name)
         self.deleteDependentTables(super(SearchRepository, self).delete(searchName))
+
+
+'''if __name__ == '__main__':
+    string = ""
+    with open('log39.txt') as f:
+        for line in f:
+            string+=line
+        print(string)
+        rep = SearchRepository()
+        rep.createItem('logs', (string, 39))'''

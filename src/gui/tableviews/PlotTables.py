@@ -1,10 +1,9 @@
 from math import isnan
 
-import pandas as pd
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import Qt
 
-from src.gui.GUI_functions import connectTable
+from src.gui.GUI_functions import connectTable, showOptions
 from src.gui.tableviews.TableModels import AbstractTableModel
 
 
@@ -40,15 +39,26 @@ class PlotTableView(QtWidgets.QWidget):
     '''
     Widget with QTableView showing occupancies, av. charges, ... of each fragment
     '''
-    def __init__(self, data, keys, title, precision):
+    def __init__(self, data, keys, title, precision, firstLine = None):
         super().__init__(parent=None)
         verticalLayout = QtWidgets.QVBoxLayout(self)
+        self._translate = QtCore.QCoreApplication.translate
+        if firstLine is not None:
+            horizontalWidget = QtWidgets.QWidget(self)
+            formLayout = QtWidgets.QFormLayout(horizontalWidget)
+            label = QtWidgets.QLabel(horizontalWidget)
+            label.setText(self._translate(self.objectName(), 'prec. mod. loss:'))
+            formLayout.setWidget(0, QtWidgets.QFormLayout.LabelRole, label)
+            valLabel = QtWidgets.QLabel(horizontalWidget)
+            valLabel.setText(self._translate(self.objectName(), str(round(firstLine*100,1))+' %'))
+            valLabel.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse | QtCore.Qt.TextSelectableByKeyboard)
+            formLayout.setWidget(0, QtWidgets.QFormLayout.FieldRole, valLabel)
+            verticalLayout.addWidget(horizontalWidget)
         scrollArea = QtWidgets.QScrollArea(self)
         #_scrollArea.setGeometry(QtCore.QRect(10, 10, len(data[0])*50+200, len(data)*22+25))
         scrollArea.setWidgetResizable(True)
         # _scrollArea.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         # _scrollArea.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-
         model = PlotTableModel(data, keys,precision)
         self._table = QtWidgets.QTableView(self)
         self._table.setSortingEnabled(True)
@@ -56,14 +66,13 @@ class PlotTableView(QtWidgets.QWidget):
         self._table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         self._table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         #self._table.setSelectionBehavior(QAbstractItemView.SelectRows)
-        connectTable(self._table,self.showOptions)
+        connectTable(self._table,showOptions)
         '''self._table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self._table.customContextMenuRequested['QPoint'].connect(partial(self.showOptions, self._table))'''
         scrollArea.setWidget(self._table)
         #self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         #self._table.move(0,0)
         self.setObjectName(title)
-        self._translate = QtCore.QCoreApplication.translate
         self.setWindowTitle(self._translate(self.objectName(), self.objectName()))
         self._table.resizeColumnsToContents()
         self._table.resizeRowsToContents()
@@ -71,10 +80,10 @@ class PlotTableView(QtWidgets.QWidget):
         #self.resize(len(data[0])*50+200, len(data)*22+25)
         self.show()
 
-    def showOptions(self, table, pos):
+    '''def showOptions(self, table, pos):
         menu = QtWidgets.QMenu()
         copyAction = menu.addAction("Copy Table")
         action = menu.exec_(table.viewport().mapToGlobal(pos))
         if action == copyAction:
             df=pd.DataFrame(data=self._table.model().getData(), columns=self._table.model().getHeaders())
-            df.to_clipboard(index=False,header=True)
+            df.to_clipboard(index=False,header=True)'''

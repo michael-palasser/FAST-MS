@@ -4,6 +4,7 @@ Created on 6 Aug 2020
 @author: michael
 '''
 import logging
+from re import findall
 
 import numpy as np
 from copy import deepcopy
@@ -469,9 +470,12 @@ class IntensityModeller(object):
         :param (FragmentIon) ion: corresponding ion
         '''
         hash = ion.getHash()
+        returnedHash=None
         if hash in self._correctedIons.keys():
             comment = 'man.del.'
             oldDict, newDict = self._correctedIons, self._deletedIons
+            print('switchIon',hash)
+            returnedHash = self.checkForOverlaps(ion)
         elif hash in self._deletedIons.keys():
             comment = 'man.undel.'
             oldDict, newDict = self._deletedIons, self._correctedIons
@@ -480,6 +484,44 @@ class IntensityModeller(object):
         ion.addComment(comment)
         newDict[hash] = ion
         del oldDict[hash]
+        return returnedHash
+
+    def checkForOverlaps(self, ion):
+        '''
+        Checks if an ion which should be deleted overlaps with another ion
+        :param (FragmentIon) ion: corresponding ion
+        :return: (str) hash of overlapping ion
+        '''
+        overlappingIons = findall('\[(.*?)\]', ion.getComment())
+        print('checkForOverlaps1',overlappingIons, ion.getComment())
+        print(self._correctedIons.keys())
+        if len(overlappingIons)>0:
+            ionStrings = overlappingIons[-1].split(',')
+            print('checkForOverlaps2',ionStrings)
+            counter=0
+            returnedHash=None
+            for ionString in ionStrings:
+                vals = ionString.split('_')
+                ionHash = (vals[0], int(vals[1]))
+                print('checkForOverlaps3',ionHash, ionHash in self._correctedIons.keys())
+                if ionHash in self._correctedIons.keys():
+                    counter+=1
+                    returnedHash=ionHash
+            if counter==1:
+                return returnedHash
+        return None
+
+    def resetIon(self, ionHash):
+        '''
+        Repeats modelling step for one ion
+        :param ionHash:
+        :return:
+        '''
+        ion = self._correctedIons[ionHash]
+        self._correctedIons[ionHash] = self.calculateIntensity(ion)
+        self._correctedIons[ionHash].addComment(ion.getComment())
+        self._correctedIons[ionHash].addComment('reset')
+        return self._correctedIons[ionHash]
 
     def getAdjacentIons(self, ionHash):
         '''

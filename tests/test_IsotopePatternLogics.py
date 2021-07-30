@@ -175,7 +175,7 @@ class TestIsotopePatternLogics(TestCase):
             newFragDict[name] = frag
         properties = self.getProperties(searchSettings)
         for fragTemp in searchSettings.getFragmentation().getItems() + searchSettings.getFragmentation().getItems2():
-            if not fragTemp.enabled():
+            if not fragTemp.isEnabled():
                 continue
             fragTempName = fragTemp.getName()
             if fragTempName[0] in ['a', 'b', 'c', 'd']:
@@ -191,7 +191,7 @@ class TestIsotopePatternLogics(TestCase):
             self.assertIn(name, newFragDict.keys())
             self.assertEqual(fragment.getFormula().getFormulaDict(), newFragDict[name].getFormula().getFormulaDict())
             for modTemp in searchSettings.getModification().getItems():
-                if not modTemp.enabled():
+                if not modTemp.isEnabled():
                     continue
                 for nrMod in range(1, 3):
                     fragment = self.logics.getFragment(mode, sequ, properties['fragmentationName'], fragTempName,

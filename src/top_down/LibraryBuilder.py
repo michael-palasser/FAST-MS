@@ -5,11 +5,14 @@ Created on 21 Jul 2020
 '''
 from re import search as reSearch
 from multiprocessing import Pool
+import logging
 
 from src.Exceptions import InvalidInputException
 from src.MolecularFormula import MolecularFormula
 from src.entities.Ions import Fragment
 
+logging.basicConfig(level=logging.INFO)
+logging.basicConfig(filename='logfile_LibraryBuilder.log',level=logging.INFO)
 
 class FragmentLibraryBuilder(object):
     '''
@@ -35,7 +38,6 @@ class FragmentLibraryBuilder(object):
         self.__modifPattern = properties.getModification()
         self.__maxMod = maxMod
         self.__fragmentLibrary = list()
-        #self.__importantModifications = set()
         self.__precursor = None
 
 
@@ -60,7 +62,7 @@ class FragmentLibraryBuilder(object):
         monomers = self.__molecule.getBBDict()
         for link in sequ:
             if link not in monomers.keys():
-                print("problem at", length)
+                logging.error("problem at "+ str(length)+', '+link+ ': building block unkown')
                 raise InvalidInputException(link, 'building block unkown')
             formula = formula.addFormula(monomers[link].getFormula())
             simpleLadder.append((sequ[:length],formula))
@@ -120,12 +122,12 @@ class FragmentLibraryBuilder(object):
                     continue
                 formula = linkFormula.addFormula(template.getFormula())
                 if self.checkForResidue(template.getResidue(), linkSequ):
-                    if (not formula.checkForNegativeValues()) and template.enabled():
+                    if (not formula.checkForNegativeValues()) and template.isEnabled():
                         ladder.append(Fragment(species, len(linkSequ), rest, formula, linkSequ,
                                                templateRadicals))
                         for nrMod in range(1, self.__maxMod + 1):
                             for modif in self.__modifPattern.getItems():
-                                if modif.enabled():
+                                if modif.isEnabled():
                                     modifName = modif.getName()
                                     formula = linkFormula.addFormula(template.getFormula(),
                                                 MolecularFormula(modif.getFormula()).multiplyFormula(nrMod).getFormulaDict())
@@ -175,7 +177,7 @@ class FragmentLibraryBuilder(object):
         #return
         basicFormula = simpleFormula.addFormula(self.__molecule.getFormula())
         for precTemplate in self.__fragmentation.getItems2():
-            if precTemplate.enabled():
+            if precTemplate.isEnabled():
                 #templateName = precTemplate.getName()
                 species, templateName = self.processTemplateName(precTemplate.getName())
                 #print(species, templateName)
@@ -187,7 +189,7 @@ class FragmentLibraryBuilder(object):
                     self.__precursor = newFragment
                 for nrMod in range(1, self.__maxMod + 1):
                     for modifTemplate in self.__modifPattern.getItems():
-                        if modifTemplate.enabled():
+                        if modifTemplate.isEnabled():
                             modifName = modifTemplate.getName()
                             name = modifName + templateName
                             if self.__maxMod > 1:
@@ -206,10 +208,13 @@ class FragmentLibraryBuilder(object):
         '''
         Creates the final fragment library (list of Fragments). Stored in self.__fragmentLibrary
         '''
+        logging.info("********** Creating fragment library **********")
         if len(self.__modifPattern.getExcluded())>0:
-            print('These nrOfModifications are excluded:')
-            for elem in self.__modifPattern.getExcluded():
-                print(elem)
+            #print('These nrOfModifications are excluded:')
+            logging.info('These nrOfModifications are excluded: '
+                         +', '.join([elem for elem in self.__modifPattern.getExcluded()]))
+            '''for elem in self.__modifPattern.getExcluded():
+                print(elem)'''
         sequence = self.__sequence.getSequenceList()
         forwardFragments = self.createFragmentLadder(self.buildSimpleLadder(sequence), self.__fragmentation.getFragTemplates(1))
         simpleLadderBack = self.buildSimpleLadder(sequence[::-1])
@@ -219,6 +224,7 @@ class FragmentLibraryBuilder(object):
         #    print(frag.getName(),frag.formula.toString())
         self.__fragmentLibrary = forwardFragments + backwardFragments + precursorFragments
         self.__fragmentLibrary.sort(key=lambda obj:(obj.getType() , obj.getNumber()))
+        [logging.debug(fragment.getName()+': '+fragment.getFormula().toString()) for fragment in self.__fragmentLibrary]
         #for fragment in self.__fragmentLibrary:
             #print(fragment.getName(), fragment.formula.toString())
 
@@ -237,10 +243,13 @@ class FragmentLibraryBuilder(object):
         if self.__sequence.getMolecule() == 'Protein':
             criticalLength = 60
         if len(self.__sequence.getSequenceList())<criticalLength: #flag == 0:
+            logging.debug('Normal calculation')
             for fragment in self.__fragmentLibrary:
                 fragment.setIsotopePattern(fragment.getFormula().calculateIsotopePattern())
-                print(fragment.getName())
+                #print(fragment.getName())
+                logging.info('\t'+fragment.getName())
         else:
+            logging.debug('Parallel calculation')
             p = Pool()
             updatedFragmentLibrary = p.map(self.calculateParallel, self.__fragmentLibrary)
             self.__fragmentLibrary = sorted(updatedFragmentLibrary, key=lambda obj:(obj.getType() , obj.getNumber()))
@@ -255,6 +264,7 @@ class FragmentLibraryBuilder(object):
         :return: (Fragment) fragment with isotopePattern
         '''
         fragment.setIsotopePattern(fragment.getFormula().calculateIsotopePattern())
-        print(fragment.getName())
+        #print(fragment.getName())
+        logging.info('\t'+fragment.getName())
         return fragment
 

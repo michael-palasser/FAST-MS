@@ -33,7 +33,7 @@ class IntactLibraryBuilder(object):
         unmodFormula = self.getUnmodifiedFormula()
         library = {"" : (unmodFormula.calculateMonoIsotopic(),0)}
         for item in self._modifications.getItems():
-            if item.enabled():
+            if item.isEnabled():
                 modFormula = unmodFormula.addFormula(item.getFormula())
                 library[item.getName()] = (modFormula.calculateMonoIsotopic(),item.getNrMod())
         return library

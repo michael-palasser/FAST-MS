@@ -474,7 +474,6 @@ class IntensityModeller(object):
         if hash in self._correctedIons.keys():
             comment = 'man.del.'
             oldDict, newDict = self._correctedIons, self._deletedIons
-            print('switchIon',hash)
             returnedHash = self.checkForOverlaps(ion)
         elif hash in self._deletedIons.keys():
             comment = 'man.undel.'
@@ -493,17 +492,13 @@ class IntensityModeller(object):
         :return: (str) hash of overlapping ion
         '''
         overlappingIons = findall('\[(.*?)\]', ion.getComment())
-        print('checkForOverlaps1',overlappingIons, ion.getComment())
-        print(self._correctedIons.keys())
         if len(overlappingIons)>0:
             ionStrings = overlappingIons[-1].split(',')
-            print('checkForOverlaps2',ionStrings)
             counter=0
             returnedHash=None
             for ionString in ionStrings:
                 vals = ionString.split('_')
                 ionHash = (vals[0], int(vals[1]))
-                print('checkForOverlaps3',ionHash, ionHash in self._correctedIons.keys())
                 if ionHash in self._correctedIons.keys():
                     counter+=1
                     returnedHash=ionHash

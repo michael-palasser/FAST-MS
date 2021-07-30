@@ -93,8 +93,8 @@ class TestFragmentLibraryBuilder(TestCase):
 
     def getValues(self, storage, fragItems):
         sequenceList = self.propertyStorageRNA.getSequenceList()
-        modifications = [mod for mod in storage.getModification().getItems() if mod.enabled()]
-        frags = [frag for frag in fragItems if frag.enabled()]
+        modifications = [mod for mod in storage.getModification().getItems() if mod.isEnabled()]
+        frags = [frag for frag in fragItems if frag.isEnabled()]
         return sequenceList, modifications, frags
 
     def test_process_template_name(self):

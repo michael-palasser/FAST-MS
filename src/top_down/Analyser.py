@@ -3,6 +3,8 @@ Created on 10 Aug 2020
 
 @author: michael
 '''
+from copy import deepcopy
+
 import numpy as np
 
 class Analyser(object):
@@ -206,8 +208,48 @@ class Analyser(object):
             [table[i].append(val) for i, val in enumerate(reversed(vals[:-1]))]
         for i, bb in enumerate(self._sequence[1:]):
             table[i]+=[len(self._sequence)-i-1,bb]
-
         return table
+
+
+    def getSequenceCoverage(self, forwTypes):
+        '''
+        Determines the sequence coverage for each fragment type, for each direction (N-/5'-terminus etc.) and the
+        global sequence coverage
+        :param (list[str]) forwTypes: list of all forward (N-terminal, 5'-, ...) fragment types
+        :return: (dict[str,ndArray[bool]], dict[str,float], ndArray[bool])
+            coverages: dictionary (fragm. type:array) whereby each row index of the array represents the cleavage site -1
+                and the boolean values states if a fragment was found at the corresponding site.
+            calcCoverages: dictionary (fragm. type:value) whereby the values represent the proportion of coverage
+            overall: 2D array (1.column = forward direction, 2.column = forward direction, 3.column = global) whereby
+                each row index of the array represents the cleavage site -1 and the boolean values states if a fragment
+                was found at the corresponding site.
+        '''
+        print(forwTypes)
+        sequLength=len(self._sequence)-1
+        coverages = {}
+        calcCoverages = dict()
+        overall = np.zeros((sequLength,3))
+        arr = np.zeros(sequLength)
+        for ion in self._ions:
+            if ion.getNumber()==0:
+                continue
+            type = ion.getType()
+            if type not in coverages.keys():
+                coverages[type]= deepcopy(arr)
+            row = ion.getNumber()-1
+            if type not in forwTypes:
+                row = sequLength-ion.getNumber()
+            coverages[type][row] = 1
+        #overall = np.zeros(sequLength)
+        for type,val in coverages.items():
+            calcCoverages[type] = np.sum(val)/sequLength
+        overall[:,0] = np.any([val.astype(bool) for type,val in coverages.items() if type in forwTypes], axis=0)
+        calcCoverages['allForward'] = np.sum(overall[:,0])/sequLength
+        overall[:,1] = np.any([val.astype(bool) for type,val in coverages.items() if type not in forwTypes], axis=0)
+        calcCoverages['allBackward'] = np.sum(overall[:,1])/sequLength
+        overall[:,2] = np.any((overall[:,0],overall[:,1]), axis=0)
+        calcCoverages['all'] = np.sum(overall[:,2])/sequLength
+        return coverages, calcCoverages, overall
 
     '''def addColumn(self, table, vals):
         for i, val in enumerate(vals):

@@ -247,7 +247,7 @@ class TD_MainController(object):
                  'Occupancy-Plot': (self.showOccupancyPlot,'Show occupancies as a function of sequence pos.',None),
                  'Charge-Plot': (lambda: self.showChargeDistrPlot(False),'Show av. charge as a function of sequence pos. (Calculated with Int. values)',None),
                  'Reduced Charge-Plot':(lambda: self.showChargeDistrPlot(True),'Show av. charge as a function of sequence pos. (Calculated with Int./z values)',None),
-                 'Sequence Coverage': (self.dumb,'Show sequence coverage',None)}, None)
+                 'Sequence Coverage': (self.showSequenceCoverage,'Show sequence coverage',None)}, None)
         self._actions.update(actions)
         if self._settings['modifications'] == '-':
             self._actions['Occupancy-Plot'].setDisabled(True)
@@ -398,9 +398,6 @@ class TD_MainController(object):
                         self._info.resetIon(ion)
                         self._tables[mode].model().updateData(ion.getMoreValues())
                 self._infoView.update()
-
-
-
 
 
     def saveSingleIon(self, newIon):
@@ -652,6 +649,13 @@ class TD_MainController(object):
         '''plotFactory2.showChargePlot(self._libraryBuilder.getSequenceList(),
                                       self._libraryBuilder.filterByDir(redChargeDict,1),
                                       self._libraryBuilder.filterByDir(redChargeDict,-1),self._settings['charge'])'''
+
+    def showSequenceCoverage(self):
+        self._analyser.setIons(self._intensityModeller.getObservedIons().values())
+        coverages, calcCoverages, overall = self._analyser.getSequenceCoverage(self._propStorage.getFragmentsByDir(1))
+        print(coverages, calcCoverages, overall)
+        [print(i+1,overall[i][0],overall[i][1], len(self._propStorage.getSequenceList())-(i+1))
+         for i in range(len(self._propStorage.getSequenceList())-1)]
 
     def saveAnalysis(self):
         '''

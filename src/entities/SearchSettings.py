@@ -1,6 +1,21 @@
+from re import search as reSearch
+
 from src.Services import SequenceService, MoleculeService, FragmentationService, ModificationService
 from src.entities.GeneralEntities import BuildingBlock
 from src.entities.IonTemplates import FragItem, ModificationItem
+
+
+def processTemplateName(templName):
+    '''
+    Splits the name of a template into species and modification
+    :param (str) templName:
+    :return: (tuple[str,str]) species, modification
+    '''
+    search = reSearch(r"([+,-])", templName)
+    if search == None:
+        return templName, ""
+    # print('hey',templName[0:search.start()], templName[search.start():])
+    return templName[0:search.start()], templName[search.start():]
 
 
 class SearchSettings(object):
@@ -77,8 +92,8 @@ class SearchSettings(object):
         :param (int) dir: desired direction of the fragment templates (1 for forward, -1 for backward)
         :return: (list[FragItem]) list of filtered fragment templates
         '''
-        return [fragTemplate.getName() for fragTemplate in self.__fragmentation.getItems()
-                if fragTemplate.getDirection() == dir]
+        return {processTemplateName(fragTemplate.getName())[0] for fragTemplate in self.__fragmentation.getItems()
+                if fragTemplate.getDirection() == dir}
 
     def filterByDir(self, fragDict, dir):
         '''

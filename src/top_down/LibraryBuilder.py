@@ -3,16 +3,17 @@ Created on 21 Jul 2020
 
 @author: michael
 '''
-from re import search as reSearch
 from multiprocessing import Pool
 import logging
 
 from src.Exceptions import InvalidInputException
 from src.MolecularFormula import MolecularFormula
 from src.entities.Ions import Fragment
+from src.entities.SearchSettings import processTemplateName
 
 logging.basicConfig(level=logging.INFO)
 logging.basicConfig(filename='logfile_LibraryBuilder.log',level=logging.INFO)
+
 
 class FragmentLibraryBuilder(object):
     '''
@@ -115,7 +116,7 @@ class FragmentLibraryBuilder(object):
                 continue
             for template in fragTemplates:
                 #templateName = template.getName()
-                species, rest = self.processTemplateName(template.getName())
+                species, rest = processTemplateName(template.getName())
                 templateRadicals = template.getRadicals()
                 #if self.checkForProlines(templateName[0],linkSequ, basicLadder):
                 if self.checkForProlines(species,linkSequ, basicLadder[len(linkSequ)][0][-1]):
@@ -145,19 +146,6 @@ class FragmentLibraryBuilder(object):
         return ladder
 
 
-    @staticmethod
-    def processTemplateName(templName):
-        '''
-        Splits the name of a template into species and modification
-        :param (str) templName:
-        :return: (tuple[str,str]) species, modification
-        '''
-        search = reSearch(r"([+,-])",templName)
-        if search == None:
-            return templName, ""
-        #print('hey',templName[0:search.start()], templName[search.start():])
-        return templName[0:search.start()], templName[search.start():]
-
 
     def addPrecursor(self, simpleFormula):
         '''
@@ -169,7 +157,7 @@ class FragmentLibraryBuilder(object):
         precursorFragments = []
         sequence = self.__sequence.getSequenceList()
         sequenceName = self.__sequence.getName()
-        species, precName = self.processTemplateName(self.__fragmentation.getPrecursor())
+        species, precName = processTemplateName(self.__fragmentation.getPrecursor())
         if self.__maxMod == 1:
             precName = self.__modifPattern.getModification()
         elif self.__maxMod > 1:
@@ -179,7 +167,7 @@ class FragmentLibraryBuilder(object):
         for precTemplate in self.__fragmentation.getItems2():
             if precTemplate.isEnabled():
                 #templateName = precTemplate.getName()
-                species, templateName = self.processTemplateName(precTemplate.getName())
+                species, templateName = processTemplateName(precTemplate.getName())
                 #print(species, templateName)
                 tempFormula = basicFormula.addFormula(precTemplate.getFormula())
                 templateRadicals = precTemplate.getRadicals()

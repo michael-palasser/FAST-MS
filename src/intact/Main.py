@@ -45,7 +45,7 @@ def run():
     #with open(spectralFile) as f:
     #    finder.readData(f)
     finder.readData(configHandler.get('spectralData'))
-    finder.calibrate()
+    listOfCalibrationVals = finder.calibrate()
 
     """find ions"""
     print("\n********** finding ions **********")
@@ -68,7 +68,7 @@ def run():
     avCharges, avErrors, stddevs = analyser.calculateAvChargeAndError()
     try:
         excelWriter.writeAnalysis(listOfParameters, analyser.getSortedIonList(),
-                                  avCharges, avErrors, stddevs,
+                                  avCharges, avErrors, stddevs, listOfCalibrationVals,
                                   analyser.calculateAverageModification(),
                                   analyser.calculateModifications())
         print("saved in:", output)

@@ -130,6 +130,7 @@ class MolecularFormulaTest(TestCase):
     def testIsotopePattern(self, theoIsotopePattern=None, calcIsotopePattern=None, complete=True, max_ppm=0.5,
                            deltaCalcInt=5*10e-6):
         if theoIsotopePattern is not None:
+            print()
             # theoIsotopePattern = np.array(theoIsotopePattern, dtype=[('m/z', np.float64), ('calcInt', np.float64)])
             theoIsotopePattern['calcInt'] *= (calcIsotopePattern['calcInt'][0] / theoIsotopePattern['calcInt'][0])
             if len(theoIsotopePattern) > (len(calcIsotopePattern) + 1):
@@ -200,7 +201,12 @@ class MolecularFormulaTest(TestCase):
             '''print(molFormulaDummy_i)
             print(exactIsotopePattern)
             print(fastIsotopePattern)'''
-            self.testIsotopePattern(exactIsotopePattern,fastIsotopePattern,max_ppm=1, deltaCalcInt=10e-4)
+            try:
+                self.testIsotopePattern(exactIsotopePattern,fastIsotopePattern,max_ppm=1.5, deltaCalcInt=10e-4)
+            except AssertionError as e:
+                print(molFormulaDummy_i.toString())
+                print(exactIsotopePattern,fastIsotopePattern)
+                raise e
 
 
 

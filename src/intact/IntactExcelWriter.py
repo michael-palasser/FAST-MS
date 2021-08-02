@@ -52,11 +52,14 @@ class IntactExcelWriter(object):
             self._lastRow = row
         self._col = 6
 
-    def writeAvChargeAndError(self, worksheet, averageCharge, avError, stdDevOfErrors):
+    def writeGeneralAnalysis(self, worksheet, averageCharge, avError, stdDevOfErrors, calibrationVals):
         '''
-        Writes av. charge and av. error of one spectrum to xlsx file
+        Writes av. charge and the values of the calibration (av. error, std. dev. of the errors, and the parameters of
+        the calibration function) of one spectrum to xlsx file
         :param (float) averageCharge: average charge in a spectrum
         :param (float) avError:  average ppm error in a spectrum
+        :param (float) stdDevOfErrors:  std. dev. of the ppm errors in a spectrum
+        :param (tuple[float]) calibrationVals: the parameters (a,b,c) of the calibration function: y=ax^2+bx+c
         '''
         worksheet.write(self._row, self._col, 'av.charge:')
         worksheet.write(self._row + 1, self._col, averageCharge, self._format2digit)
@@ -65,6 +68,10 @@ class IntactExcelWriter(object):
         worksheet.write(self._row + 4, self._col+1, avError, self._format2digit)
         worksheet.write(self._row + 5, self._col, 'std.dev.:')
         worksheet.write(self._row + 5, self._col+1, stdDevOfErrors, self._format2digit)
+        row = self._row + 6
+        for i,key in enumerate(('a','b','c')):
+            worksheet.write(row + i, self._col, key)
+            worksheet.write(row + i, self._col+1, calibrationVals[i])
         self._col += 2
 
     def writeAverageMod(self, worksheet, avModifPerCharge):
@@ -118,15 +125,19 @@ class IntactExcelWriter(object):
         self._col = currentCol + 3
 
 
-    def writeAnalysis(self, listOfParameters, listsOfIons, avCharges,avErrors, stdDevsOfErrors,avModifPerCharges, modificationsInSpectra):
+    def writeAnalysis(self, listOfParameters, listsOfIons, avCharges,avErrors, stdDevsOfErrors, listOfCalibrationVals,
+                      avModifPerCharges, modificationsInSpectra):
         '''
         Writes the analysis to xlsx file
-        :param (dict[str,Any]) parameters: {name: value}
-        :param (list[list[IntactIon]]) listsOfIons: observed ions for each spectrum
-        :param (list[float]) avCharges: average charges in each spectrum
-        :param (list[float]) avErrors: average ppm error in each spectrum
-        :param (list[dict[int,float]]) avModifPerCharges: av. modifications {charge: av. modification} in each spectrum
-        :param (list[dict[str,ndarray(dtype=[int,float])]]) modificationsInSpectra:
+        :param (list[dict[str,Any]]) parameters: lists of {name: value}
+        :param (list[list[list[IntactIon]]]) listsOfIons: observed ions for each spectrum
+        :param (list[list[float]]) avCharges: average charges in each spectrum
+        :param (list[list[float]]) stdDevsOfErrors: list of std. dev. of the ppm errors in each spectrum
+        :param (list[list[tuple[float]]]) listOfCalibrationVals: list of the parameters (a,b,c) of the calibration
+            function (y=ax^2+bx+c) for each spectrum
+        :param (list[list[dict[int,float]]]) avModifPerCharges: av. modifications {charge: av. modification} in each
+            spectrum
+        :param (list[list[dict[str,ndarray(dtype=[int,float])]]]) modificationsInSpectra:
             {modification: 2D array of [(charge,percentage)])} for each spectrum
         '''
         self._worksheets = [self._workbook.add_worksheet() for _ in range(len(listOfParameters))]
@@ -142,7 +153,8 @@ class IntactExcelWriter(object):
                 worksheet.write(self._row, 0, 'spectralFile ' + str(j + 1))
                 self._row+=1
                 self.writeIons(worksheet, listsOfIons[i][j])
-                self.writeAvChargeAndError(worksheet, avCharges[i][j], avErrors[i][j],stdDevsOfErrors[i][j])
+                self.writeGeneralAnalysis(worksheet, avCharges[i][j], avErrors[i][j], stdDevsOfErrors[i][j],
+                                          listOfCalibrationVals[i][j])
                 self.writeAverageMod(worksheet, avModifPerCharges[i][j])
                 self.writeModifications(worksheet, modificationsInSpectra[i][j])
                 self._row = self._lastRow + 2

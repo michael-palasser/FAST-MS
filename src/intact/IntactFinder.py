@@ -30,6 +30,7 @@ class Finder(object):
         self._configHandler = configHandler
         self._data = list()
         self._foundIons = list()
+        self._listOfCalibrationValues = []
 
     def getData(self):
         return self._data
@@ -177,7 +178,6 @@ class Finder(object):
             3.  If the average ppm error is below 2.5 the spectrum the calibration is used. Otherwise the ppm threshold
                 is decreased by 10 ppm and step 2 and 3 are repeated until the average ppm error is below 2.5
         '''
-        listOfCalibrationValues = list()
         #count = 1
         errorLimit = self._configHandler.get('errorLimitCalib')
         for fileNr, ionLists in enumerate(self.findIons(0, errorLimit)):
@@ -212,13 +212,14 @@ class Finder(object):
                         break
                 #count += 1
                 calibrationValues.append(solution)
-            listOfCalibrationValues.append(calibrationValues)
+            self._listOfCalibrationValues.append(calibrationValues)
         newData = list()
-        for spectrumFile, calibrationValues in zip(self._data, listOfCalibrationValues):
+        for spectrumFile, calibrationValues in zip(self._data, self._listOfCalibrationValues):
             newFileData = []
             for spectrum,solution in zip(spectrumFile, calibrationValues):
                 spectrum['m/z'] = self.fun_parabola(spectrum['m/z'], solution[0],solution[1],solution[2])
                 newFileData.append(spectrum)
             newData.append(newFileData)
         self._data = newData
+        return self._listOfCalibrationValues
 

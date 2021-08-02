@@ -5,7 +5,7 @@ import numpy as np
 from src.Exceptions import InvalidInputException
 from src.IsotopePatternLogics import IsotopePatternLogics
 from src.MolecularFormula import MolecularFormula
-from src.entities.SearchSettings import SearchSettings
+from src.entities.SearchSettings import SearchSettings, processTemplateName
 from src.top_down.LibraryBuilder import FragmentLibraryBuilder
 from src.top_down.SpectrumHandler import getMz
 from tests.test_MolecularFormula import RNA_formulaDummy, RNA_pattern
@@ -170,7 +170,7 @@ class TestIsotopePatternLogics(TestCase):
         newFragDict = {}
         for name, frag in fragLib.items():
             if precName in name:
-                _, rest = FragmentLibraryBuilder.processTemplateName(name)
+                _, rest = processTemplateName(name)
                 newFragDict['Prec' + rest] = frag
             newFragDict[name] = frag
         properties = self.getProperties(searchSettings)

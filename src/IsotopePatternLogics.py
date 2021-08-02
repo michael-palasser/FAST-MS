@@ -9,6 +9,7 @@ from src.entities.Ions import Fragment, FragmentIon
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.top_down.IntensityModeller import IntensityModeller
 from src.top_down.LibraryBuilder import FragmentLibraryBuilder
+from src.entities.SearchSettings import processTemplateName
 from src.simpleFunctions import eMass, protMass
 
 
@@ -201,7 +202,7 @@ class IsotopePatternLogics(object):
         else:
             fragTempl = [fragTempl for fragTempl in fragmentation.getItems() if fragTempl.getName()==fragTemplName][0]
             number = len(sequenceList)
-        species, rest = FragmentLibraryBuilder.processTemplateName(fragTempl.getName())
+        species, rest = processTemplateName(fragTempl.getName())
         formula = formula.addFormula(fragTempl.getFormula())
         if modifPatternName != '-' and nrMod != 0:
             modPattern = self._modService.getPatternWithObjects(modifPatternName)

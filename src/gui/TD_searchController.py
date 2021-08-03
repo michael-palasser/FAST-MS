@@ -20,6 +20,7 @@ from src.gui.AbstractMainWindows import SimpleMainWindow
 from src.gui.GUI_functions import connectTable
 from src.gui.IsotopePatternView import AddIonView
 from src.gui.tableviews.FragmentationTable import FragmentationTable
+from src.gui.widgets.SequCovWidget import SequCovWidget
 from src.gui.widgets.InfoView import InfoView
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.repositories.IsotopePatternRepository import IsotopePatternRepository
@@ -651,11 +652,26 @@ class TD_MainController(object):
                                       self._libraryBuilder.filterByDir(redChargeDict,-1),self._settings['charge'])'''
 
     def showSequenceCoverage(self):
+        '''
+        Calculates the sequence coverage details and makes a widget which shows the results
+        '''
         self._analyser.setIons(self._intensityModeller.getObservedIons().values())
         coverages, calcCoverages, overall = self._analyser.getSequenceCoverage(self._propStorage.getFragmentsByDir(1))
-        print(coverages, calcCoverages, overall)
-        [print(i+1,overall[i][0],overall[i][1], len(self._propStorage.getSequenceList())-(i+1))
-         for i in range(len(self._propStorage.getSequenceList())-1)]
+        sequ = self._propStorage.getSequenceList()
+        calcData =[(key,val*100) for key,val in calcCoverages.items()]
+        coverageData = self.addCleavageSites(sequ, [[key] + list(val) for key,val in coverages.items()])
+        globalData = [[key] + list(val) for key,val in zip(('forward','backward'), np.transpose(overall[:,0:2]))]
+        self._openWindows.append(SequCovWidget(calcData, sequ, coverageData,
+                                               self.addCleavageSites(sequ, globalData)))
+
+
+    @staticmethod
+    def addCleavageSites(sequ, data):
+        sequLength = len(sequ)
+        newData = [[''] + [str(i + 1) for i in range(sequLength)]]
+        newData += data
+        newData.append([''] + [str(sequLength - i) for i in range(sequLength)])
+        return newData
 
     def saveAnalysis(self):
         '''

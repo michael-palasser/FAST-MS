@@ -224,8 +224,7 @@ class Analyser(object):
                 each row index of the array represents the cleavage site -1 and the boolean values states if a fragment
                 was found at the corresponding site.
         '''
-        print(forwTypes)
-        sequLength=len(self._sequence)-1
+        sequLength=len(self._sequence)
         coverages = {}
         calcCoverages = dict()
         overall = np.zeros((sequLength,3))
@@ -241,14 +240,22 @@ class Analyser(object):
                 row = sequLength-ion.getNumber()
             coverages[type][row] = 1
         #overall = np.zeros(sequLength)
+        redSequLength = sequLength-1
         for type,val in coverages.items():
-            calcCoverages[type] = np.sum(val)/sequLength
+            calcCoverages[type] = np.sum(val)/(redSequLength)
         overall[:,0] = np.any([val.astype(bool) for type,val in coverages.items() if type in forwTypes], axis=0)
-        calcCoverages['allForward'] = np.sum(overall[:,0])/sequLength
+        calcCoverages['forward'] = np.sum(overall[:,0])/redSequLength
         overall[:,1] = np.any([val.astype(bool) for type,val in coverages.items() if type not in forwTypes], axis=0)
-        calcCoverages['allBackward'] = np.sum(overall[:,1])/sequLength
+        calcCoverages['backward'] = np.sum(overall[:,1])/redSequLength
         overall[:,2] = np.any((overall[:,0],overall[:,1]), axis=0)
-        calcCoverages['all'] = np.sum(overall[:,2])/sequLength
+        calcCoverages['total'] = np.sum(overall[:,2])/sequLength
+        for type in coverages.keys():
+            if type in forwTypes:
+                coverages[type][-1] = np.nan
+            else:
+                coverages[type][0] = np.nan
+        overall[-1,0] = np.nan
+        overall[0,1] = np.nan
         return coverages, calcCoverages, overall
 
     '''def addColumn(self, table, vals):

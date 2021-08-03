@@ -7,7 +7,7 @@ from src.gui.tableviews.TableModels import AbstractTableModel
 
 class FragmentationTableModel(AbstractTableModel):
     '''
-    TableModel for QTableView in SimplePeakView, used to show original peak values of remodelled ions
+    TableModel for QTableView in FragmentationTable which shows the relative percentages of each fragment
     '''
     def __init__(self, data):
         super(FragmentationTableModel, self).__init__(data, ('','{:1.3f}'),

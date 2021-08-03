@@ -168,9 +168,10 @@ class TestAnalyser(TestCase):
 
     def test_get_sequence_coverage(self):
         self.analyser.setIons(self.ions.values())
-        coverages, calcCoverages, overall = self.analyser.getSequenceCoverage(('a','c'))
-        self.assertTrue(np.all(coverages['c']))
-        self.assertTrue(np.all(coverages['w']))
+        coverages, calcCoverages, overall = self.analyser.getSequenceCoverage(['a','c'])
+        print(coverages,calcCoverages,overall)
+        self.assertTrue(np.all(coverages['c'][:-1]))
+        self.assertTrue(np.all(coverages['w'][1:]))
         self.assertFalse(coverages['a'][0])
         self.assertFalse(coverages['y'][-1])
         for type in ('c','w','allForward','allBackward','all'):
@@ -178,15 +179,19 @@ class TestAnalyser(TestCase):
         for type in ('a','y'):
             #print(type, coverages[type])
             self.assertAlmostEqual(2/3,calcCoverages[type])
-        self.assertTrue(np.all(overall))
+        self.assertTrue(np.all(overall[:-1,0]))
+        self.assertTrue(np.all(overall[1:,1]))
+        self.assertTrue(np.all(overall[:,2]))
         ions = deepcopy(self.ions)
         for hash in self.ions.keys():
-            if 'c01' in hash[0]:
+            if ('c02' in hash[0]) or ('a02' in hash[0]):
                 del ions[hash]
         self.analyser.setIons(ions.values())
         coverages, calcCoverages, overall = self.analyser.getSequenceCoverage(('a','c'))
+        print(coverages,calcCoverages,overall)
         for type in ('w','allBackward','all'):
             self.assertAlmostEqual(1,calcCoverages[type])
-        for type in ('a','c','y','allForward'):
+        for type in ('c','y','allForward'):
             #print(type, coverages[type])
             self.assertAlmostEqual(2/3,calcCoverages[type])
+        self.assertAlmostEqual(1/3,calcCoverages['a'])

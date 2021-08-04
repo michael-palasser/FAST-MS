@@ -1,7 +1,12 @@
+import os
+import sys
+from datetime import datetime
 from functools import partial
 import pandas as pd
 
 from PyQt5 import QtWidgets, QtCore
+
+from src import path
 
 translate = QtCore.QCoreApplication.translate
 
@@ -41,3 +46,9 @@ def showOptions(table, pos):
     if action == copyAction:
         df=pd.DataFrame(data=table.model().getData(), columns=table.model().getHeaders())
         df.to_clipboard(index=False,header=True)
+
+def shoot(widget):
+    #filename = datetime.now().strftime('%Y-%m-%d_%H-%M-%S.png')
+    p=widget.grab()
+    p.save(os.path.join(path,'pics',widget.windowTitle()), 'png')
+    print('Shoot taken')

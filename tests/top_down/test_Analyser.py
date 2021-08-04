@@ -174,7 +174,7 @@ class TestAnalyser(TestCase):
         self.assertTrue(np.all(coverages['w'][1:]))
         self.assertFalse(coverages['a'][0])
         self.assertFalse(coverages['y'][-1])
-        for type in ('c','w','allForward','allBackward','all'):
+        for type in ('c','w','forward','backward','total'):
             self.assertAlmostEqual(1,calcCoverages[type])
         for type in ('a','y'):
             #print(type, coverages[type])
@@ -187,11 +187,11 @@ class TestAnalyser(TestCase):
             if ('c02' in hash[0]) or ('a02' in hash[0]):
                 del ions[hash]
         self.analyser.setIons(ions.values())
-        coverages, calcCoverages, overall = self.analyser.getSequenceCoverage(('a','c'))
+        coverages, calcCoverages, overall = self.analyser.getSequenceCoverage(['a','c'])
         print(coverages,calcCoverages,overall)
-        for type in ('w','allBackward','all'):
+        for type in ('w','backward','total'):
             self.assertAlmostEqual(1,calcCoverages[type])
-        for type in ('c','y','allForward'):
+        for type in ('c','y','forward'):
             #print(type, coverages[type])
             self.assertAlmostEqual(2/3,calcCoverages[type])
         self.assertAlmostEqual(1/3,calcCoverages['a'])

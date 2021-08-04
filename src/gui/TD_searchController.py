@@ -17,7 +17,7 @@ from src import path
 from src.Exceptions import InvalidIsotopePatternException, InvalidInputException
 from src.entities.Info import Info
 from src.gui.AbstractMainWindows import SimpleMainWindow
-from src.gui.GUI_functions import connectTable
+from src.gui.GUI_functions import connectTable, shoot
 from src.gui.IsotopePatternView import AddIonView
 from src.gui.tableviews.FragmentationTable import FragmentationTable
 from src.gui.widgets.SequCovWidget import SequCovWidget
@@ -46,6 +46,7 @@ def sortIonsByName(ionList):
     #return sorted(ionList,key=lambda obj:(obj.type ,obj.number))
     return sorted(ionList, key=lambda obj: (obj.getName(), obj.getCharge()))
 
+FOTO_SESSION=True
 
 
 #if __name__ == '__main__':
@@ -223,6 +224,8 @@ class TD_MainController(object):
         self.verticalLayout.addWidget(self._tabWidget)'''
         self._mainWindow.resize(1000, 900)
         self._mainWindow.show()
+        if FOTO_SESSION:
+            shoot(self._mainWindow)
 
 
     def createMenuBar(self):
@@ -362,9 +365,14 @@ class TD_MainController(object):
                                 np.max(selectedIon.getIsotopePattern()['m/z']),
                                         np.max(selectedIon.getIsotopePattern()['relAb']))
             self._openWindows.append(spectrumView)
+            if FOTO_SESSION:
+                shoot(spectrumView)
         elif action == peakAction:
             #global peakview
-            self._openWindows.append(PeakView(self._mainWindow, selectedIon, self._intensityModeller.remodelSingleIon, self.saveSingleIon))
+            peakView = PeakView(self._mainWindow, selectedIon, self._intensityModeller.remodelSingleIon, self.saveSingleIon)
+            self._openWindows.append(peakView)
+            if FOTO_SESSION:
+                shoot(peakView)
         elif action == formulaAction:
             text = 'Ion:\t' + selectedIon.getName()+\
                    '\n\nFormula:\t'+selectedIon.getFormula().toString()
@@ -439,6 +447,8 @@ class TD_MainController(object):
         addIonView = AddIonView(self._mainWindow, self._propStorage.getMolecule().getName(),
                                 ''.join(self._propStorage.getSequenceList()), self.addNewIon)
         self._openWindows.append(addIonView)
+        if FOTO_SESSION:
+            shoot(addIonView)
 
     def addNewIon(self, addIonView):
         '''
@@ -466,12 +476,12 @@ class TD_MainController(object):
         self._tabWidget = QtWidgets.QTabWidget(self._centralwidget)
         self.fillMainWindow()
 
-    def dumb(self):
+    '''def dumb(self):
         print('not yet implemented')
         dlg = QtWidgets.QMessageBox(QtWidgets.QMessageBox.Information, 'Unvalid Request',
                     'Sorry, not implemented yet', QtWidgets.QMessageBox.Ok, self._mainWindow, )
         if dlg.exec_() and dlg == QtWidgets.QMessageBox.Ok:
-            return
+            return'''
 
     def export(self):
         '''
@@ -481,6 +491,8 @@ class TD_MainController(object):
         lastOptions= exportConfigHandler.getAll()
         dlg = ExportDialog(self._mainWindow, lastOptions)
         dlg.exec_()
+        if FOTO_SESSION:
+            shoot(dlg)
         if dlg and not dlg.canceled():
             self._info.export()
             newOptions = dlg.getOptions()
@@ -600,6 +612,8 @@ class TD_MainController(object):
         fragmentationView = FragmentationTable([(type,val) for type,val in
                                                 self._analyser.calculateRelAbundanceOfSpecies().items()])
         self._openWindows.append(fragmentationView)
+        if FOTO_SESSION:
+            shoot(fragmentationView)
 
     def showOccupancyPlot(self):
         '''
@@ -627,6 +641,8 @@ class TD_MainController(object):
                                            list(percentageDict.keys()), 'Occupancies: '+modification, 3,
                                       self._analyser.getModificationLoss())
             self._openWindows.append(occupView)
+            if FOTO_SESSION:
+                shoot(occupView)
 
 
     def showChargeDistrPlot(self, reduced):
@@ -650,6 +666,8 @@ class TD_MainController(object):
         '''plotFactory2.showChargePlot(self._libraryBuilder.getSequenceList(),
                                       self._libraryBuilder.filterByDir(redChargeDict,1),
                                       self._libraryBuilder.filterByDir(redChargeDict,-1),self._settings['charge'])'''
+        if FOTO_SESSION:
+            shoot(chargeView)
 
     def showSequenceCoverage(self):
         '''
@@ -661,8 +679,10 @@ class TD_MainController(object):
         calcData =[(key,val*100) for key,val in calcCoverages.items()]
         coverageData = self.addCleavageSites(sequ, [[key] + list(val) for key,val in coverages.items()])
         globalData = [[key] + list(val) for key,val in zip(('forward','backward'), np.transpose(overall[:,0:2]))]
-        self._openWindows.append(SequCovWidget(calcData, sequ, coverageData,
-                                               self.addCleavageSites(sequ, globalData)))
+        sequCovWidget = SequCovWidget(calcData, sequ, coverageData, self.addCleavageSites(sequ, globalData))
+        self._openWindows.append(sequCovWidget)
+        if FOTO_SESSION:
+            shoot(sequCovWidget)
 
 
     @staticmethod

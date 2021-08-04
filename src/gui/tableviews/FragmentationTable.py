@@ -1,3 +1,4 @@
+
 from PyQt5 import QtCore, QtWidgets
 
 
@@ -65,3 +66,4 @@ class FragmentationTable(QtWidgets.QWidget):
         verticalLayout.addWidget(scrollArea)
         #self.resize(len(data[0])*50+200, len(data)*22+25)
         self.show()
+

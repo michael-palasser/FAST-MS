@@ -10,13 +10,14 @@ from src import path
 
 translate = QtCore.QCoreApplication.translate
 
-def makeLabelInputWidget(parent,labelName,widget):
+def makeLabelInputWidget(parent,labelName,*args):
     horizontalWidget = QtWidgets.QWidget(parent)
     horizLayout = QtWidgets.QHBoxLayout(horizontalWidget)
     label = QtWidgets.QLabel(horizontalWidget)
     label.setText(translate(parent.objectName(), labelName))
     horizLayout.addWidget(label)
-    horizLayout.addWidget(widget)
+    for widget in args:
+        horizLayout.addWidget(widget)
     return horizontalWidget, horizLayout
 
 def createComboBox(parent, options):

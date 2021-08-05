@@ -5,11 +5,10 @@ Created on 6 Aug 2020
 '''
 import logging
 from re import findall
-
 import numpy as np
 from copy import deepcopy
-from scipy.optimize import minimize
-from scipy.optimize import minimize_scalar
+from scipy.optimize import minimize, minimize_scalar
+
 from src.top_down.SpectrumHandler import getErrorLimit, calculateError
 
 

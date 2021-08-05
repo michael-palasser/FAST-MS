@@ -256,7 +256,13 @@ class Analyser(object):
                 coverages[type][0] = np.nan
         overall[-1,0] = np.nan
         overall[0,1] = np.nan
-        return coverages, calcCoverages, overall
+        coveragesForw, coveragesBack = {},{}
+        for key,val in coverages.items():
+            if key in forwTypes:
+                coveragesForw[key] = val
+            else:
+                coveragesBack[key] = val
+        return (coveragesForw,coveragesBack), calcCoverages, overall
 
     '''def addColumn(self, table, vals):
         for i, val in enumerate(vals):

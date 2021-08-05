@@ -673,25 +673,19 @@ class TD_MainController(object):
         '''
         Calculates the sequence coverage details and makes a widget which shows the results
         '''
+        global sequCovWidget
         self._analyser.setIons(self._intensityModeller.getObservedIons().values())
         coverages, calcCoverages, overall = self._analyser.getSequenceCoverage(self._propStorage.getFragmentsByDir(1))
         sequ = self._propStorage.getSequenceList()
         calcData =[(key,val*100) for key,val in calcCoverages.items()]
-        coverageData = self.addCleavageSites(sequ, [[key] + list(val) for key,val in coverages.items()])
-        globalData = [[key] + list(val) for key,val in zip(('forward','backward'), np.transpose(overall[:,0:2]))]
-        sequCovWidget = SequCovWidget(calcData, sequ, coverageData, self.addCleavageSites(sequ, globalData))
+        #globalData = [list(val) for key,val in zip(('forward','backward'), np.transpose(overall[:,0:2]))]
+        sequCovWidget = SequCovWidget(calcData, sequ, coverages[0], coverages[1], overall)
         self._openWindows.append(sequCovWidget)
         if FOTO_SESSION:
             shoot(sequCovWidget)
 
 
-    @staticmethod
-    def addCleavageSites(sequ, data):
-        sequLength = len(sequ)
-        newData = [[''] + [str(i + 1) for i in range(sequLength)]]
-        newData += data
-        newData.append([''] + [str(sequLength - i) for i in range(sequLength)])
-        return newData
+
 
     def saveAnalysis(self):
         '''

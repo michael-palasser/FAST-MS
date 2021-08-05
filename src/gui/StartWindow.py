@@ -11,7 +11,7 @@ from src.gui.IsotopePatternView import IsotopePatternView
 from src.gui.EditorController import *
 from src.gui.dialogs.ParameterDialogs import TD_configurationDialog
 from src.gui.dialogs.StartDialogs import IntactStartDialog
-from src.top_down.ModellingTool import main as modellingTool
+#from src.top_down.ModellingTool import main as modellingTool
 from src.top_down.OccupancyRecalculator import run as occupancyRecalculator
 from src.top_down.SpectrumComparator import run as spectrumComparator
 from src.intact.Main import run as IntactIonsSearch
@@ -30,8 +30,8 @@ class Window(SimpleMainWindow):
                              (lambda:TD_MainController(self, True), 'Starts analysis of top-down spectrum', None),
                          'Load Analysis':
                              (lambda:TD_MainController(self, False), 'Loads an old analysis', None),
-                         'Calc. Abundances':
-                             (lambda: modellingTool(self), 'Calculates relative abundances of an ion list', None),
+                         #'Calc. Abundances':
+                         #    (lambda: modellingTool(self), 'Calculates relative abundances of an ion list', None),
                          'Calculate Occupancies':
                              (lambda: occupancyRecalculator(self), 'Calculates occupancies of a given ion list', None),
                          'Compare Analysis':

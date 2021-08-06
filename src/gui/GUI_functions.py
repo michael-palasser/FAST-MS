@@ -51,5 +51,5 @@ def showOptions(table, pos):
 def shoot(widget):
     #filename = datetime.now().strftime('%Y-%m-%d_%H-%M-%S.png')
     p=widget.grab()
-    p.save(os.path.join(path,'pics',widget.windowTitle()), 'png')
+    p.save(os.path.join(path,'pics',widget.windowTitle()+'.png'), 'png')
     print('Shoot taken')

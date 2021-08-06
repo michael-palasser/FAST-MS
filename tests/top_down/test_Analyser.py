@@ -35,7 +35,7 @@ class TestAnalyser(TestCase):
         ion.setQuality(0.1)
         ions.append(ion)
         self.analyser.setIons(ions)
-        for type, val in self.analyser.calculateRelAbundanceOfSpecies().items():
+        for type, val in self.analyser.calculateRelAbundanceOfSpecies()[0].items():
             if type == 'dummyRNA':
                 self.assertAlmostEqual(3 / 8, val)
             else:
@@ -55,7 +55,7 @@ class TestAnalyser(TestCase):
         ion.setQuality(0.1)
         ions.append(ion)
         self.analyser.setIons(ions)
-        for type, val in self.analyser.calculateRelAbundanceOfSpecies().items():
+        for type, val in self.analyser.calculateRelAbundanceOfSpecies()[0].items():
             if type == 'a':
                 self.assertAlmostEqual(0.5, val)
             else:
@@ -98,14 +98,14 @@ class TestAnalyser(TestCase):
                     arr[ion.getNumber() - 1, 0] += intensity / ion.getCharge()
                 ions.append(ion)
             self.analyser.setIons(ions)
-            occupDict = self.analyser.calculateOccupancies([currentType])
+            occupDict = self.analyser.calculateOccupancies([currentType])[0]
             self.assertTrue(currentType in occupDict.keys())
             self.assertEqual(1, len(occupDict.keys()))
             self.assertEqual(len(arr), len(occupDict[currentType]))
             for i, val in enumerate(occupDict[currentType]):
                 if arr[i, 0] != 0:
                     self.assertAlmostEqual(arr[i, 1] / arr[i, 0], val)
-            occupDict = self.analyser.calculateOccupancies([currentType], '+CMCT', ['+CMCT'])
+            occupDict = self.analyser.calculateOccupancies([currentType], '+CMCT', ['+CMCT'])[0]
             self.assertTrue(currentType in occupDict.keys())
             self.assertEqual(1, len(occupDict.keys()))
             self.assertEqual(len(arr), len(occupDict[currentType]))
@@ -169,11 +169,10 @@ class TestAnalyser(TestCase):
     def test_get_sequence_coverage(self):
         self.analyser.setIons(self.ions.values())
         coverages, calcCoverages, overall = self.analyser.getSequenceCoverage(['a','c'])
-        print(coverages,calcCoverages,overall)
-        self.assertTrue(np.all(coverages['c'][:-1]))
-        self.assertTrue(np.all(coverages['w'][1:]))
-        self.assertFalse(coverages['a'][0])
-        self.assertFalse(coverages['y'][-1])
+        self.assertTrue(np.all(coverages[0]['c'][:-1]))
+        self.assertTrue(np.all(coverages[1]['w'][1:]))
+        self.assertFalse(coverages[0]['a'][0])
+        self.assertFalse(coverages[1]['y'][-1])
         for type in ('c','w','forward','backward','total'):
             self.assertAlmostEqual(1,calcCoverages[type])
         for type in ('a','y'):

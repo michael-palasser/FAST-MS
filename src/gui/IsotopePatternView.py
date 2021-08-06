@@ -17,9 +17,9 @@ class IsotopePatternView(SimpleMainWindow):
     def __init__(self, parent):
         super(IsotopePatternView, self).__init__(parent, 'Isotope Pattern Tool')
         self._ion= None
-        self._controller = IsotopePatternLogics()
-        self._fragmentationOpts = self._controller.getFragmentationNames()
-        self._modifPatternOpts = self._controller.getModifPatternNames()
+        self._logics = IsotopePatternLogics()
+        self._fragmentationOpts = self._logics.getFragmentationNames()
+        self._modifPatternOpts = self._logics.getModifPatternNames()
         self._intensity = None
         self._vertLayout = QtWidgets.QVBoxLayout(self._centralwidget)
         self._widget1,self._horizLayout1 = self.getHorizWidget(self._centralwidget, self._vertLayout, 15,5)
@@ -31,7 +31,7 @@ class IsotopePatternView(SimpleMainWindow):
         modeLabel.setText(self._translate(self.objectName(), "Mode:"))
         self._horizLayout1.addWidget(modeLabel)
         self._modeBox = QtWidgets.QComboBox(self._widget1)
-        self.updateComboBox(self._modeBox, self._controller.getMolecules())
+        self.updateComboBox(self._modeBox, self._logics.getMolecules())
         self._horizLayout1.addWidget(self._modeBox)
 
         widget2,chargeRadLayout = self.getHorizWidget(self._centralwidget, self._vertLayout,5,15)
@@ -114,13 +114,14 @@ class IsotopePatternView(SimpleMainWindow):
         self._frame.setMinimumSize(230, 180)
         formlayout = makeFormLayout(self._frame)
         formlayout.setContentsMargins(5,5,5,5)
-
         self._frame.setLayout(formlayout)
         self._frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self._frame.setFrameShadow(QtWidgets.QFrame.Raised)
         self._options = {key:QtWidgets.QComboBox(self._frame) for key in ('fragmentation', 'fragment', 'modPattern', 'modif')}
         self._options['fragmentation'].currentIndexChanged.connect(self.getFragValues)
+        self._options['fragment'].currentIndexChanged.connect(self.changeRadicals)
         self._options['modPattern'].currentIndexChanged.connect(self.getModValues)
+        self._options['modif'].currentIndexChanged.connect(self.changeRadicals)
         self._options['nrMod'] = QtWidgets.QSpinBox(self._frame)
         self._options['nrMod'].setValue(0)
         self.fillFrame(formlayout, ("", "", "", "", ''))
@@ -147,6 +148,14 @@ class IsotopePatternView(SimpleMainWindow):
             self._options[key].setSizePolicy(sizePolicy)
             formlayout.setWidget(i, QtWidgets.QFormLayout.LabelRole, label)
             formlayout.setWidget(i, QtWidgets.QFormLayout.FieldRole, self._options[key])
+
+    def changeRadicals(self):
+        radicals = self._logics.getRadicals(self._modeBox.currentText(), self._inputForm.text(),
+                                 self._options['fragmentation'].currentText(),
+                                 self._options['fragment'].currentText(), self._options['modPattern'].currentText(),
+                                 self._options['modif'].currentText(), self._options['nrMod'].value())
+        self._radicals.setValue(radicals)
+
 
     def loadSequence(self):
         service = SequenceService()
@@ -181,14 +190,14 @@ class IsotopePatternView(SimpleMainWindow):
 
     def getFragValues(self):
         if self._options['fragmentation'].currentText() != "":
-            fragItems, precItems = self._controller.getFragItems(self._options['fragmentation'].currentText())
+            fragItems, precItems = self._logics.getFragItems(self._options['fragmentation'].currentText())
             [self._options['fragment'].model().item(i).setEnabled(True) for i in range(self._options['fragment'].count())]
             self.updateComboBox(self._options['fragment'], fragItems + [''] + precItems)
             self._options['fragment'].model().item(len(fragItems)).setEnabled(False)
 
     def getModValues(self):
         if (self._options['modPattern'].currentText() != "") and (self._options['modPattern'].currentText() != "-"):
-            self.updateComboBox(self._options['modif'], self._controller.getModifItems(self._options['modPattern'].currentText()))
+            self.updateComboBox(self._options['modif'], self._logics.getModifItems(self._options['modPattern'].currentText()))
 
     def calculateByChange(self):
         '''
@@ -207,15 +216,15 @@ class IsotopePatternView(SimpleMainWindow):
             if self._exact.isChecked():
                 accelerate = None
             if self._modeBox.currentIndex() == 0:
-                self._ion, neutralMass, avMass = self._controller.calculate(self._modeBox.currentText(),
-                                         self._inputForm.text(), charge, int(self._radicals.text()), self._intensity,
-                                                                            accelerate=accelerate)
+                self._ion, neutralMass, avMass = self._logics.calculate(self._modeBox.currentText(),
+                                                                        self._inputForm.text(), charge, int(self._radicals.text()), self._intensity,
+                                                                        accelerate=accelerate)
             else:
-                self._ion, neutralMass, avMass= self._controller.calculate(self._modeBox.currentText(),
-                                                                     self._inputForm.text(), charge, int(self._radicals.text()), self._intensity,
-                                                                     self._options['fragmentation'].currentText(), self._options['fragment'].currentText(),
-                                                                     self._options['modPattern'].currentText(), self._options['modif'].currentText(), self._options['nrMod'].value(),
-                                                                           accelerate)
+                self._ion, neutralMass, avMass= self._logics.calculate(self._modeBox.currentText(),
+                                                                       self._inputForm.text(), charge, int(self._radicals.text()), self._intensity,
+                                                                       self._options['fragmentation'].currentText(), self._options['fragment'].currentText(),
+                                                                       self._options['modPattern'].currentText(), self._options['modif'].currentText(), self._options['nrMod'].value(),
+                                                                       accelerate)
         except InvalidInputException as e:
             QtWidgets.QMessageBox.warning(self, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
             return
@@ -232,7 +241,7 @@ class IsotopePatternView(SimpleMainWindow):
         self._spectrumView.hide()
         self._vertLayoutRight.removeWidget(self._spectrumView)
         del self._spectrumView
-        isotopePattern = self._controller.getIsotopePattern(ion)
+        isotopePattern = self._logics.getIsotopePattern(ion)
         self._spectrumView = TheoSpectrumView(self._rightWidget, isotopePattern, 365)
         self._spectrumView.setMinimumSize(365, 300)
         self._vertLayoutRight.addWidget(self._spectrumView)
@@ -267,12 +276,12 @@ class IsotopePatternView(SimpleMainWindow):
             peaks = []
             for i, peak in enumerate(self._peakTable.getPeaks()):
                 peaks.append((peak[0], inputVals[i][0], peak[2], inputVals[i][1]))
-            self._ion = self._controller.model(peaks)
+            self._ion = self._logics.model(peaks)
             self._intensity = round(self._ion.getIntensity())
         except InvalidInputException as e:
             QtWidgets.QMessageBox.warning(self, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
             return
-        self.renderView(self._ion, self._controller.getNeutralMass(), self._controller.getAvMass())
+        self.renderView(self._ion, self._logics.getNeutralMass(), self._logics.getAvMass())
 
 
 
@@ -280,13 +289,19 @@ class AddIonView(IsotopePatternView):
     '''
     QMainWindow which is used to add new ions to ion list in top-down search
     '''
-    def __init__(self, parent, mode, sequence, fun):
+    def __init__(self, parent, mode, sequence, fragmentation, modification, fun):
         super(AddIonView, self).__init__(parent)
-        self._modeBox.setCurrentText(mode)
-        self._modeBox.setEnabled(False)
+        self.setWindowTitle(self._translate(self.objectName(),'New Ion'))
+        self.setBox(self._modeBox,mode)
         self._inputForm.setText(sequence)
+        self.setBox(self._options['fragmentation'],fragmentation)
+        self.setBox(self._options['modPattern'],modification)
         self._signal = fun
         self._saveBtn = self.makeBtn(self._widget1,self._horizLayout1, 'Save', self.accept)
+
+    def setBox(self, box, value):
+        box.setCurrentText(value)
+        box.setEnabled(False)
 
     def getIon(self):
         return self._ion

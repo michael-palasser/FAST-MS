@@ -1,4 +1,6 @@
 import sys
+from copy import deepcopy
+
 import numpy as np
 import matplotlib
 from matplotlib import pyplot as plt
@@ -9,6 +11,7 @@ from PyQt5 import QtWidgets, QtGui
 from PyQt5.QtCore import Qt, QVariant, QCoreApplication
 from PyQt5.QtWidgets import QApplication
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
+from matplotlib.patches import Rectangle
 
 from src.gui.GUI_functions import connectTable, showOptions, makeLabelInputWidget, createComboBox
 from src.gui.tableviews.TableModels import AbstractTableModel
@@ -68,9 +71,12 @@ class SequCovWidget(QtWidgets.QWidget):
     '''
     def __init__(self, values, sequence, coveragesForw, coveragesBackw, globalData):
         super().__init__(parent=None)
-        self._globalData = globalData
         self._fragments = {}
         self._translate = QCoreApplication.translate
+        self._coveragesForw = coveragesForw
+        self._coveragesBackw = coveragesBackw
+        self._globalData = globalData
+        self._sequLength = len(sequence)
         verticalLayout = QtWidgets.QVBoxLayout(self)
         model = SequCovTableModel(values)
         table = QtWidgets.QTableView(self)
@@ -82,18 +88,17 @@ class SequCovWidget(QtWidgets.QWidget):
         table.setMinimumHeight((len(values)+1)*23)
         connectTable(table,showOptions)
         verticalLayout.addWidget(table)
-        all = coveragesForw
+        all = deepcopy(coveragesForw)
         all.update(coveragesBackw)
-        coverageData = self.addCleavageSites(sequ, [[key] + list(val) for key,val in all.items()])
+        coverageData = self.addCleavageSites([[key] + list(val) for key,val in all.items()])
         verticalLayout.addWidget(self.makeCoverageTable(coverageData, ['fragm.'] + sequence))
         #verticalLayout.addWidget(self.makeCoverageTable(globalData, ['direction'] + sequence))
-
         width = 10
-        if len(sequence)>200:
+        if self._sequLength>200:
             width = 30
-        elif len(sequence)>100:
+        elif self._sequLength>100:
             width = 20
-        elif len(sequence)>50:
+        elif self._sequLength>50:
             width = 15
         self._lineWidth = QtWidgets.QSpinBox()
         self._lineWidth.setValue(width)
@@ -112,7 +117,8 @@ class SequCovWidget(QtWidgets.QWidget):
         self.setObjectName('Sequence Coverage')
         self.setWindowTitle(self._translate(self.objectName(), self.objectName()))
         self.show()
-        self._sequPlot = SequenceCoveragePlot(sequence, globalData[:,0], globalData[:,1], width)
+        self._sequPlot = SequenceCoveragePlot(sequence, globalData[:,0].reshape((self._sequLength,1)),
+                                              globalData[:,1].reshape((self._sequLength,1)), width)
         updateBtn.clicked.connect(self.updatePlot)
 
     def fillGrid(self, type, row, checked=False):
@@ -139,34 +145,46 @@ class SequCovWidget(QtWidgets.QWidget):
         #table.resize(70+len(data[0])*table.columnWidth(1), (len(data)+1)*table.rowHeight(0))
         return table
 
-    @staticmethod
-    def addCleavageSites(sequ, data):
-        sequLength = len(sequ)
-        newData = [[''] + [str(i + 1) for i in range(sequLength)]]
+
+    def addCleavageSites(self, data):
+        newData = [[''] + [str(i + 1) for i in range(self._sequLength)]]
         newData += data
-        newData.append([''] + [str(sequLength - i) for i in range(sequLength)])
+        newData.append([''] + [str(self._sequLength - i) for i in range(self._sequLength)])
         return newData
 
 
     def updatePlot(self):
-        self._sequPlot.makePlot(self._globalData[:,0], self._globalData[:,1],self._lineWidth.value())
+        forward,backward =[],[]
+        forwardC,backwardC =[],[]
+        if self._fragments['total'][0].isChecked():
+            forward.append(self._globalData[:,0])
+            colour = self._fragments['total'][1].currentText()
+            forwardC.append(colour)
+            backwardC.append(colour)
+            backward.append(self._globalData[:,1])
+        for key, tup in self._fragments.items():
+            if key in self._coveragesForw.keys():
+                if tup[0].isChecked():
+                    forward.append(self._coveragesForw[key])
+                    forwardC.append(tup[1].currentText())
+            elif key in self._coveragesBackw.keys():
+                if tup[0].isChecked():
+                    backward.append(self._coveragesBackw[key])
+                    backwardC.append(tup[1].currentText())
+        forward2,backward2 = [],[]
+        for i in range(self._sequLength):
+            forward2.append([arr[i] for arr in forward])
+            backward2.append([arr[i] for arr in backward])
+        print(self._coveragesForw.keys())
+        self._sequPlot.makePlot(forward2, backward2,self._lineWidth.value(), forwardC,backwardC)
         self._sequPlot.draw()
         self.show()
 
-    '''def saveAsEps(self):
-        fig, ax = plt.subplots()  # or
-        self._sequPlot.savefig('filename.eps', format='eps')'''
-
-def processCoverageData(sequ, dataDict):
-    sequLength = len(sequ)
-    data = [[''] + [str(i + 1) for i in range(sequLength)]]
-    for key, line in dataDict.items():
-        data.append([key] + list(line))
-    data.append([''] + [str(sequLength - i) for i in range(sequLength)])
-    return data
-
 
 class SequenceCoveragePlot(FigureCanvasQTAgg):
+    '''
+    Matplotlib plot which shows the sequence coverages
+    '''
     def __init__(self, sequence, coveragesForward, coverageBackward, width):
         self._sequence= sequence
         self._coveragesForward = coveragesForward
@@ -174,13 +192,12 @@ class SequenceCoveragePlot(FigureCanvasQTAgg):
         self.makePlot(coveragesForward, coverageBackward, width)
         super(SequenceCoveragePlot, self).__init__(self._fig)
 
-    def makePlot(self, coveragesForward, coverageBackward, lineWidth):
+    def makePlot(self, coveragesForward, coveragesBackward, lineWidth, coloursF=['red'],coloursB=['red']):
         rows = int(len(self._sequence) / lineWidth)+1
         step_x = 1/(lineWidth)
         step_y = 1/(rows+3)
-
         self._fig = plt.figure(figsize=(lineWidth/1.5,rows))
-        matplotlib.rcParams.update({'font.size': 20})
+        matplotlib.rcParams.update({'font.size': 15})
         ax = plt.subplot(111)
         ax.spines['right'].set_visible(False)
         ax.spines['top'].set_visible(False)
@@ -192,25 +209,30 @@ class SequenceCoveragePlot(FigureCanvasQTAgg):
         ax.xaxis.set_tick_params(width=3, bottom = False, direction='out')
         ax.yaxis.set_tick_params(width=3, left = False, direction='out')
         ax.yaxis.set_tick_params(width=3, right = False, direction='out')
-
         xPos=step_x/2
         line=step_y
         counter = 1
         plt.text(x=-step_x*0.6, y=1-line, s=str(counter), fontsize=12)
+        #size = 0.01
         for i,bb in enumerate(self._sequence):
-            plt.text(x=xPos, y=1-line, s=bb)
-            if coveragesForward[i] and not np.isnan(coveragesForward[i]):
-                plt.text(x=xPos+step_x*0.659, y=1-line+step_y*0.49, s='L', fontsize=15, ha='right', c='red',rotation=180)
-                plt.text(x=xPos+step_x*0.62, y=1-line+step_y*0, s='I', fontsize=15, ha='left', c='red')
+            plt.text(x=xPos, y=1-line, s=bb, fontsize=20)
+            for j,coverageForward in enumerate(coveragesForward[i]):
+                if coverageForward and not np.isnan(coverageForward):
+                    yPos_j=1-line+step_y*0.49+(len(coveragesForward[i])-j-1)*step_y*0.2
+                    plt.text(x=xPos+step_x*0.659, y=yPos_j, s='L', ha='right', c=coloursF[j],rotation=180)
+                    plt.text(x=xPos+step_x*0.62, y=1-line+step_y*0, s='I', ha='left', c=coloursF[-1])
             counter+=1
             if not (i+1)%lineWidth:
                 line+=2*step_y
                 plt.text(x=-step_x*0.6, y=1-line, s=str(counter), fontsize=10)
                 xPos=step_x/2
-            if (i!=len(self._sequence)-1) and coverageBackward[i+1] and not np.isnan(coverageBackward[i+1]):
-                plt.text(x=xPos+step_x*0.62, y=1-line-step_y*0.3, s='L', fontsize=15, ha='left', c='red',)
-                if (not coveragesForward[i]) or xPos==step_x/2:
-                    plt.text(x=xPos+step_x*0.62, y=1-line+step_y*0, s='I', fontsize=15, ha='left', c='red')
+            if i != (len(self._sequence) - 1):
+                for j,coverageBackward in enumerate(coveragesBackward[i+1]):
+                    if coverageBackward and not np.isnan(coverageBackward):
+                        yPos_j=1-line-step_y*0.3-(len(coveragesForward[i])-j-1)*step_y*0.2
+                        plt.text(x=xPos+step_x*0.62, y=yPos_j, s='L', ha='left', c=coloursB[j])
+                        #if (not coveragesForward[i]) or (xPos==step_x/2):
+                        plt.text(x=xPos+step_x*0.62, y=1-line+step_y*0, s='I', ha='left', c=coloursB[-1])
             if (i+1)%lineWidth:
                 xPos+=step_x
         plt.show()

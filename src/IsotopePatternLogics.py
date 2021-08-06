@@ -8,7 +8,6 @@ from src.entities.GeneralEntities import Sequence
 from src.entities.Ions import Fragment, FragmentIon
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.top_down.IntensityModeller import IntensityModeller
-from src.top_down.LibraryBuilder import FragmentLibraryBuilder
 from src.entities.SearchSettings import processTemplateName
 from src.simpleFunctions import eMass, protMass
 
@@ -61,6 +60,11 @@ class IsotopePatternLogics(object):
                [precTemplate.getName() for precTemplate in
                 self._fragService.getPatternWithObjects(fragmentationName).getItems2()][1:]
 
+    def getRadicals(self, moleculeName, sequString, fragmentationName, fragTemplName, modifPatternName, modifName,
+                    nrMod):
+        fragment = self.getFragment(moleculeName, sequString, fragmentationName, fragTemplName, modifPatternName,
+                                    modifName, nrMod)
+        return fragment.getRadicals()
 
     def getModifItems(self, modifPatternName):
         '''

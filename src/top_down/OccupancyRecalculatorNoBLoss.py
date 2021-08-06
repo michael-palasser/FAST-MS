@@ -78,9 +78,9 @@ def run(mainWindow):
     analyser = Analyser(ionList, sequence, 1, modification)
     excelWriter = BasicExcelWriter(os.path.join(path, "Spectral_data","Occupancies_out.xlsx"))
     excelWriter.writeDate()
-    row = excelWriter.writeAbundancesOfSpecies(2, analyser.calculateRelAbundanceOfSpecies())
+    row = excelWriter.writeAbundancesOfSpecies(2, analyser.calculateRelAbundanceOfSpecies()[0])
     excelWriter.addOccupOrCharges(0,row, sequence,
-                                  analyser.calculateOccupancies(speciesList),1) #ToDo
+                                  analyser.calculateOccupancies(speciesList)[0],1) #ToDo
     excelWriter.closeWorkbook()
     try:
         subprocess.call(['open', os.path.join(path, "Spectral_data","Occupancies_out.xlsx")])

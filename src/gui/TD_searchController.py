@@ -445,7 +445,8 @@ class TD_MainController(object):
         Starts an AddIonView to create a new ion (which was not found by the main search)
         '''
         addIonView = AddIonView(self._mainWindow, self._propStorage.getMolecule().getName(),
-                                ''.join(self._propStorage.getSequenceList()), self.addNewIon)
+                                ''.join(self._propStorage.getSequenceList()), self._settings['fragmentation'],
+                                self._settings['modifications'], self.addNewIon)
         self._openWindows.append(addIonView)
         if FOTO_SESSION:
             shoot(addIonView)
@@ -610,7 +611,7 @@ class TD_MainController(object):
     def showFragmentation(self):
         self._analyser.setIons(self.getIonList())
         fragmentationView = FragmentationTable([(type,val) for type,val in
-                                                self._analyser.calculateRelAbundanceOfSpecies().items()])
+                                                self._analyser.calculateRelAbundanceOfSpecies()[0].items()])
         self._openWindows.append(fragmentationView)
         if FOTO_SESSION:
             shoot(fragmentationView)
@@ -625,7 +626,7 @@ class TD_MainController(object):
         if ok and modification!='':
             self._analyser.setIons(self.getIonList())
             percentageDict = self._analyser.calculateOccupancies(self._configs.get('interestingIons'), modification,
-                                                                 self._propStorage.getUnimportantModifs())
+                                                                 self._propStorage.getUnimportantModifs())[0]
             '''if percentageDict == None:
                 dlg = QtWidgets.QMessageBox(self._mainWindow, title='Unvalid Request',
                             text='It is not possible to calculate occupancies for an unmodified molecule.',

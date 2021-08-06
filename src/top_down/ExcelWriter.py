@@ -235,10 +235,10 @@ class ExcelWriter(BasicExcelWriter):
             #percentages = list()
             self.writeAnalysis({"spectral file:": settings['spectralData'], 'max. m/z:':spectrumHandler.getUpperBound()},
                                analyser.getModificationLoss(),
-                               analyser.calculateRelAbundanceOfSpecies(),
+                               analyser.calculateRelAbundanceOfSpecies()[0],
                                properties.getSequenceList(),
                                analyser.calculateOccupancies(self._configs['interestingIons'],
-                                                             unImportantMods=properties.getUnimportantModifs()),
+                                                             unImportantMods=properties.getUnimportantModifs())[0],
                                analyser.analyseCharges(self._configs['interestingIons'], False)[0],
                                analyser.analyseCharges(self._configs['interestingIons'], True)[0],
                                properties.getFragmentsByDir(1), properties.getFragmentsByDir(-1),

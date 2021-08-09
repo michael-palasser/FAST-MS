@@ -52,7 +52,7 @@ class SpectrumHandler(object):
     acidicAA = {'D': 10, 'E': 10,
                 'H': 0.9, 'R': 0.5, 'K': 0.5, }
 
-    def __init__(self, properties, precursor, settings):
+    def __init__(self, properties, precursor, settings, peaks=None):
         '''
         Constructor, also processes spectrum
         :param properties: propertyStorage of search
@@ -60,6 +60,7 @@ class SpectrumHandler(object):
         :param precursor: precursor Fragment
         :type precursor: Fragment
         :param (dict[str,Any]) settings: search settings
+        :param (set[tuple[float]] | None) peaks: set of )
         '''
 
         self.__sequList = properties.getSequenceList()
@@ -72,8 +73,11 @@ class SpectrumHandler(object):
         self._precursor = precursor
         self.__charge = self.calcPrecCharge(self.__settings['charge'], self._precursor.getRadicals())
         self._normalizationFactor = None
-
-        self.addSpectrum(self.__settings['spectralData'])
+        if peaks == None:
+            self.addSpectrum(self.__settings['spectralData'])
+        else:
+            self.__spectrum = np.array(sorted(list(peaks), key=lambda tup:tup[0]))
+            self.__upperBound = np.max(peaks)
         self._foundIons = list()
         self._ionsInNoise = list()
         self._searchedChargeStates = dict()

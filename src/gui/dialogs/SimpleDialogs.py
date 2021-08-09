@@ -77,8 +77,7 @@ class OpenSpectralDataDlg(AbstractDialog):
         super(OpenSpectralDataDlg, self).__init__(parent,'Spectral Data not found!')
         formLayout = self.makeFormLayout(self)
         label = QtWidgets.QLabel(self)
-        label.setText(self._translate(self.objectName(), 'File with spectral data could not be found.\n'
-                                                                    'Select the location of the file.'))
+        label.setText(self._translate(self.objectName(), 'Select the location of the file.'))
         formLayout.setWidget(0, QtWidgets.QFormLayout.SpanningRole, label)
         self._fileWidget = OpenFileWidget(parent, 1, join(path, 'Spectral_data', 'top-down'), "Open File",
                                            "Plain Text Files (*txt);;Comma Separated Values (*csv);;All Files (*)")

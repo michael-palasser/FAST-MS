@@ -3,8 +3,6 @@ from datetime import datetime
 
 from src.MolecularFormula import MolecularFormula
 from src.FormulaFunctions import stringToFormula2
-#from src.entities.AbstractEntities import AbstractItem1]
-#from src.MolecularFormula import stringToFormula2
 from src.entities.Search import Search
 from src.repositories.SearchRepository import SearchRepository
 
@@ -83,3 +81,10 @@ class SearchService(object):
 
     def deleteSearch(self, name):
         self._rep.delete(name)
+
+    @staticmethod
+    def getAllAssignedPeaks(ions):
+        peaks = set()
+        for ion in ions:
+            peaks.update({(peak['m/z'],peak['relAb']) for peak in ion.getIsotopePattern() if peak['relAb']!=0})
+        return peaks

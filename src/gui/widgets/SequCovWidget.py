@@ -194,9 +194,10 @@ class SequenceCoveragePlot(FigureCanvasQTAgg):
 
     def makePlot(self, coveragesForward, coveragesBackward, lineWidth, coloursF=['red'],coloursB=['red']):
         rows = int(len(self._sequence) / lineWidth)+1
-        step_x = 1/(lineWidth)
-        step_y = 1/(rows+3)
-        self._fig = plt.figure(figsize=(lineWidth/1.5,rows))
+        step_x = 1/(lineWidth+1)
+        step_y = 1/(2*rows)
+        print('rows', rows, len(self._sequence),step_y)
+        self._fig = plt.figure(figsize=(lineWidth,rows+0))
         matplotlib.rcParams.update({'font.size': 15})
         ax = plt.subplot(111)
         ax.spines['right'].set_visible(False)
@@ -219,7 +220,7 @@ class SequenceCoveragePlot(FigureCanvasQTAgg):
             for j,coverageForward in enumerate(coveragesForward[i]):
                 if coverageForward and not np.isnan(coverageForward):
                     yPos_j=1-line+step_y*0.49+(len(coveragesForward[i])-j-1)*step_y*0.2
-                    plt.text(x=xPos+step_x*0.659, y=yPos_j, s='L', ha='right', c=coloursF[j],rotation=180)
+                    plt.text(x=xPos+step_x*0.6443, y=yPos_j, s='L', ha='right', c=coloursF[j],rotation=180)
                     plt.text(x=xPos+step_x*0.62, y=1-line+step_y*0, s='I', ha='left', c=coloursF[-1])
             counter+=1
             if not (i+1)%lineWidth:
@@ -243,7 +244,7 @@ if __name__ == '__main__':
     sequ = list('GGCUGCUUGUCCUUUAAUGGUCCAGUC')
     overall = [(key,val*100) for key,val in
                {'a': 0.7692307692307693, 'c': 0.9230769230769231, 'w': 0.7692307692307693, 'y': 0.9230769230769231, 'allForward': 0.9615384615384616, 'allBackward': 0.9230769230769231, 'all': 0.9259259259259259}.items()]
-    gui = SequCovWidget( overall,
+    '''gui = SequCovWidget( overall,
                          sequ, {'a': np.array([0., 1., 0., 1., 1., 1., 0., 1., 1., 1., 0., 0., 1., 0., 1., 1., 1.,
        1., 1., 1., 1., 1., 1., 1., 1., 1., np.nan]), 'c': np.array([0., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.,
        1., 1., 1., 1., 1., 0., 1., 1., 1.,np.nan])}, {'w': np.array([np.nan,1., 1., 0., 0., 1., 1., 0., 1., 1., 0., 1., 1., 1., 1., 1., 1., 1.,
@@ -251,4 +252,9 @@ if __name__ == '__main__':
        1., 1., 1., 1., 1., 1., 1., 1., 0.])},np.array([(val1,val2) for val1,val2 in zip(np.array([0., 1., 0., 1., 1., 1., 0., 1., 1., 1., 0., 0., 1., 0., 1., 1., 1.,
                                             1., 1., 1., 1., 1., 1., 1., 1., 1., np.nan]),np.array([np.nan,1., 1., 1., 1., 1., 1., 1., 1., 1., 0., 1., 1., 1., 1., 1., 1., 1.,
                                             1., 1., 1., 1., 1., 1., 1., 1., 0.]))]))
+    '''
+    sequ = list('GGCUGCUUGUCCUUUAAUGGUCCAGUC')*10
+    sequLength = len(sequ)
+    sequPlot = SequenceCoveragePlot(sequ, np.ones((sequLength,1)),
+                                          np.ones((sequLength,1)), 20)
     sys.exit(app.exec_())

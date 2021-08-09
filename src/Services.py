@@ -1,6 +1,5 @@
 import re
 from abc import ABC
-from numpy import sum as npSum
 
 from src.Exceptions import InvalidInputException
 from src.entities.GeneralEntities import Macromolecule, Element, BuildingBlock, Sequence

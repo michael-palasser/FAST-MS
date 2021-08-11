@@ -112,7 +112,7 @@ class TDStartDialog(StartDialog):
     def checkSpectralDataFile(self, mode, fileName):
         if fileName == '':
             print('Just calculating fragment library')
-            return False
+            return ''
         else:
             return super(TDStartDialog, self).checkSpectralDataFile(mode, fileName)
 

@@ -22,7 +22,10 @@ class ConfigHandler(object):
         self._configFile = configFile
         if isfile(configFile):
             with open(configFile, "r") as f:
-                self.__parameters = json.loads(json.load(f))
+                try:
+                    self.__parameters = json.loads(json.load(f))
+                except:
+                    self.__parameters = dict()
         else:
             print('not found')
             print(configFile)

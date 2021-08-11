@@ -1,5 +1,5 @@
 import numpy as np
-
+from matplotlib import pyplot as plt
 from PyQt5 import QtGui
 import pyqtgraph as pg
 
@@ -245,3 +245,50 @@ class PlotFactory(object):
                 self._plot3.addItem(pg.BarGraphItem(x=xVals, height=vals[:,1], width=0.5, brush=colours[i], name=name))
             i+=1"""
 
+
+def plotBars(values, headers, title, occup=False):
+    #sequLength = len(sequence)
+    colours = ['tab:red','royalblue', 'tab:brown','tab:green', 'tab:orange', 'tab:purple']
+    nrCols = len(headers)
+    nrRows = len(values)
+    xVals = np.arange(1,nrRows+1)
+    width = 0.8  # the width of the bars: can also be len(x) sequence
+
+    fig, ax = plt.subplots()#figsize=(50,nrRows*10+50))
+    bottom=np.zeros(nrRows)
+    for i in range(nrCols):
+        #index=nrCols-i-1
+        if occup:
+            if not i%2:
+                ax.bar(xVals, values[:,i], width, bottom= bottom, label=headers[i], color='w',
+                       edgecolor=colours[int(i/2)], linewidth=0.6)
+            else:
+                ax.bar(xVals, values[:,i], width, bottom= bottom, label=headers[i], color=colours[int(i/2)],
+                       linewidth=0.6)
+        else:
+            ax.bar(xVals, values[:,i], width, bottom= bottom, label=headers[i], color=colours[i])
+        bottom += values[:,i]
+    '''ax.bar(labels, women_means, width, yerr=women_std, bottom=men_means,
+           label='Women')'''
+
+    plt.rcParams['figure.figsize'] = nrRows/5+5, 4
+    ax.set_ylabel('Rel.abundances in a.u.')
+    ax.set_xlabel('cleavage site')
+    ax.set_title(title)
+    ax.legend()
+
+    ax.set_xlim([0, nrRows+1])
+    plt.show()
+
+if __name__ == '__main__':
+    arr = np.zeros((26,2))
+    for i in range(26):
+        for j in range(2):
+            arr[i,j] = np.random.randint(100000)
+    plotBars(arr, ['c','y'], 'hey')
+    arr = np.zeros((26,4))
+    for i in range(26):
+        for j in range(4):
+            arr[i,j] = np.random.randint(100000)
+    plotBars(arr, ['c','c+CMCT','y','y+CMCT'], 'hey', False)
+    print(list(arr[:][1]))

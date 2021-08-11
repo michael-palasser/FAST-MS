@@ -38,7 +38,7 @@ from src.gui.dialogs.CheckIonView import CheckMonoisotopicOverlapView, CheckOver
 from src.gui.tableviews.TableModels import IonTableModel
 from src.gui.tableviews.PlotTables import PlotTableView
 from src.gui.tableviews.ShowPeaksViews import PeakView, SimplePeakView
-from src.gui.widgets.SequencePlots import PlotFactory
+from src.gui.widgets.SequencePlots import PlotFactory, plotBars
 from src.gui.dialogs.SimpleDialogs import ExportDialog, SelectSearchDlg, OpenSpectralDataDlg, SaveSearchDialog
 #from src.gui.ParameterDialogs import TDStartDialog
 from src.gui.dialogs.StartDialogs import TDStartDialog
@@ -631,15 +631,16 @@ class TD_MainController(object):
     def showFragmentation(self):
         self._analyser.setIons(self.getIonList())
         fragmentation, fragPerSite = self._analyser.calculateRelAbundanceOfSpecies()
-
         forwardVals = self._propStorage.filterByDir(fragPerSite, 1)
         backwardVals = self._propStorage.filterByDir(fragPerSite, -1)
+        table = self._analyser.toTable(forwardVals.values(), backwardVals.values())
+        headers= list(fragPerSite.keys())
         fragmentationView = FragmentationTable([(type,val) for type,val in fragmentation.items()],
-                                               self._analyser.toTable(forwardVals.values(), backwardVals.values()),
-                                               list(fragPerSite.keys()))
+                                               table, headers)
         '''occupView = PlotTableView(fragPerSite.values(), list(fragPerSite.keys()), 'Fragmenation Efficiencies: '+modification, 3,
                                   self._analyser.getModificationLoss())'''
         self._openWindows.append(fragmentationView)
+        plotBars(np.array(table)[:,2:-2].astype(float), headers, 'Fragmentation Efficiencies')
 
 
     def showOccupancyPlot(self):
@@ -672,7 +673,6 @@ class TD_MainController(object):
 
             absTable = self._analyser.toTable(self.processAbsValues(list(forwardAbsVals.values())),
                                               self.processAbsValues(list(backwardAbsVals.values())))
-            print('absTable',absTable)
             headers=[]
             for key in list(forwardAbsVals.keys())+list(backwardAbsVals.keys()):
                 headers.append(key)
@@ -684,6 +684,7 @@ class TD_MainController(object):
                                         list(percentageDict.keys()), self._analyser.getModificationLoss(),
                                         absTable, headers)
             self._openWindows.append(occupView)
+            plotBars(np.array(absTable)[:,2:-2].astype(float), headers, 'Abs. Occupancies', True)
 
     def processAbsValues(self, arrays):
         #rows, columns = len(arrays[0]), len(arrays)

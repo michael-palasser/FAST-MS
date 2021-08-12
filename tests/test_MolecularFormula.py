@@ -202,7 +202,7 @@ class MolecularFormulaTest(TestCase):
             print(exactIsotopePattern)
             print(fastIsotopePattern)'''
             try:
-                self.testIsotopePattern(exactIsotopePattern,fastIsotopePattern,max_ppm=1.5, deltaCalcInt=10e-4)
+                self.testIsotopePattern(exactIsotopePattern,fastIsotopePattern,max_ppm=2, deltaCalcInt=10e-4)
             except AssertionError as e:
                 print(molFormulaDummy_i.toString())
                 print(exactIsotopePattern,fastIsotopePattern)

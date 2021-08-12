@@ -6,12 +6,13 @@ from src.gui.tableviews.PlotTables import PlotTableView
 
 class OccupancyWidget(QtWidgets.QWidget):
     '''
-    Widget with QTableView showing relative percentages of each fragment
+    Widget with a QTableView showing relative percentages of each fragment and a second QTableView showing sums of the
+     relative abundances of each fragment (unmodified/modified)
     '''
     def __init__(self,modification, percData,percHeaders, modificationLoss, absData, absHeaders):
         super().__init__(parent=None)
         verticalLayout = QtWidgets.QVBoxLayout(self)
-        self.setWindowTitle('Occupancies')
+        self.setWindowTitle('Occupancies: '+modification)
         #scrollArea = QtWidgets.QScrollArea(self)
         #_scrollArea.setGeometry(QtCore.QRect(10, 10, len(typeData[0])*50+200, len(typeData)*22+25))
         #scrollArea.setWidgetResizable(True)

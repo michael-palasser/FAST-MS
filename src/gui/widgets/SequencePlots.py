@@ -2,6 +2,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from PyQt5 import QtGui
 import pyqtgraph as pg
+from matplotlib.ticker import MultipleLocator
 
 
 class PlotFactory(object):
@@ -246,7 +247,16 @@ class PlotFactory(object):
             i+=1"""
 
 
-def plotBars(values, headers, title, occup=False):
+def plotBars(sequence, values, headers, title, occup=False):
+    '''
+    Plots the relative abundances per cleavage site for every fragment type
+    :param (list[str]) sequence:
+    :param (ndarray[float]) values:
+    :param headers: header for each column of values
+    :param title:
+    :param occup: True for occupancy plot
+    :return:
+    '''
     #sequLength = len(sequence)
     colours = ['tab:red','royalblue', 'tab:brown','tab:green', 'tab:orange', 'tab:purple']
     nrCols = len(headers)
@@ -268,12 +278,16 @@ def plotBars(values, headers, title, occup=False):
         else:
             ax.bar(xVals, values[:,i], width, bottom= bottom, label=headers[i], color=colours[i])
         bottom += values[:,i]
-    '''ax.bar(labels, women_means, width, yerr=women_std, bottom=men_means,
-           label='Women')'''
-
-    plt.rcParams['figure.figsize'] = nrRows/5+5, 4
+    for i,bb in enumerate(sequence):
+        plt.text(x=i+0.5, y=0, s=bb, fontsize=13, c='gold', ha='center')
+    plt.rcParams['figure.figsize'] = nrRows/5+4, 4
     ax.set_ylabel('Rel.abundances in a.u.')
     ax.set_xlabel('cleavage site')
+    ax.xaxis.set_major_locator(MultipleLocator(5))
+    #ax.xaxis.set_major_formatter('{x:.0f}')
+    ax.xaxis.set_minor_locator(MultipleLocator(1))
+
+    plt.grid(axis = 'y',linestyle = '--', linewidth = 0.4)
     ax.set_title(title)
     ax.legend()
 
@@ -285,10 +299,11 @@ if __name__ == '__main__':
     for i in range(26):
         for j in range(2):
             arr[i,j] = np.random.randint(100000)
-    plotBars(arr, ['c','y'], 'hey')
+    sequ = list('GGCUGCUUGUCCUUUAAUGGUCCAGUC')
+    plotBars(sequ, arr, ['c','y'], 'hey')
     arr = np.zeros((26,4))
     for i in range(26):
         for j in range(4):
             arr[i,j] = np.random.randint(100000)
-    plotBars(arr, ['c','c+CMCT','y','y+CMCT'], 'hey', False)
+    plotBars(sequ, arr, ['c','c+CMCT','y','y+CMCT'], 'hey', False)
     print(list(arr[:][1]))

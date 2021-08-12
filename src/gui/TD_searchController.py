@@ -629,6 +629,10 @@ class TD_MainController(object):
         return list(self._intensityModeller.getObservedIons().values())
 
     def showFragmentation(self):
+        '''
+        Makes a widget with a table with the proportion of each fragment type and a table with the relative abundances
+        for every fragment type and cleavage site. The latter is plotted (bar plot).
+        '''
         self._analyser.setIons(self.getIonList())
         fragmentation, fragPerSite = self._analyser.calculateRelAbundanceOfSpecies()
         forwardVals = self._propStorage.filterByDir(fragPerSite, 1)
@@ -637,15 +641,14 @@ class TD_MainController(object):
         headers= list(fragPerSite.keys())
         fragmentationView = FragmentationTable([(type,val) for type,val in fragmentation.items()],
                                                table, headers)
-        '''occupView = PlotTableView(fragPerSite.values(), list(fragPerSite.keys()), 'Fragmenation Efficiencies: '+modification, 3,
-                                  self._analyser.getModificationLoss())'''
         self._openWindows.append(fragmentationView)
-        plotBars(np.array(table)[:,2:-2].astype(float), headers, 'Fragmentation Efficiencies')
+        plotBars(self._propStorage.getSequenceList(), np.array(table)[:,2:-2].astype(float), headers,
+                 'Fragmentation Efficiencies')
 
 
     def showOccupancyPlot(self):
         '''
-        Makes a widget with the occupancy plot and a table with the corresponding values
+        Makes a widget with 2 tables showing the relative occupancies and the absolute ones and plots both data sets
         '''
         #dlg = QtWidgets.QInputDialog()
         modification,ok = QtWidgets.QInputDialog.getText(self._mainWindow,'Occupancy Plot', 'Enter the modification: ',
@@ -684,17 +687,12 @@ class TD_MainController(object):
                                         list(percentageDict.keys()), self._analyser.getModificationLoss(),
                                         absTable, headers)
             self._openWindows.append(occupView)
-            plotBars(np.array(absTable)[:,2:-2].astype(float), headers, 'Abs. Occupancies', True)
+            plotBars(sequence, np.array(absTable)[:,2:-2].astype(float), headers, 'Abs. Occupancies: '+modification, True)
 
     def processAbsValues(self, arrays):
         #rows, columns = len(arrays[0]), len(arrays)
         #finArray = np.zeros((rows, 2*columns))
         finArrays = []
-        """for i in range(rows):
-            for j in range(columns):
-                finArray[i,2*j] = arrays[j][i][0]
-                finArray[i,2*j+1] = arrays[j][i][1]
-        return finArray"""
         for arr in arrays:
             finArrays.append(arr[:,0])
             finArrays.append(arr[:,1])

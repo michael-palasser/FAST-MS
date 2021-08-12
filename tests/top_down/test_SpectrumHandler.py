@@ -18,7 +18,7 @@ def initTestLibraryBuilder():
     configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
     filePath = os.path.join(path, 'tests', 'top_down', 'dummySpectrum.txt')
     settings = {'sequName': 'dummyRNA', 'charge': -3, 'fragmentation': 'RNA_CAD', 'modifications': 'CMCT',
-                     'nrMod': 1, 'spectralData': filePath, 'noiseLimit': 10 ** 5, 'fragLib': ''}
+                     'nrMod': 1, 'spectralData': filePath, 'noiseLimit': 10 ** 6, 'fragLib': ''}
     props = SearchSettings(settings['sequName'], settings['fragmentation'], settings['modifications'])
     builder = FragmentLibraryBuilder(props, 1)
     builder.createFragmentLibrary()

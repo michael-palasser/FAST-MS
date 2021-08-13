@@ -130,19 +130,27 @@ class MolecularFormulaTest(TestCase):
     def testIsotopePattern(self, theoIsotopePattern=None, calcIsotopePattern=None, complete=True, max_ppm=0.5,
                            deltaCalcInt=5*10e-6):
         if theoIsotopePattern is not None:
-            print()
+            ppms = []
             # theoIsotopePattern = np.array(theoIsotopePattern, dtype=[('m/z', np.float64), ('calcInt', np.float64)])
-            theoIsotopePattern['calcInt'] *= (calcIsotopePattern['calcInt'][0] / theoIsotopePattern['calcInt'][0])
+            #theoIsotopePattern['calcInt'] *= (calcIsotopePattern['calcInt'][0] / theoIsotopePattern['calcInt'][0])
+            self.assertLess(np.sum(calcIsotopePattern['calcInt']), 1.000)
+            if complete:
+                theoIsotopePattern['calcInt']/=np.sum(theoIsotopePattern['calcInt'])
+                calcIsotopePattern['calcInt']/=np.sum(calcIsotopePattern['calcInt'])
+            else:
+                theoIsotopePattern['calcInt'] *= (calcIsotopePattern['calcInt'][0] / theoIsotopePattern['calcInt'][0])
             if len(theoIsotopePattern) > (len(calcIsotopePattern) + 1):
                 raise Exception('Length of calculated isotope pattern to short')
             for i in range(min(len(theoIsotopePattern),len(calcIsotopePattern))):
-                self.assertLess(np.abs(calculateError(theoIsotopePattern[i]['m/z'], calcIsotopePattern[i]['m/z'])),max_ppm)
+                error =calculateError(theoIsotopePattern[i]['m/z'], calcIsotopePattern[i]['m/z'])
+                self.assertLess(np.abs(error),max_ppm)
                 #self.assertAlmostEqual(theoIsotopePattern[i]['m/z'], calcIsotopePattern[i]['m/z'], delta=5 * 10 ** (-6))
                 self.assertAlmostEqual(theoIsotopePattern[i]['calcInt'], calcIsotopePattern[i]['calcInt'],
                                        delta=deltaCalcInt)
+                ppms.append(error)
             if complete:
                 self.assertAlmostEqual(1.0, float(np.sum(calcIsotopePattern['calcInt'])), delta=0.005)
-            self.assertTrue(np.sum(calcIsotopePattern['calcInt']) < 1)
+            return ppms[np.argmax(np.array(np.abs(ppms)))]
 
 
     def test_make_ffttables(self):
@@ -192,9 +200,9 @@ class MolecularFormulaTest(TestCase):
                 raise AssertionError(molFormulaDummy_i.getFormulaDict())
 
     def test_calculate_isotope_pattern_fft(self):
-        for i in range(5):
-            molFormulaDummy_i = MolecularFormula({'C': randint(50, 500), 'H': randint(100, 1000),
-                                                  'N': randint(10, 400), 'O': randint(10, 400),
+        for i in range(2):
+            molFormulaDummy_i = MolecularFormula({'C': randint(100, 1000), 'H': randint(200, 2000),
+                                                  'N': randint(50, 400), 'O': randint(50, 400),
                                                   'P': randint(0, 20), 'S': randint(0, 20)})
             exactIsotopePattern = molFormulaDummy_i.calculateIsotopePattern()
             fastIsotopePattern = molFormulaDummy_i.calculateIsotopePatternFFT(1)
@@ -202,7 +210,8 @@ class MolecularFormulaTest(TestCase):
             print(exactIsotopePattern)
             print(fastIsotopePattern)'''
             try:
-                self.testIsotopePattern(exactIsotopePattern,fastIsotopePattern,max_ppm=1.5, deltaCalcInt=10e-4)
+                print('max error', molFormulaDummy_i.toString(),
+                      self.testIsotopePattern(exactIsotopePattern,fastIsotopePattern,max_ppm=1.5, deltaCalcInt=10e-4))
             except AssertionError as e:
                 print(molFormulaDummy_i.toString())
                 print(exactIsotopePattern,fastIsotopePattern)

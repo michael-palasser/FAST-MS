@@ -395,8 +395,10 @@ class SpectrumHandler(object):
         precModCharge = self.getModCharge(self._precursor)
         self._normalizationFactor = self.getNormalizationFactor()
         logging.debug('Normalisation factor: '+ str(self._normalizationFactor))
-        self._protonIsoPatterns = self.getProtonIsotopePatterns()
+        self.getProtonIsotopePatterns()
         for fragment in fragmentLibrary:
+            formula =fragment.getFormula()
+            #neutralPatternFFT = formula.calculateIsotopePatternFFT(1, )
             logging.info(fragment.getName())
             self._searchedChargeStates[fragment.getName()] = []
             sortedPattern = np.sort(fragment.getIsotopePattern(), order='calcInt')[::-1]
@@ -406,7 +408,9 @@ class SpectrumHandler(object):
             radicals = fragment.getRadicals()
             for z in zRange:
                 logging.debug('* z'+str(z))
-                theoreticalPeaks = self.getIsotopePattern(sortedPattern,z,radicals)
+                theoreticalPeaks = copy.deepcopy(sortedPattern)
+                theoreticalPeaks['m/z'] = getMz(theoreticalPeaks['m/z'], z * self.__sprayMode, radicals)
+                theoreticalPeaks = self.getChargedIsotopePattern(sortedPattern, z, radicals)
                 if (configs['lowerBound'] < theoreticalPeaks[0]['m/z'] < self.__upperBound):
                     self._searchedChargeStates[fragment.getName()].append(z)
                     #make a guess of the ion abundance based on number in range
@@ -425,7 +429,8 @@ class SpectrumHandler(object):
                         logging.debug(str(spectralPeak[0])+'\t'+str(spectralPeak[1])+'\t'+str(spectralPeak[2])+'\t'+
                                       str(spectralPeak[3]))
                     if sumInt > 0:
-                        noise = self.calculateNoise(theoreticalPeaks[0]['m/z'], 4)
+                        #theoreticalPeaks=self.getChargedIsotopePattern2(formula, theoreticalPeaks, z-radicals)
+                        noise = self.calculateNoise(theoreticalPeaks[0]['m/z'], configs['noiseWindowSize'])
                         logging.debug('Noise:'+str(noise))
                         sumInt += notFound * noise * 0.5              #if one or more isotope peaks were not found noise added #parameter
                         notInNoise = np.where(theoreticalPeaks['calcInt'] >noise*
@@ -464,9 +469,9 @@ class SpectrumHandler(object):
         for i in range(maxZ):
             protonIsotopePatterns[i] = MolecularFormula({'H':i+1}).calcIsotopePatternPart(2)['calcInt']
             logging.debug(str(protonIsotopePatterns[i][0])+'\t'+str(protonIsotopePatterns[i][1]))
-        return protonIsotopePatterns
+        self._protonIsoPatterns = protonIsotopePatterns
 
-    def getIsotopePattern(self, neutralPattern,z, radicals):
+    def getChargedIsotopePattern(self, neutralPattern, z, radicals):
         '''
         Calculates the final theoretical isotope pattern of an ion
         :param (ndArray) neutralPattern: isotope pattern of the neutral species,
@@ -485,7 +490,29 @@ class SpectrumHandler(object):
             regressionVals = theoreticalPeaks['calcInt']
         for i in range(1,len(theoreticalPeaks)):
             theoreticalPeaks['calcInt'][i] += self._protonIsoPatterns[z-1][1]*regressionVals[i-1]*self.__sprayMode
+        theoreticalPeaks['calcInt'] /= np.sum(theoreticalPeaks['calcInt'])
         return theoreticalPeaks
+
+    def getChargedIsotopePattern2(self, formula, neutralPattern, nrHs):#, neutralFFT):
+        sortedNeutralPattern = np.sort(neutralPattern, order='m/z')
+        if self.__sprayMode:
+            #print('old',neutralPattern[0])
+            ionPatternFFT = formula.addFormula({'H': nrHs}).calculateIsotopePatternFFT(2,neutralPattern) #Warum besser mit neutral???
+        else:
+            ionPatternFFT = formula.subtractFormula({'H': nrHs}).calculateIsotopePatternFFT(2,neutralPattern)
+        ionPattern = sortedNeutralPattern
+        maxIndexArr = np.array((len(ionPattern),len(ionPatternFFT)))
+        maxIndex = np.min(maxIndexArr)
+        if np.max(maxIndexArr) == np.min(maxIndexArr):
+            #ionPattern['calcInt'] += (ionPatternFFT['calcInt']-neutralFFT['calcInt'])
+            ionPattern['calcInt'] = ionPatternFFT['calcInt']
+        else:
+            #print('maxIndex',maxIndex,maxIndexArr)
+            #ionPattern['calcInt'][:maxIndex] += (ionPatternFFT['calcInt'][:maxIndex]-neutralFFT['calcInt'][:maxIndex])
+            ionPattern['calcInt'][:maxIndex] = ionPatternFFT['calcInt'][:maxIndex]
+        ionPattern['calcInt'] /= np.sum(ionPattern['calcInt'])
+        return ionPattern#np.sort(ionPattern, order='calcInt')[::-1]
+
 
     def findPeak(self, theoPeak):
         searchMask = np.where(abs(calculateError(self.__spectrum[:, 0], theoPeak['m/z']))

@@ -1,9 +1,11 @@
 #import sqlite3
+
 import numpy as np
 
 from src.entities.Ions import FragmentIon, Fragment
 from src.entities.Search import Search
 from src.repositories.AbstractRepositories import AbstractRepository
+from tqdm import tqdm
 
 
 class SearchRepository(AbstractRepository):
@@ -89,7 +91,9 @@ class SearchRepository(AbstractRepository):
         '''
         searchVals = self.get('name', name)
         ions, delIons, remIons = [], [], []
-        for ionVals in self.getItems(searchVals[0], 'ions'):
+        ionVals = self.getItems(searchVals[0], 'ions')
+        bar = tqdm(total=len(ionVals)+4)
+        for ionVals in ionVals:
             peaks = [(peak[1], peak[2], peak[3], peak[4], peak[5]) for peak in self.getItems(ionVals[0],'peaks')]
             peaks = np.array(peaks, dtype=[('m/z', np.float64), ('relAb', np.float64),('calcInt', np.float64),
                                            ('error', np.float32), ('used', np.bool_)])
@@ -103,8 +107,11 @@ class SearchRepository(AbstractRepository):
                 delIons.append(ion)
             else:
                 remIons.append(ion)
+            bar.update(1)
         searchedZStates = {ionVals[1]:ionVals[2] for ionVals in self.getItems(searchVals[0], 'chargeStates')}
+        bar.update(2)
         log = self.getItems(searchVals[0], 'logs')[0][1]
+        bar.update(2)
         return Search(searchVals, ions, delIons, remIons, searchedZStates, log)
 
 

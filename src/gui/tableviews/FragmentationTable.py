@@ -3,6 +3,7 @@ from PyQt5 import QtCore, QtWidgets
 
 
 from src.gui.GUI_functions import connectTable, showOptions
+from src.gui.tableviews.PlotTables import PlotTableView
 from src.gui.tableviews.TableModels import AbstractTableModel
 
 
@@ -17,7 +18,7 @@ class FragmentationTableModel(AbstractTableModel):
 
     def data(self, index, role):
         '''
-        Overwrites the data method of AbstractTableModel to correctly format each value
+        Overwrites the typeData method of AbstractTableModel to correctly format each value
         '''
         if index.isValid():
             if role == QtCore.Qt.DisplayRole:
@@ -36,16 +37,16 @@ class FragmentationTable(QtWidgets.QWidget):
     '''
     Widget with QTableView showing relative percentages of each fragment
     '''
-    def __init__(self, data):
+    def __init__(self, typeData, siteData, siteHeaders):
         super().__init__(parent=None)
         verticalLayout = QtWidgets.QVBoxLayout(self)
         scrollArea = QtWidgets.QScrollArea(self)
-        #_scrollArea.setGeometry(QtCore.QRect(10, 10, len(data[0])*50+200, len(data)*22+25))
+        #_scrollArea.setGeometry(QtCore.QRect(10, 10, len(typeData[0])*50+200, len(typeData)*22+25))
         scrollArea.setWidgetResizable(True)
         # _scrollArea.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         # _scrollArea.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
-        model = FragmentationTableModel(data)
+        model = FragmentationTableModel(typeData)
         self._table = QtWidgets.QTableView(self)
         self._table.setSortingEnabled(True)
         self._table.setModel(model)
@@ -64,6 +65,8 @@ class FragmentationTable(QtWidgets.QWidget):
         self._table.resizeColumnsToContents()
         self._table.resizeRowsToContents()
         verticalLayout.addWidget(scrollArea)
-        #self.resize(len(data[0])*50+200, len(data)*22+25)
+        #self.resize(len(typeData[0])*50+200, len(typeData)*22+25)
+        table2 = PlotTableView(siteData, siteHeaders,'Fragmentation Efficiencies: ',0)
+        verticalLayout.addWidget(table2)
         self.show()
 

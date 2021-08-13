@@ -6,6 +6,7 @@ import matplotlib
 from matplotlib import pyplot as plt
 import matplotlib.ticker as mticker
 
+import matplotlib.path as mpath
 
 from PyQt5 import QtWidgets, QtGui
 from PyQt5.QtCore import Qt, QVariant, QCoreApplication
@@ -193,13 +194,15 @@ class SequenceCoveragePlot(FigureCanvasQTAgg):
         super(SequenceCoveragePlot, self).__init__(self._fig)
 
     def makePlot(self, coveragesForward, coveragesBackward, lineWidth, coloursF=['red'],coloursB=['red']):
-        rows = int(len(self._sequence) / lineWidth)+1
-        step_x = 1/(lineWidth+1)
+        sequLength=len(self._sequence)
+        rows = int(sequLength / lineWidth)+1
+        step_x = 1
         step_y = 1/(2*rows)
-        print('rows', rows, len(self._sequence),step_y)
+        #print('rows', rows, sequLength,step_y)
         self._fig = plt.figure(figsize=(lineWidth,rows+0))
         matplotlib.rcParams.update({'font.size': 15})
         ax = plt.subplot(111)
+        ax.set_xlim([-step_x*0.5, lineWidth+0.5])
         ax.spines['right'].set_visible(False)
         ax.spines['top'].set_visible(False)
         ax.spines['left'].set_visible(False)
@@ -219,42 +222,58 @@ class SequenceCoveragePlot(FigureCanvasQTAgg):
             plt.text(x=xPos, y=1-line, s=bb, fontsize=20)
             for j,coverageForward in enumerate(coveragesForward[i]):
                 if coverageForward and not np.isnan(coverageForward):
-                    yPos_j=1-line+step_y*0.49+(len(coveragesForward[i])-j-1)*step_y*0.2
-                    plt.text(x=xPos+step_x*0.6443, y=yPos_j, s='L', ha='right', c=coloursF[j],rotation=180)
-                    plt.text(x=xPos+step_x*0.62, y=1-line+step_y*0, s='I', ha='left', c=coloursF[-1])
+                    yPos_j=1-line+step_y*0.6+(len(coveragesForward[i])-j-1)*step_y*0.2
+                    plt.text(x=xPos+step_x*0.491, y=yPos_j, s='L', ha='center', c=coloursF[j],rotation=180)
+                    plt.text(x=xPos+step_x*0.586, y=1-line+step_y*0.15, s='I', ha='center', c=coloursF[-1])
             counter+=1
             if not (i+1)%lineWidth:
                 line+=2*step_y
-                plt.text(x=-step_x*0.6, y=1-line, s=str(counter), fontsize=10)
+                plt.text(x=-step_x*0.5, y=1-line, s=str(counter), fontsize=10)
                 xPos=step_x/2
-            if i != (len(self._sequence) - 1):
-                for j,coverageBackward in enumerate(coveragesBackward[i+1]):
+            if i != (sequLength):
+                for j,coverageBackward in enumerate(coveragesBackward[i]):
                     if coverageBackward and not np.isnan(coverageBackward):
-                        yPos_j=1-line-step_y*0.3-(len(coveragesForward[i])-j-1)*step_y*0.2
-                        plt.text(x=xPos+step_x*0.62, y=yPos_j, s='L', ha='left', c=coloursB[j])
+                        yPos_j=1-line-step_y*0.3-(len(coveragesBackward[i])-j-1)*step_y*0.2
+                        #plt.text(x=xPos+step_x*0.62, y=yPos_j, s='L', ha='left', c=coloursB[j])
+                        plt.text(x=xPos-step_x*0.375, y=yPos_j, s='L', ha='center', c=coloursB[j])
+                        plt.text(x=xPos-step_x*0.414, y=1-line-step_y*0.15, s='I', ha='center', c=coloursB[-1])
+
                         #if (not coveragesForward[i]) or (xPos==step_x/2):
-                        plt.text(x=xPos+step_x*0.62, y=1-line+step_y*0, s='I', ha='left', c=coloursB[-1])
+                        #plt.text(x=xPos+step_x*0.62, y=1-line-step_y*0.05, s='I', ha='left', c=coloursB[-1])
             if (i+1)%lineWidth:
                 xPos+=step_x
+
+        #plt.savefig('foo.png')
         plt.show()
 
 
 if __name__ == '__main__':
-    app = QApplication(sys.argv)
     sequ = list('GGCUGCUUGUCCUUUAAUGGUCCAGUC')
+    '''app = QApplication(sys.argv)
     overall = [(key,val*100) for key,val in
                {'a': 0.7692307692307693, 'c': 0.9230769230769231, 'w': 0.7692307692307693, 'y': 0.9230769230769231, 'allForward': 0.9615384615384616, 'allBackward': 0.9230769230769231, 'all': 0.9259259259259259}.items()]
-    '''gui = SequCovWidget( overall,
+    gui = SequCovWidget( overall,
                          sequ, {'a': np.array([0., 1., 0., 1., 1., 1., 0., 1., 1., 1., 0., 0., 1., 0., 1., 1., 1.,
        1., 1., 1., 1., 1., 1., 1., 1., 1., np.nan]), 'c': np.array([0., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.,
        1., 1., 1., 1., 1., 0., 1., 1., 1.,np.nan])}, {'w': np.array([np.nan,1., 1., 0., 0., 1., 1., 0., 1., 1., 0., 1., 1., 1., 1., 1., 1., 1.,
        0., 1., 1., 1., 1., 1., 1., 1., 0.]), 'y': np.array([np.nan,1., 1., 1., 1., 1., 1., 1., 1., 1., 0., 1., 1., 1., 1., 1., 1., 1.,
        1., 1., 1., 1., 1., 1., 1., 1., 0.])},np.array([(val1,val2) for val1,val2 in zip(np.array([0., 1., 0., 1., 1., 1., 0., 1., 1., 1., 0., 0., 1., 0., 1., 1., 1.,
                                             1., 1., 1., 1., 1., 1., 1., 1., 1., np.nan]),np.array([np.nan,1., 1., 1., 1., 1., 1., 1., 1., 1., 0., 1., 1., 1., 1., 1., 1., 1.,
-                                            1., 1., 1., 1., 1., 1., 1., 1., 0.]))]))
-    '''
-    sequ = list('GGCUGCUUGUCCUUUAAUGGUCCAGUC')*10
+                                            1., 1., 1., 1., 1., 1., 1., 1., 0.]))]))'''
+
+    '''sequ = list('GGCUGCUUGUCCUUUAAUGGUCCAGUC')*10
     sequLength = len(sequ)
     sequPlot = SequenceCoveragePlot(sequ, np.ones((sequLength,1)),
-                                          np.ones((sequLength,1)), 20)
-    sys.exit(app.exec_())
+                                          np.ones((sequLength,1)), 20)'''
+
+    star = matplotlib.markers.TICKLEFT
+    print(star)
+    circle = mpath.Path.unit_circle()
+    # concatenate the circle with an internal cutout of the star
+    '''verts = np.concatenate([circle.vertices, star])
+    codes = np.concatenate([circle.codes, star])
+    cut_star = mpath.Path(verts, codes)
+    plt.plot(np.arange(10) ** 2, '--r', marker=cut_star, markersize=15)'''
+
+    plt.show()
+    #sys.exit(app.exec_())

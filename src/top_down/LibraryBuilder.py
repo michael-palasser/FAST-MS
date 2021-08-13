@@ -5,6 +5,7 @@ Created on 21 Jul 2020
 '''
 from multiprocessing import Pool
 import logging
+#from tqdm import tqdm
 
 from src.Exceptions import InvalidInputException
 from src.MolecularFormula import MolecularFormula
@@ -221,21 +222,26 @@ class FragmentLibraryBuilder(object):
         '''
         Calls calculateIsotopePattern() function (class MolecularFormula). Calculation is parallelized if length of
         (precursor) sequence is longer than criticalLength (depends on type of molecule)
+        :param (Callable) fun:
         :return (list[Fragment]) list of fragments with isotope patterns
         '''
         """factor = 1
         if self.__sequence.getMolecule() == 'Protein':
             factor = 0.5
         if len(self.__sequence.getSequenceList()*factor<25):"""
+        #self._fun = fun
         criticalLength = 30
         if self.__sequence.getMolecule() == 'Protein':
             criticalLength = 60
         if len(self.__sequence.getSequenceList())<criticalLength: #flag == 0:
+            #self._bar = tqdm(total=len(self.__fragmentLibrary))
             logging.debug('Normal calculation')
             for fragment in self.__fragmentLibrary:
                 fragment.setIsotopePattern(fragment.getFormula().calculateIsotopePattern())
                 #print(fragment.getName())
                 logging.info('\t'+fragment.getName())
+                #self._bar.update(1)
+                #self._fun()
         else:
             logging.debug('Parallel calculation')
             p = Pool()
@@ -254,5 +260,7 @@ class FragmentLibraryBuilder(object):
         fragment.setIsotopePattern(fragment.getFormula().calculateIsotopePattern())
         #print(fragment.getName())
         logging.info('\t'+fragment.getName())
+        #self._bar.update(1) does not work in python 3.8
+        #self._fun()
         return fragment
 

@@ -21,8 +21,10 @@ from src.gui.GUI_functions import connectTable, shoot, createComboBox
 from src.gui.IsotopePatternView import AddIonView
 from src.gui.dialogs.AbstractDialogs import AbstractDialog
 from src.gui.tableviews.FragmentationTable import FragmentationTable
+from src.gui.widgets.OccupancyWidget import OccupancyWidget
 from src.gui.widgets.SequCovWidget import SequCovWidget
 from src.gui.widgets.InfoView import InfoView
+from src.gui.widgets.Widgets import LoadingWidget
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.repositories.IsotopePatternRepository import IsotopePatternRepository
 from src.top_down.Analyser import Analyser
@@ -36,7 +38,7 @@ from src.gui.dialogs.CheckIonView import CheckMonoisotopicOverlapView, CheckOver
 from src.gui.tableviews.TableModels import IonTableModel
 from src.gui.tableviews.PlotTables import PlotTableView
 from src.gui.tableviews.ShowPeaksViews import PeakView, SimplePeakView
-from src.gui.widgets.SequencePlots import PlotFactory
+from src.gui.widgets.SequencePlots import PlotFactory, plotBars
 from src.gui.dialogs.SimpleDialogs import ExportDialog, SelectSearchDlg, OpenSpectralDataDlg, SaveSearchDialog
 #from src.gui.ParameterDialogs import TDStartDialog
 from src.gui.dialogs.StartDialogs import TDStartDialog
@@ -72,10 +74,13 @@ class TD_MainController(object):
                                                self._settings['modifications'])
             self._info = Info(self._settings, self._configs, self._propStorage)
             self._saved = False
-            self._savedName = os.path.split(self._settings['spectralData'])[-1][:-4]
+            try:
+                self._savedName = os.path.split(self._settings['spectralData'])[-1][:-4]
+            except:
+                self._savedName = ''
             try:
                 if self.search() == 0:
-                    self.setUpUi(parent)
+                    self.setUpUi()
             except InvalidInputException as e:
                 traceback.print_exc()
                 QtWidgets.QMessageBox.warning(None, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
@@ -93,8 +98,8 @@ class TD_MainController(object):
                 if not os.path.isfile(self._settings['spectralData']):
                     choice = QtWidgets.QMessageBox.question(parent, 'Spectral Data not found!',
                         'File with spectral data could not be found.\n'
-                        'Do you want to manually select the file? Otherwise, the analysis  will be loaded without the '
-                        'spectral data?',
+                        'Do you want to manually select the file? Otherwise, the analysis will be loaded without the '
+                        'spectral data.',
                         QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
                     if choice == QtWidgets.QMessageBox.Yes:
                         dlg = OpenSpectralDataDlg(parent)
@@ -115,7 +120,7 @@ class TD_MainController(object):
                 self._analyser = Analyser(None, self._propStorage.getSequenceList(), self._settings['charge'],
                                           self._propStorage.getModificationName())
                 self._saved = True
-                self.setUpUi(parent)
+                self.setUpUi()
 
     @staticmethod
     def deleteSearch(name, searchService):
@@ -155,8 +160,9 @@ class TD_MainController(object):
                     #sys.exit()
         if libraryImported == False:
             print("\n********** Writing new list of isotope patterns to:", patternReader.getFile(), "**********\n")
+            #ld = LoadingWidget(len(self._libraryBuilder.getFragmentLibrary()), True)
             start = time.time()
-            patternReader.saveIsotopePattern(self._libraryBuilder.addNewIsotopePattern())
+            patternReader.saveIsotopePattern(self._libraryBuilder.addNewIsotopePattern())#ld.progress))
             print("\ndone\nexecution time: ", round((time.time() - start) / 60, 2), "min\n")
 
         """Importing spectral pattern"""
@@ -215,12 +221,12 @@ class TD_MainController(object):
         print("done")
         return 0
 
-    def setUpUi(self, parent):
+    def setUpUi(self):
         '''
         Opens a SimpleMainWindow with the ion lists and a InfoView with the protocol
         '''
         self._openWindows = []
-        self._mainWindow = SimpleMainWindow(parent, 'Results:  ' + os.path.split(self._settings['spectralData'])[-1])
+        self._mainWindow = SimpleMainWindow(None, 'Results:  ' + os.path.split(self._settings['spectralData'])[-1])
         self._openWindows.append(self._mainWindow)
         self._translate = QtCore.QCoreApplication.translate
         self._centralwidget = self._mainWindow.centralWidget()
@@ -623,22 +629,34 @@ class TD_MainController(object):
         return list(self._intensityModeller.getObservedIons().values())
 
     def showFragmentation(self):
+        '''
+        Makes a widget with a table with the proportion of each fragment type and a table with the relative abundances
+        for every fragment type and cleavage site. The latter is plotted (bar plot).
+        '''
         self._analyser.setIons(self.getIonList())
-        fragmentationView = FragmentationTable([(type,val) for type,val in
-                                                self._analyser.calculateRelAbundanceOfSpecies()[0].items()])
+        fragmentation, fragPerSite = self._analyser.calculateRelAbundanceOfSpecies()
+        forwardVals = self._propStorage.filterByDir(fragPerSite, 1)
+        backwardVals = self._propStorage.filterByDir(fragPerSite, -1)
+        table = self._analyser.toTable(forwardVals.values(), backwardVals.values())
+        headers= list(fragPerSite.keys())
+        fragmentationView = FragmentationTable([(type,val) for type,val in fragmentation.items()],
+                                               table, headers)
         self._openWindows.append(fragmentationView)
+        plotBars(self._propStorage.getSequenceList(), np.array(table)[:,2:-2].astype(float), headers,
+                 'Fragmentation Efficiencies')
+
 
     def showOccupancyPlot(self):
         '''
-        Makes a widget with the occupancy plot and a table with the corresponding values
+        Makes a widget with 2 tables showing the relative occupancies and the absolute ones and plots both data sets
         '''
         #dlg = QtWidgets.QInputDialog()
         modification,ok = QtWidgets.QInputDialog.getText(self._mainWindow,'Occupancy Plot', 'Enter the modification: ',
                                                          text=self._propStorage.getModificationName())
         if ok and modification!='':
             self._analyser.setIons(self.getIonList())
-            percentageDict = self._analyser.calculateOccupancies(self._configs.get('interestingIons'), modification,
-                                                                 self._propStorage.getUnimportantModifs())[0]
+            percentageDict, absDict = self._analyser.calculateOccupancies(self._configs.get('interestingIons'), modification,
+                                                                 self._propStorage.getUnimportantModifs())
             '''if percentageDict == None:
                 dlg = QtWidgets.QMessageBox(self._mainWindow, title='Unvalid Request',
                             text='It is not possible to calculate occupancies for an unmodified molecule.',
@@ -648,12 +666,37 @@ class TD_MainController(object):
             plotFactory = PlotFactory(self._mainWindow)
             forwardVals = self._propStorage.filterByDir(percentageDict,1)
             backwardVals = self._propStorage.filterByDir(percentageDict,-1)
-            plotFactory.showOccupancyPlot(self._propStorage.getSequenceList(), forwardVals, backwardVals,
+            sequence = self._propStorage.getSequenceList()
+            plotFactory.showOccupancyPlot(sequence, forwardVals, backwardVals,
                                           self._settings['nrMod'], modification)
-            occupView = PlotTableView(self._analyser.toTable(forwardVals.values(), backwardVals.values()),
+
+            #absTable = np.zeros((len(sequence),len(absDict.keys())))
+            forwardAbsVals = self._propStorage.filterByDir(absDict,1)
+            backwardAbsVals = self._propStorage.filterByDir(absDict,-1)
+
+            absTable = self._analyser.toTable(self.processAbsValues(list(forwardAbsVals.values())),
+                                              self.processAbsValues(list(backwardAbsVals.values())))
+            headers=[]
+            for key in list(forwardAbsVals.keys())+list(backwardAbsVals.keys()):
+                headers.append(key)
+                headers.append(key+modification)
+            '''occupView = PlotTableView(self._analyser.toTable(forwardVals.values(), backwardVals.values()),
                                            list(percentageDict.keys()), 'Occupancies: '+modification, 3,
-                                      self._analyser.getModificationLoss())
+                                      self._analyser.getModificationLoss())'''
+            occupView = OccupancyWidget(modification, self._analyser.toTable(forwardVals.values(), backwardVals.values()),
+                                        list(percentageDict.keys()), self._analyser.getModificationLoss(),
+                                        absTable, headers)
             self._openWindows.append(occupView)
+            plotBars(sequence, np.array(absTable)[:,2:-2].astype(float), headers, 'Abs. Occupancies: '+modification, True)
+
+    def processAbsValues(self, arrays):
+        #rows, columns = len(arrays[0]), len(arrays)
+        #finArray = np.zeros((rows, 2*columns))
+        finArrays = []
+        for arr in arrays:
+            finArrays.append(arr[:,0])
+            finArrays.append(arr[:,1])
+        return finArrays
 
 
     def showChargeDistrPlot(self, reduced):
@@ -691,8 +734,6 @@ class TD_MainController(object):
         #globalData = [list(val) for key,val in zip(('forward','backward'), np.transpose(overall[:,0:2]))]
         sequCovWidget = SequCovWidget(calcData, sequ, coverages[0], coverages[1], overall)
         self._openWindows.append(sequCovWidget)
-
-
 
 
     def saveAnalysis(self):

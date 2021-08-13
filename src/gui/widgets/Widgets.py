@@ -1,6 +1,8 @@
+import sys
+
 from PyQt5 import QtWidgets, QtGui, QtCore
 from PyQt5.QtGui import QMovie
-from PyQt5.QtWidgets import QFileDialog, QLabel
+from PyQt5.QtWidgets import QFileDialog, QLabel, QApplication
 
 from src.gui.GUI_functions import createComboBox
 
@@ -128,15 +130,44 @@ class LoadingWidget(QtWidgets.QWidget):
     '''
     QWidget which shows a gif to illustrate an ongoing process.
     '''
-    def __init__(self, parent):
-        super(LoadingWidget, self).__init__(parent)
-        self._loading_lbl = QLabel(self)
+    def __init__(self, size, stop=False):
+        super(LoadingWidget, self).__init__(None)
+        self._size = size
+        verticalLayout = QtWidgets.QVBoxLayout(self)
+        self._progress = QtWidgets.QProgressBar(self)
+        self._progress.setGeometry(200, 80, 250, 20)
+        verticalLayout.addWidget(self._progress)
+        self._progress.setValue(0)
+        self._completed = 0
+        if stop:
+            stopBtn = QtWidgets.QPushButton(self)
+            verticalLayout.addWidget(stopBtn)
+            stopBtn.setText('Cancel')
+            stopBtn.clicked.connect(self.cancel)
+        self.show()
+        '''self._loading_lbl = QLabel(self)
         loading_movie = QMovie("loading.gif")  # some gif in here
         self._loading_lbl.setMovie(loading_movie)
         loading_movie.start()
 
         self.setGeometry(50, 50, 100, 100)
         self.setMinimumSize(10, 10)
+        self.show()'''
+
+    def progress(self):
+        self._completed += 1/ self._size
+        self._progress.setValue(self._completed)
         self.show()
+        if self._progress == 1:
+            self.close()
 
+    def cancel(self):
+        choice = QtWidgets.QMessageBox.question(self, "",'Do you really want to cancel?',
+                                                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+        if choice == QtWidgets.QMessageBox.Yes:
+            self.close()
 
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    gui =LoadingWidget(100, True)
+    sys.exit(app.exec_())

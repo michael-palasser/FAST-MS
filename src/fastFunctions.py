@@ -121,6 +121,7 @@ def calculatePercentage(isotopeTable):
     return massI,propI
 
 
+
 @njit
 def calculateNuclFineStructure(isotopePeak, isotopeTable):
     '''

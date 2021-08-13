@@ -281,14 +281,17 @@ class MolecularFormula(object):
         return abundanceTable, elemNrs, np.sum(dm[:,0])/np.sum(dm[:,1])
 
 
-    def calculateIsotopePatternFFT(self, accelerate):
+    def calculateIsotopePatternFFT(self, accelerate,exactPattern=None):#, minSumCorrection=0):
         '''
         Calculates isotope patterns based on molecular formulas using a combination of the usual polynomial and the
         fast fourier transform method
         :return: (ndarray(dtype=[float,float])) isotope pattern (structured numpy array: [(mass,relative Abundance)])
         '''
-        exactPattern= self.calculateIsotopePattern(accelerate)
-        if np.sum(exactPattern['calcInt']) > MIN_SUM:
+        #assert minSumCorrection+MIN_SUM<1
+        #print('new',self.calculateIsotopePattern(accelerate)[0])
+        if exactPattern is None:
+            exactPattern= self.calculateIsotopePattern(accelerate)
+        if np.sum(exactPattern['calcInt']) > MIN_SUM:#+minSumCorrection:
             return np.array(exactPattern, dtype=isoPatternDtype)
         abundanceTable, elemNrs, dm = self.makeFFTTables(exactPattern['m/z'][0])
         isotope_pattern =  np.array(self.calculateAbundancesFFT(abundanceTable, elemNrs), dtype=isoPatternDtype)
@@ -296,7 +299,7 @@ class MolecularFormula(object):
         isoPeak = len(exactPattern)
         isotope_pattern['m/z'] =(isotope_pattern['m/z']-isotope_pattern['m/z'][isoPeak-1])*dm+exactPattern['m/z'][-1]
         finalPattern = [row for row in exactPattern]
-        while sumInt <MIN_SUM:
+        while sumInt <MIN_SUM:#+minSumCorrection:
             finalPattern.append(isotope_pattern[isoPeak])
             sumInt+=isotope_pattern[isoPeak]['calcInt']
             isoPeak+=1
@@ -341,6 +344,34 @@ class MolecularFormula(object):
             M_iso = np.sum(ultrafineStruct[:,0]*ultrafineStruct[:,1])/prop
             isotope_pattern.append((M_iso,prop))
         return np.array(isotope_pattern, dtype=isoPatternDtype)
+
+
+    """def makeFFTCorrectionTable(self,neutralPattern):
+        '''
+        Creates an array with the abundances of each isotope, an array with the nrs of each element and estimates the
+        spacing between the isotope peaks (in Da). For universal elemental composition.
+        :param (float) monoMass: monoisotopic mass of the molecule
+        :return:
+            (ndarray(dtype=[float,])) abundance table (2D array, each row represents an element, column index represents
+                the number of nucleons;
+            (ndarray(dtype=[float])) nr. of each element in the formula (1D array, each row represents an element);
+            (float) estimated spacing between the isotope peaks
+        '''
+        maxMass = int(np.max(neutralPattern['m/z']))+2
+        abundanceTable = np.zeros((2,maxMass))
+        for i,line in enumerate(sorted(neutralPattern['calcInt'])):
+            abundanceTable[0][100+i] = line
+        abundanceTable[1][1] = self._periodicTable['H'][2]
+        return abundanceTable 
+    
+    def correctNeutralIsotopePattern(self, neutralPattern, charge):
+        abundanceTable=self.makeFFTCorrectionTable(neutralPattern)
+        self.calculateAbundancesFFT(neutralPattern, )"""
+
+
+
+
+
 
     '''def makePoissonTable(self):
         lamdaHNOS = 0

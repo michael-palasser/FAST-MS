@@ -437,7 +437,7 @@ class SpectrumHandler(object):
                                               configs['thresholdFactor'] / (sumInt/sumIntTheo))
                         if theoreticalPeaks[notInNoise].size > peakQuantitiy:
                             logging.debug('* All Peaks:')
-                            foundPeaks = [self.findPeak(theoPeak) for theoPeak in theoreticalPeaks[notInNoise]]
+                            foundPeaks = [self.findPeak(theoPeak, configs['errorTolerance']) for theoPeak in theoreticalPeaks[notInNoise]]
                             #find other isotope Peaks
                             foundPeaksArr = np.sort(np.array(foundPeaks, dtype=self._peaksArrType), order=['m/z'])
                             if not np.all(foundPeaksArr['relAb']==0):
@@ -514,9 +514,9 @@ class SpectrumHandler(object):
         return ionPattern#np.sort(ionPattern, order='calcInt')[::-1]
 
 
-    def findPeak(self, theoPeak):
+    def findPeak(self, theoPeak, tolerance=0):
         searchMask = np.where(abs(calculateError(self.__spectrum[:, 0], theoPeak['m/z']))
-                              < getErrorLimit(self.__spectrum[:, 0]))
+                              < getErrorLimit(self.__spectrum[:, 0])+tolerance)
         return self.getCorrectPeak(self.__spectrum[searchMask], theoPeak)
 
 

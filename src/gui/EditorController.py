@@ -222,6 +222,8 @@ class AbstractEditorController(AbstractSimpleEditorController, ABC):
         '''
         To open a new pattern
         '''
+        if title is False:
+            title = "Open"
         openedPattern = self.open(title)
         if openedPattern != None:
             self._pattern = openedPattern
@@ -380,9 +382,9 @@ class ElementEditorController(AbstractEditorController):
         self.createWidgets(self._centralwidget, self._formLayout, ["Name: "],
                            {"name": QtWidgets.QLineEdit(self._centralwidget)}, [self._pattern.getName()])
         self._widgets['name'].setToolTip('First Letter must be uppercase, all other letters must be lowercase')
-        self.table = self.createTableWidget(self._centralwidget, self._pattern.getItems(),
+        self._table = self.createTableWidget(self._centralwidget, self._pattern.getItems(),
                                             self._service.getHeaders(), self._service.getBoolVals())
-        self._formLayout.setWidget(1, QtWidgets.QFormLayout.SpanningRole, self.table)   #ToDo
+        self._formLayout.setWidget(1, QtWidgets.QFormLayout.SpanningRole, self._table)   #ToDo
         self._mainWindow.show()
 
     def save(self, *args):
@@ -390,7 +392,7 @@ class ElementEditorController(AbstractEditorController):
         if args and args[0] == None:
             id = None
         super(ElementEditorController, self).save(Element(self._widgets["name"].text(),
-                                                          self.readTable(self.table, self._service.getBoolVals()), id))
+                                                          self.readTable(self._table, self._service.getBoolVals()), id))
 
 
 

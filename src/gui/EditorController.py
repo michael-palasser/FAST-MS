@@ -103,7 +103,15 @@ class AbstractSimpleEditorController(ABC):
             for col in range(table.columnCount()):
                 widgetItem = table.item(row, col)
                 if col in boolVals:
-                    rowData.append(int(widgetItem.checkState()/2))
+                    try:
+                        rowData.append(int(widgetItem.checkState()/2))
+                    except AttributeError as e:
+                        newItem = QtWidgets.QTableWidgetItem()
+                        newItem.setCheckState(QtCore.Qt.Checked)
+                        table.setItem(row,col, newItem)
+                        rowData.append(1)
+                        print(row,col,boolVals,widgetItem)
+                        raise Warning(e.__str__())
                 elif widgetItem and widgetItem.text():
                     rowData.append(widgetItem.text())
                 else:
@@ -142,11 +150,13 @@ class AbstractSimpleEditorController(ABC):
                     emptyRow = rowNr
                     break
             if emptyRow == rowCount:
+                #self.insertRow(table, bools)
                 table.insertRow(rowCount)
             for j in range(columnCount):
                 if not table.item(selectedRowIndex, j) is None:
                     table.setItem(emptyRow, j, QtWidgets.QTableWidgetItem(table.item(selectedRowIndex, j).text()))
                     if j in bools:
+                        print('bool',emptyRow, j)
                         table.item(emptyRow, j).setCheckState(table.item(selectedRowIndex, j).checkState())
             table.resizeRowsToContents()
         if action == deleteRowAction:
@@ -438,6 +448,12 @@ class FragmentEditorController(AbstractEditorControllerWithTabs):
         self._mainWindow.updateComboBox(self._widgets['precursor'], precNames)
 
     def save(self, *args):
+        '''prec = self._widgets['precursor'].currentText()
+        table2 = self.readTable(self._table2, self._service.getBoolVals()[1])
+        if prec not in [row[0] for row in table2]:
+            QtWidgets.QMessageBox.warning(self._mainWindow, "Problem occured", prec + ' not found in table',
+                                          QtWidgets.QMessageBox.Ok)'''
+            #raise InvalidInputException('Precursor not found', prec + ' not included in table')
         id = self._pattern.getId()
         if args and args[0] == None:
             id = None
@@ -505,6 +521,27 @@ class ModificationEditorController(AbstractEditorControllerWithTabs):
                                                                            self._widgets["modification"].text(), self.readTable(self._table1, self._service.getBoolVals()[0]),
                                                                            self.readTable(self._table2, self._service.getBoolVals()[1]), id))
 
+    def delete(self):
+        '''
+        Delets a pattern
+        '''
+        openDialog = OpenDialog("Delete", self._service.getAllPatternNames())
+        # openDialog.show()
+        if openDialog.exec_() and openDialog.accepted:
+            text = openDialog.getName()
+            if text != "--New--" and text != '-':
+                print('Deleting ' + text)
+                choice = QtWidgets.QMessageBox.question(self._mainWindow, 'Deleting ',
+                                                        "Warning: Deleting " + text +
+                                                        " cannot be undone!\n\nResume?",
+                                                        QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+                if choice == QtWidgets.QMessageBox.Yes:
+                    print("deleting", text)
+                    self._pattern = self._service.delete(text)
+            else:
+                #raise InvalidInputException('Deleting', 'Deleting "'+text+ '" not possible')
+                QtWidgets.QMessageBox.warning(self._mainWindow, "Problem occured", 'Deleting "'+text+ '" not possible',
+                                              QtWidgets.QMessageBox.Ok)
 
 class IntactIonEditorController(AbstractEditorController):
     '''

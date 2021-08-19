@@ -97,7 +97,7 @@ class IntensityModeller(object):
         # Grubbs('isch) test
         gValue = np.zeros(len(spectralIntensities))
         if solution.fun ** (0.5) > 0:
-            gValue = (spectralIntensities - calcIntensities) / solution.fun ** (0.5)
+            gValue = (spectralIntensities - calcIntensities) / np.sqrt(solution.fun/len(spectralIntensities))
             #print(gValue, solution.fun, spectralIntensities,calcIntensities )
         outlier_index = np.where(gValue > self._configs['outlierLimit'])
         return solution, mzArray[outlier_index].tolist()

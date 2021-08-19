@@ -86,7 +86,7 @@ class SpectrumHandler(object):
                                        ('calcInt', float), ('error', np.float32), ('used', bool)])
 
     def calcPrecCharge(self, charge, radicals):
-        return abs(charge - radicals)
+        return abs(charge) - radicals #must be changed if radicals turns to electrons
 
     def setNormalizationFactor(self, factor):
         self._normalizationFactor = factor
@@ -470,7 +470,7 @@ class SpectrumHandler(object):
         :return: (ndArray[float,float]) array with 2 columns: rows represent proton nr + 1, column 1: monoisotopic,
             column 2: M+1 peak
         '''
-        maxZ = abs(self.__settings['charge'])
+        maxZ = abs(self.__settings['charge'])+1
         protonIsotopePatterns = np.zeros((maxZ,2))
         for i in range(maxZ):
             protonIsotopePatterns[i] = MolecularFormula({'H':i+1}).calcIsotopePatternPart(2)['calcInt']

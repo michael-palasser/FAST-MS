@@ -12,6 +12,7 @@ from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.simpleFunctions import eMass
 from src.top_down.LibraryBuilder import FragmentLibraryBuilder
 from src.top_down.SpectrumHandler import SpectrumHandler, getErrorLimit, getMz, calculateError
+from tests.test_MolecularFormula import averaginine, averagine
 from tests.top_down.test_LibraryBuilder import initTestSequences
 
 
@@ -59,7 +60,7 @@ class TestSpectrumHandler(TestCase):
 
     def test_calcPrecCharge(self):
         self.assertEqual(5, self.spectrumHandler.calcPrecCharge(6, 1))
-        self.assertEqual(5, self.spectrumHandler.calcPrecCharge(-6, -1))
+        self.assertEqual(5, self.spectrumHandler.calcPrecCharge(-6, 1))
 
     def test_add_spectrum_from_csv_and_txt(self):
         with open(os.path.join(path, 'tests', 'top_down', 'dummySpectrum.csv'), 'r') as f:
@@ -299,35 +300,33 @@ class TestSpectrumHandler(TestCase):
         spectrumHandlerNeg = SpectrumHandler(props, builder.getPrecursor(), settings)
         spectrumHandlerPos.getProtonIsotopePatterns()
         spectrumHandlerNeg.getProtonIsotopePatterns()
-        for i in range(100):
-            nrH = randint(100, 2000)
-            molFormulaDummy_i = MolecularFormula({'C': randint(50, 100), 'H': nrH,
-                                                  'N': randint(20, 50), 'O': randint(20, 50),
-                                                  'P': randint(0, 10), 'S': randint(0, 5)})
-            exactIsotopePattern = molFormulaDummy_i.calculateIsotopePattern()
-            #neutralIsotopePatternFFT = molFormulaDummy_i.calculateIsotopePatternFFT(1,exactIsotopePattern)
-            exactIsotopePattern['calcInt'] /= np.sum(exactIsotopePattern['calcInt'])
-            #print('exact:',exactIsotopePattern[0])
-            maxZ = 20
-            if maxZ>nrH/40:
-                maxZ = int(nrH/40)
-            z = randint(1,maxZ)
-            molForm_i_pos = molFormulaDummy_i.subtractFormula({'H': z})
-            molForm_i_neg = molFormulaDummy_i.addFormula({'H': z})
-            correctedPos = spectrumHandlerPos.getChargedIsotopePattern2(molForm_i_pos, molForm_i_pos.calculateIsotopePattern(),
-                                                                        z)#,neutralIsotopePatternFFT)
-            correctedPos['m/z'] =getMz(correctedPos['m/z'], z, 0)
-            exactIsotopePattern_pos = deepcopy(exactIsotopePattern)
-            exactIsotopePattern_pos['m/z']=exactIsotopePattern_pos['m/z']/z-eMass
-            exactIsotopePattern_neg = deepcopy(exactIsotopePattern)
-            exactIsotopePattern_neg['m/z']=exactIsotopePattern_neg['m/z']/z+eMass
-            #print(correctedPos['m/z'], exactIsotopePattern['m/z'])
+        for i in range(10):
+            randNr = randint(1, 100)
+            molFormulaDummy_RNA = MolecularFormula({key:int(round(val*randNr)) for key,val in averaginine.items()})
+            molFormulaDummy_prot = MolecularFormula({key:int(round(val*randNr)) for key,val in averagine.items()})
+            for molFormulaDummy_i in [molFormulaDummy_RNA,molFormulaDummy_prot]:
+                exactIsotopePattern = molFormulaDummy_i.calculateIsotopePattern()
+                #neutralIsotopePatternFFT = molFormulaDummy_i.calculateIsotopePatternFFT(1,exactIsotopePattern)
+                exactIsotopePattern['calcInt'] /= np.sum(exactIsotopePattern['calcInt'])
+                #print('exact:',exactIsotopePattern[0])
+                maxZ = int(randNr/2)+2
+                z = randint(1,maxZ)
+                molForm_i_pos = molFormulaDummy_i.subtractFormula({'H': z})
+                molForm_i_neg = molFormulaDummy_i.addFormula({'H': z})
+                correctedPos = spectrumHandlerPos.getChargedIsotopePattern2(molForm_i_pos, molForm_i_pos.calculateIsotopePattern(),
+                                                                            z)#,neutralIsotopePatternFFT)
+                correctedPos['m/z'] =getMz(correctedPos['m/z'], z, 0)
+                exactIsotopePattern_pos = deepcopy(exactIsotopePattern)
+                exactIsotopePattern_pos['m/z']=exactIsotopePattern_pos['m/z']/z-eMass
+                exactIsotopePattern_neg = deepcopy(exactIsotopePattern)
+                exactIsotopePattern_neg['m/z']=exactIsotopePattern_neg['m/z']/z+eMass
+                #print(correctedPos['m/z'], exactIsotopePattern['m/z'])
 
-            correctedNeg = spectrumHandlerNeg.getChargedIsotopePattern2(molForm_i_neg, molForm_i_neg.calculateIsotopePattern(),
-                                                                        z)#,neutralIsotopePatternFFT)
-            correctedNeg['m/z'] =getMz(correctedNeg['m/z'], -z, 0)
-            print(self.testIsotopePattern(exactIsotopePattern_pos,correctedPos,deltaCalcInt=1*10e-4))
-            print(self.testIsotopePattern(exactIsotopePattern_neg,correctedNeg,deltaCalcInt=1*10e-4))
+                correctedNeg = spectrumHandlerNeg.getChargedIsotopePattern2(molForm_i_neg, molForm_i_neg.calculateIsotopePattern(),
+                                                                            z)#,neutralIsotopePatternFFT)
+                correctedNeg['m/z'] =getMz(correctedNeg['m/z'], -z, 0)
+                print(self.testIsotopePattern(exactIsotopePattern_pos,correctedPos,deltaCalcInt=1*10e-4))
+                print(self.testIsotopePattern(exactIsotopePattern_neg,correctedNeg,deltaCalcInt=1*10e-4))
             '''print('max error', molFormulaDummy_i.toString(),
                   self.testIsotopePattern(exactIsotopePattern,molForm_i_cor_pos,max_ppm=1.5, deltaCalcInt=8*10e-5))
             print('max error', molFormulaDummy_i.toString(),
@@ -340,7 +339,7 @@ class TestSpectrumHandler(TestCase):
     def testIsotopePattern(self, theoIsotopePattern=None, calcIsotopePattern=None, complete=True, max_ppm=0.3,
                            deltaCalcInt=5*10e-6):
         if theoIsotopePattern is not None:
-            ppms = []
+            ppms, diffs = [], []
             # theoIsotopePattern = np.array(theoIsotopePattern, dtype=[('m/z', np.float64), ('calcInt', np.float64)])
             #theoIsotopePattern['calcInt'] *= (calcIsotopePattern['calcInt'][0] / theoIsotopePattern['calcInt'][0])
             if len(theoIsotopePattern) > (len(calcIsotopePattern) + 1):
@@ -349,13 +348,16 @@ class TestSpectrumHandler(TestCase):
                 error =calculateError(theoIsotopePattern[i]['m/z'], calcIsotopePattern[i]['m/z'])
                 self.assertLess(np.abs(error),max_ppm)
                 ppms.append(error)
+
                 #self.assertAlmostEqual(theoIsotopePattern[i]['m/z']/z, calcIsotopePattern[i]['m/z'], delta=5 * 10 ** (-6))
                 self.assertAlmostEqual(theoIsotopePattern[i]['calcInt'], calcIsotopePattern[i]['calcInt'],
                                        delta=deltaCalcInt)
+                diffs.append(calcIsotopePattern[i]['calcInt']-theoIsotopePattern[i]['calcInt']  )
             if complete:
                 self.assertAlmostEqual(1.0, float(np.sum(calcIsotopePattern['calcInt'])), delta=0.005)
             #self.assertLess(np.sum(calcIsotopePattern['calcInt']), 1)
-            return ppms[np.argmax(np.array(np.abs(ppms)))]
+            diffs=np.array(diffs)
+            return diffs[np.argmax(np.abs(diffs))], np.average(np.abs(diffs))
 
 
 

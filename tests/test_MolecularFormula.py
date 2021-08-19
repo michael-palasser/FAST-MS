@@ -7,6 +7,8 @@ from src.fastFunctions import getByIndex
 from src.MolecularFormula import MolecularFormula
 from src.top_down.SpectrumHandler import calculateError
 
+averagine ={'C': 4.9384, 'H': 7.7583, 'N': 1.3577, 'O': 1.4773, 'S': 0.0417}
+averaginine = {'C': 9.5, 'H': 11.75, 'N': 3.75, 'O': 7, 'P': 1}
 molFormulaDummy = MolecularFormula('C5H4N3O')
 RNA_formulaDummy = MolecularFormula('C38H48N15O26P3')  # GACU
 peptideFormulaDummy = MolecularFormula('C36H56N12O14S')  # GCASDQHPV
@@ -184,7 +186,12 @@ class MolecularFormulaTest(TestCase):
         return np.sum(dm[:, 0]) / np.sum(dm[:, 1])
 
     def test_calculate_abundances_fft(self):
+        '''averagine ={'C': 4.9384, 'H': 7.7583, 'N': 1.3577, 'O': 1.4773, 'S': 0.0417}
+        averaginine = {'C': 9.5, 'H': 11.75, 'N': 3.75, 'O': 7, 'P': 1}'''
         for i in range(20):
+            #randNr = randint(10, 100)
+            '''molFormulaDummy_RNA = MolecularFormula({key:int(round(val*randNr)) for key,val in averaginine.items()})
+            molFormulaDummy_prot = MolecularFormula({key:int(round(val*randNr)) for key,val in averagine.items()})'''
             molFormulaDummy_i = MolecularFormula({'C': randint(5, 50), 'H': randint(10, 100),
                                                   'N': randint(1, 40), 'O': randint(1, 40),
                                                   'P': randint(0, 2), 'S': randint(0, 2)})
@@ -199,23 +206,28 @@ class MolecularFormulaTest(TestCase):
                 print(fastIsotopePattern)
                 raise AssertionError(molFormulaDummy_i.getFormulaDict())
 
+
     def test_calculate_isotope_pattern_fft(self):
-        for i in range(2):
-            molFormulaDummy_i = MolecularFormula({'C': randint(100, 1000), 'H': randint(200, 2000),
+        for i in range(10):
+            randNr = randint(30, 150)
+            molFormulaDummy_RNA = MolecularFormula({key:int(round(val*randNr)) for key,val in averaginine.items()})
+            molFormulaDummy_prot = MolecularFormula({key:int(round(val*randNr)) for key,val in averagine.items()})
+            molFormulaDummy_both = MolecularFormula({'C': randint(100, 1000), 'H': randint(200, 2000),
                                                   'N': randint(50, 400), 'O': randint(50, 400),
                                                   'P': randint(0, 20), 'S': randint(0, 20)})
-            exactIsotopePattern = molFormulaDummy_i.calculateIsotopePattern()
-            fastIsotopePattern = molFormulaDummy_i.calculateIsotopePatternFFT(1)
-            '''print(molFormulaDummy_i)
-            print(exactIsotopePattern)
-            print(fastIsotopePattern)'''
-            try:
-                print('max error', molFormulaDummy_i.toString(),
-                      self.testIsotopePattern(exactIsotopePattern,fastIsotopePattern,max_ppm=1.5, deltaCalcInt=10e-4))
-            except AssertionError as e:
-                print(molFormulaDummy_i.toString())
-                print(exactIsotopePattern,fastIsotopePattern)
-                raise e
+            for molFormulaDummy_i in [molFormulaDummy_RNA, molFormulaDummy_prot]:#, molFormulaDummy_both]:
+                exactIsotopePattern = molFormulaDummy_i.calculateIsotopePattern()
+                fastIsotopePattern = molFormulaDummy_i.calculateIsotopePatternFFT(1)
+                '''print(molFormulaDummy_i)
+                print(exactIsotopePattern)
+                print(fastIsotopePattern)'''
+                try:
+                    print('max error', molFormulaDummy_i.toString(),
+                          self.testIsotopePattern(exactIsotopePattern,fastIsotopePattern,max_ppm=1.0, deltaCalcInt=5*10e-5))
+                except AssertionError as e:
+                    print(molFormulaDummy_i.toString())
+                    print(exactIsotopePattern,fastIsotopePattern)
+                    raise e
 
 
 

@@ -158,12 +158,13 @@ class FragmentLibraryBuilder(object):
         precursorFragments = []
         sequence = self.__sequence.getSequenceList()
         sequenceName = self.__sequence.getName()
-        species, precName = processTemplateName(self.__fragmentation.getPrecursor())
+        species, mod = processTemplateName(self.__fragmentation.getPrecursor())
+        precName=sequenceName
         if self.__maxMod == 1:
-            precName = self.__modifPattern.getModification()
+            precName += self.__modifPattern.getModification()
         elif self.__maxMod > 1:
-            precName = self.__modifPattern.getModification()[0] +  str(self.__maxMod) + self.__modifPattern.getModification()[1:]
-        #return
+            precName += self.__modifPattern.getModification()[0] +  str(self.__maxMod) + self.__modifPattern.getModification()[1:]
+        precName+=mod
         basicFormula = simpleFormula.addFormula(self.__molecule.getFormula())
         for precTemplate in self.__fragmentation.getItems2():
             if precTemplate.isEnabled():
@@ -174,7 +175,7 @@ class FragmentLibraryBuilder(object):
                 templateRadicals = precTemplate.getRadicals()
                 newFragment = Fragment(sequenceName, 0, templateName, tempFormula, sequence, templateRadicals)
                 precursorFragments.append(newFragment)
-                if (templateName == precName):  #ToDo: check no Modification
+                if (sequenceName+templateName == precName):  #ToDo: check no Modification
                     self.__precursor = newFragment
                 for nrMod in range(1, self.__maxMod + 1):
                     for modifTemplate in self.__modifPattern.getItems():
@@ -187,7 +188,8 @@ class FragmentLibraryBuilder(object):
                                     MolecularFormula(modifTemplate.getFormula()).multiplyFormula(nrMod).getFormulaDict()),
                                     sequence, templateRadicals+modifTemplate.getRadicals())
                             precursorFragments.append(newFragment)
-                            if (name == precName):
+                            print(sequenceName+name,precName,sequenceName+name == precName)
+                            if (sequenceName+name == precName):
                                 self.__precursor = newFragment
         #[print(frag.getName(),frag.getRadicals()) for frag in precursorFragments]
         return precursorFragments

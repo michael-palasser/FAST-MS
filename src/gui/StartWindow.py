@@ -50,7 +50,7 @@ class Window(SimpleMainWindow):
                          'Edit Intact Ions': (lambda: self.editData(IntactIonEditorController), 'Edit Intact Ions', None),
                          'Model Isotope Pattern':
                              (lambda: IsotopePatternView(self), 'Calculates the isotope pattern of an ion', None)},None)
-        self.createMenu('Edit data',
+        self.createMenu('Edit Data',
                         {'Elements': (lambda: self.editData(ElementEditorController), 'Edit element table', None),
                          'Molecules': (lambda: self.editData(MoleculeEditorController), 'Edit Molecular Properties', None),
                          'Sequences': (lambda: self.editData(SequenceEditorController), 'Edit stored sequences', None)},
@@ -58,7 +58,6 @@ class Window(SimpleMainWindow):
         self.move(200,200)
         # self.setWindowIcon(QIcon('pic.png'))
         self.showButtons()
-
 
     def showButtons(self):
         xPos = self.makeButton('Analyse top-down\nspectrum', 'Starts analysis of top-down spectrum', 40,
@@ -107,10 +106,9 @@ class Window(SimpleMainWindow):
             controller()
         except CanceledException:
             pass
-        '''except InvalidInputException:
+        except InvalidInputException as e:
             traceback.print_exc()
-            print('hey')
-            QtWidgets.QMessageBox.warning(self, "Problem occured", traceback.format_exc(), QtWidgets.QMessageBox.Ok)'''
+            QtWidgets.QMessageBox.warning(self, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
 
 def run():
     app = QApplication(sys.argv)

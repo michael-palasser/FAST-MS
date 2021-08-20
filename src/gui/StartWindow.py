@@ -27,9 +27,11 @@ class Window(SimpleMainWindow):
         self.createMenuBar()
         self.createMenu('Top-Down Tools',
                         {'Analyse Spectrum':
-                             (lambda:TD_MainController(self, True), 'Starts analysis of top-down spectrum', None),
+                             (lambda:self.startTopDown(True), 'Starts analysis of top-down spectrum', None),
                          'Load Analysis':
-                             (lambda:TD_MainController(self, False), 'Loads an old analysis', None),
+                             (lambda:self.startTopDown(False), 'Loads an old analysis', None),
+                         'Open last Analysis':
+                             (self.reopen, 'Re-opens the last analysis', None),
                          #'Calc. Abundances':
                          #    (lambda: modellingTool(self), 'Calculates relative abundances of an ion list', None),
                          'Calculate Occupancies':
@@ -57,15 +59,24 @@ class Window(SimpleMainWindow):
                         None)
         self.move(200,200)
         # self.setWindowIcon(QIcon('pic.png'))
+        self._lastSearch = None
         self.showButtons()
 
     def showButtons(self):
         xPos = self.makeButton('Analyse top-down\nspectrum', 'Starts analysis of top-down spectrum', 40,
-                               lambda:TD_MainController(self, True))
+                               lambda:self.startTopDown(True))
         xPos = self.makeButton('Analyse spectrum\nof intact molecule', 'Starts analysis of normal intact spectrum',
                                xPos, self.startIntactIonSearch)
         self.setGeometry(50, 50, xPos+40, 230)
         self.show()
+
+    def startTopDown(self, new):
+        self._lastSearch = SimpleMainWindow(None, '')
+        TD_MainController(self, new, self._lastSearch)
+
+    def reopen(self):
+        if self._lastSearch is not None:
+            self._lastSearch.show()
 
     def makeButton(self, name, toolTip, xPos, fun):
         width = 200

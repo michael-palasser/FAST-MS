@@ -57,12 +57,13 @@ class TD_MainController(object):
     '''
     Controller class for starting, saving, exporting and loading a top-down search/analysis
     '''
-    def __init__(self, parent, new):
+    def __init__(self, parent, new, window):
         '''
         Starts either the search or loads a search from the database. Afterwards, result windows are shown.
         :param parent:
         :param (bool) new: True if new search, False if old search is loaded
         '''
+        self._mainWindow= window
         if new:
             dialog = TDStartDialog(None)
             dialog.exec_()
@@ -226,9 +227,11 @@ class TD_MainController(object):
         Opens a SimpleMainWindow with the ion lists and a InfoView with the protocol
         '''
         self._openWindows = []
-        self._mainWindow = SimpleMainWindow(None, 'Results:  ' + os.path.split(self._settings['spectralData'])[-1])
-        self._openWindows.append(self._mainWindow)
+        #self._mainWindow = SimpleMainWindow(None, 'Results:  ' + os.path.split(self._settings['spectralData'])[-1])
         self._translate = QtCore.QCoreApplication.translate
+        self._mainWindow.setWindowTitle(self._translate(self._mainWindow.objectName(),
+                                                        'Results:  ' + os.path.split(self._settings['spectralData'])[-1]))
+        self._openWindows.append(self._mainWindow)
         self._centralwidget = self._mainWindow.centralWidget()
         self.verticalLayout = QtWidgets.QVBoxLayout(self._centralwidget)
         self._tabWidget = QtWidgets.QTabWidget(self._centralwidget)
@@ -539,6 +542,7 @@ class TD_MainController(object):
                 except:
                     pass
             except KeyError as e:
+                traceback.print_exc()
                 print(e.__str__(), 'not found')
                 dlg = QtWidgets.QMessageBox(QtWidgets.QMessageBox.Information, 'Inaccurate Fragment List',
                                             e.__str__() + ' not found\n' +

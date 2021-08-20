@@ -119,7 +119,7 @@ class ExportDialog(AbstractDialog):
             self._boxes.append(box)
             index +=1
 
-        options = ('m/z', 'z','intensity', 'fragment', 'error /ppm', 'S/N', 'quality', 'formula', 'score', 'comment',
+        options = ('m/z', 'z','intensity', 'int./z', 'fragment', 'error /ppm', 'S/N', 'quality', 'formula', 'score', 'comment',
                    'molecular mass', 'average mass', 'noise')
         label = QtWidgets.QLabel(self)
         label.setText(self._translate(self.objectName(), 'Ion Values:'))

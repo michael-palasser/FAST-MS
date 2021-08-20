@@ -55,6 +55,7 @@ class SearchRepository(AbstractRepository):
                 "comment" text NOT NULL,
                 "status" integer NOT NULL,
                 "parentId" integer NOT NULL );""")
+        #ToDo weg mit radicals, monoiso, error,
         self._conn.cursor().execute("""
             CREATE TABLE IF NOT EXISTS peaks (
                 "id"	integer PRIMARY KEY UNIQUE,
@@ -64,6 +65,7 @@ class SearchRepository(AbstractRepository):
                 "error" real NOT NULL ,
                 "used" integer NOT NULL,
                 "parentId" integer NOT NULL );""")
+        #ToDo weg mit error
         self._conn.cursor().execute("""
             CREATE TABLE IF NOT EXISTS logs (
                 "id"	integer PRIMARY KEY UNIQUE,

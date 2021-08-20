@@ -318,14 +318,14 @@ class MolecularFormula(object):
         '''
         MAX_ELEMENTS = abundanceTable.shape[0]
         MAX_MASS = abundanceTable.shape[1]
-        abundanceTable_trans = fft(abundanceTable, axis=1)
-        ptA = np.ones(MAX_MASS, dtype=complex)
+        transformedTable = fft(abundanceTable, axis=1)
+        transformedAbundances = np.ones(MAX_MASS, dtype=complex)
         for i in range(MAX_ELEMENTS):
-            ptA *= (abundanceTable_trans[i, :] ** elemNrs[i])
-        riptA = ifft(ptA).real
-        riptA/=np.sum(riptA)
-        notZero = np.where(riptA >= 10e-10)
-        return [(mass_i, riptA_i) for mass_i, riptA_i in zip(notZero[0]+1,riptA[notZero])]
+            transformedAbundances *= (transformedTable[i, :] ** elemNrs[i])
+        abundances = ifft(transformedAbundances).real
+        abundances/=np.sum(abundances)
+        notZero = np.where(abundances >= 10e-10)
+        return [(mass_i, riptA_i) for mass_i, riptA_i in zip(notZero[0]+1,abundances[notZero])]
 
 
     def calcIsotopePatternPart(self, nrIsoPeaks):

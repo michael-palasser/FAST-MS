@@ -344,7 +344,7 @@ class SpectrumHandler(object):
                 nrMod = 1
                 if len(findall(r"(\d+)"+mod, fragment.getModification())) > 0:
                     nrMod = int(findall(r"(\d+)"+mod, fragment.getModification())[0])
-                modCharge += charge * nrMod * self.__sprayMode
+                modCharge += charge * nrMod# * self.__sprayMode
         logging.debug('Charge of modification: '+ str(modCharge))
         return modCharge
 
@@ -376,8 +376,10 @@ class SpectrumHandler(object):
         probableZ -= fragment.getRadicals()
         tolerance = configs['zTolerance']
         lowZ, highZ = 1, self.__charge
-        zEffect = (precModCharge - self.getModCharge(fragment)) * self.__sprayMode
+        zEffect = (self.getModCharge(fragment)-precModCharge) * self.__sprayMode
+        #print(1,fragment.getName(),probableZ)
         probableZ += zEffect
+        #print(2,fragment.getName(),probableZ)
         if (probableZ-tolerance)> lowZ:
             lowZ = round(probableZ-tolerance)
         if (probableZ+tolerance)< highZ:

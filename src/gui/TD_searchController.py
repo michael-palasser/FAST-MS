@@ -91,8 +91,10 @@ class TD_MainController(object):
             dialog = SelectSearchDlg(parent, searchService.getAllSearchNames(),self.deleteSearch, searchService)
             if dialog.exec_() and not dialog.canceled():
                 self._configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
+                start=time.time()
                 self._settings, observedIons, delIons, remIons, searchedZStates, logFile = \
                     searchService.getSearch(dialog.getName())
+                print('time:', time.time()-start)
                 self._info = Info(logFile)
                 self._savedName = dialog.getName()
                 peaks = None
@@ -763,10 +765,12 @@ class TD_MainController(object):
                 return
         print('Saving analysis', self._savedName)
         self._info.save()
+        start=time.time()
         searchService.saveSearch(self._savedName, self._settings, self._intensityModeller.getObservedIons().values(),
                                  self._intensityModeller.getDeletedIons().values(),
                                  self._intensityModeller.getRemodelledIons(),
-                                 self._spectrumHandler.getSearchedChargeStates(), self._info)
+                                 self._spectrumHandler.getSearchedChargeStates(), self._info.toString())
         self._saved = True
+        print('time:',time.time()-start)
         print('done')
         self._infoView.update()

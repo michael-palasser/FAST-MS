@@ -4,6 +4,7 @@ import numpy as np
 
 from src.entities.Ions import FragmentIon, Fragment
 from src.entities.Search import Search
+from src.entities.SearchSettings import processTemplateName
 from src.repositories.AbstractRepositories import AbstractRepository
 from tqdm import tqdm
 
@@ -15,10 +16,10 @@ class SearchRepository(AbstractRepository):
     def __init__(self):
         super(SearchRepository, self).__init__('search.db', 'searches',
                                                ('name', "date","sequName", "charge", "fragmentation", "modifications",
-                                                "nrMod", "spectralData", "noiseLimit", "fragLib"), (), ())
+                                                "nrMod", "spectralData", "noiseLimit", "fragLib"), (), (), 'DEFERRED')
         #self.__conn = sqlite3.connect(':memory:')
-        self._depTables = {'ions': ("type", "number", "modif", "formula", "sequ", "radicals", "monoiso", "charge",
-                                    "noise", "int", "error", "qual", "comment", 'status', "parentId"),
+        self._depTables = {'ions': ("name", "number", "formula", "monoiso", "charge",
+                                    "noise", "qual", "comment", 'status', "parentId"),
                            'peaks': ("mz", "relAb", "calInt", "error", "used", "parentId"),
                            'chargeStates': ("name", "zList", "parentId"),
                            'logs': ("log", "parentId")}
@@ -40,17 +41,12 @@ class SearchRepository(AbstractRepository):
         self._conn.cursor().execute("""
             CREATE TABLE IF NOT EXISTS ions (
                 "id"	integer PRIMARY KEY UNIQUE,
-                "type"	text NOT NULL ,
+                "name"	text NOT NULL ,
                 "number" integer NOT NULL ,
-                "modif" text NOT NULL ,
                 "formula" text NOT NULL ,
-                "sequ" text NOT NULL ,
-                "radicals" integer NOT NULL ,
                 "monoiso" real NOT NULL,
                 "charge" integer NOT NULL,
                 "noise" integer NOT NULL,
-                "int" integer NOT NULL,
-                "error" real NOT NULL,
                 "qual" real NOT NULL,
                 "comment" text NOT NULL,
                 "status" integer NOT NULL,
@@ -65,7 +61,6 @@ class SearchRepository(AbstractRepository):
                 "error" real NOT NULL ,
                 "used" integer NOT NULL,
                 "parentId" integer NOT NULL );""")
-        #ToDo weg mit error
         self._conn.cursor().execute("""
             CREATE TABLE IF NOT EXISTS logs (
                 "id"	integer PRIMARY KEY UNIQUE,
@@ -97,15 +92,16 @@ class SearchRepository(AbstractRepository):
         bar = tqdm(total=len(ionVals)+4)
         for ionVals in ionVals:
             peaks = [(peak[1], peak[2], peak[3], peak[4], peak[5]) for peak in self.getItems(ionVals[0],'peaks')]
-            peaks = np.array(peaks, dtype=[('m/z', np.float64), ('relAb', np.float64),('calcInt', np.float64),
-                                           ('error', np.float32), ('used', np.bool_)])
-            ion = FragmentIon(Fragment(ionVals[1], ionVals[2], ionVals[3], ionVals[4], ionVals[5],
-                                       ionVals[6]),
-                              ionVals[7], ionVals[8], peaks,ionVals[9])
-            ion.setRemaining(ionVals[10], ionVals[11], ionVals[12], ionVals[13])
-            if ionVals[14] == 0:
+            peaks = np.array(peaks, dtype=[('m/z', float), ('relAb', float),('calcInt', float),('error', np.float32),
+                                           ('used', bool)])
+            type, modification = processTemplateName(ionVals[1])
+
+            ion = FragmentIon(Fragment(type, ionVals[2], modification, ionVals[3], [],None),
+                              ionVals[4], ionVals[5], peaks,ionVals[6], ionVals[7], True, ionVals[8])
+            #ion.setRemaining(ionVals[10], ionVals[11], ionVals[12], ionVals[13])
+            if ionVals[9] == 0:
                 ions.append(ion)
-            elif ionVals[14] == 1:
+            elif ionVals[9] == 1:
                 delIons.append(ion)
             else:
                 remIons.append(ion)
@@ -140,7 +136,7 @@ class SearchRepository(AbstractRepository):
         self.insertItems(searchId, search.getIons(), 0)
         self.insertItems(searchId, search.getDeletedIons(), 1)
         self.insertItems(searchId, search.getRemIons(), 2)
-        self.createItem('logs', (search.getInfo().toString(), searchId))
+        self.createItem('logs', (search.getInfo(), searchId))
         [self.createItem('chargeStates', [frag,zList, searchId]) for frag,zList in search.getSearchedZStates().items()]
 
     """def create(self, vals):
@@ -183,7 +179,7 @@ class SearchRepository(AbstractRepository):
         cur = self._conn.cursor()
         sql = 'INSERT INTO ' + table + '(' + ', '.join(self._depTables[table]) + ''') 
                                       VALUES(''' + (len(self._depTables[table]) * '?,')[:-1] + ')'
-        print(sql, attributes)
+        #print(sql, attributes)
         cur.execute(sql, attributes)
         self._conn.commit()
         return cur.lastrowid

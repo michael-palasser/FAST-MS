@@ -16,11 +16,11 @@ from tests.test_MolecularFormula import averaginine, averagine
 from tests.top_down.test_LibraryBuilder import initTestSequences
 
 
-def initTestLibraryBuilder(charge=-3):
+def initTestLibraryBuilder(charge=-3, modif='CMCT'):
     initTestSequences()
     configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
     filePath = os.path.join(path, 'tests', 'top_down', 'dummySpectrum.txt')
-    settings = {'sequName': 'dummyRNA', 'charge': charge, 'fragmentation': 'RNA_CAD', 'modifications': 'CMCT',
+    settings = {'sequName': 'dummyRNA', 'charge': charge, 'fragmentation': 'RNA_CAD', 'modifications': modif,
                 'nrMod': 1, 'spectralData': filePath, 'noiseLimit': 10 ** 6, 'fragLib': ''}
     props = SearchSettings(settings['sequName'], settings['fragmentation'], settings['modifications'])
     builder = FragmentLibraryBuilder(props, 1)
@@ -92,9 +92,9 @@ class TestSpectrumHandler(TestCase):
         fragment0 = Fragment('c', 5, '', '', [], 0)
         self.assertAlmostEqual(0, self.spectrumHandler.getModCharge(fragment0))
         fragment1 = Fragment('c', 5, '+CMCT', '', [], 0)
-        self.assertAlmostEqual(-zEffect, self.spectrumHandler.getModCharge(fragment1))
+        self.assertAlmostEqual(zEffect, self.spectrumHandler.getModCharge(fragment1))
         fragment2 = Fragment('c', 5, '+2CMCT', '', [], 0)
-        self.assertAlmostEqual(-2 * zEffect, self.spectrumHandler.getModCharge(fragment2))
+        self.assertAlmostEqual(2 * zEffect, self.spectrumHandler.getModCharge(fragment2))
 
     def test_get_normalization_factor(self):
         normalizationFactor = abs(self.settings['charge']) / (len(self.props.getSequenceList()) - 1)
@@ -112,13 +112,13 @@ class TestSpectrumHandler(TestCase):
                                                         precModCharge)
         self.assertEqual(0, rangeCalc.stop)
 
-        rangeTheo = self.getRange(precCharge / nrP - precModCharge, tolerance, precCharge)
+        rangeTheo = self.getRange(precCharge / nrP + precModCharge, tolerance, precCharge)
         rangeCalc = self.spectrumHandler.getChargeRange(Fragment('c', 3, '', MolecularFormula({'P': 1}), [], 0),
                                                         precModCharge)
         self.assertEqual(rangeTheo.start, rangeCalc.start)
         self.assertEqual(rangeTheo.stop, rangeCalc.stop)
 
-        rangeTheo = self.getRange(2 * precCharge / nrP - precModCharge, tolerance, precCharge)
+        rangeTheo = self.getRange(2 * precCharge / nrP + precModCharge, tolerance, precCharge)
         rangeCalc = self.spectrumHandler.getChargeRange(Fragment('c', 3, '', MolecularFormula({'P': 2}), [], 0),
                                                         precModCharge)
         self.assertEqual(rangeTheo.start, rangeCalc.start)

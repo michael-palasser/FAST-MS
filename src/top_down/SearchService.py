@@ -63,7 +63,7 @@ class SearchService(object):
         :param (FragmentIon) ion: ion with strings as sequence and formula
         :return: (FragmentIon) ion with list[str] as sequence and MolecularFormula as formula
         '''
-        ion.setSequence(ion.getSequence().split(','))
+        #ion.setSequence(ion.getSequence().split(','))
         ion.setFormula(MolecularFormula(stringToFormula2(ion.getFormula(), {}, 1)))
         return ion
 
@@ -75,7 +75,7 @@ class SearchService(object):
         '''
         #print(ion.getName(), ion.formula)
         processedIon = deepcopy(ion)
-        processedIon.setSequence(','.join(ion.getSequence()))
+        #processedIon.setSequence(','.join(ion.getSequence()))
         processedIon.setFormula(ion.getFormula().toString())
         return processedIon
 

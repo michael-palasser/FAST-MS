@@ -346,6 +346,58 @@ class MolecularFormula(object):
         return np.array(isotope_pattern, dtype=isoPatternDtype)
 
 
+
+    """CIsotopes = np.array([(12,12.0, 0.98938), (13, 13.0033548350723, 0.01078)])
+    OIsotopes = np.array([(16,15.9949146195717,0.9975716),(17,16.9991317565069,0.000381),(18,17.9991596128676,0.0020514)])
+    elements = [CIsotopes,OIsotopes]
+    elementNrs = [20,30]
+    for currentElement, N in zip(elements, elementNrs):
+        print(N)
+        I= len(currentElement)
+    
+        #if I>2:
+        dimensionality = tuple([N+1 for i in range(I-1)])
+        #else:
+        #    dimensionality=(1,N+1)
+        print('dim',dimensionality)
+        E=np.zeros(dimensionality)
+        dimList = [0 for dim in dimensionality]
+        E[tuple(dimList)]=currentElement[0,2]
+        for i in range(1,I):
+            index = deepcopy(dimList)
+            '''if len(index)==1:
+                E[tuple(index)]=currentElement[i,2]
+            else:'''
+            index[-i]=1
+            print('index1',index)
+            print(index,currentElement[i,2])
+            E[tuple(index)]=currentElement[i,2]
+            print(E[tuple(index)])
+        #E[0, 1] = currentElement[1, 2]
+        print('E',E)
+        #E_N = np.zeros(dimensionality)
+        #E_N[tuple(dimList)]=currentElement[0,2]
+        fftArrs = []
+        if I==2:
+            result = ifft(fft(E) ** N).real
+            result /= np.sum(result)
+            print('result',result)
+            continue
+        elif I==3:
+            result1= np.zeros(dimensionality, dtype=complex)
+            for i,row in enumerate(E):
+                result1[i,:] = fft(row)
+            result2= np.zeros(dimensionality, dtype=complex)
+            result= np.zeros(dimensionality, dtype=complex)
+            for i,col in enumerate(result1.T):
+                result2[i,:] = ifft(fft(col)**N)
+            for i,row in enumerate(result2.T):
+                result[i,:] = ifft(row)
+            result = result.real
+            result /= np.sum(result)
+            print('result',result.real)
+            continue"""
+
     """def makeFFTCorrectionTable(self,neutralPattern):
         '''
         Creates an array with the abundances of each isotope, an array with the nrs of each element and estimates the

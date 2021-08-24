@@ -152,7 +152,8 @@ class MolecularFormulaTest(TestCase):
                 ppms.append(error)
             if complete:
                 self.assertAlmostEqual(1.0, float(np.sum(calcIsotopePattern['calcInt'])), delta=0.005)
-            return ppms[np.argmax(np.array(np.abs(ppms)))]
+            ppms = np.array(ppms)
+            return ppms[np.argmax(np.abs(ppms))], np.average(np.abs(ppms))
 
 
     def test_make_ffttables(self):
@@ -215,19 +216,31 @@ class MolecularFormulaTest(TestCase):
             molFormulaDummy_both = MolecularFormula({'C': randint(100, 1000), 'H': randint(200, 2000),
                                                   'N': randint(50, 400), 'O': randint(50, 400),
                                                   'P': randint(0, 20), 'S': randint(0, 20)})
-            for molFormulaDummy_i in [molFormulaDummy_RNA, molFormulaDummy_prot]:#, molFormulaDummy_both]:
+            for j,molFormulaDummy_i in enumerate([molFormulaDummy_RNA, molFormulaDummy_prot]):#, molFormulaDummy_both]:
                 exactIsotopePattern = molFormulaDummy_i.calculateIsotopePattern()
                 fastIsotopePattern = molFormulaDummy_i.calculateIsotopePatternFFT(1)
                 '''print(molFormulaDummy_i)
                 print(exactIsotopePattern)
                 print(fastIsotopePattern)'''
                 try:
-                    print('max error', molFormulaDummy_i.toString(),
-                          self.testIsotopePattern(exactIsotopePattern,fastIsotopePattern,max_ppm=1.0, deltaCalcInt=5*10e-5))
+                    max_ppm = 1
+                    if exactIsotopePattern['m/z'][0]>10000:
+                        print('hey',randNr, exactIsotopePattern['m/z'][0])
+                        max_ppm = 0.6
+                    print(j%2,'max error', molFormulaDummy_i.toString(),
+                          self.testIsotopePattern(exactIsotopePattern,fastIsotopePattern,max_ppm=max_ppm, deltaCalcInt=1*10e-4))
                 except AssertionError as e:
                     print(molFormulaDummy_i.toString())
                     print(exactIsotopePattern,fastIsotopePattern)
                     raise e
+        print('RRE2 / calmodulin')
+        molFormulaDummy_RNA = MolecularFormula('C630H778N255O459P65') #rre2
+        molFormulaDummy_prot = MolecularFormula('C714H1120N188O255S9') #calmodulin
+        for j,molFormulaDummy_i in enumerate([molFormulaDummy_RNA, molFormulaDummy_prot]):#, molFormulaDummy_both]:
+            exactIsotopePattern = molFormulaDummy_i.calculateIsotopePattern()
+            fastIsotopePattern = molFormulaDummy_i.calculateIsotopePatternFFT(12)
+            print(j%2,'max error', molFormulaDummy_i.toString(),
+                  self.testIsotopePattern(exactIsotopePattern,fastIsotopePattern,max_ppm=0.6, deltaCalcInt=1*10e-4))
 
 
 

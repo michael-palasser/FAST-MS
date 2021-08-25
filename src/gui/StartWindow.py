@@ -30,13 +30,13 @@ class Window(SimpleMainWindow):
                              (lambda:self.startTopDown(True), 'Starts analysis of top-down spectrum', None),
                          'Load Analysis':
                              (lambda:self.startTopDown(False), 'Loads an old analysis', None),
-                         'Open last Analysis':
+                         'Open current Analysis':
                              (self.reopen, 'Re-opens the last analysis', None),
                          #'Calc. Abundances':
                          #    (lambda: modellingTool(self), 'Calculates relative abundances of an ion list', None),
                          'Calculate Occupancies':
                              (lambda: occupancyRecalculator(self), 'Calculates occupancies of a given ion list', None),
-                         'Compare Analysis':
+                         'Compare ion lists':
                              (self.compareSpectra, 'Compares the ion lists of multiple spectra', None)},
                         None)
         #[print(action.toolTip()) for action in menuActions.values()]
@@ -48,9 +48,9 @@ class Window(SimpleMainWindow):
                              (lambda: self.editData(ModificationEditorController), 'Edit modification/ligand patterns',
                               None)}, None)
         self.createMenu('Other Tools', {'Analyse Intact Ions': (lambda: self.editData(self.startIntactIonSearch),
-                                                 'Starts analysis of spectrum with unfragmented ions', None),
+                                                 'Starts analysis of spectra with unfragmented ions', None),
                          'Edit Intact Ions': (lambda: self.editData(IntactIonEditorController), 'Edit Intact Ions', None),
-                         'Model Isotope Pattern':
+                         'Model Ion':
                              (lambda: IsotopePatternView(self), 'Calculates the isotope pattern of an ion', None)},None)
         self.createMenu('Edit Data',
                         {'Elements': (lambda: self.editData(ElementEditorController), 'Edit element table', None),
@@ -65,7 +65,7 @@ class Window(SimpleMainWindow):
     def showButtons(self):
         xPos = self.makeButton('Analyse top-down\nspectrum', 'Starts analysis of top-down spectrum', 40,
                                lambda:self.startTopDown(True))
-        xPos = self.makeButton('Analyse spectrum\nof intact molecule', 'Starts analysis of normal intact spectrum',
+        xPos = self.makeButton('Analyse spectra\nof intact ions', 'Starts analysis of spectra with unfragmented ions',
                                xPos, self.startIntactIonSearch)
         self.setGeometry(50, 50, xPos+40, 230)
         self.show()

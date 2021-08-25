@@ -277,6 +277,9 @@ class MolecularFormula(object):
                     if isotope[0]-mono[0] != 0:
                         dm_i = isotope[1]-mono[1]
                         dm.append((dm_i/round(dm_i)*elemNrs[i]*isotope[2],elemNrs[i]*isotope[2]))
+                        #intDm = round(dm_i)
+                        #dm.append(((dm_i-intDm)*elemNrs[i]*isotope[2]/intDm,  elemNrs[i]*isotope[2]/intDm))
+                        #print('dm',intDm,dm_i/round(dm_i), 1+(dm_i-intDm))
         dm =np.array(dm)
         return abundanceTable, elemNrs, np.sum(dm[:,0])/np.sum(dm[:,1])
 

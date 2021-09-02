@@ -258,7 +258,7 @@ def plotBars(sequence, values, headers, title, occup=False):
     :return:
     '''
     #sequLength = len(sequence)
-    colours = ['tab:red','royalblue', 'tab:brown','tab:green', 'tab:orange', 'tab:purple']
+    colours = ['tab:red','royalblue','tab:green', 'tab:orange', 'tab:purple', 'tab:cyan', 'tab:brown']
     nrCols = len(headers)
     nrRows = len(values)
     xVals = np.arange(1,nrRows+1)
@@ -271,15 +271,18 @@ def plotBars(sequence, values, headers, title, occup=False):
         if occup:
             if not i%2:
                 ax.bar(xVals, values[:,i], width, bottom= bottom, label=headers[i], color='w',
-                       edgecolor=colours[int(i/2)], linewidth=0.6)
+                       edgecolor=colours[int(i/2)], linewidth=0.7)
             else:
                 ax.bar(xVals, values[:,i], width, bottom= bottom, label=headers[i], color=colours[int(i/2)],
-                       linewidth=0.6)
+                       edgecolor=colours[int(i/2)], linewidth=0.7)
         else:
             ax.bar(xVals, values[:,i], width, bottom= bottom, label=headers[i], color=colours[i])
         bottom += values[:,i]
+    sequColour = 'black'
+    if occup:
+        sequColour = 'saddlebrown'
     for i,bb in enumerate(sequence):
-        plt.text(x=i+0.5, y=0, s=bb, fontsize=13, c='gold', ha='center')
+        plt.text(x=i+0.5, y=0, s=bb, fontsize=13, c=sequColour, ha='center')
     plt.rcParams['figure.figsize'] = nrRows/5+4, 4
     ax.set_ylabel('Rel.abundances in a.u.')
     ax.set_xlabel('cleavage site')

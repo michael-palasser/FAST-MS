@@ -231,10 +231,11 @@ class IntensityModeller(object):
             self.deleteIon(ion.getHash(), "mono.")
 
     def deleteIon(self, ionHash, comment):
-        self._correctedIons[ionHash].addComment(comment)
-        print('deleting',ionHash)
-        self._deletedIons[ionHash] = self._correctedIons[ionHash]
-        del self._correctedIons[ionHash]
+        if ionHash in self._correctedIons.keys():
+            self._correctedIons[ionHash].addComment(comment)
+            print('deleting',ionHash)
+            self._deletedIons[ionHash] = self._correctedIons[ionHash]
+            del self._correctedIons[ionHash]
 
     def remodelOverlaps(self, allAuto=False):
         '''

@@ -1,4 +1,3 @@
-import time
 from unittest import TestCase
 import numpy as np
 from random import randint
@@ -117,7 +116,7 @@ class MolecularFormulaTest(TestCase):
         self.testIsotopePattern(RNA_pattern, RNA_formulaDummy.calculateIsotopePattern())
         self.testIsotopePattern(peptide_pattern, peptideFormulaDummy.calculateIsotopePattern())
         self.testIsotopePattern(uni_pattern, uniFormulaDummy.calculateIsotopePattern())
-        for i in range(100):
+        for i in range(10):
             molFormulaDummy_i = MolecularFormula({'C': randint(5, 50), 'H': randint(10, 100),
                                                   'N': randint(1, 40), 'O': randint(1, 40),
                                                   'P': randint(0, 2), 'S': randint(0, 2)})

@@ -2,14 +2,13 @@ import numpy as np
 
 from src.Exceptions import InvalidInputException
 from src.MolecularFormula import MolecularFormula
-from src.FormulaFunctions import stringToFormula
+from src.FormulaFunctions import stringToFormula, eMass, protMass
 from src.Services import MoleculeService, FragmentationService, ModificationService, PeriodicTableService
 from src.entities.GeneralEntities import Sequence
 from src.entities.Ions import Fragment, FragmentIon
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.top_down.IntensityModeller import IntensityModeller
 from src.entities.SearchSettings import processTemplateName
-from src.simpleFunctions import eMass, protMass
 
 
 class IsotopePatternLogics(object):

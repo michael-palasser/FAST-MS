@@ -310,7 +310,7 @@ writeFragments("Protein_ECD",fragPath, prcFrags)
 #service.restart()
 """
 
-from src.repositories.SearchRepositoryOld import SearchRepository
+from Other.SearchRepositoryOld import SearchRepository
 from src.repositories.SearchRepository import SearchRepository as SearchRepositoryNew
 
 rep = SearchRepository()

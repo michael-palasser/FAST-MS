@@ -3,7 +3,7 @@ from PyQt5 import QtWidgets, QtCore
 from src.IsotopePatternLogics import IsotopePatternLogics
 from src.Services import *
 from src.gui.AbstractMainWindows import SimpleMainWindow
-from src.gui.GUI_functions import makeFormLayout
+from src.gui.GUI_functions import makeFormLayout, shoot
 from src.gui.widgets.IonTableWidgets import IsoPatternIon
 from src.gui.widgets.PeakWidgets import IsoPatternPeakWidget
 from src.gui.dialogs.SimpleDialogs import OpenDialog
@@ -86,6 +86,7 @@ class IsotopePatternView(SimpleMainWindow):
         self.createMenuBar()
         self.createMenu('Options', {'Load Sequence': (self.loadSequence, None, "Ctrl+O"),
                                     'Pause Calculation': (self.pauseCalculation, None, None),
+                                    'Shoot': (lambda: shoot(self), None, None),
                                     'Close': (self.close, 'Closes Window', 'Ctrl+Q')}, None)
         self._pause = False
         self.show()

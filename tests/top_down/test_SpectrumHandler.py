@@ -5,11 +5,11 @@ import numpy as np
 from numpy.random import randint
 
 from src import path
+from src.FormulaFunctions import eMass
 from src.MolecularFormula import MolecularFormula
 from src.entities.Ions import Fragment
 from src.entities.SearchSettings import SearchSettings
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
-from src.simpleFunctions import eMass
 from src.top_down.LibraryBuilder import FragmentLibraryBuilder
 from src.top_down.SpectrumHandler import SpectrumHandler, getErrorLimit, getMz, calculateError
 from tests.test_MolecularFormula import averaginine, averagine

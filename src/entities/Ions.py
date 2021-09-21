@@ -6,9 +6,8 @@ Created on 3 Jul 2020
 from math import exp
 import numpy as np
 #from numpy import array, dtype
-
+from src.FormulaFunctions import eMass, protMass
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
-from src.simpleFunctions import eMass, protMass
 
 noiseLimit = ConfigurationHandlerFactory.getTD_SettingHandler().get('noiseLimit')
 

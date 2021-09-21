@@ -12,10 +12,11 @@ import copy
 from scipy.constants import R
 
 from src.Exceptions import InvalidInputException
+from src.FormulaFunctions import eMass, protMass
 from src.MolecularFormula import MolecularFormula
 from src.entities.Ions import FragmentIon
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
-from src.simpleFunctions import eMass, protMass
+#from Other.simpleFunctions import eMass, protMass
 
 configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
 logging.basicConfig(level=logging.INFO)

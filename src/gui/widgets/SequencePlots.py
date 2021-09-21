@@ -107,7 +107,8 @@ class PlotFactory(object):
         Formats the plot if it's an occupancy plot
         '''
         self._plot1.setWindowTitle('Occupancies ' +modification)
-        yLabel = '% '+modification + ' ('
+        #yLabel = '% '+modification + ' ('
+        yLabel = modification + ' ('
         styles = {"black": "#f00", "font-size": "18px"}
         self._plot1.setLabel('left', yLabel + ','.join(self._forwardVals.keys()) + ')', **styles)
         self._plot1.setLabel('right', yLabel + ','.join(self._backwardVals.keys()) + ')', **styles)

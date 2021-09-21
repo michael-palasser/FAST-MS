@@ -216,7 +216,8 @@ class SequenceCoveragePlot(FigureCanvasQTAgg):
         xPos=step_x/2
         line=step_y
         counter = 1
-        plt.text(x=-step_x*0.6, y=1-line, s=str(counter), fontsize=12)
+        nrSize= 10
+        plt.text(x=-step_x*0.6, y=1-line, s=str(counter), fontsize=nrSize)
         #size = 0.01
         for i,bb in enumerate(self._sequence):
             plt.text(x=xPos, y=1-line, s=bb, fontsize=20)
@@ -228,7 +229,7 @@ class SequenceCoveragePlot(FigureCanvasQTAgg):
             counter+=1
             if not (i+1)%lineWidth:
                 line+=2*step_y
-                plt.text(x=-step_x*0.5, y=1-line, s=str(counter), fontsize=10)
+                plt.text(x=-step_x*0.5, y=1-line, s=str(counter), fontsize=nrSize)
                 xPos=step_x/2
             if i != (sequLength):
                 for j,coverageBackward in enumerate(coveragesBackward[i]):

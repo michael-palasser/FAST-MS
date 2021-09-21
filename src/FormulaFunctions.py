@@ -1,7 +1,11 @@
 import re
 
+from scipy.constants import electron_mass, N_A, proton_mass
+
 from src.Exceptions import InvalidInputException
 
+eMass = electron_mass*N_A*1000
+protMass = proton_mass *N_A*1000
 
 def stringToFormula(formulaString, formulaDict, sign):
     '''

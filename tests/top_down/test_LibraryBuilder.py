@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from src.top_down.LibraryBuilder import FragmentLibraryBuilder
-from src.entities.SearchSettings import SearchSettings
+from src.entities.SearchSettings import SearchSettings, processTemplateName
 from src.Services import *
 
 
@@ -93,15 +93,15 @@ class TestFragmentLibraryBuilder(TestCase):
 
     def getValues(self, storage, fragItems):
         sequenceList = self.propertyStorageRNA.getSequenceList()
-        modifications = [mod for mod in storage.getModification().getItems() if mod.enabled()]
-        frags = [frag for frag in fragItems if frag.enabled()]
+        modifications = [mod for mod in storage.getModification().getItems() if mod.isEnabled()]
+        frags = [frag for frag in fragItems if frag.isEnabled()]
         return sequenceList, modifications, frags
 
     def test_process_template_name(self):
-        tup = self.builderRNA.processTemplateName('c14-G')
+        tup = processTemplateName('c14-G')
         self.assertEqual('c14', tup[0])
         self.assertEqual('-G', tup[1])
-        tup = self.builderRNA.processTemplateName('c03+CMCT+Na-Eth-G')
+        tup = processTemplateName('c03+CMCT+Na-Eth-G')
         self.assertEqual('c03', tup[0])
         self.assertEqual('+CMCT+Na-Eth-G', tup[1])
 

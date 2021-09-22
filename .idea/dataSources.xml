@@ -43,5 +43,11 @@
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
       <jdbc-url>jdbc:sqlite:$PROJECT_DIR$/src/data/search.db</jdbc-url>
     </data-source>
+    <data-source source="LOCAL" name="top_down" uuid="ba3d0453-6815-4b15-b30c-2e36eb4af7f6">
+      <driver-ref>sqlite.xerial</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
+      <jdbc-url>jdbc:sqlite:C:\Users\Michael\Documents\Diss\SAUSAGE\src\data\top_down.db</jdbc-url>
+    </data-source>
   </component>
 </project>

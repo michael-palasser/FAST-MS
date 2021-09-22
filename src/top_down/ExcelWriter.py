@@ -235,10 +235,10 @@ class ExcelWriter(BasicExcelWriter):
             #percentages = list()
             self.writeAnalysis({"spectral file:": settings['spectralData'], 'max. m/z:':spectrumHandler.getUpperBound()},
                                analyser.getModificationLoss(),
-                               analyser.calculateRelAbundanceOfSpecies(),
+                               analyser.calculateRelAbundanceOfSpecies()[0],
                                properties.getSequenceList(),
                                analyser.calculateOccupancies(self._configs['interestingIons'],
-                                                             unImportantMods=properties.getUnimportantModifs()),
+                                                             unImportantMods=properties.getUnimportantModifs())[0],
                                analyser.analyseCharges(self._configs['interestingIons'], False)[0],
                                analyser.analyseCharges(self._configs['interestingIons'], True)[0],
                                properties.getFragmentsByDir(1), properties.getFragmentsByDir(-1),
@@ -333,7 +333,8 @@ class ExcelWriter(BasicExcelWriter):
         :return: (dict[str, tuple[Any,Any]]) dict of attribute name (key) and tuples of attribute and format
          '''
         return {'m/z':(ion.getMonoisotopic(),self._format5digit), 'z':(ion.getCharge(),None),
-                'intensity':(round(ion.getIntensity()),None), 'fragment':(ion.getName(),None),
+                'intensity':(round(ion.getIntensity()),None), 'int./z':(round(ion.getIntensity()/ion.getCharge()),None),
+                'fragment':(ion.getName(),None),
                 'error /ppm':(round(ion.getError(),3), self._format2digit),
                 'S/N':(round(ion.getSignalToNoise(),3), self._format2digit),
                 'quality':(round(ion.getQuality(),3), self._format2digit),

@@ -4,11 +4,10 @@ Created on 3 Jul 2020
 @author: michael
 '''
 from math import exp
-from numpy import sum as npSum, isnan, nan
+import numpy as np
 #from numpy import array, dtype
-
+from src.FormulaFunctions import eMass, protMass
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
-from src.simpleFunctions import eMass, protMass
 
 noiseLimit = ConfigurationHandlerFactory.getTD_SettingHandler().get('noiseLimit')
 
@@ -105,7 +104,7 @@ class FragmentIon(Fragment):
     '''
     charged fragment
     '''
-    def __init__(self, fragment, monoisotopic, charge, isotopePattern, noise):
+    def __init__(self, fragment, monoisotopic, charge, isotopePattern, noise, quality=None, calculate=False, comment=''):
         '''
         Constructor
         :param (Fragment) fragment
@@ -118,12 +117,18 @@ class FragmentIon(Fragment):
         self._monoisotopicRaw = monoisotopic
         self._charge = charge
         self._isotopePattern = isotopePattern
-        self._intensity = 0
-        self._error = 0
-        self._quality = 0
-        self._score = 0
+        self._quality = quality
+        if calculate:
+            self._intensity= np.sum(self._isotopePattern['calcInt'])
+            self._error = np.average(self._isotopePattern['error'][np.where(self._isotopePattern['relAb'] != 0 &
+                                                                            self._isotopePattern['used'])])
+            self.calcScore()
+        else:
+            self._intensity = 0
+            self._error = 0
+            self._score = 0
         self._noise = noise
-        self._comment = ""
+        self._comment = comment
 
     def getCharge(self):
         return self._charge
@@ -154,7 +159,7 @@ class FragmentIon(Fragment):
             print('warning:', round(self._quality, 2), self.getName())
             self._score = 10 ** 6
         else:
-            self._score = exp(10 * self._quality) / 20 * self._quality * self._intensity / noiseLimit
+            self._score = exp(10 * self._quality) / 20 * self._quality * self.getIntensity() / noiseLimit
         # return self.score
 
     def getNeutral(self, mz, mode):
@@ -164,8 +169,8 @@ class FragmentIon(Fragment):
         return self.getNeutral(self.getMonoisotopic(),mode)
 
     def getAverageMass(self, mode):
-        avMass = npSum(self._isotopePattern['m/z']*self._isotopePattern['calcInt'])/npSum(self._isotopePattern['calcInt'])
-        if isnan(self.getNeutral(avMass,mode)):
+        avMass = np.sum(self._isotopePattern['m/z']*self._isotopePattern['calcInt'])/np.sum(self._isotopePattern['calcInt'])
+        if np.isnan(self.getNeutral(avMass,mode)):
             print(self._isotopePattern, avMass, self._isotopePattern['calcInt'])
         return self.getNeutral(avMass,mode)
 
@@ -173,6 +178,8 @@ class FragmentIon(Fragment):
         return self._noise
     def getComment(self):
         return self._comment
+    def setComment(self, comment):
+        self._comment = comment
     def addComment(self, comment):
         self._comment += comment + ','
 
@@ -215,7 +222,7 @@ class FragmentIon(Fragment):
         if self._noise != 0:
             return self._intensity / self._noise
         else:
-            return nan
+            return np.nan
 
     def getRelAbundance(self):
         return self._intensity / self._charge
@@ -245,9 +252,11 @@ class FragmentIon(Fragment):
         To save an ion in database
         :return: list of values
         '''
-        return [self._type, self._number, self._modification, self._formula, self._sequence, self._radicals,
+        '''return [self._type, self._number, self._modification, self._formula, self._sequence, self._radicals,
                 self._monoisotopicRaw, self._charge, int(round(self._noise)), int(round(self._intensity)),
-                float(self._error), self._quality, self._comment]
+                float(self._error), self._quality, self._comment]'''
+        return [self._type+self._modification, self._number, self._formula, self._monoisotopicRaw, self._charge,
+                int(round(self._noise)), self._quality, self._comment]
 
     def peaksToStorage(self):
         '''

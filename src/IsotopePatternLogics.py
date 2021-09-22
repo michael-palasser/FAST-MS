@@ -2,14 +2,13 @@ import numpy as np
 
 from src.Exceptions import InvalidInputException
 from src.MolecularFormula import MolecularFormula
-from src.FormulaFunctions import stringToFormula
+from src.FormulaFunctions import stringToFormula, eMass, protMass
 from src.Services import MoleculeService, FragmentationService, ModificationService, PeriodicTableService
 from src.entities.GeneralEntities import Sequence
 from src.entities.Ions import Fragment, FragmentIon
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.top_down.IntensityModeller import IntensityModeller
-from src.top_down.LibraryBuilder import FragmentLibraryBuilder
-from src.simpleFunctions import eMass, protMass
+from src.entities.SearchSettings import processTemplateName
 
 
 class IsotopePatternLogics(object):
@@ -60,6 +59,11 @@ class IsotopePatternLogics(object):
                [precTemplate.getName() for precTemplate in
                 self._fragService.getPatternWithObjects(fragmentationName).getItems2()][1:]
 
+    def getRadicals(self, moleculeName, sequString, fragmentationName, fragTemplName, modifPatternName, modifName,
+                    nrMod):
+        fragment = self.getFragment(moleculeName, sequString, fragmentationName, fragTemplName, modifPatternName,
+                                    modifName, nrMod)
+        return fragment.getRadicals()
 
     def getModifItems(self, modifPatternName):
         '''
@@ -201,7 +205,7 @@ class IsotopePatternLogics(object):
         else:
             fragTempl = [fragTempl for fragTempl in fragmentation.getItems() if fragTempl.getName()==fragTemplName][0]
             number = len(sequenceList)
-        species, rest = FragmentLibraryBuilder.processTemplateName(fragTempl.getName())
+        species, rest = processTemplateName(fragTempl.getName())
         formula = formula.addFormula(fragTempl.getFormula())
         if modifPatternName != '-' and nrMod != 0:
             modPattern = self._modService.getPatternWithObjects(modifPatternName)

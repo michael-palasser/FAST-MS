@@ -1,4 +1,4 @@
-import os
+"""import os
 import traceback
 
 from src import path
@@ -264,7 +264,7 @@ def writeIntactModifs():
 #writeElements()
 #writeMolecules()
 #writeSequences()
-"""with open(os.path.join(path, 'Parameters', 'Protein' + '.txt')) as f:
+with open(os.path.join(path, 'Parameters', 'Protein' + '.txt')) as f:
     for line in f:
         if line.startswith('#') or line == "":
             continue
@@ -302,9 +302,20 @@ writeFragments("RNA_CAD",fragPath, prcFrags)
 writeFragments("Protein_CAD",fragPath, prcFrags)
 writeFragments("Protein_ECD",fragPath, prcFrags)
 
-#writeModifications()"""
+#writeModifications()
 
 #writeIntactModifs()
 
 #service = FragmentationService()
 #service.restart()
+"""
+
+from Other.SearchRepositoryOld import SearchRepository
+from src.repositories.SearchRepository import SearchRepository as SearchRepositoryNew
+
+rep = SearchRepository()
+repNew = SearchRepositoryNew()
+
+for searchName in rep.getAllNames():
+    search = rep.getSearch(searchName)
+    repNew.createSearch(search)

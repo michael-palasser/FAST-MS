@@ -1,17 +1,23 @@
+import os
+import sys
+from datetime import datetime
 from functools import partial
 import pandas as pd
 
 from PyQt5 import QtWidgets, QtCore
 
+from src import path
+
 translate = QtCore.QCoreApplication.translate
 
-def makeLabelInputWidget(parent,labelName,widget):
+def makeLabelInputWidget(parent,labelName,*args):
     horizontalWidget = QtWidgets.QWidget(parent)
     horizLayout = QtWidgets.QHBoxLayout(horizontalWidget)
     label = QtWidgets.QLabel(horizontalWidget)
     label.setText(translate(parent.objectName(), labelName))
     horizLayout.addWidget(label)
-    horizLayout.addWidget(widget)
+    for widget in args:
+        horizLayout.addWidget(widget)
     return horizontalWidget, horizLayout
 
 def createComboBox(parent, options):
@@ -41,3 +47,9 @@ def showOptions(table, pos):
     if action == copyAction:
         df=pd.DataFrame(data=table.model().getData(), columns=table.model().getHeaders())
         df.to_clipboard(index=False,header=True)
+
+def shoot(widget):
+    #filename = datetime.now().strftime('%Y-%m-%d_%H-%M-%S.png')
+    p=widget.grab()
+    p.save(os.path.join(path,'pics',widget.windowTitle()+'.png'), 'png')
+    print('Shoot taken')

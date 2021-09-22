@@ -236,6 +236,20 @@ class TestIntensityModeller(TestCase):
             if hash in theoIons.keys():
                 self.assertNotEqual(ion.getIntensity(),theoIons[hash].getIntensity())
 
+
+
+    def test_check_for_overlaps(self):
+        simplePatterns,theoIons = self.test_find_overlaps()
+        simplePattern = simplePatterns[0]
+        self.intensityModeller.remodelIntensity(simplePatterns,[])
+        if len(simplePattern)>2:
+            self.assertEqual(None, self.intensityModeller.checkForOverlaps(
+                self.intensityModeller.getObservedIons()[simplePattern[0]]))
+        [self.intensityModeller.deleteIon(simplePatterns[0][-i-1], '') for i in range(len(simplePattern)-2)]
+        self.assertEqual(simplePattern[1], self.intensityModeller.checkForOverlaps(
+                self.intensityModeller.getObservedIons()[simplePattern[0]]))
+
+
     '''def test_remodel_complex_patterns(self):
         self.fail()'''
 

@@ -14,7 +14,7 @@ class AbstractRepository(ABC):
     Abstract parent class for SearchRepository, SequenceRepository and AbstractRepositoryWithItems
     Dealing with just one table
     '''
-    def __init__(self, database, tableName, columns, integerVals, boolVals):
+    def __init__(self, database, tableName, columns, integerVals, boolVals, isolationLevel=None):
         '''
         :param (str) database: path + filename of the database
         :param (str) tableName: name of the table
@@ -22,7 +22,10 @@ class AbstractRepository(ABC):
         :param (tuple[int]]) integerVals: indices of the columns which contain numerical values
         :param (tuple[int]]) boolVals: indices of the columns which contain boolean values
         '''
-        self._conn = sqlite3.connect(join(path,"src","data",database))
+        if isolationLevel is not None:
+            self._conn = sqlite3.connect(join(path,"src","data",database),isolation_level=isolationLevel)
+        else:
+            self._conn = sqlite3.connect(join(path,"src","data",database))
         self._mainTable = tableName
         self._columns = columns
         self._integerVals = integerVals

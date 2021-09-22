@@ -12,10 +12,11 @@ import copy
 from scipy.constants import R
 
 from src.Exceptions import InvalidInputException
+from src.FormulaFunctions import eMass, protMass
 from src.MolecularFormula import MolecularFormula
 from src.entities.Ions import FragmentIon
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
-from src.simpleFunctions import eMass, protMass
+#from Other.simpleFunctions import eMass, protMass
 
 configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
 logging.basicConfig(level=logging.INFO)
@@ -52,7 +53,7 @@ class SpectrumHandler(object):
     acidicAA = {'D': 10, 'E': 10,
                 'H': 0.9, 'R': 0.5, 'K': 0.5, }
 
-    def __init__(self, properties, precursor, settings):
+    def __init__(self, properties, precursor, settings, peaks=None):
         '''
         Constructor, also processes spectrum
         :param properties: propertyStorage of search
@@ -60,6 +61,7 @@ class SpectrumHandler(object):
         :param precursor: precursor Fragment
         :type precursor: Fragment
         :param (dict[str,Any]) settings: search settings
+        :param (set[tuple[float]] | None) peaks: set of )
         '''
 
         self.__sequList = properties.getSequenceList()
@@ -72,8 +74,11 @@ class SpectrumHandler(object):
         self._precursor = precursor
         self.__charge = self.calcPrecCharge(self.__settings['charge'], self._precursor.getRadicals())
         self._normalizationFactor = None
-
-        self.addSpectrum(self.__settings['spectralData'])
+        if peaks == None:
+            self.addSpectrum(self.__settings['spectralData'])
+        else:
+            self.__spectrum = np.array(sorted(list(peaks), key=lambda tup:tup[0]))
+            self.__upperBound = np.max(peaks)
         self._foundIons = list()
         self._ionsInNoise = list()
         self._searchedChargeStates = dict()
@@ -82,7 +87,7 @@ class SpectrumHandler(object):
                                        ('calcInt', float), ('error', np.float32), ('used', bool)])
 
     def calcPrecCharge(self, charge, radicals):
-        return abs(charge - radicals)
+        return abs(charge) - radicals #must be changed if radicals turns to electrons
 
     def setNormalizationFactor(self, factor):
         self._normalizationFactor = factor
@@ -212,19 +217,21 @@ class SpectrumHandler(object):
         windowSize = configs['upperBoundWindowSize']
         currentMz = configs['minUpperBound']
         #tolerance = 50
+
         peaksHigherThanNoise = list()
         logging.debug('********** Calculating noise **********\nm/z\tnoise')
-        while currentMz < 2500:
-            noise = self.calculateNoise(currentMz,windowSize)
-            logging.debug(str(currentMz)+'\t'+ str(noise))
+        while currentMz < np.max(self.__spectrum[:,0]):#2500:
             currentWindow = self.getPeaksInWindow(self.__spectrum, currentMz, windowSize)
+            noise = self.calculateNoise(currentMz,windowSize,currentWindow)
+            logging.debug(str(currentMz)+'\t'+ str(noise))
+            #currentWindow = self.getPeaksInWindow(self.__spectrum, currentMz, windowSize)
             peaksHigherThanNoise.append((currentMz, currentWindow[np.where(currentWindow > (noise * 5))].size))
             currentMz += 1
         peaksHigherThanNoise = np.array(peaksHigherThanNoise)
-        windowSize, currentMz = 100 , 1200
+        windowSize, currentMz = 100 , configs['minUpperBound']
         logging.info('********** Finding upper bound m/z - Window in spectralFile containing fragments **********')
         logging.info('m/z\tpeaks')
-        while currentMz < 2500:
+        while True:#currentMz < 2500:
             currentWindow = self.getPeaksInWindow(peaksHigherThanNoise, currentMz, windowSize)
             numPeaks = np.sum(currentWindow[:, 1])
             #logging.info(str(currentMz)+'\t'+ str(numPeaks))
@@ -242,7 +249,7 @@ class SpectrumHandler(object):
         self.__upperBound = currentMz
         return currentMz
 
-    def calculateNoise(self, point, windowSize):
+    def calculateNoise(self, point, windowSize, currentWindow=None):
         '''
         Calculates the noise within a certain window in the spectrum
         Noise is calculated by averaging the lowest peaks within window multiplied by a factor (0.67).
@@ -250,10 +257,12 @@ class SpectrumHandler(object):
         If the number of peaks is below a threshold, the user indicated noise level is used
         :param (float) point: m/z (median)
         :param (float) windowSize: window: [point-windowSize/2, point+windowSize/2]
+        :param (ndarray(dtype=float, ndim=2) | None) currentWindow: peaks within window
         :return: (float) noise
         '''
         noise = self.__settings['noiseLimit']
-        currentWindow = self.getPeaksInWindow(self.__spectrum, point, windowSize)
+        if currentWindow is None:
+            currentWindow = self.getPeaksInWindow(self.__spectrum, point, windowSize)
         if currentWindow[:, 1].size < 11:
             currentWindow = self.getPeaksInWindow(self.__spectrum, point, windowSize * 2)
         if currentWindow[:,1].size > 10:     #parameter
@@ -262,21 +271,23 @@ class SpectrumHandler(object):
             #stdDevPeakInt = np.std(peakInt)
             while True:
                 avPeakInt0 = avPeakInt
-                lowAbundendantPeaks = peakInt[np.where(peakInt < (avPeakInt + 2* 10**6))]#2 * stdDevPeakInt))]
+                lowAbundendantPeaks = peakInt[np.where(peakInt < (avPeakInt +noise))]# 2* 10**6))]#2 * stdDevPeakInt))] #ToDo parameter
                 avPeakInt = np.average(lowAbundendantPeaks)
-                if len(lowAbundendantPeaks) == 1:
+                if (len(lowAbundendantPeaks) == 1) or (avPeakInt - avPeakInt0 == 0):
                     #print(avPeakInt,stdDevPeakInt)
                     #print('exit 1')
-                    return avPeakInt * 0.67
-                if avPeakInt - avPeakInt0 == 0:
-                    #print('exit 2')
+                    #return avPeakInt * 0.67
                     break
+                '''if avPeakInt - avPeakInt0 == 0:
+                    #print('exit 2')
+                    break'''
                 #else:
                     #stdDevPeakInt = np.std(lowAbundendantPeaks)
-            if avPeakInt > noise*0.67:
+            avPeakInt *= 0.6
+            if avPeakInt > noise:#*0.67:
                 noise = avPeakInt
             #print(avPeakInt,stdDevPeakInt)
-        return noise*0.6
+        return noise
 
     @staticmethod
     def getPeaksInWindow(allPeaks, point, windowSize):
@@ -334,7 +345,7 @@ class SpectrumHandler(object):
                 nrMod = 1
                 if len(findall(r"(\d+)"+mod, fragment.getModification())) > 0:
                     nrMod = int(findall(r"(\d+)"+mod, fragment.getModification())[0])
-                modCharge += charge * nrMod * self.__sprayMode
+                modCharge += charge * nrMod# * self.__sprayMode
         logging.debug('Charge of modification: '+ str(modCharge))
         return modCharge
 
@@ -366,8 +377,10 @@ class SpectrumHandler(object):
         probableZ -= fragment.getRadicals()
         tolerance = configs['zTolerance']
         lowZ, highZ = 1, self.__charge
-        zEffect = (precModCharge - self.getModCharge(fragment)) * self.__sprayMode
+        zEffect = (self.getModCharge(fragment)-precModCharge) * self.__sprayMode
+        #print(1,fragment.getName(),probableZ)
         probableZ += zEffect
+        #print(2,fragment.getName(),probableZ)
         if (probableZ-tolerance)> lowZ:
             lowZ = round(probableZ-tolerance)
         if (probableZ+tolerance)< highZ:
@@ -391,8 +404,10 @@ class SpectrumHandler(object):
         precModCharge = self.getModCharge(self._precursor)
         self._normalizationFactor = self.getNormalizationFactor()
         logging.debug('Normalisation factor: '+ str(self._normalizationFactor))
-        self._protonIsoPatterns = self.getProtonIsotopePatterns()
+        self.getProtonIsotopePatterns()
         for fragment in fragmentLibrary:
+            formula =fragment.getFormula()
+            #neutralPatternFFT = formula.calculateIsotopePatternFFT(1, )
             logging.info(fragment.getName())
             self._searchedChargeStates[fragment.getName()] = []
             sortedPattern = np.sort(fragment.getIsotopePattern(), order='calcInt')[::-1]
@@ -402,7 +417,9 @@ class SpectrumHandler(object):
             radicals = fragment.getRadicals()
             for z in zRange:
                 logging.debug('* z'+str(z))
-                theoreticalPeaks = self.getIsotopePattern(sortedPattern,z,radicals)
+                theoreticalPeaks = copy.deepcopy(sortedPattern)
+                theoreticalPeaks['m/z'] = getMz(theoreticalPeaks['m/z'], z * self.__sprayMode, radicals)
+                theoreticalPeaks = self.getChargedIsotopePattern(sortedPattern, z, radicals)
                 if (configs['lowerBound'] < theoreticalPeaks[0]['m/z'] < self.__upperBound):
                     self._searchedChargeStates[fragment.getName()].append(z)
                     #make a guess of the ion abundance based on number in range
@@ -421,14 +438,15 @@ class SpectrumHandler(object):
                         logging.debug(str(spectralPeak[0])+'\t'+str(spectralPeak[1])+'\t'+str(spectralPeak[2])+'\t'+
                                       str(spectralPeak[3]))
                     if sumInt > 0:
-                        noise = self.calculateNoise(theoreticalPeaks[0]['m/z'], 4)
+                        #theoreticalPeaks=self.getChargedIsotopePattern2(formula, theoreticalPeaks, z-radicals)
+                        noise = self.calculateNoise(theoreticalPeaks[0]['m/z'], configs['noiseWindowSize'])
                         logging.debug('Noise:'+str(noise))
                         sumInt += notFound * noise * 0.5              #if one or more isotope peaks were not found noise added #parameter
                         notInNoise = np.where(theoreticalPeaks['calcInt'] >noise*
                                               configs['thresholdFactor'] / (sumInt/sumIntTheo))
                         if theoreticalPeaks[notInNoise].size > peakQuantitiy:
                             logging.debug('* All Peaks:')
-                            foundPeaks = [self.findPeak(theoPeak) for theoPeak in theoreticalPeaks[notInNoise]]
+                            foundPeaks = [self.findPeak(theoPeak, configs['errorTolerance']) for theoPeak in theoreticalPeaks[notInNoise]]
                             #find other isotope Peaks
                             foundPeaksArr = np.sort(np.array(foundPeaks, dtype=self._peaksArrType), order=['m/z'])
                             if not np.all(foundPeaksArr['relAb']==0):
@@ -455,14 +473,14 @@ class SpectrumHandler(object):
         :return: (ndArray[float,float]) array with 2 columns: rows represent proton nr + 1, column 1: monoisotopic,
             column 2: M+1 peak
         '''
-        maxZ = abs(self.__settings['charge'])
+        maxZ = abs(self.__settings['charge'])+1
         protonIsotopePatterns = np.zeros((maxZ,2))
         for i in range(maxZ):
             protonIsotopePatterns[i] = MolecularFormula({'H':i+1}).calcIsotopePatternPart(2)['calcInt']
             logging.debug(str(protonIsotopePatterns[i][0])+'\t'+str(protonIsotopePatterns[i][1]))
-        return protonIsotopePatterns
+        self._protonIsoPatterns = protonIsotopePatterns
 
-    def getIsotopePattern(self, neutralPattern,z, radicals):
+    def getChargedIsotopePattern(self, neutralPattern, z, radicals):
         '''
         Calculates the final theoretical isotope pattern of an ion
         :param (ndArray) neutralPattern: isotope pattern of the neutral species,
@@ -481,11 +499,33 @@ class SpectrumHandler(object):
             regressionVals = theoreticalPeaks['calcInt']
         for i in range(1,len(theoreticalPeaks)):
             theoreticalPeaks['calcInt'][i] += self._protonIsoPatterns[z-1][1]*regressionVals[i-1]*self.__sprayMode
+        theoreticalPeaks['calcInt'] /= np.sum(theoreticalPeaks['calcInt'])
         return theoreticalPeaks
 
-    def findPeak(self, theoPeak):
+    def getChargedIsotopePattern2(self, formula, neutralPattern, nrHs):#, neutralFFT):
+        sortedNeutralPattern = np.sort(neutralPattern, order='m/z')
+        if self.__sprayMode:
+            #print('old',neutralPattern[0])
+            ionPatternFFT = formula.addFormula({'H': nrHs}).calculateIsotopePatternFFT(2,neutralPattern) #Warum besser mit neutral???
+        else:
+            ionPatternFFT = formula.subtractFormula({'H': nrHs}).calculateIsotopePatternFFT(2,neutralPattern)
+        ionPattern = sortedNeutralPattern
+        maxIndexArr = np.array((len(ionPattern),len(ionPatternFFT)))
+        maxIndex = np.min(maxIndexArr)
+        if np.max(maxIndexArr) == np.min(maxIndexArr):
+            #ionPattern['calcInt'] += (ionPatternFFT['calcInt']-neutralFFT['calcInt'])
+            ionPattern['calcInt'] = ionPatternFFT['calcInt']
+        else:
+            #print('maxIndex',maxIndex,maxIndexArr)
+            #ionPattern['calcInt'][:maxIndex] += (ionPatternFFT['calcInt'][:maxIndex]-neutralFFT['calcInt'][:maxIndex])
+            ionPattern['calcInt'][:maxIndex] = ionPatternFFT['calcInt'][:maxIndex]
+        ionPattern['calcInt'] /= np.sum(ionPattern['calcInt'])
+        return ionPattern#np.sort(ionPattern, order='calcInt')[::-1]
+
+
+    def findPeak(self, theoPeak, tolerance=0):
         searchMask = np.where(abs(calculateError(self.__spectrum[:, 0], theoPeak['m/z']))
-                              < getErrorLimit(self.__spectrum[:, 0]))
+                              < getErrorLimit(self.__spectrum[:, 0])+tolerance)
         return self.getCorrectPeak(self.__spectrum[searchMask], theoPeak)
 
 

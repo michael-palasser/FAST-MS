@@ -3,8 +3,6 @@ from datetime import datetime
 
 from src.MolecularFormula import MolecularFormula
 from src.FormulaFunctions import stringToFormula2
-#from src.entities.AbstractEntities import AbstractItem1]
-#from src.MolecularFormula import stringToFormula2
 from src.entities.Search import Search
 from src.repositories.SearchRepository import SearchRepository
 
@@ -65,7 +63,7 @@ class SearchService(object):
         :param (FragmentIon) ion: ion with strings as sequence and formula
         :return: (FragmentIon) ion with list[str] as sequence and MolecularFormula as formula
         '''
-        ion.setSequence(ion.getSequence().split(','))
+        #ion.setSequence(ion.getSequence().split(','))
         ion.setFormula(MolecularFormula(stringToFormula2(ion.getFormula(), {}, 1)))
         return ion
 
@@ -77,9 +75,16 @@ class SearchService(object):
         '''
         #print(ion.getName(), ion.formula)
         processedIon = deepcopy(ion)
-        processedIon.setSequence(','.join(ion.getSequence()))
+        #processedIon.setSequence(','.join(ion.getSequence()))
         processedIon.setFormula(ion.getFormula().toString())
         return processedIon
 
     def deleteSearch(self, name):
         self._rep.delete(name)
+
+    @staticmethod
+    def getAllAssignedPeaks(ions):
+        peaks = set()
+        for ion in ions:
+            peaks.update({(peak['m/z'],peak['relAb']) for peak in ion.getIsotopePattern() if peak['relAb']!=0})
+        return peaks

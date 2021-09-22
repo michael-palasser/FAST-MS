@@ -277,18 +277,24 @@ class MolecularFormula(object):
                     if isotope[0]-mono[0] != 0:
                         dm_i = isotope[1]-mono[1]
                         dm.append((dm_i/round(dm_i)*elemNrs[i]*isotope[2],elemNrs[i]*isotope[2]))
+                        #intDm = round(dm_i)
+                        #dm.append(((dm_i-intDm)*elemNrs[i]*isotope[2]/intDm,  elemNrs[i]*isotope[2]/intDm))
+                        #print('dm',intDm,dm_i/round(dm_i), 1+(dm_i-intDm))
         dm =np.array(dm)
         return abundanceTable, elemNrs, np.sum(dm[:,0])/np.sum(dm[:,1])
 
 
-    def calculateIsotopePatternFFT(self, accelerate):
+    def calculateIsotopePatternFFT(self, accelerate,exactPattern=None):#, minSumCorrection=0):
         '''
         Calculates isotope patterns based on molecular formulas using a combination of the usual polynomial and the
         fast fourier transform method
         :return: (ndarray(dtype=[float,float])) isotope pattern (structured numpy array: [(mass,relative Abundance)])
         '''
-        exactPattern= self.calculateIsotopePattern(accelerate)
-        if np.sum(exactPattern['calcInt']) > MIN_SUM:
+        #assert minSumCorrection+MIN_SUM<1
+        #print('new',self.calculateIsotopePattern(accelerate)[0])
+        if exactPattern is None:
+            exactPattern= self.calculateIsotopePattern(accelerate)
+        if np.sum(exactPattern['calcInt']) > MIN_SUM:#+minSumCorrection:
             return np.array(exactPattern, dtype=isoPatternDtype)
         abundanceTable, elemNrs, dm = self.makeFFTTables(exactPattern['m/z'][0])
         isotope_pattern =  np.array(self.calculateAbundancesFFT(abundanceTable, elemNrs), dtype=isoPatternDtype)
@@ -296,7 +302,7 @@ class MolecularFormula(object):
         isoPeak = len(exactPattern)
         isotope_pattern['m/z'] =(isotope_pattern['m/z']-isotope_pattern['m/z'][isoPeak-1])*dm+exactPattern['m/z'][-1]
         finalPattern = [row for row in exactPattern]
-        while sumInt <MIN_SUM:
+        while sumInt <MIN_SUM:#+minSumCorrection:
             finalPattern.append(isotope_pattern[isoPeak])
             sumInt+=isotope_pattern[isoPeak]['calcInt']
             isoPeak+=1
@@ -315,14 +321,14 @@ class MolecularFormula(object):
         '''
         MAX_ELEMENTS = abundanceTable.shape[0]
         MAX_MASS = abundanceTable.shape[1]
-        abundanceTable_trans = fft(abundanceTable, axis=1)
-        ptA = np.ones(MAX_MASS, dtype=complex)
+        transformedTable = fft(abundanceTable, axis=1)
+        transformedAbundances = np.ones(MAX_MASS, dtype=complex)
         for i in range(MAX_ELEMENTS):
-            ptA *= (abundanceTable_trans[i, :] ** elemNrs[i])
-        riptA = ifft(ptA).real
-        riptA/=np.sum(riptA)
-        notZero = np.where(riptA >= 10e-10)
-        return [(mass_i, riptA_i) for mass_i, riptA_i in zip(notZero[0]+1,riptA[notZero])]
+            transformedAbundances *= (transformedTable[i, :] ** elemNrs[i])
+        abundances = ifft(transformedAbundances).real
+        abundances/=np.sum(abundances)
+        notZero = np.where(abundances >= 10e-10)
+        return [(mass_i, riptA_i) for mass_i, riptA_i in zip(notZero[0]+1,abundances[notZero])]
 
 
     def calcIsotopePatternPart(self, nrIsoPeaks):
@@ -341,6 +347,86 @@ class MolecularFormula(object):
             M_iso = np.sum(ultrafineStruct[:,0]*ultrafineStruct[:,1])/prop
             isotope_pattern.append((M_iso,prop))
         return np.array(isotope_pattern, dtype=isoPatternDtype)
+
+
+
+    """CIsotopes = np.array([(12,12.0, 0.98938), (13, 13.0033548350723, 0.01078)])
+    OIsotopes = np.array([(16,15.9949146195717,0.9975716),(17,16.9991317565069,0.000381),(18,17.9991596128676,0.0020514)])
+    elements = [CIsotopes,OIsotopes]
+    elementNrs = [20,30]
+    for currentElement, N in zip(elements, elementNrs):
+        print(N)
+        I= len(currentElement)
+    
+        #if I>2:
+        dimensionality = tuple([N+1 for i in range(I-1)])
+        #else:
+        #    dimensionality=(1,N+1)
+        print('dim',dimensionality)
+        E=np.zeros(dimensionality)
+        dimList = [0 for dim in dimensionality]
+        E[tuple(dimList)]=currentElement[0,2]
+        for i in range(1,I):
+            index = deepcopy(dimList)
+            '''if len(index)==1:
+                E[tuple(index)]=currentElement[i,2]
+            else:'''
+            index[-i]=1
+            print('index1',index)
+            print(index,currentElement[i,2])
+            E[tuple(index)]=currentElement[i,2]
+            print(E[tuple(index)])
+        #E[0, 1] = currentElement[1, 2]
+        print('E',E)
+        #E_N = np.zeros(dimensionality)
+        #E_N[tuple(dimList)]=currentElement[0,2]
+        fftArrs = []
+        if I==2:
+            result = ifft(fft(E) ** N).real
+            result /= np.sum(result)
+            print('result',result)
+            continue
+        elif I==3:
+            result1= np.zeros(dimensionality, dtype=complex)
+            for i,row in enumerate(E):
+                result1[i,:] = fft(row)
+            result2= np.zeros(dimensionality, dtype=complex)
+            result= np.zeros(dimensionality, dtype=complex)
+            for i,col in enumerate(result1.T):
+                result2[i,:] = ifft(fft(col)**N)
+            for i,row in enumerate(result2.T):
+                result[i,:] = ifft(row)
+            result = result.real
+            result /= np.sum(result)
+            print('result',result.real)
+            continue"""
+
+    """def makeFFTCorrectionTable(self,neutralPattern):
+        '''
+        Creates an array with the abundances of each isotope, an array with the nrs of each element and estimates the
+        spacing between the isotope peaks (in Da). For universal elemental composition.
+        :param (float) monoMass: monoisotopic mass of the molecule
+        :return:
+            (ndarray(dtype=[float,])) abundance table (2D array, each row represents an element, column index represents
+                the number of nucleons;
+            (ndarray(dtype=[float])) nr. of each element in the formula (1D array, each row represents an element);
+            (float) estimated spacing between the isotope peaks
+        '''
+        maxMass = int(np.max(neutralPattern['m/z']))+2
+        abundanceTable = np.zeros((2,maxMass))
+        for i,line in enumerate(sorted(neutralPattern['calcInt'])):
+            abundanceTable[0][100+i] = line
+        abundanceTable[1][1] = self._periodicTable['H'][2]
+        return abundanceTable 
+    
+    def correctNeutralIsotopePattern(self, neutralPattern, charge):
+        abundanceTable=self.makeFFTCorrectionTable(neutralPattern)
+        self.calculateAbundancesFFT(neutralPattern, )"""
+
+
+
+
+
 
     '''def makePoissonTable(self):
         lamdaHNOS = 0

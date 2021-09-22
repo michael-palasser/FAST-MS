@@ -33,6 +33,8 @@ class PlotTableModel(AbstractTableModel):
                 elif isnan(item):
                     return ''
                 return self._format[col].format(item)
+        if role == Qt.TextAlignmentRole:
+            return Qt.AlignRight
 
 
 class PlotTableView(QtWidgets.QWidget):

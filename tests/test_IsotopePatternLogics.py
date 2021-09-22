@@ -5,7 +5,7 @@ import numpy as np
 from src.Exceptions import InvalidInputException
 from src.IsotopePatternLogics import IsotopePatternLogics
 from src.MolecularFormula import MolecularFormula
-from src.entities.SearchSettings import SearchSettings
+from src.entities.SearchSettings import SearchSettings, processTemplateName
 from src.top_down.LibraryBuilder import FragmentLibraryBuilder
 from src.top_down.SpectrumHandler import getMz
 from tests.test_MolecularFormula import RNA_formulaDummy, RNA_pattern
@@ -170,12 +170,12 @@ class TestIsotopePatternLogics(TestCase):
         newFragDict = {}
         for name, frag in fragLib.items():
             if precName in name:
-                _, rest = FragmentLibraryBuilder.processTemplateName(name)
+                _, rest = processTemplateName(name)
                 newFragDict['Prec' + rest] = frag
             newFragDict[name] = frag
         properties = self.getProperties(searchSettings)
         for fragTemp in searchSettings.getFragmentation().getItems() + searchSettings.getFragmentation().getItems2():
-            if not fragTemp.enabled():
+            if not fragTemp.isEnabled():
                 continue
             fragTempName = fragTemp.getName()
             if fragTempName[0] in ['a', 'b', 'c', 'd']:
@@ -191,7 +191,7 @@ class TestIsotopePatternLogics(TestCase):
             self.assertIn(name, newFragDict.keys())
             self.assertEqual(fragment.getFormula().getFormulaDict(), newFragDict[name].getFormula().getFormulaDict())
             for modTemp in searchSettings.getModification().getItems():
-                if not modTemp.enabled():
+                if not modTemp.isEnabled():
                     continue
                 for nrMod in range(1, 3):
                     fragment = self.logics.getFragment(mode, sequ, properties['fragmentationName'], fragTempName,

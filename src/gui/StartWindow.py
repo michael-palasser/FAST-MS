@@ -11,7 +11,7 @@ from src.gui.IsotopePatternView import IsotopePatternView
 from src.gui.EditorController import *
 from src.gui.dialogs.ParameterDialogs import TD_configurationDialog
 from src.gui.dialogs.StartDialogs import IntactStartDialog
-from src.top_down.ModellingTool import main as modellingTool
+#from src.top_down.ModellingTool import main as modellingTool
 from src.top_down.OccupancyRecalculator import run as occupancyRecalculator
 from src.top_down.SpectrumComparator import run as spectrumComparator
 from src.intact.Main import run as IntactIonsSearch
@@ -27,14 +27,16 @@ class Window(SimpleMainWindow):
         self.createMenuBar()
         self.createMenu('Top-Down Tools',
                         {'Analyse Spectrum':
-                             (lambda:TD_MainController(self, True), 'Starts analysis of top-down spectrum', None),
+                             (lambda:self.startTopDown(True), 'Starts analysis of top-down spectrum', None),
                          'Load Analysis':
-                             (lambda:TD_MainController(self, False), 'Loads an old analysis', None),
-                         'Calc. Abundances':
-                             (lambda: modellingTool(self), 'Calculates relative abundances of an ion list', None),
+                             (lambda:self.startTopDown(False), 'Loads an old analysis', None),
+                         'Open current Analysis':
+                             (self.reopen, 'Re-opens the last analysis', None),
+                         #'Calc. Abundances':
+                         #    (lambda: modellingTool(self), 'Calculates relative abundances of an ion list', None),
                          'Calculate Occupancies':
                              (lambda: occupancyRecalculator(self), 'Calculates occupancies of a given ion list', None),
-                         'Compare Analysis':
+                         'Compare ion lists':
                              (self.compareSpectra, 'Compares the ion lists of multiple spectra', None)},
                         None)
         #[print(action.toolTip()) for action in menuActions.values()]
@@ -46,27 +48,35 @@ class Window(SimpleMainWindow):
                              (lambda: self.editData(ModificationEditorController), 'Edit modification/ligand patterns',
                               None)}, None)
         self.createMenu('Other Tools', {'Analyse Intact Ions': (lambda: self.editData(self.startIntactIonSearch),
-                                                 'Starts analysis of spectrum with unfragmented ions', None),
+                                                 'Starts analysis of spectra with unfragmented ions', None),
                          'Edit Intact Ions': (lambda: self.editData(IntactIonEditorController), 'Edit Intact Ions', None),
-                         'Model Isotope Pattern':
+                         'Model Ion':
                              (lambda: IsotopePatternView(self), 'Calculates the isotope pattern of an ion', None)},None)
-        self.createMenu('Edit data',
+        self.createMenu('Edit Data',
                         {'Elements': (lambda: self.editData(ElementEditorController), 'Edit element table', None),
                          'Molecules': (lambda: self.editData(MoleculeEditorController), 'Edit Molecular Properties', None),
                          'Sequences': (lambda: self.editData(SequenceEditorController), 'Edit stored sequences', None)},
                         None)
         self.move(200,200)
         # self.setWindowIcon(QIcon('pic.png'))
+        self._lastSearch = None
         self.showButtons()
-
 
     def showButtons(self):
         xPos = self.makeButton('Analyse top-down\nspectrum', 'Starts analysis of top-down spectrum', 40,
-                               lambda:TD_MainController(self, True))
-        xPos = self.makeButton('Analyse spectrum\nof intact molecule', 'Starts analysis of normal intact spectrum',
+                               lambda:self.startTopDown(True))
+        xPos = self.makeButton('Analyse spectra\nof intact ions', 'Starts analysis of spectra with unfragmented ions',
                                xPos, self.startIntactIonSearch)
         self.setGeometry(50, 50, xPos+40, 230)
         self.show()
+
+    def startTopDown(self, new):
+        self._lastSearch = SimpleMainWindow(None, '')
+        TD_MainController(self, new, self._lastSearch)
+
+    def reopen(self):
+        if self._lastSearch is not None:
+            self._lastSearch.show()
 
     def makeButton(self, name, toolTip, xPos, fun):
         width = 200
@@ -107,10 +117,9 @@ class Window(SimpleMainWindow):
             controller()
         except CanceledException:
             pass
-        '''except InvalidInputException:
+        except InvalidInputException as e:
             traceback.print_exc()
-            print('hey')
-            QtWidgets.QMessageBox.warning(self, "Problem occured", traceback.format_exc(), QtWidgets.QMessageBox.Ok)'''
+            QtWidgets.QMessageBox.warning(self, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
 
 def run():
     app = QApplication(sys.argv)

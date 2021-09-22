@@ -1,7 +1,8 @@
 import numpy as np
-
+from matplotlib import pyplot as plt
 from PyQt5 import QtGui
 import pyqtgraph as pg
+from matplotlib.ticker import MultipleLocator
 
 
 class PlotFactory(object):
@@ -14,6 +15,7 @@ class PlotFactory(object):
 
     def showOccupancyPlot(self, sequence, forwardVals, backwardVals, maxY, modification):
         self.initiatePlot(sequence, forwardVals, backwardVals, maxY, lambda: self.formatForOccupancies(modification))
+        #self.initiateAbsPlot(sequence, absVals, maxY, 'Abs. Occupancies '+modification)
 
     def showChargePlot(self, sequence, forwardVals, backwardVals, maxY, forwardVals2, backwardVals2):
         self.initiatePlot(sequence, forwardVals, backwardVals, abs(maxY), self.formatForCharges)
@@ -53,18 +55,18 @@ class PlotFactory(object):
         self._plot1.setRange(yRange=yRange, padding=0)
         self._plot2.setRange(yRange=yRange, padding=0)
         self._plot2.invertY()
-        self.addSequence()
+        self.addSequence(self._plot1)
         func()
         self.plot()
         self._plot1.resize(len(sequence) * 25 + 200, 400)
         self._plot2.resize(2000, 1000) #if too small the second graph will dissapear when scaling up
 
-    def addSequence(self):
+    def addSequence(self, plot):
         '''
         Adds building block markers to the plot at the corresponding positions
         '''
         line = pg.InfiniteLine(pos=0,angle=0,pen=pg.mkPen(color='w', width=0),movable=False)
-        self._plot1.addItem(line)
+        plot.addItem(line)
         sequMarkers = {}
         for bb in self._sequence:
             if bb not in sequMarkers.keys():
@@ -72,7 +74,7 @@ class PlotFactory(object):
         for i, bb in enumerate(self._sequence):
             scatter = pg.ScatterPlotItem(x=(i+0.5,),y=(0,), symbol=sequMarkers[bb],
                                          pen=pg.mkPen(color='k', width=0.1), size=10, pxMode=True)
-            self._plot1.addItem(scatter)
+            plot.addItem(scatter)
 
 
     def makeCustomMarker(self, bb):
@@ -90,8 +92,6 @@ class PlotFactory(object):
         tr.translate(-br.x() - br.width() / 2., -br.y() - br.height() / 2.)
         return tr.map(mysymbol)
 
-
-
     def formatForCharges(self):
         '''
         Formats the plot if it's a charge plot
@@ -107,7 +107,8 @@ class PlotFactory(object):
         Formats the plot if it's an occupancy plot
         '''
         self._plot1.setWindowTitle('Occupancies ' +modification)
-        yLabel = '% '+modification + ' ('
+        #yLabel = '% '+modification + ' ('
+        yLabel = modification + ' ('
         styles = {"black": "#f00", "font-size": "18px"}
         self._plot1.setLabel('left', yLabel + ','.join(self._forwardVals.keys()) + ')', **styles)
         self._plot1.setLabel('right', yLabel + ','.join(self._backwardVals.keys()) + ')', **styles)
@@ -183,10 +184,130 @@ class PlotFactory(object):
             i+=1
 
 
-
     def updateViews(self):
         '''
         Resets the plot window
         '''
         self._plot2.setGeometry(self._plot1.getViewBox().sceneBoundingRect())
         self._plot2.linkedViewChanged(self._plot1.getViewBox(), self._plot2.XAxis)
+
+
+
+    """def initiateAbsPlot(self, sequence, absVals, maxY, title):
+        '''
+        Constructs the corresponding plots. Plot has 2 lines (2 axis) in forward and backward direction
+        :param (list[str]) sequence: sequence of building blocks
+        :param (dict[str,ndarray[float]]) forwardVals: dictionary of
+            {fragment type: proportions [fragment number x proportion]} in forward direction (N-term./5')
+        :param (dict[str,ndarray[float]]) backwardVals: dictionary of
+            {fragment type: proportions [fragment number x proportion]} in backward direction (C-term./3')
+        :param (float) maxY: max. y value
+        :param (callable) func: method which formats the plot
+        '''
+        self._absVals = absVals
+        self._sequence = sequence
+        sequLength = len(sequence)
+        self._plot3 = pg.plot()
+        self._plot3.addLegend(labelTextSize='14pt')
+        self._plot3.setBackground('w')
+        self._plot3.showAxis('right')
+        styles = {"black": "#f00", "font-size": "20px"}
+        self._plot3.setLabel('bottom', 'cleavage site', **styles)
+        yRange = [-maxY*0.05,maxY*1.05]
+        self._plot3.setXRange(0.02, sequLength + 0.02)
+        self._plot3.plotItem.vb.setLimits(xMin=0, xMax=len(self._sequence) + 0.01, yMin=yRange[0], yMax=yRange[1])
+        self._plot3.setRange(yRange=yRange, padding=0)
+        self.addSequence(self._plot3)
+        self._plot3.setWindowTitle(title)
+        #self._plot3.setWindowTitle('Fragmentation Efficiencies')
+        yLabel = '∑ rel. abundances'
+        styles = {"black": "#f00", "font-size": "18px"}
+        self._plot3.setLabel('left', yLabel + ','.join(self._absVals.keys()) + ')', **styles)
+        self.plotBars([i+1 for i in range(sequLength)], self._absVals, self._colours)
+        self._plot3.resize(len(sequence) * 25 + 200, 400)
+
+
+    def plotBars(self, xVals, currentDict, colours):
+        '''
+        Plots a line on the plot
+        :param (list[int]) xVals: cleavage site
+        :param (dict[str,ndarray[float]]) currentDict: dictionary of
+            {fragment type: proportions [fragment number x proportion]}
+        :param (list[str]) colours: colour codes for the lines
+        :param (list[str]) markers: marker codes for the lines
+        :param parent:
+        '''
+        i=0
+        for key, vals in currentDict.items():
+            name = key + '-ions'
+            if vals.shape[0] == 1:
+                self._plot3.addItem(bars = pg.BarGraphItem(x=xVals, height=vals, width=0.5, brush=colours[i], name=name))
+            else:
+                self._plot3.addItem(pg.BarGraphItem(x=xVals, height=vals[:,0], width=0.5, brush=colours[i], name=name))
+                self._plot3.addItem(pg.BarGraphItem(x=xVals, height=vals[:,1], width=0.5, brush=colours[i], name=name))
+            i+=1"""
+
+
+def plotBars(sequence, values, headers, title, occup=False):
+    '''
+    Plots the relative abundances per cleavage site for every fragment type
+    :param (list[str]) sequence:
+    :param (ndarray[float]) values:
+    :param headers: header for each column of values
+    :param title:
+    :param occup: True for occupancy plot
+    :return:
+    '''
+    #sequLength = len(sequence)
+    colours = ['tab:red','royalblue','tab:green', 'tab:orange', 'tab:purple', 'tab:cyan', 'tab:brown']
+    nrCols = len(headers)
+    nrRows = len(values)
+    xVals = np.arange(1,nrRows+1)
+    width = 0.8  # the width of the bars: can also be len(x) sequence
+
+    fig, ax = plt.subplots()#figsize=(50,nrRows*10+50))
+    bottom=np.zeros(nrRows)
+    for i in range(nrCols):
+        #index=nrCols-i-1
+        if occup:
+            if not i%2:
+                ax.bar(xVals, values[:,i], width, bottom= bottom, label=headers[i], color='w',
+                       edgecolor=colours[int(i/2)], linewidth=0.7)
+            else:
+                ax.bar(xVals, values[:,i], width, bottom= bottom, label=headers[i], color=colours[int(i/2)],
+                       edgecolor=colours[int(i/2)], linewidth=0.7)
+        else:
+            ax.bar(xVals, values[:,i], width, bottom= bottom, label=headers[i], color=colours[i])
+        bottom += values[:,i]
+    sequColour = 'black'
+    if occup:
+        sequColour = 'saddlebrown'
+    for i,bb in enumerate(sequence):
+        plt.text(x=i+0.5, y=0, s=bb, fontsize=13, c=sequColour, ha='center')
+    plt.rcParams['figure.figsize'] = nrRows/5+4, 4
+    ax.set_ylabel('Rel.abundances in a.u.')
+    ax.set_xlabel('cleavage site')
+    ax.xaxis.set_major_locator(MultipleLocator(5))
+    #ax.xaxis.set_major_formatter('{x:.0f}')
+    ax.xaxis.set_minor_locator(MultipleLocator(1))
+
+    plt.grid(axis = 'y',linestyle = '--', linewidth = 0.4)
+    ax.set_title(title)
+    ax.legend()
+
+    ax.set_xlim([0, nrRows+1])
+    plt.show()
+
+if __name__ == '__main__':
+    arr = np.zeros((26,2))
+    for i in range(26):
+        for j in range(2):
+            arr[i,j] = np.random.randint(100000)
+    sequ = list('GGCUGCUUGUCCUUUAAUGGUCCAGUC')
+    plotBars(sequ, arr, ['c','y'], 'hey')
+    arr = np.zeros((26,4))
+    for i in range(26):
+        for j in range(4):
+            arr[i,j] = np.random.randint(100000)
+    plotBars(sequ, arr, ['c','c+CMCT','y','y+CMCT'], 'hey', False)
+    print(list(arr[:][1]))

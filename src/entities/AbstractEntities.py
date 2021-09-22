@@ -171,7 +171,7 @@ class AbstractItem2(AbstractItem1, ABC):
                 processedItem.append(val)
         return processedItem
 
-    def enabled(self):
+    def isEnabled(self):
         return (self._enabled == 1)
 
     def getFormula(self):

@@ -36,10 +36,10 @@ class Info(object):
         return ion.getName() + ', ' + str(ion.getCharge())
 
     def deleteMonoisotopic(self, ion):
-        self._infoString += '\n* del (mono) ' + self.ionToString(ion)
+        self._infoString += '\n* deleted ' + self.ionToString(ion) +  ' (same mass and charge as another ion)'
 
     def deleteIon(self, ion):
-        self._infoString += '\n* del ' + self.ionToString(ion)
+        self._infoString += '\n* deleted ' + self.ionToString(ion)
 
     def restoreIon(self, ion):
         self._infoString += '\n* restored ' + self.ionToString(ion)
@@ -52,11 +52,18 @@ class Info(object):
         '''
         self._infoString += '\n* changed ' + self.ionToString(origIon) + \
                 ';   old Int.: ' + str(round(origIon.getIntensity())) + ', new: ' + str(round(newIon.getIntensity()))
-        count = 1
+        #count = 1
+        self._infoString += '\n\tisotope peaks (columns: m/z,  int.(spectrum),  int. (calc.),  used)\n' \
+                            '\n\t\tnew   -->   old\n'
         for oldPeak, newPeak in zip(origIon.getIsotopePattern(), newIon.getIsotopePattern()):
-            self._infoString += '\n\t' + str(count) + '   old: ' + ', '.join([str(val) for val in oldPeak]) + \
-                               '\tnew: ' + ', '.join([str(val) for val in newPeak])
-            count += 1
+            self._infoString += '\n\t'+ self.formatPeak(oldPeak) + '\t' + self.formatPeak(newPeak)
+            #self._infoString += '\n\t' + str(count) + '   old: ' + ',  '.join([str(val) for val in oldPeak]) + \
+            #                   '\tnew: ' + ', '.join([str(val) for val in newPeak])
+            #count += 1
+
+    @staticmethod
+    def formatPeak(peak):
+        return ',  '.join([round(peak[0],5) + int(peak[1]) + int(peak[2]) + round(peak[4],2)])
 
     def addNewIon(self, ion):
         self._infoString += '\n* manually added ' + self.ionToString(ion)

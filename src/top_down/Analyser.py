@@ -3,6 +3,8 @@ Created on 10 Aug 2020
 
 @author: michael
 '''
+from copy import deepcopy
+
 import numpy as np
 
 class Analyser(object):
@@ -28,26 +30,30 @@ class Analyser(object):
     def calculateRelAbundanceOfSpecies(self):
         '''
         Calculates relative abundances of all fragment types including the precursor ion
-        :return: (dict[str,float]) relative fragment type abundances {type:abundance}
+        :return: (dict[str,float], dict[str,ndArray[float]]) relative fragment type abundances {type:abundance}, and
+            relative fragment type abundances per cleavage site
         '''
         relAbundanceOfSpecies = dict()
+        precInt = 0
         totalSum = 0
+        precName= 'prec'
         """for type in fragmentList:
             relAbundanceOfSpecies[type] = 0"""
         for ion in self._ions:
             #if (ion.getScore() < 5) or (ion.getQuality()<0.3) or (ion.getNumber() == 0):
-            factor = 0.5
+            relAb = ion.getRelAbundance()
             if ion.getNumber() == 0:
-                factor=1
-            relAb = ion.getRelAbundance() * factor
-            if ion.getType() not in relAbundanceOfSpecies.keys():
-                relAbundanceOfSpecies[ion.getType()] = relAb
+                precInt+=relAb
+                precName = ion.getType()
             else:
-                relAbundanceOfSpecies[ion.getType()] += relAb
+                relAb /= 2
+                if ion.getType() not in relAbundanceOfSpecies.keys():
+                    relAbundanceOfSpecies[ion.getType()] = np.zeros(len(self._sequence))
+                relAbundanceOfSpecies[ion.getType()][ion.getNumber()-1] += relAb
             totalSum += relAb
-        for species in relAbundanceOfSpecies:
-            relAbundanceOfSpecies[species] /= totalSum
-        return relAbundanceOfSpecies
+        totalDict = {precName:precInt/totalSum}
+        totalDict.update({type: np.sum(val/totalSum) for type, val in relAbundanceOfSpecies.items()})
+        return totalDict, relAbundanceOfSpecies
 
     def getModificationLoss(self):
         '''
@@ -72,40 +78,43 @@ class Analyser(object):
         :param (list of str) interestingIons: fragment types which should be analysed
         :param (str) modification: name of the modification (optional)
         :param (list of str) unImportantMods: list of modifications which should not be used for the calculation (optional)
-        :return: (dict[str,ndarray[float]]) dictionary {fragment type: proportions [fragment number x proportion]}
-            of modified proportions for every (interesting) fragment type
+        :return: (dict[str,ndarray[float]], dict[str,ndarray[float,float]])
+            dictionary {fragment type: proportions [fragment number x proportion]} of modified proportions for every
+                (interesting) fragment type
+            dictionary {fragment type: absolute values (2D array wiht columns: unmod. intensity per cleavage sit,
+                mod. intensity per cl.site)} for every (interesting) fragment type
         '''
         if modification == "":
             return None
         elif modification is None:
             modification=self._modification
-        temp = dict()
+        absValues = dict()
         for ion in self._ions:
             if ion.getType() in interestingIons:
                 if unImportantMods is not None:
                     if len([mod for mod in unImportantMods if mod in ion.getModification()])>0:
                         #print('not', ion.getName())
                         continue
-                if ion.getType() not in temp.keys():
-                    temp[ion.getType()] = np.zeros((len(self._sequence), 3))
+                if ion.getType() not in absValues.keys():
+                    absValues[ion.getType()] = np.zeros((len(self._sequence), 3))
                 #if self._modification in ion.getModification():
                 if ('+' in modification) or ('-' in modification):
                     modifications = ion.getModification()
                 else:
                     modifications = ion.getModificationList()
                 if modification in modifications:
-                    temp[ion.getType()][ion.getNumber() - 1] += \
+                    absValues[ion.getType()][ion.getNumber() - 1] += \
                         np.array([ion.getRelAbundance(),
                                   ion.getRelAbundance() * self.getNrOfModifications(ion.getModification(), modification), 0])
                     #print('\t', ion.getName(), ion.getRelAbundance()*int(self.getNrOfModifications(ion.getModification())), 'mod')
                 else:
-                    temp[ion.getType()][ion.getNumber() - 1] += \
+                    absValues[ion.getType()][ion.getNumber() - 1] += \
                         np.array([ion.getRelAbundance(),0,0])
                     #print('\t', ion.getName(), ion.getRelAbundance())
-        for key,vals in temp.items():
+        for key,vals in absValues.items():
             print('sequ.\t',key+'_free\t', key+'+'+modification)
             [print(str(i+1), '\t',val[0]-val[1], '\t', val[1]) for i,val in enumerate(vals)]
-        return self.calculateProportions(temp)#dict()
+        return self.calculateProportions(absValues),absValues#dict()
 
 
     @staticmethod
@@ -206,8 +215,61 @@ class Analyser(object):
             [table[i].append(val) for i, val in enumerate(reversed(vals[:-1]))]
         for i, bb in enumerate(self._sequence[1:]):
             table[i]+=[len(self._sequence)-i-1,bb]
-
         return table
+
+
+    def getSequenceCoverage(self, forwTypes):
+        '''
+        Determines the sequence coverage for each fragment type, for each direction (N-/5'-terminus etc.) and the
+        global sequence coverage
+        :param (list[str]) forwTypes: list of all forward (N-terminal, 5'-, ...) fragment types
+        :return: (dict[str,ndArray[bool]], dict[str,float], ndArray[bool])
+            coverages: dictionary (fragm. type:array) whereby each row index of the array represents the cleavage site -1
+                and the boolean values states if a fragment was found at the corresponding site.
+            calcCoverages: dictionary (fragm. type:value) whereby the values represent the proportion of coverage
+            overall: 2D array (1.column = forward direction, 2.column = forward direction, 3.column = global) whereby
+                each row index of the array represents the cleavage site -1 and the boolean values states if a fragment
+                was found at the corresponding site.
+        '''
+        sequLength=len(self._sequence)
+        coverages = {}
+        calcCoverages = dict()
+        overall = np.zeros((sequLength,3))
+        arr = np.zeros(sequLength)
+        for ion in self._ions:
+            if ion.getNumber()==0:
+                continue
+            type = ion.getType()
+            if type not in coverages.keys():
+                coverages[type]= deepcopy(arr)
+            row = ion.getNumber()-1
+            if type not in forwTypes:
+                row = sequLength-ion.getNumber()
+            coverages[type][row] = 1
+        #overall = np.zeros(sequLength)
+        redSequLength = sequLength-1
+        for type,val in coverages.items():
+            calcCoverages[type] = np.sum(val)/(redSequLength)
+        overall[:,0] = np.any([val.astype(bool) for type,val in coverages.items() if type in forwTypes], axis=0)
+        calcCoverages['forward'] = np.sum(overall[:,0])/redSequLength
+        overall[:,1] = np.any([val.astype(bool) for type,val in coverages.items() if type not in forwTypes], axis=0)
+        calcCoverages['backward'] = np.sum(overall[:,1])/redSequLength
+        overall[:,2] = np.any((overall[:,0],overall[:,1]), axis=0)
+        calcCoverages['total'] = np.sum(overall[:,2])/sequLength
+        for type in coverages.keys():
+            if type in forwTypes:
+                coverages[type][-1] = np.nan
+            else:
+                coverages[type][0] = np.nan
+        overall[-1,0] = np.nan
+        overall[0,1] = np.nan
+        coveragesForw, coveragesBack = {},{}
+        for key,val in coverages.items():
+            if key in forwTypes:
+                coveragesForw[key] = val
+            else:
+                coveragesBack[key] = val
+        return (coveragesForw,coveragesBack), calcCoverages, overall
 
     '''def addColumn(self, table, vals):
         for i, val in enumerate(vals):

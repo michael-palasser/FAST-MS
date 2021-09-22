@@ -5,11 +5,10 @@ Created on 6 Aug 2020
 '''
 import logging
 from re import findall
-
 import numpy as np
 from copy import deepcopy
-from scipy.optimize import minimize
-from scipy.optimize import minimize_scalar
+from scipy.optimize import minimize, minimize_scalar
+
 from src.top_down.SpectrumHandler import getErrorLimit, calculateError
 
 
@@ -98,7 +97,7 @@ class IntensityModeller(object):
         # Grubbs('isch) test
         gValue = np.zeros(len(spectralIntensities))
         if solution.fun ** (0.5) > 0:
-            gValue = (spectralIntensities - calcIntensities) / solution.fun ** (0.5)
+            gValue = (spectralIntensities - calcIntensities) / np.sqrt(solution.fun/len(spectralIntensities))
             #print(gValue, solution.fun, spectralIntensities,calcIntensities )
         outlier_index = np.where(gValue > self._configs['outlierLimit'])
         return solution, mzArray[outlier_index].tolist()
@@ -232,10 +231,11 @@ class IntensityModeller(object):
             self.deleteIon(ion.getHash(), "mono.")
 
     def deleteIon(self, ionHash, comment):
-        self._correctedIons[ionHash].addComment(comment)
-        print('deleting',ionHash)
-        self._deletedIons[ionHash] = self._correctedIons[ionHash]
-        del self._correctedIons[ionHash]
+        if ionHash in self._correctedIons.keys():
+            self._correctedIons[ionHash].addComment(comment)
+            print('deleting',ionHash)
+            self._deletedIons[ionHash] = self._correctedIons[ionHash]
+            del self._correctedIons[ionHash]
 
     def remodelOverlaps(self, allAuto=False):
         '''
@@ -474,7 +474,6 @@ class IntensityModeller(object):
         if hash in self._correctedIons.keys():
             comment = 'man.del.'
             oldDict, newDict = self._correctedIons, self._deletedIons
-            print('switchIon',hash)
             returnedHash = self.checkForOverlaps(ion)
         elif hash in self._deletedIons.keys():
             comment = 'man.undel.'
@@ -493,17 +492,13 @@ class IntensityModeller(object):
         :return: (str) hash of overlapping ion
         '''
         overlappingIons = findall('\[(.*?)\]', ion.getComment())
-        print('checkForOverlaps1',overlappingIons, ion.getComment())
-        print(self._correctedIons.keys())
         if len(overlappingIons)>0:
             ionStrings = overlappingIons[-1].split(',')
-            print('checkForOverlaps2',ionStrings)
             counter=0
             returnedHash=None
             for ionString in ionStrings:
                 vals = ionString.split('_')
                 ionHash = (vals[0], int(vals[1]))
-                print('checkForOverlaps3',ionHash, ionHash in self._correctedIons.keys())
                 if ionHash in self._correctedIons.keys():
                     counter+=1
                     returnedHash=ionHash

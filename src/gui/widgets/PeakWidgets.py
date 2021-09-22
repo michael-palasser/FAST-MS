@@ -26,6 +26,8 @@ class GeneralPeakWidget(QtWidgets.QTableWidget):
         self.setHorizontalHeaderLabels(self._headers)
         self.setSortingEnabled(True)
         connectTable(self, self.showOptions)
+
+        print(self._peaks, self._headers, len(self._peaks), len(self._headers))
         '''self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.customContextMenuRequested['QPoint'].connect(partial(self.showOptions, self))'''
 
@@ -87,10 +89,12 @@ class GeneralPeakWidget(QtWidgets.QTableWidget):
         '''
         Returns a dataframe with the peak data
         '''
-        df = pd.DataFrame(data=self._peaks, columns=self._headers)
+        df = pd.DataFrame()#data=self._peaks), columns=self._headers)
+        df['m/z'] = self._peaks['m/z']
         df['int. (spectrum)'] = self._peaks['relAb']
         df['int. (calc.)'] = self._peaks['calcInt']
         df['error /ppm'] = self._peaks['error']
+        df['used'] = self._peaks['used']
         return df
 
     def readTable(self):

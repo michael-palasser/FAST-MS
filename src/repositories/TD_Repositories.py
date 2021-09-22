@@ -182,8 +182,8 @@ class ModificationRepository(AbstractRepositoryWith2Items):
         columns = super(ModificationRepository, self).getItemColumns()
         columns.update({'Residue': "If the species is dependent on the occurence of a specific residue within the "
                                    "sequenceList, enter the residue", 'Radicals': "Enter the number of radicals",
-                        'z-Effect': "If the modification alters the charge of modified fragment enter an (empiric) number of the extent",
-                        'calcOcc': 'Should the modification be used for occupancy calculation?',
+                        'z-effect': "If the modification alters the charge of modified fragment enter an (empiric) number of the extent",
+                        'Calc.occ': 'Should the modification be used for occupancy calculation?',
                         'Enabled': "Activate/Deactivate Modification"})
         return (columns,{'Name': 'Modification to be excluded'})
 

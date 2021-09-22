@@ -1,4 +1,3 @@
-import time
 from unittest import TestCase
 import numpy as np
 from random import randint
@@ -7,6 +6,8 @@ from src.fastFunctions import getByIndex
 from src.MolecularFormula import MolecularFormula
 from src.top_down.SpectrumHandler import calculateError
 
+averagine ={'C': 4.9384, 'H': 7.7583, 'N': 1.3577, 'O': 1.4773, 'S': 0.0417}
+averaginine = {'C': 9.5, 'H': 11.75, 'N': 3.75, 'O': 7, 'P': 1}
 molFormulaDummy = MolecularFormula('C5H4N3O')
 RNA_formulaDummy = MolecularFormula('C38H48N15O26P3')  # GACU
 peptideFormulaDummy = MolecularFormula('C36H56N12O14S')  # GCASDQHPV
@@ -115,7 +116,7 @@ class MolecularFormulaTest(TestCase):
         self.testIsotopePattern(RNA_pattern, RNA_formulaDummy.calculateIsotopePattern())
         self.testIsotopePattern(peptide_pattern, peptideFormulaDummy.calculateIsotopePattern())
         self.testIsotopePattern(uni_pattern, uniFormulaDummy.calculateIsotopePattern())
-        for i in range(100):
+        for i in range(10):
             molFormulaDummy_i = MolecularFormula({'C': randint(5, 50), 'H': randint(10, 100),
                                                   'N': randint(1, 40), 'O': randint(1, 40),
                                                   'P': randint(0, 2), 'S': randint(0, 2)})
@@ -130,18 +131,28 @@ class MolecularFormulaTest(TestCase):
     def testIsotopePattern(self, theoIsotopePattern=None, calcIsotopePattern=None, complete=True, max_ppm=0.5,
                            deltaCalcInt=5*10e-6):
         if theoIsotopePattern is not None:
+            ppms = []
             # theoIsotopePattern = np.array(theoIsotopePattern, dtype=[('m/z', np.float64), ('calcInt', np.float64)])
-            theoIsotopePattern['calcInt'] *= (calcIsotopePattern['calcInt'][0] / theoIsotopePattern['calcInt'][0])
+            #theoIsotopePattern['calcInt'] *= (calcIsotopePattern['calcInt'][0] / theoIsotopePattern['calcInt'][0])
+            self.assertLess(np.sum(calcIsotopePattern['calcInt']), 1.000)
+            if complete:
+                theoIsotopePattern['calcInt']/=np.sum(theoIsotopePattern['calcInt'])
+                calcIsotopePattern['calcInt']/=np.sum(calcIsotopePattern['calcInt'])
+            else:
+                theoIsotopePattern['calcInt'] *= (calcIsotopePattern['calcInt'][0] / theoIsotopePattern['calcInt'][0])
             if len(theoIsotopePattern) > (len(calcIsotopePattern) + 1):
                 raise Exception('Length of calculated isotope pattern to short')
             for i in range(min(len(theoIsotopePattern),len(calcIsotopePattern))):
-                self.assertLess(np.abs(calculateError(theoIsotopePattern[i]['m/z'], calcIsotopePattern[i]['m/z'])),max_ppm)
+                error =calculateError(calcIsotopePattern[i]['m/z'],theoIsotopePattern[i]['m/z'])
+                self.assertLess(np.abs(error),max_ppm)
                 #self.assertAlmostEqual(theoIsotopePattern[i]['m/z'], calcIsotopePattern[i]['m/z'], delta=5 * 10 ** (-6))
                 self.assertAlmostEqual(theoIsotopePattern[i]['calcInt'], calcIsotopePattern[i]['calcInt'],
                                        delta=deltaCalcInt)
+                ppms.append(error)
             if complete:
                 self.assertAlmostEqual(1.0, float(np.sum(calcIsotopePattern['calcInt'])), delta=0.005)
-            self.assertTrue(np.sum(calcIsotopePattern['calcInt']) < 1)
+            ppms = np.array(ppms)
+            return ppms[np.argmax(np.abs(ppms))], np.average(np.abs(ppms))
 
 
     def test_make_ffttables(self):
@@ -175,7 +186,12 @@ class MolecularFormulaTest(TestCase):
         return np.sum(dm[:, 0]) / np.sum(dm[:, 1])
 
     def test_calculate_abundances_fft(self):
+        '''averagine ={'C': 4.9384, 'H': 7.7583, 'N': 1.3577, 'O': 1.4773, 'S': 0.0417}
+        averaginine = {'C': 9.5, 'H': 11.75, 'N': 3.75, 'O': 7, 'P': 1}'''
         for i in range(20):
+            #randNr = randint(10, 100)
+            '''molFormulaDummy_RNA = MolecularFormula({key:int(round(val*randNr)) for key,val in averaginine.items()})
+            molFormulaDummy_prot = MolecularFormula({key:int(round(val*randNr)) for key,val in averagine.items()})'''
             molFormulaDummy_i = MolecularFormula({'C': randint(5, 50), 'H': randint(10, 100),
                                                   'N': randint(1, 40), 'O': randint(1, 40),
                                                   'P': randint(0, 2), 'S': randint(0, 2)})
@@ -190,17 +206,40 @@ class MolecularFormulaTest(TestCase):
                 print(fastIsotopePattern)
                 raise AssertionError(molFormulaDummy_i.getFormulaDict())
 
+
     def test_calculate_isotope_pattern_fft(self):
-        for i in range(5):
-            molFormulaDummy_i = MolecularFormula({'C': randint(50, 500), 'H': randint(100, 1000),
-                                                  'N': randint(10, 400), 'O': randint(10, 400),
-                                                  'P': randint(0, 20), 'S': randint(0, 20)})
+        for i in range(10):
+            randNr = randint(30, 150)
+            molFormulaDummy_RNA = MolecularFormula({key:int(round(val*randNr)) for key,val in averaginine.items()})
+            molFormulaDummy_prot = MolecularFormula({key:int(round(val*randNr)) for key,val in averagine.items()})
+            '''molFormulaDummy_both = MolecularFormula({'C': randint(100, 1000), 'H': randint(200, 2000),
+                                                  'N': randint(50, 400), 'O': randint(50, 400),
+                                                  'P': randint(0, 20), 'S': randint(0, 20)})'''
+            for j,molFormulaDummy_i in enumerate([molFormulaDummy_RNA, molFormulaDummy_prot]):#, molFormulaDummy_both]:
+                exactIsotopePattern = molFormulaDummy_i.calculateIsotopePattern()
+                fastIsotopePattern = molFormulaDummy_i.calculateIsotopePatternFFT(1)
+                '''print(molFormulaDummy_i)
+                print(exactIsotopePattern)
+                print(fastIsotopePattern)'''
+                try:
+                    max_ppm = 1
+                    if exactIsotopePattern['m/z'][0]>10000:
+                        print('hey',randNr, exactIsotopePattern['m/z'][0])
+                        max_ppm = 0.6
+                    print(j%2,'max error', molFormulaDummy_i.toString(),
+                          self.testIsotopePattern(exactIsotopePattern,fastIsotopePattern,max_ppm=max_ppm, deltaCalcInt=1*10e-4))
+                except AssertionError as e:
+                    print(molFormulaDummy_i.toString())
+                    print(exactIsotopePattern,fastIsotopePattern)
+                    raise e
+        print('RRE2 / calmodulin')
+        molFormulaDummy_RNA = MolecularFormula('C630H778N255O459P65') #rre2
+        molFormulaDummy_prot = MolecularFormula('C714H1120N188O255S9') #calmodulin
+        for j,molFormulaDummy_i in enumerate([molFormulaDummy_RNA, molFormulaDummy_prot]):#, molFormulaDummy_both]:
             exactIsotopePattern = molFormulaDummy_i.calculateIsotopePattern()
             fastIsotopePattern = molFormulaDummy_i.calculateIsotopePatternFFT(1)
-            '''print(molFormulaDummy_i)
-            print(exactIsotopePattern)
-            print(fastIsotopePattern)'''
-            self.testIsotopePattern(exactIsotopePattern,fastIsotopePattern,max_ppm=1, deltaCalcInt=10e-4)
+            print(j%2,'max error', molFormulaDummy_i.toString(),
+                  self.testIsotopePattern(exactIsotopePattern,fastIsotopePattern,max_ppm=0.6, deltaCalcInt=1*10e-4))
 
 
 

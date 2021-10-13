@@ -117,7 +117,7 @@ class IsotopePatternLogics(object):
         if formula != self._formula:
             self._formula = formula
             #self._fragment = fragment
-            tempFormula=self._formula.addFormula({'H':charge})
+            tempFormula=self._formula.addFormula({'H':charge+electrons})
             if tempFormula.getFormulaDict()['H']<0:
                 raise InvalidInputException('Nr of H = '+str(tempFormula.getFormulaDict()['H']), 'not enough Hs for deprotonation')
             #if tempFormula.calcIsotopePatternSlowly(1)['m/z'][0]>6000:
@@ -153,9 +153,11 @@ class IsotopePatternLogics(object):
         :return: (float) m/z
         '''
         if z != 0:
-            return abs((mass+electrons*(protMass+eMass)-z*eMass) / z)
+            #return abs((mass+electrons*(protMass+eMass)-z*eMass) / z)
+            return abs((mass-z*eMass) / z)
         else:
-            return abs(mass+electrons*(protMass+eMass))
+            #return abs(mass+electrons*(protMass+eMass))
+            return abs(mass)
 
     def checkFormula(self,formulaString):
         '''

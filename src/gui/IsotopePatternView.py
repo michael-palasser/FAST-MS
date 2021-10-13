@@ -139,7 +139,7 @@ class IsotopePatternView(SimpleMainWindow):
         '''
         Inserts the ion option (fragmentation, modification, ...) widgets into the QFrame
         '''
-        labelNames = ("Fragmentation:", "Fragment:", "Modif.Pattern:", "Modification:", "Nr.of Mod.:")
+        labelNames = ("Fragmentation:", "Fragment:", "Modif. Pattern:", "Modification:", "Nr. of Mod.:")
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         for i, key in enumerate(self._options.keys()):
             label = QtWidgets.QLabel(self._frame)

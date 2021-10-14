@@ -9,7 +9,6 @@ import subprocess
 import traceback
 from datetime import datetime
 
-from src.Exceptions import InvalidInputException
 from src.intact.IntactLibraryBuilder import IntactLibraryBuilder
 from src.intact.IntactFinder import Finder
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
@@ -45,7 +44,7 @@ def run():
     #with open(spectralFile) as f:
     #    finder.readData(f)
     finder.readData(configHandler.get('spectralData'))
-    listOfCalibrationVals = finder.calibrate()
+    listOfCalibrationVals = finder.calibrateAll()
 
     """find ions"""
     print("\n********** finding ions **********")

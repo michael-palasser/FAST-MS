@@ -13,6 +13,45 @@ from src.top_down.SpectrumHandler import calculateError
 
 protonMass = 1.00727647
 
+class Calibrator(object):
+    '''
+    Responsible for calibrating ions in a spectrum
+    '''
+    def __init__(self, theoValues, configHandler):
+        '''
+        :param (dict[str, MolecularFormula]) theoValues: library of formulas {name:formula}
+        :param configHandler: (ConfigHandler) configurationHandler for intact ions
+        '''
+        self._finder = Finder(theoValues, configHandler)
+        self._ionData = self._finder.readFile(configHandler.get('spectralData'))[0]
+        errorLimit = configHandler.get('errorLimitCalib')
+        assignedIons = self._finder.findIonsInSpectrum(0, errorLimit, self._ionData)
+        self._calibrationValues, self._pcov, self._quality, self._usedIons = \
+            self._finder.findCalibrationFunction(assignedIons, errorLimit)
+
+    def getCalibrationValues(self):
+        return self._calibrationValues
+
+    def getQuality(self):
+        return self._quality[0], self._quality[1], self._pcov
+
+    def getUsedIons(self):
+        return self._usedIons
+
+    def calibratePeaks(self, peaks):
+        '''
+        Calibrates a peak array
+        :param (ndarray) peaks:
+        :return:
+        '''
+        peaks[:,0] = self._finder.calibrate(peaks[:,0], self._calibrationValues)
+        return peaks
+
+    def writePeaks(self, peaks, fileName):
+        with open(fileName) as f:
+            f.write('m/z\tI\n')
+            for peak in peaks:
+                f.write(str(peak[0]+'\t'+str(peak[1])+'\n'))
 
 class Finder(object):
     '''
@@ -41,9 +80,9 @@ class Finder(object):
         :param (list[str]) files: paths of txt files
         '''
         self._files = files
-        dtype = np.dtype([('m/z', np.float64), ('z', np.uint8), ('relAb', np.float64)])
+        #dtype = np.dtype([('m/z', np.float64), ('z', np.uint8), ('relAb', np.float64)])
         for path in files:
-            data = []
+            '''data = []
             spectrum = list()
             with open(path) as file:
                 for line in file:
@@ -60,9 +99,30 @@ class Finder(object):
                         except:
                             print("problem in spectral pattern file: \nline", line)
                             continue
-            data.append(np.array(spectrum, dtype=dtype))
-            self._data.append(data)
+            data.append(np.array(spectrum, dtype=dtype))'''
+            self._data.append(self.readFile(path))
 
+    def readFile(self, path):
+        data = []
+        spectrum = list()
+        dtype=np.dtype([('m/z', np.float64), ('z', np.uint8), ('relAb', np.float64)])
+        with open(path) as file:
+            for line in file:
+                line = line.rstrip()
+                if line.startswith('m/z'):  # ToDo
+                    if len(spectrum) != 0:
+                        data.append(np.array(spectrum, dtype=dtype))
+                        spectrum = list()
+                else:
+                    try:
+                        lineList = line.split()
+                        charge = lineList[1].replace('+', '').replace('-', '')
+                        spectrum.append((lineList[0], charge, lineList[2]))
+                    except:
+                        print("problem in spectral pattern file: \nline", line)
+                        continue
+        data.append(np.array(spectrum, dtype=dtype))
+        return data
 
     def getMz(self, mass, z):
         return mass / z + protonMass * self._mode
@@ -102,7 +162,7 @@ class Finder(object):
         for spectra in self._data:
             ionLists = list()
             for spectrum in spectra:
-                ions = list()
+                '''ions = list()
                 for modif, val in self._theoValues.items():
                     mass = val[0]
                     z = 1
@@ -149,10 +209,65 @@ class Finder(object):
                                         ions.append(
                                             Ion(self._configHandler.get('sequName'), modif, sortedArr[-1]['m/z'], self.getMz(mass, z),
                                                 sortedArr[-1]['z'], sortedArr[-1]['relAb'], val[1]))
-                        z+=1
-                ionLists.append(ions)
+                        z+=1'''
+                ionLists.append(self.findIonsInSpectrum(k, d, spectrum, flag))
             listOfIonLists.append(ionLists)
         return listOfIonLists
+
+
+    def findIonsInSpectrum(self, k, d, spectrum, flag=False):
+        ions = list()
+        for modif, val in self._theoValues.items():
+            mass = val[0]
+            z = 1
+            while True:
+                if self.getMz(mass, z) < self._configHandler.get('minMz'):
+                    break
+                elif self.getMz(mass, z) < self._configHandler.get('maxMz'):
+                    errorLimit = self.getErrorLimit(k, d, self.getMz(mass, z))
+                    mask = np.where((abs(calculateError(spectrum['m/z'], self.getMz(mass, z))) < errorLimit)
+                                    & (spectrum['z'] == z))
+                    if (len(mask[0]) == 1):
+                        ions.append(Ion(self._configHandler.get('sequName'), modif, spectrum[mask]['m/z'][0],
+                                        self.getMz(mass, z),
+                                        spectrum[mask]['z'][0], spectrum[mask]['relAb'][0], val[1]))
+                    elif flag:
+                        if len(mask[0]) == 0:
+                            mask = np.where(
+                                (abs(calculateError(spectrum['m/z'], self.getMz(mass + 1.00266, z)))
+                                 < errorLimit) & (spectrum['z'] == z))
+                            if len(mask[0]) == 0:
+                                mask = np.where(
+                                    (abs(calculateError(spectrum['m/z'], self.getMz(mass - 1.00266, z)))
+                                     < errorLimit) & (spectrum['z'] == z))
+
+                            if (len(mask[0]) == 1):
+                                ions.append(
+                                    Ion(self._configHandler.get('sequName'), modif, spectrum[mask]['m/z'][0],
+                                        self.getMz(mass, z),
+                                        spectrum[mask]['z'][0], spectrum[mask]['relAb'][0], val[1]))
+                        if len(mask[0]) > 1:
+                            # print("more than one ion within error range:",spectralFile[mask])
+                            ionPicked = 0
+                            if errorLimit > 6.5:
+                                newMask = np.where(abs(calculateError(spectrum['m/z'],
+                                                                      self.getMz(mass, z))) < 6.5)
+                                if (len(newMask[0]) == 1):
+                                    ionPicked = 1
+                                    ions.append(
+                                        Ion(self._configHandler.get('sequName'), modif, spectrum[newMask]['m/z'][0],
+                                            self.getMz(mass, z), spectrum[newMask]['z'][0],
+                                            spectrum[newMask]['relAb'][0], val[1]))
+                                elif len(newMask[0]) > 1:
+                                    mask = newMask
+                            if ionPicked == 0:
+                                sortedArr = np.sort(spectrum[mask], order='relAb')
+                                ions.append(
+                                    Ion(self._configHandler.get('sequName'), modif, sortedArr[-1]['m/z'],
+                                        self.getMz(mass, z),
+                                        sortedArr[-1]['z'], sortedArr[-1]['relAb'], val[1]))
+                z += 1
+        return ions
 
 
     @staticmethod
@@ -168,7 +283,7 @@ class Finder(object):
         return a * x**2 + b * x + c
 
 
-    def calibrate(self):
+    def calibrateAll(self):
         '''
         Calibrates spectra internally using a quadratic calibration function:
         Loops over each spectral ion list :
@@ -180,10 +295,12 @@ class Finder(object):
         '''
         #count = 1
         errorLimit = self._configHandler.get('errorLimitCalib')
-        for fileNr, ionLists in enumerate(self.findIons(0, errorLimit)):
+        '''for fileNr, ionLists in enumerate(self.findIons(0, errorLimit)):'''
+        for fileNr, spectra in enumerate(self._data):
             calibrationValues = []
-            for i, ionList in enumerate(ionLists):
-                limit = errorLimit
+            for i, spectrum in enumerate(spectra):
+                ionList = self.findIonsInSpectrum(0, errorLimit, spectrum)
+                '''limit = errorLimit
                 solution = [0,1,0]
                 while limit >=10 :
                     y = list()
@@ -209,9 +326,15 @@ class Finder(object):
                                                        'Are you sure you picked the correct settings?')
                     errorList = np.array(errorList)
                     if np.average(errorList) < 1.0 and np.std(errorList)<2.0: #ToDo: to parameters
-                        break
+                        break'''
                 #count += 1
-                calibrationValues.append(solution)
+                try:
+                    calibrationValues.append(self.findCalibrationFunction(ionList,errorLimit)[0])
+                except InvalidInputException:
+                    raise InvalidInputException(self._files[fileNr],
+                                                'Nr of found ions in spectrum ' + str(i) +
+                                                ' is too low to calibrate (' + str(len(ionList)) + ').    '
+                                                                    'Are you sure you picked the correct settings?')
             self._listOfCalibrationValues.append(calibrationValues)
         newData = list()
         for spectrumFile, calibrationValues in zip(self._data, self._listOfCalibrationValues):
@@ -223,3 +346,57 @@ class Finder(object):
         self._data = newData
         return self._listOfCalibrationValues
 
+
+    def findCalibrationFunction(self, ionList, errorLimit):
+        limit = errorLimit
+        solution = [0, 1, 0]
+        count=0
+        while limit >= 10 or count==0:
+            usedIons = []
+            count=1
+            y = list()
+            x = list()
+            errorList = list()
+            for ion in ionList:
+                calibratedX = self.fun_parabola(ion.getMz(), solution[0], solution[1], solution[2])
+                theoMz = ion.getTheoMz()
+                if abs(calculateError(calibratedX, theoMz)) < limit:
+                    y.append(theoMz)
+                    x.append(ion.getMz())
+                    #errorList.append(abs(calculateError(calibratedX, theoMz)))
+                    errorList.append(calculateError(calibratedX, theoMz))
+                    usedIons.append(ion)
+            try:
+                solution, pcov = curve_fit(self.fun_parabola, np.array(x), np.array(y))
+                limit -= 10
+            except ValueError:
+                if limit < 100:
+                    limit += 5
+                else:
+                    raise InvalidInputException('Calibration not possible',
+                                                'Nr of found ions is too low to calibrate (' + str(len(ionList)) +
+                                                ').    Are you sure you picked the correct settings?')
+            errorList = np.array(errorList)
+            if np.average(np.abs(errorList)) < 1.0 and np.std(errorList) < 2.0:  # ToDo: to parameters
+                break
+        return solution, pcov, (np.average(np.abs(errorList)), np.std(errorList)), usedIons
+
+
+    def findCalibrationFunctionManually(self,ionList):
+        x,y, errorList = [],[], []
+        for ion in ionList:
+            theoMz = ion.getTheoMz()
+            y.append(theoMz)
+            x.append(ion.getMz())
+        try:
+            solution, pcov = curve_fit(self.fun_parabola, np.array(x), np.array(y))
+        except ValueError:
+            raise InvalidInputException('Calibration not possible',
+                                        'Nr of ions is too low to calibrate (' + str(len(ionList)) +').')
+        for ion in ionList:
+            calibratedX = self.calibrate(ion.getMz(), solution)
+            errorList.append(calculateError(calibratedX, ion.getTheoMz()))
+        return solution, pcov, errorList
+
+    def calibrate(self, uncalibrated, solution):
+        return self.fun_parabola(uncalibrated, solution[0],solution[1],solution[2])

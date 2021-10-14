@@ -15,7 +15,7 @@ class TestIntactAnalyser(TestCase):
             self.finderRNA, self.configRNA, self.finderProt, self.configProt = initFinders()
         with open('2511_RIO_test.txt') as f:
             self.finderRNA.readData(f)
-        self.finderRNA.calibrate()
+        self.finderRNA.calibrateAll()
         self.analyser = IntactAnalyser(self.finderRNA.findIons(self.configRNA.get('k'), self.configRNA.get('d'), True))"""
 
     def test_calculate_av_charge_and_error(self):

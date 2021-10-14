@@ -4,7 +4,6 @@ import numpy as np
 
 from src import path
 from src.Services import SequenceService
-from src.entities.GeneralEntities import Sequence
 from src.intact.IntactFinder import Finder
 from src.intact.IntactLibraryBuilder import IntactLibraryBuilder
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
@@ -31,10 +30,12 @@ def initConfigurations():
     return configHandler
 
 def initTestSequences(sequenceService=SequenceService()):
-    sequences = [Sequence(tup[0], tup[1], tup[2], i) for i, tup in
-                 enumerate(sequenceService.getSequences())]
-    sequences.append(Sequence('neoRibo', 'GGCUGCUUGUCCUUUAAUGGUCCAGUC', 'RNA', len(sequences) + 1))
-    sequences.append(Sequence('dummyProt', 'GAPH', 'Protein', len(sequences) + 1))
+    sequences = sequenceService.getSequences()
+    names = [tup[0] for tup in sequences]
+    if 'neoRibo' not in names:
+        sequences.append(('neoRibo', 'GGCUGCUUGUCCUUUAAUGGUCCAGUC', 'RNA', len(sequences) + 1))
+    if 'dummyProt' not in names:
+        sequences.append(('dummyProt', 'GAPH', 'Protein', len(sequences) + 1))
     sequenceService.save(sequences)
 
 class TestFinder(TestCase):
@@ -63,7 +64,7 @@ class TestFinder(TestCase):
 
     def test_find_ions(self):
         self.finderRNA.readData([self.RNA_spectrum])
-        self.finderRNA.calibrate()
+        self.finderRNA.calibrateAll()
         for ionList in self.finderRNA.findIons(self.configRNA.get('k'), self.configRNA.get('d'), True)[0]:
             self.assertGreater(len(ionList), 0)
 
@@ -75,7 +76,7 @@ class TestFinder(TestCase):
         errors1 = []
         for ionList in self.finderRNA.findIons(0, 50)[0]:
             errors1.append(np.abs(np.average([ion.calculateError() for ion in ionList])))
-        self.finderRNA.calibrate()
+        self.finderRNA.calibrateAll()
         errors2, stddevs = [], []
         for ionList in self.finderRNA.findIons(0, 50)[0]:
             errors = np.array([ion.calculateError() for ion in ionList if abs(ion.calculateError()) < 30])

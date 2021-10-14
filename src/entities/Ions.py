@@ -269,8 +269,8 @@ class FragmentIon(Fragment):
         return peaks
 
 
-class IntactIon(object):
-    def __init__(self, name, modification, mz,theoMz, charge, intensity, nrOfModifications):
+class IntactNeutral(object):
+    def __init__(self, sequName, modification, nrOfModifications, formula=None):
         '''
         :param (str) name: name of the ion
         :param (str) modification: modification/ligand/loss
@@ -280,18 +280,42 @@ class IntactIon(object):
         :param (float) intensity: intensity or relative abundance
         :param (int) nrOfModifications: nr. of modifications on ion
         '''
-        self._sequName = name
+        self._sequName = sequName
         self._modification = modification
-        self._mz = mz
-        self._theoMz = theoMz
-        self._charge = charge
-        self._intensity = intensity
         self._nrOfModifications = nrOfModifications
+        self._formula = formula
+        self._isotopePattern = None
 
     def getModification(self):
         return self._modification
     def getName(self):
         return self._sequName + self._modification
+    def getNrOfModifications(self):
+        return self._nrOfModifications
+    def getIsotopePattern(self):
+        return self._isotopePattern
+    def setIsotopePattern(self, isotopePattern):
+        self._isotopePattern = isotopePattern
+
+
+class IntactIon(IntactNeutral):
+    def __init__(self, sequName, modification, mz,theoMz, charge, intensity, nrOfModifications):
+        '''
+        :param (str) name: name of the ion
+        :param (str) modification: modification/ligand/loss
+        :param (float) mz: monoisotopic m/z
+        :param (float) theoMz: theoretical (calculated) m/z
+        :param (int) charge: charge
+        :param (float) intensity: intensity or relative abundance
+        :param (int) nrOfModifications: nr. of modifications on ion
+        '''
+        super(IntactIon, self).__init__(sequName, modification, nrOfModifications)
+        self._mz = mz
+        self._theoMz = theoMz
+        self._charge = charge
+        self._intensity = intensity
+
+
     def getMz(self):
         return self._mz
     def getTheoMz(self):
@@ -300,8 +324,6 @@ class IntactIon(object):
         return self._charge
     def getIntensity(self):
         return self._intensity
-    def getNrOfModifications(self):
-        return self._nrOfModifications
 
     def calculateError(self):
         return (self._mz - self._theoMz) / self._theoMz * 10 ** 6

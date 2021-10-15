@@ -285,6 +285,7 @@ class IntactNeutral(object):
         self._nrOfModifications = nrOfModifications
         self._formula = formula
         self._isotopePattern = None
+        self._monoisotopicRaw = None
 
     def getModification(self):
         return self._modification
@@ -292,10 +293,16 @@ class IntactNeutral(object):
         return self._sequName + self._modification
     def getNrOfModifications(self):
         return self._nrOfModifications
+    def getFormula(self):
+        return self._formula
     def getIsotopePattern(self):
         return self._isotopePattern
     def setIsotopePattern(self, isotopePattern):
         self._isotopePattern = isotopePattern
+    def getMonoisotopic(self):
+        if self._monoisotopicRaw is None:
+            self._monoisotopicRaw = self._formula.calculateMonoIsotopic()
+        return self._monoisotopicRaw
 
 
 class IntactIon(IntactNeutral):

@@ -19,7 +19,7 @@ class Calibrator(object):
     '''
     def __init__(self, theoValues, configHandler):
         '''
-        :param (dict[str, MolecularFormula]) theoValues: library of formulas {name:formula}
+        :param (list[IntactNeutral]) theoValues: library of neutrals
         :param configHandler: (ConfigHandler) configurationHandler for intact ions
         '''
         self._finder = Finder(theoValues, configHandler)
@@ -27,7 +27,7 @@ class Calibrator(object):
         errorLimit = configHandler.get('errorLimitCalib')
         assignedIons = self._finder.findIonsInSpectrum(0, errorLimit, self._ionData)
         self._calibrationValues, self._pcov, self._quality, self._usedIons = \
-            self._finder.findCalibrationFunction(assignedIons, errorLimit)
+            self._finder.findCalibrationFunction(assignedIons, errorLimit, configHandler.get('maxStd'))
 
     def getCalibrationValues(self):
         return self._calibrationValues
@@ -59,7 +59,7 @@ class Finder(object):
     '''
     def __init__(self, theoValues, configHandler):
         '''
-        :param (dict[str, MolecularFormula]) theoValues: library of formulas {name:formula}
+        :param (list[IntactNeutral]) theoValues: library of neutrals
         :param configHandler: (ConfigHandler) configurationHandler for intact ions
         '''
         self._theoValues = theoValues
@@ -217,8 +217,10 @@ class Finder(object):
 
     def findIonsInSpectrum(self, k, d, spectrum, flag=False):
         ions = list()
-        for modif, val in self._theoValues.items():
-            mass = val[0]
+        for neutral in self._theoValues:
+            mass = neutral.getMonoisotopic()
+            modif = neutral.getModification()
+            nrMod = neutral.getNrOfModifications()
             z = 1
             while True:
                 if self.getMz(mass, z) < self._configHandler.get('minMz'):
@@ -230,7 +232,7 @@ class Finder(object):
                     if (len(mask[0]) == 1):
                         ions.append(Ion(self._configHandler.get('sequName'), modif, spectrum[mask]['m/z'][0],
                                         self.getMz(mass, z),
-                                        spectrum[mask]['z'][0], spectrum[mask]['relAb'][0], val[1]))
+                                        spectrum[mask]['z'][0], spectrum[mask]['relAb'][0], nrMod))
                     elif flag:
                         if len(mask[0]) == 0:
                             mask = np.where(
@@ -245,7 +247,7 @@ class Finder(object):
                                 ions.append(
                                     Ion(self._configHandler.get('sequName'), modif, spectrum[mask]['m/z'][0],
                                         self.getMz(mass, z),
-                                        spectrum[mask]['z'][0], spectrum[mask]['relAb'][0], val[1]))
+                                        spectrum[mask]['z'][0], spectrum[mask]['relAb'][0], nrMod))
                         if len(mask[0]) > 1:
                             # print("more than one ion within error range:",spectralFile[mask])
                             ionPicked = 0
@@ -257,7 +259,7 @@ class Finder(object):
                                     ions.append(
                                         Ion(self._configHandler.get('sequName'), modif, spectrum[newMask]['m/z'][0],
                                             self.getMz(mass, z), spectrum[newMask]['z'][0],
-                                            spectrum[newMask]['relAb'][0], val[1]))
+                                            spectrum[newMask]['relAb'][0], nrMod))
                                 elif len(newMask[0]) > 1:
                                     mask = newMask
                             if ionPicked == 0:
@@ -265,7 +267,7 @@ class Finder(object):
                                 ions.append(
                                     Ion(self._configHandler.get('sequName'), modif, sortedArr[-1]['m/z'],
                                         self.getMz(mass, z),
-                                        sortedArr[-1]['z'], sortedArr[-1]['relAb'], val[1]))
+                                        sortedArr[-1]['z'], sortedArr[-1]['relAb'], nrMod))
                 z += 1
         return ions
 
@@ -295,6 +297,7 @@ class Finder(object):
         '''
         #count = 1
         errorLimit = self._configHandler.get('errorLimitCalib')
+        maxStd = self._configHandler.get('maxStd')
         '''for fileNr, ionLists in enumerate(self.findIons(0, errorLimit)):'''
         for fileNr, spectra in enumerate(self._data):
             calibrationValues = []
@@ -329,7 +332,7 @@ class Finder(object):
                         break'''
                 #count += 1
                 try:
-                    calibrationValues.append(self.findCalibrationFunction(ionList,errorLimit)[0])
+                    calibrationValues.append(self.findCalibrationFunction(ionList,errorLimit, maxStd)[0])
                 except InvalidInputException:
                     raise InvalidInputException(self._files[fileNr],
                                                 'Nr of found ions in spectrum ' + str(i) +
@@ -347,7 +350,7 @@ class Finder(object):
         return self._listOfCalibrationValues
 
 
-    def findCalibrationFunction(self, ionList, errorLimit):
+    def findCalibrationFunction(self, ionList, errorLimit, maxStd):
         limit = errorLimit
         solution = [0, 1, 0]
         count=0
@@ -377,7 +380,8 @@ class Finder(object):
                                                 'Nr of found ions is too low to calibrate (' + str(len(ionList)) +
                                                 ').    Are you sure you picked the correct settings?')
             errorList = np.array(errorList)
-            if np.average(np.abs(errorList)) < 1.0 and np.std(errorList) < 2.0:  # ToDo: to parameters
+            #if np.average(np.abs(errorList)) < 1.0 and np.std(errorList) < 2.0:  # ToDo: to parameters
+            if np.std(errorList) < maxStd:  # ToDo: to parameters
                 break
         return solution, pcov, (np.average(np.abs(errorList)), np.std(errorList)), usedIons
 

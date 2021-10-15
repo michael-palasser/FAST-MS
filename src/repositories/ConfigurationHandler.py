@@ -20,6 +20,7 @@ class ConfigHandler(object):
         #with openAgain(_configFile, "w") as f:
          #   json.dump(json.dumps(parameters), f)
         self._configFile = configFile
+        print('new')
         if isfile(configFile):
             with open(configFile, "r") as f:
                 try:
@@ -77,13 +78,20 @@ class ConfigurationHandlerFactory(object):
     def getTD_ConfigHandler():
         return ConfigHandler(join(dataPath,"configurations_top_down.json"))
 
-    @staticmethod
-    def getIntactHandler():
-        return ConfigHandler(join(dataPath, "configurations_intact.json"))
 
     @staticmethod
     def getExportHandler():
         return ConfigHandler(join(dataPath, "export_options.json"))
+
+    @staticmethod
+    def getIntactHandler():
+        print('eig new configH')
+        return ConfigHandler(join(dataPath, "configurations_intact.json"))
+
+    @staticmethod
+    def getFullIntactHandler():
+        return ConfigHandler(join(dataPath, "configurations_intactFull.json"))
+
 
 conf = {'sequName' : 'ribA',
     'charge' : -6,

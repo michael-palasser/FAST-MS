@@ -31,27 +31,19 @@ class IntactLibraryBuilder(object):
     def createLibrary(self, patternCalc=False):
         '''
         creates a library of modified ions
-        :return: (dict[str,MolecularFormula]) library of formulas {name:formula}
+        :return: (list[IntactNeutral]) library of neutral molecules
         '''
         unmodFormula = self.getUnmodifiedFormula()
         sequName = self._sequence.getName()
-        if patternCalc:
-            library = {"" : IntactNeutral(sequName, '', 0, unmodFormula)}
-        else:
-            library = {"" : (unmodFormula.calculateMonoIsotopic(),0)}
+        library = [IntactNeutral(sequName, '', 0, formula=unmodFormula)]
         for item in self._modifications.getItems():
             if item.isEnabled():
-                modName = item.getName()
-                nrOfMods = item.getNrMod()
                 modFormula = unmodFormula.addFormula(item.getFormula())
-                if patternCalc:
-                    #neutral = IntactNeutral(sequName, modName, nrOfMods, modFormula)
-                    library[modName] = IntactNeutral(sequName, modName, nrOfMods, modFormula)
-                else:
-                    library[modName] = (modFormula.calculateMonoIsotopic(),nrOfMods)
+                library.append(IntactNeutral(sequName, item.getName(), item.getNrMod(), modFormula))
+                #library[modName] = (modFormula.calculateMonoIsotopic(), nrOfMods)
         if patternCalc:
             p = Pool()
-            p.map(self.calculateParallel, list(library.values()))
+            p.map(self.calculateParallel, library)
             #library = sorted(updatedFragmentLibrary, key=lambda obj:(obj.getType() , obj.getNumber()))
         return library
 

@@ -110,6 +110,8 @@ class AbstractDialog(QtWidgets.QDialog):
             return widget.text()
         elif isinstance(widget, QtWidgets.QComboBox):
             return widget.currentText()
+        elif isinstance(widget, QtWidgets.QCheckBox):
+            return widget.isChecked()
         else:
             raise Exception('Unknown type of widget')
 
@@ -121,6 +123,8 @@ class AbstractDialog(QtWidgets.QDialog):
             widget.setText(value)
         elif isinstance(widget, QtWidgets.QComboBox):
             widget.setCurrentText(value)
+        elif isinstance(widget, QtWidgets.QCheckBox):
+            widget.setChecked(value)
         else:
             raise Exception('Unknown type of widget')
 
@@ -150,8 +154,6 @@ class AbstractDialog(QtWidgets.QDialog):
 
 
     def checkSpectralDataFile(self, mode, fileName):
-        print('hey',fileName)
-        print(os.path.isfile(fileName))
         if not os.path.isfile(fileName):
             spectralDataPath = os.path.join(path, 'Spectral_data', mode, fileName)
             if os.path.isfile(spectralDataPath):

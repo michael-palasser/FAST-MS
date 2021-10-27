@@ -1,7 +1,7 @@
 from unittest import TestCase
 import numpy as np
 
-from src.entities.Ions import IntactIon
+from src.entities.Ions import SimpleIntactIon
 from src.intact.IntactAnalyser import IntactAnalyser
 #from tests.intact.test_IntactFinder import initFinders, initTestSequences
 
@@ -49,7 +49,7 @@ class TestIntactAnalyser(TestCase):
             else:
                 mod = '-'
                 nrMod=0
-            ions.append(IntactIon('',mod,mz+ppm*mz/10**6,mz,charge,intensity,nrMod))
+            ions.append(SimpleIntactIon('', mod, mz + ppm * mz / 10 ** 6, mz, charge, intensity, nrMod, 0))
         return ions, errors
 
     def test_calculate_average_modification(self):
@@ -78,7 +78,7 @@ class TestIntactAnalyser(TestCase):
                 nrMod = np.random.randint(1, 5)
                 if mod == '-':
                     nrMod=0
-                ions.append(IntactIon('',mod,1,1,z,intensity,nrMod))
+                ions.append(SimpleIntactIon('', mod, 1, 1, z, intensity, nrMod, 0))
 
         modifInts = np.zeros((self.maxCharge,3))
         for ion in ions:

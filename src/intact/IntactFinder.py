@@ -8,8 +8,8 @@ import numpy as np
 from scipy.optimize import curve_fit
 
 from src.Exceptions import InvalidInputException
-from src.entities.Ions import IntactIon as Ion
-from src.top_down.SpectrumHandler import calculateError
+from src.entities.Ions import SimpleIntactIon as Ion
+from src.top_down.SpectrumHandler import calculateError, getMz
 
 protonMass = 1.00727647
 
@@ -124,12 +124,11 @@ class Finder(object):
         data.append(np.array(spectrum, dtype=dtype))
         return data
 
-    def getMz(self, mass, z):
-        return mass / z + protonMass * self._mode
-
+    '''def getMz(self, mass, z):
+        return mass / z + protonMass * self._mode'''
 
     '''@staticmethod
-    def calculateError(value, theoValue):
+    def getError(value, theoValue):
         return (value - theoValue) / theoValue * 10 ** 6'''
 
     def getErrorLimit(self,k, d, mz):
@@ -156,7 +155,7 @@ class Finder(object):
         :param (float) k: slope of error threshold
         :param (float) d: intercept of error threshold
         :param (bool) flag: if set, errors in ion list in txt file (+/- 1 Da) are taken in account
-        :return: (list[list[list[IntactIon]]]) list (files) of list (spectra in 1 file) of ions
+        :return: (list[list[list[SimpleIntactIon]]]) list (files) of list (spectra in 1 file) of ions
         '''
         listOfIonLists = []
         for spectra in self._data:
@@ -167,47 +166,47 @@ class Finder(object):
                     mass = val[0]
                     z = 1
                     while True:
-                        if self.getMz(mass,z) < self._configHandler.get('minMz'):
+                        if self.getMonoisotopic(mass,z) < self._configHandler.get('minMz'):
                             break
-                        elif self.getMz(mass,z) < self._configHandler.get('maxMz'):
-                            errorLimit = self.getErrorLimit(k, d, self.getMz(mass, z))
-                            mask = np.where((abs(calculateError(spectrum['m/z'], self.getMz(mass,z))) < errorLimit)
+                        elif self.getMonoisotopic(mass,z) < self._configHandler.get('maxMz'):
+                            errorLimit = self.getErrorLimit(k, d, self.getMonoisotopic(mass, z))
+                            mask = np.where((abs(getError(spectrum['m/z'], self.getMonoisotopic(mass,z))) < errorLimit)
                                             & (spectrum['z'] == z))
                             if (len(mask[0]) == 1):
-                                ions.append(Ion(self._configHandler.get('sequName'), modif, spectrum[mask]['m/z'][0], self.getMz(mass, z),
+                                ions.append(Ion(self._configHandler.get('sequName'), modif, spectrum[mask]['m/z'][0], self.getMonoisotopic(mass, z),
                                                 spectrum[mask]['z'][0], spectrum[mask]['relAb'][0], val[1]))
 
                             elif flag:
                                 if len(mask[0]) == 0:
                                     mask = np.where(
-                                        (abs(calculateError(spectrum['m/z'], self.getMz(mass+1.00266, z)))
+                                        (abs(getError(spectrum['m/z'], self.getMonoisotopic(mass+1.00266, z)))
                                             < errorLimit) & (spectrum['z'] == z))
                                     if len(mask[0]) == 0:
                                         mask = np.where(
-                                            (abs(calculateError(spectrum['m/z'], self.getMz(mass-1.00266, z)))
+                                            (abs(getError(spectrum['m/z'], self.getMonoisotopic(mass-1.00266, z)))
                                                 < errorLimit) & (spectrum['z'] == z))
 
                                     if (len(mask[0]) == 1):
                                         ions.append(
-                                            Ion(self._configHandler.get('sequName'), modif, spectrum[mask]['m/z'][0], self.getMz(mass, z),
+                                            Ion(self._configHandler.get('sequName'), modif, spectrum[mask]['m/z'][0], self.getMonoisotopic(mass, z),
                                                 spectrum[mask]['z'][0], spectrum[mask]['relAb'][0], val[1]))
                                 if len(mask[0]) > 1:
                                     #print("more than one ion within error range:",spectralFile[mask])
                                     ionPicked = 0
                                     if errorLimit > 6.5:
-                                        newMask = np.where(abs(calculateError(spectrum['m/z'],
-                                                                                   self.getMz(mass,z))) < 6.5)
+                                        newMask = np.where(abs(getError(spectrum['m/z'],
+                                                                                   self.getMonoisotopic(mass,z))) < 6.5)
                                         if (len(newMask[0]) == 1):
                                             ionPicked = 1
                                             ions.append(Ion(self._configHandler.get('sequName'), modif, spectrum[newMask]['m/z'][0],
-                                                            self.getMz(mass,z), spectrum[newMask]['z'][0],
+                                                            self.getMonoisotopic(mass,z), spectrum[newMask]['z'][0],
                                                             spectrum[newMask]['relAb'][0], val[1]))
                                         elif len(newMask[0]) > 1:
                                             mask = newMask
                                     if ionPicked == 0:
                                         sortedArr = np.sort(spectrum[mask], order='relAb')
                                         ions.append(
-                                            Ion(self._configHandler.get('sequName'), modif, sortedArr[-1]['m/z'], self.getMz(mass, z),
+                                            Ion(self._configHandler.get('sequName'), modif, sortedArr[-1]['m/z'], self.getMonoisotopic(mass, z),
                                                 sortedArr[-1]['z'], sortedArr[-1]['relAb'], val[1]))
                         z+=1'''
                 ionLists.append(self.findIonsInSpectrum(k, d, spectrum, flag))
@@ -221,53 +220,51 @@ class Finder(object):
             mass = neutral.getMonoisotopic()
             modif = neutral.getModification()
             nrMod = neutral.getNrOfModifications()
+            radicals = neutral.getRadicals()
             z = 1
             while True:
-                if self.getMz(mass, z) < self._configHandler.get('minMz'):
+                mz = getMz(mass, z*self._mode, radicals)
+                if mz < self._configHandler.get('minMz'):
                     break
-                elif self.getMz(mass, z) < self._configHandler.get('maxMz'):
-                    errorLimit = self.getErrorLimit(k, d, self.getMz(mass, z))
-                    mask = np.where((abs(calculateError(spectrum['m/z'], self.getMz(mass, z))) < errorLimit)
+                elif mz < self._configHandler.get('maxMz'):
+                    errorLimit = self.getErrorLimit(k, d, mz)
+                    mask = np.where((abs(calculateError(spectrum['m/z'], mz)) < errorLimit)
                                     & (spectrum['z'] == z))
                     if (len(mask[0]) == 1):
                         ions.append(Ion(self._configHandler.get('sequName'), modif, spectrum[mask]['m/z'][0],
-                                        self.getMz(mass, z),
-                                        spectrum[mask]['z'][0], spectrum[mask]['relAb'][0], nrMod))
+                                        mz, spectrum[mask]['z'][0], spectrum[mask]['relAb'][0], nrMod, radicals))
                     elif flag:
                         if len(mask[0]) == 0:
                             mask = np.where(
-                                (abs(calculateError(spectrum['m/z'], self.getMz(mass + 1.00266, z)))
+                                (abs(calculateError(spectrum['m/z'], getMz(mass + 1.00266, z*self._mode, radicals)))
                                  < errorLimit) & (spectrum['z'] == z))
                             if len(mask[0]) == 0:
                                 mask = np.where(
-                                    (abs(calculateError(spectrum['m/z'], self.getMz(mass - 1.00266, z)))
+                                    (abs(calculateError(spectrum['m/z'], getMz(mass - 1.00266, z*self._mode, radicals)))
                                      < errorLimit) & (spectrum['z'] == z))
 
                             if (len(mask[0]) == 1):
                                 ions.append(
-                                    Ion(self._configHandler.get('sequName'), modif, spectrum[mask]['m/z'][0],
-                                        self.getMz(mass, z),
-                                        spectrum[mask]['z'][0], spectrum[mask]['relAb'][0], nrMod))
+                                    Ion(self._configHandler.get('sequName'), modif, spectrum[mask]['m/z'][0], mz,
+                                        spectrum[mask]['z'][0], spectrum[mask]['relAb'][0], nrMod, radicals))
                         if len(mask[0]) > 1:
                             # print("more than one ion within error range:",spectralFile[mask])
                             ionPicked = 0
                             if errorLimit > 6.5:
-                                newMask = np.where(abs(calculateError(spectrum['m/z'],
-                                                                      self.getMz(mass, z))) < 6.5)
+                                newMask = np.where(abs(calculateError(spectrum['m/z'],mz)) < 6.5)
                                 if (len(newMask[0]) == 1):
                                     ionPicked = 1
                                     ions.append(
                                         Ion(self._configHandler.get('sequName'), modif, spectrum[newMask]['m/z'][0],
-                                            self.getMz(mass, z), spectrum[newMask]['z'][0],
-                                            spectrum[newMask]['relAb'][0], nrMod))
+                                            mz, spectrum[newMask]['z'][0],
+                                            spectrum[newMask]['relAb'][0], nrMod, radicals))
                                 elif len(newMask[0]) > 1:
                                     mask = newMask
                             if ionPicked == 0:
                                 sortedArr = np.sort(spectrum[mask], order='relAb')
                                 ions.append(
-                                    Ion(self._configHandler.get('sequName'), modif, sortedArr[-1]['m/z'],
-                                        self.getMz(mass, z),
-                                        sortedArr[-1]['z'], sortedArr[-1]['relAb'], nrMod))
+                                    Ion(self._configHandler.get('sequName'), modif, sortedArr[-1]['m/z'], mz,
+                                        sortedArr[-1]['z'], sortedArr[-1]['relAb'], nrMod, radicals))
                 z += 1
         return ions
 
@@ -310,12 +307,12 @@ class Finder(object):
                     x = list()
                     errorList = list()
                     for ion in ionList:
-                        calibratedX = self.fun_parabola(ion.getMz(), solution[0], solution[1], solution[2])
+                        calibratedX = self.fun_parabola(ion.getMonoisotopic(), solution[0], solution[1], solution[2])
                         theoMz = ion.getTheoMz()
-                        if abs(calculateError(calibratedX, theoMz)) < limit:
+                        if abs(getError(calibratedX, theoMz)) < limit:
                             y.append(theoMz)
-                            x.append(ion.getMz())
-                            errorList.append(abs(calculateError(calibratedX, theoMz)))
+                            x.append(ion.getMonoisotopic())
+                            errorList.append(abs(getError(calibratedX, theoMz)))
                     try:
                         solution, pcov = curve_fit(self.fun_parabola, np.array(x), np.array(y))
                         limit -= 10
@@ -361,12 +358,12 @@ class Finder(object):
             x = list()
             errorList = list()
             for ion in ionList:
-                calibratedX = self.fun_parabola(ion.getMz(), solution[0], solution[1], solution[2])
+                calibratedX = self.fun_parabola(ion.getMonoisotopic(), solution[0], solution[1], solution[2])
                 theoMz = ion.getTheoMz()
                 if abs(calculateError(calibratedX, theoMz)) < limit:
                     y.append(theoMz)
-                    x.append(ion.getMz())
-                    #errorList.append(abs(calculateError(calibratedX, theoMz)))
+                    x.append(ion.getMonoisotopic())
+                    #errorList.append(abs(getError(calibratedX, theoMz)))
                     errorList.append(calculateError(calibratedX, theoMz))
                     usedIons.append(ion)
             try:
@@ -391,14 +388,14 @@ class Finder(object):
         for ion in ionList:
             theoMz = ion.getTheoMz()
             y.append(theoMz)
-            x.append(ion.getMz())
+            x.append(ion.getMonoisotopic())
         try:
             solution, pcov = curve_fit(self.fun_parabola, np.array(x), np.array(y))
         except ValueError:
             raise InvalidInputException('Calibration not possible',
                                         'Nr of ions is too low to calibrate (' + str(len(ionList)) +').')
         for ion in ionList:
-            calibratedX = self.calibrate(ion.getMz(), solution)
+            calibratedX = self.calibrate(ion.getMonoisotopic(), solution)
             errorList.append(calculateError(calibratedX, ion.getTheoMz()))
         return solution, pcov, errorList
 

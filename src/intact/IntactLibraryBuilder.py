@@ -8,7 +8,7 @@ from multiprocessing import Pool
 from src.MolecularFormula import MolecularFormula
 from src.Services import IntactIonService, SequenceService, MoleculeService
 from src.entities.IonTemplates import IntactModification
-from src.entities.Ions import FragmentIon, Fragment, IntactNeutral
+from src.entities.Ions import Fragment, IntactNeutral
 
 
 class IntactLibraryBuilder(object):
@@ -27,6 +27,8 @@ class IntactLibraryBuilder(object):
         self._modifications = IntactIonService().getPatternWithObjects(modificationName, IntactModification)
         self._neutralLibrary = None
 
+    def getNeutralLibrary(self):
+        return self._neutralLibrary
 
     def createLibrary(self, patternCalc=False):
         '''
@@ -35,17 +37,17 @@ class IntactLibraryBuilder(object):
         '''
         unmodFormula = self.getUnmodifiedFormula()
         sequName = self._sequence.getName()
-        library = [IntactNeutral(sequName, '', 0, formula=unmodFormula)]
+        self._neutralLibrary = [IntactNeutral(sequName, '', 0, unmodFormula, 0)]
         for item in self._modifications.getItems():
             if item.isEnabled():
                 modFormula = unmodFormula.addFormula(item.getFormula())
-                library.append(IntactNeutral(sequName, item.getName(), item.getNrMod(), modFormula))
+                self._neutralLibrary.append(IntactNeutral(sequName, item.getName(), item.getNrMod(), modFormula, item.getRadicals()))
                 #library[modName] = (modFormula.calculateMonoIsotopic(), nrOfMods)
         if patternCalc:
             p = Pool()
-            p.map(self.calculateParallel, library)
+            p.map(self.calculateParallel, self._neutralLibrary)
             #library = sorted(updatedFragmentLibrary, key=lambda obj:(obj.getType() , obj.getNumber()))
-        return library
+        return self._neutralLibrary
 
 
     def getUnmodifiedFormula(self):
@@ -78,8 +80,8 @@ class IntactLibraryBuilder(object):
         if len(self._sequence.getSequenceList())<criticalLength: #flag == 0:
             #self._bar = tqdm(total=len(self.__fragmentLibrary))
             #logging.debug('Normal calculation')
-            for fragment in self.__fragmentLibrary:
-                fragment.setIsotopePattern(fragment.getFormula().calculateIsotopePattern())
+            for neutral in self._neutralLibrary:
+                neutral.setIsotopePattern(neutral.getFormula().calculateIsotopePattern())
                 #print(fragment.getName())
                 #logging.info('\t'+fragment.getName())
                 #self._bar.update(1)
@@ -87,9 +89,9 @@ class IntactLibraryBuilder(object):
         else:
             #logging.debug('Parallel calculation')
             p = Pool()
-            updatedFragmentLibrary = p.map(self.calculateParallel, self.__fragmentLibrary)
-            self.__fragmentLibrary = sorted(updatedFragmentLibrary, key=lambda obj:(obj.getType() , obj.getNumber()))
-        return self.__fragmentLibrary
+            updatedneutralLibrary = p.map(self.calculateParallel, self._neutralLibrary)
+            self._neutralLibrary = sorted(updatedneutralLibrary, key=lambda obj:(obj.getName()))
+        return self._neutralLibrary
 
 
     def calculateParallel(self, neutral):

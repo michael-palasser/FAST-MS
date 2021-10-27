@@ -1,4 +1,3 @@
-import re
 from abc import ABC
 
 from src.FormulaFunctions import stringToFormula as MF_stringToFormula
@@ -145,7 +144,7 @@ class AbstractItem2(AbstractItem1, ABC):
     '''
     Parent class of IntactModification, AbstractItem3
     '''
-    def __init__(self, name, gain, loss, enabled):
+    def __init__(self, name, gain, loss, radicals, enabled):
         '''
         :param (str) name:
         :param (str) gain:
@@ -155,6 +154,7 @@ class AbstractItem2(AbstractItem1, ABC):
         super(AbstractItem2, self).__init__(name)
         self._gain = gain
         self._loss = loss
+        self._radicals = radicals
         self._enabled = enabled
 
     def processItem(self, item):
@@ -178,6 +178,11 @@ class AbstractItem2(AbstractItem1, ABC):
         formulaDict = self.stringToFormula(self._gain, dict(), 1)
         return self.stringToFormula(self._loss, formulaDict, -1)
 
+    def getRadicals(self):
+        if self._radicals =='-' or self._radicals == '':
+            return 0
+        return self._radicals
+
 
 class AbstractItem3(AbstractItem2):
     '''
@@ -192,17 +197,11 @@ class AbstractItem3(AbstractItem2):
         :param (int | str) radicals:
         :param (int) enabled:
         '''
-        super(AbstractItem3, self).__init__(name, gain, loss, enabled)
+        super(AbstractItem3, self).__init__(name, gain, loss, radicals, enabled)
         self._residue = residue
-        self._radicals = radicals
 
     def getResidue(self):
         return self._residue
-
-    def getRadicals(self):
-        if self._radicals =='-' or self._radicals == '':
-            return 0
-        return self._radicals
 
     def toString(self):
         return [self._name, self._gain, self._loss, self._residue, str(self._radicals), str(self._enabled)]

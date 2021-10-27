@@ -12,7 +12,7 @@ class IntactAnalyser(object):
     '''
     def __init__(self, listOfIonLists):
         '''
-        :param (list[list[list[IntactIon]]]) listOfIonLists: nested lists of IntactIons (ions in each spectrum in each file)
+        :param (list[list[list[SimpleIntactIon]]]) listOfIonLists: nested lists of IntactIons (ions in each spectrum in each file)
         '''
         self._listOfIonLists = listOfIonLists
         self._minCharge = 250
@@ -31,15 +31,15 @@ class IntactAnalyser(object):
                 chargeSum = 0
                 sumInt = 0
                 #exclude SNAP misassignments
-                errors = np.array([ion.calculateError() for ion in ionList if abs(ion.calculateError()) < 30])
+                errors = np.array([ion.getError() for ion in ionList if abs(ion.getError()) < 30])
                 averageErrors.append(np.average(errors))
                 stddevOfErrors.append(np.std(errors))
                 #errorSum = 0
                 #notCounted = 0
                 for ion in ionList:
                     sumInt += ion.getIntensity()
-                    #if abs(ion.calculateError()) < 30:
-                        #errorSum += ion.calculateError()
+                    #if abs(ion.getError()) < 30:
+                        #errorSum += ion.getError()
                     #else:
                         #notCounted += 1
                     chargeSum += ion.getCharge() *ion.getIntensity()
@@ -124,12 +124,12 @@ class IntactAnalyser(object):
     def getSortedIonList(self):
         '''
         Returns lists of ionLists with sorted ions
-        :return: (list[list[list[IntactIon]]])
+        :return: (list[list[list[SimpleIntactIon]]])
         '''
         returnedLists = list()
         for ionlists in self._listOfIonLists:
             currentLists = list()
             for ionList in ionlists:
-                currentLists.append(sorted(ionList,key=lambda obj:obj.getMz()))
+                currentLists.append(sorted(ionList, key=lambda obj:obj.getMonoisotopic()))
             returnedLists.append(currentLists)
         return returnedLists

@@ -187,7 +187,7 @@ class IntactPattern(PatternWithItems):
 
 class IntactModification(AbstractItem2):
     '''
-
+    Template for intact modifications
     '''
     def __init__(self, item):
         '''
@@ -195,7 +195,7 @@ class IntactModification(AbstractItem2):
             nr. of modifications on object, enabled
         '''
         item = self.processItem(item)
-        super(IntactModification, self).__init__(name=item[0], enabled=item[4], gain=item[1], loss=item[2])
+        super(IntactModification, self).__init__(name=item[0], gain=item[1], loss=item[2], radicals=item[3], enabled=item[4])
         self._nrMod = item[3]
 
     def getNrMod(self):

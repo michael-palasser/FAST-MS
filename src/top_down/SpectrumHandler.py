@@ -44,7 +44,8 @@ def getMz(mass, z, radicals):
         return abs(mass) + radicals*(eMass + protMass)
 
 class AbstractSpectrumHandler(ABC):
-    def __init__(self, settings, spraymode, peaks=None):
+    def __init__(self, settings, spraymode, IonClass, peaks=None):
+        print('sdkfjl')
         self._settings = settings
         self._sprayMode = spraymode
         self._upperBound = 0
@@ -57,6 +58,7 @@ class AbstractSpectrumHandler(ABC):
         else:
             self._spectrum = np.array(sorted(list(peaks), key=lambda tup: tup[0]))
             self._upperBound = np.max(peaks)
+        self._IonClass = IonClass
         self._foundIons = list()
         self._ionsInNoise = list()
         self._searchedChargeStates = dict()
@@ -78,12 +80,6 @@ class AbstractSpectrumHandler(ABC):
 
     def setSpectrum(self, spectrum):
         self._spectrum = spectrum
-
-    def calcPrecCharge(self, charge, radicals):
-        return abs(charge) - radicals #must be changed if radicals turns to electrons
-
-    def setNormalizationFactor(self, factor):
-        self._normalizationFactor = factor
 
     def getSprayMode(self):
         return self._sprayMode
@@ -285,8 +281,6 @@ class AbstractSpectrumHandler(ABC):
         pass
 
 
-
-
     def findIon(self, neutral, zRange):
         '''
         Assigns peaks in spectrum to isotope peaks of corresponding ion
@@ -347,14 +341,14 @@ class AbstractSpectrumHandler(ABC):
                         #find other isotope Peaks
                         foundPeaksArr = np.sort(np.array(foundPeaks, dtype=self._peaksArrType), order=['m/z'])
                         if not np.all(foundPeaksArr['relAb']==0):
-                            self._foundIons.append(FragmentIon(neutral, np.min(theoreticalPeaks['m/z']), z, foundPeaksArr, noise))
+                            self._foundIons.append(self._IonClass(neutral, np.min(theoreticalPeaks['m/z']), z, foundPeaksArr, noise))
                             [print("\t",np.around(peak['m/z'],4),"\t",peak['relAb']) for peak in foundPeaksArr if peak['relAb']>0]
                             [logging.info(neutral.getName()+"\t"+str(z)+"\t"+str(np.around(peak['m/z'],4))+"\t"+str(peak['relAb']) )for peak in foundPeaksArr if peak['relAb']>0]
                         else:
                             self.addToDeletedIons(neutral, foundMainPeaks, noise, np.min(theoreticalPeaks['m/z']), z)
                     elif theoreticalPeaks[notInNoise].size > 0:
                         foundMainPeaksArr = np.sort(np.array(foundMainPeaks, dtype=self._peaksArrType), order=['m/z'])
-                        self._foundIons.append(FragmentIon(neutral, np.min(theoreticalPeaks['m/z']), z,
+                        self._foundIons.append(self._IonClass(neutral, np.min(theoreticalPeaks['m/z']), z,
                                                            foundMainPeaksArr, noise))
                         [print("\t",np.around(peak['m/z'],4),"\t",peak['relAb']) for peak in foundMainPeaksArr if peak['relAb']>0]
                         [logging.info(neutral.getName()+"\t"+str(z)+"\t"+str(np.around(peak['m/z'], 4)) + "\t" +
@@ -438,7 +432,7 @@ class AbstractSpectrumHandler(ABC):
         :param (int) z: charge of ion
         '''
         foundMainPeaksArr = np.sort(np.array(foundMainPeaks, dtype=self._peaksArrType), order=['m/z'])
-        noiseIon = FragmentIon(fragment, monoisotopic, z, foundMainPeaksArr, noise)
+        noiseIon = self._IonClass(fragment, monoisotopic, z, foundMainPeaksArr, noise)
         noiseIon.addComment('noise')
         self._ionsInNoise.append(noiseIon)
 
@@ -492,7 +486,7 @@ class SpectrumHandler(AbstractSpectrumHandler):
         sprayMode = 1
         if settings['charge'] < 0:
             sprayMode = -1
-        super(SpectrumHandler, self).__init__(settings, sprayMode, peaks)
+        super(SpectrumHandler, self).__init__(settings, sprayMode, FragmentIon, peaks)
         self._sequList = properties.getSequenceList()
         self._properties = properties
         '''
@@ -512,10 +506,10 @@ class SpectrumHandler(AbstractSpectrumHandler):
     def setNormalizationFactor(self, factor):
         self._normalizationFactor = factor
 
-    def getSprayMode(self):
-        return self._sprayMode
+    '''def getSprayMode(self):
+        return self._sprayMode'''
 
-    def getSpectrum(self, *args):
+    """def getSpectrum(self, *args):
         '''
         Returns either full or part of spectrum (peak list)
         :param (tuple of float) args: if args (lowerbound, upperbound), just part of the spectrum is returned
@@ -611,7 +605,7 @@ class SpectrumHandler(AbstractSpectrumHandler):
         Truncates spectrum
         '''
         self._spectrum = self._spectrum[np.where(self._spectrum[:, 0] < (self.findUpperBound() + 10))]
-        print("\nmax m/z:", self._upperBound)
+        print("\nmax m/z:", self._upperBound)"""
 
     """@staticmethod
     def getMz(mass, z, radicals):
@@ -628,7 +622,7 @@ class SpectrumHandler(AbstractSpectrumHandler):
             return abs(mass) + radicals*(eMass + protMass)"""
 
 
-    def findUpperBound(self):
+    """def findUpperBound(self):
         '''
         Finds the highest m/z in spectrum where non-noise peaks occur
         :return: (int) m/z (upperBound)
@@ -719,7 +713,7 @@ class SpectrumHandler(AbstractSpectrumHandler):
         :return: (ndarray(dtype=float, ndim=2)) peaks within window
         '''
         spectralWindowIndex = np.where(abs(allPeaks[:, 0] - point) < (windowSize / 2))
-        return allPeaks[spectralWindowIndex]
+        return allPeaks[spectralWindowIndex]"""
 
 
     '''@staticmethod
@@ -889,7 +883,7 @@ class SpectrumHandler(AbstractSpectrumHandler):
                             self.addToDeletedIons(fragment, foundMainPeaks, noise, np.min(theoreticalPeaks['m/z']), z)'''
 
 
-    def getProtonIsotopePatterns(self):
+    """def getProtonIsotopePatterns(self):
         '''
         Calculates the isotope patterns (rel.abundances) of various numbers of protons
         :return: (ndArray[float,float]) array with 2 columns: rows represent proton nr + 1, column 1: monoisotopic,
@@ -942,10 +936,10 @@ class SpectrumHandler(AbstractSpectrumHandler):
             #ionPattern['calcInt'][:maxIndex] += (ionPatternFFT['calcInt'][:maxIndex]-neutralFFT['calcInt'][:maxIndex])
             ionPattern['calcInt'][:maxIndex] = ionPatternFFT['calcInt'][:maxIndex]
         ionPattern['calcInt'] /= np.sum(ionPattern['calcInt'])
-        return ionPattern#np.sort(ionPattern, order='calcInt')[::-1]
+        return ionPattern#np.sort(ionPattern, order='calcInt')[::-1]"""
 
 
-    def findPeak(self, theoPeak, tolerance=0):
+    """def findPeak(self, theoPeak, tolerance=0):
         searchMask = np.where(abs(calculateError(self._spectrum[:, 0], theoPeak['m/z']))
                               < getErrorLimit(self._spectrum[:, 0])+tolerance)
         return self.getCorrectPeak(self._spectrum[searchMask], theoPeak)
@@ -994,4 +988,4 @@ class SpectrumHandler(AbstractSpectrumHandler):
             return (lowestErrorPeak[0], lowestErrorPeak[1], theoPeak['calcInt'], lowestError, True)
 
     def setSearchedChargeStates(self, searchedZStates):
-        self._searchedChargeStates = searchedZStates
+        self._searchedChargeStates = searchedZStates"""

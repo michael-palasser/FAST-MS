@@ -13,6 +13,9 @@ class Info(object):
         if len(args)==3:
             self._infoString = 'Analysis: ' + datetime.now().strftime("%d/%m/%Y %H:%M") + '\n'
             self.start(args[0], args[1], args[2])
+        elif len(args) == 2:
+            self._infoString = 'Analysis: ' + datetime.now().strftime("%d/%m/%Y %H:%M") + '\n'
+            self.startIntact(args[0], args[1], args[2], args[3], args[4])
         else:
             self._infoString = args[0]
             self.load()
@@ -26,6 +29,13 @@ class Info(object):
         self._infoString += '\n* Fragmentation:' + searchProperties.getFragmentation().toString()
         self._infoString += '\n* Modification: ' + searchProperties.getModification().toString()
 
+    def startIntact(self, settings, configurations, sequenceList, modification):
+        self._infoString += '\n* Settings:\n'
+        self._infoString += ''.join(['\t%s:\t%s\n' % (key, val) for (key, val) in settings.items()])
+        self._infoString += '* Configurations:\n'
+        self._infoString += ''.join(['\t%s:\t%s\n' % (key, val) for (key, val) in configurations.items()])
+        self._infoString += '* Sequence:\n\t' + ', '.join(sequenceList)
+        self._infoString += '\n* Modification: ' + modification.toString()
 
     def searchFinished(self, mz):
         self._infoString += '\n* Search finished: ' + datetime.now().strftime("%d/%m/%Y %H:%M") +\

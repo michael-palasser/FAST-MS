@@ -75,11 +75,11 @@ class TestFinder(TestCase):
         self.finderRNA.readData([self.RNA_spectrum])
         errors1 = []
         for ionList in self.finderRNA.findIons(0, 50)[0]:
-            errors1.append(np.abs(np.average([ion.calculateError() for ion in ionList])))
+            errors1.append(np.abs(np.average([ion.getError() for ion in ionList])))
         self.finderRNA.calibrateAll()
         errors2, stddevs = [], []
         for ionList in self.finderRNA.findIons(0, 50)[0]:
-            errors = np.array([ion.calculateError() for ion in ionList if abs(ion.calculateError()) < 30])
+            errors = np.array([ion.getError() for ion in ionList if abs(ion.getError()) < 30])
             errors2.append(np.abs(np.average(errors)))
             stddevs.append(np.std(errors))
         for i in range(len(errors1)):

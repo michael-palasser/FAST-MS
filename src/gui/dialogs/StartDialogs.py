@@ -207,10 +207,12 @@ class IntactStartDialogFull(IntactStartDialog):
         super().__init__(parent, "Full Intact Ion Search", ConfigurationHandlerFactory.getFullIntactHandler())
         self._configHandler = ConfigurationHandlerFactory.getFullIntactHandler()
         self.setupUi()
+        self._widgets['noiseLimit'].setMinimum(0.01)
 
     def getLabels(self):
         oldLabels = super(IntactStartDialogFull, self).getLabels()
-        return (("Sequence Name", "Modifications", "Spectral File", "Spray Mode", 'Autocalibration', 'cal. ions', "Output"),
+        return (("Sequence Name", "Modifications", "Spectral File", "Spray Mode", "Noise Threshold (x10^6):",
+                 'Autocalibration', 'cal. ions', "Output"),
                 oldLabels[1])
 
     def getWidgets(self, sequences, modPatterns):
@@ -222,6 +224,7 @@ class IntactStartDialogFull(IntactStartDialog):
                                    "Plain Text Files (*txt);;All Files (*)"),
                     "Name of the file with peaks (txt format)"),
                  "sprayMode": (createComboBox(self._settingTab, ("negative", "positive")), "Spray mode"),
+                 'noiseLimit': (QtWidgets.QDoubleSpinBox(self), "Minimal noise level"),
                  "calibration": (QtWidgets.QCheckBox(), "Spectral data will be autocalibrated if option is ticked"),
                  "calIons": (OpenFileWidget(self._settingTab, 2, join(path, 'Spectral_data', 'intact'), "Open Files",
                                             "Plain Text Files (*txt);;All Files (*)"),
@@ -229,6 +232,18 @@ class IntactStartDialogFull(IntactStartDialog):
                  "output": (QtWidgets.QLineEdit(self._settingTab),
                             "Name of the output txt file\ndefault: name of spectral pattern file + _out.txt")},
                 oldWidgets[1])
+
+    def backToLast(self):
+        super(IntactStartDialogFull, self).backToLast()
+        self.setValueOfWidget(self._widgets['noiseLimit'], self._configHandler.get('noiseLimit') / 10 ** 6)
+
+    def accept(self):
+        settings = self.getNewSettings()
+        if settings is not None:
+            self._newSettings = settings
+            self._newSettings['noiseLimit']*= 10 ** 6
+            self._configHandler.write(self._newSettings)
+            super(IntactStartDialogFull, self).accept()
 
 
 class SpectrumComparatorStartDialog(AbstractDialog):

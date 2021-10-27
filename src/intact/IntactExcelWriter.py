@@ -40,7 +40,7 @@ class IntactExcelWriter(object):
     def writeIons(self, worksheet, listOfIons):
         '''
         Writes list of observed ion of one spectrum to xlsx file
-        :param (list[IntactIon]) listOfIons: list of Ion objects
+        :param (list[SimpleIntactIon]) listOfIons: list of Ion objects
         '''
         worksheet.write(self._row, 0, 'observed ions:')
         row = self._row + 1
@@ -130,7 +130,7 @@ class IntactExcelWriter(object):
         '''
         Writes the analysis to xlsx file
         :param (list[dict[str,Any]]) parameters: lists of {name: value}
-        :param (list[list[list[IntactIon]]]) listsOfIons: observed ions for each spectrum
+        :param (list[list[list[SimpleIntactIon]]]) listsOfIons: observed ions for each spectrum
         :param (list[list[float]]) avCharges: average charges in each spectrum
         :param (list[list[float]]) stdDevsOfErrors: list of std. dev. of the ppm errors in each spectrum
         :param (list[list[tuple[float]]]) listOfCalibrationVals: list of the parameters (a,b,c) of the calibration

@@ -15,7 +15,8 @@ class IntactRepository(AbstractRepositoryWithItems):
     '''
     def __init__(self):
         super(IntactRepository, self).__init__(join('intact.db'), 'intactPatterns', ("name",),
-                                               {"intactModItems":('name', 'gain', 'loss', 'nrMod','enabled', 'patternId')}, (3,), (4,))
+                                               {"intactModItems":('name', 'gain', 'loss', 'nrMod', 'radicals','enabled',
+                                                                  'patternId')}, (3,4), (5,))
         #self._conn = sqlite3.connect(':memory:')
 
     def makeTables(self):
@@ -30,6 +31,7 @@ class IntactRepository(AbstractRepositoryWithItems):
                 "gain" text NOT NULL ,
                 "loss" text NOT NULL ,
                 "nrMod" integer NOT NULL ,
+                "radicals" integer NOT NULL ,
                 "enabled" integer NOT NULL,
                 "patternId" integer NOT NULL );""")
 
@@ -42,6 +44,7 @@ class IntactRepository(AbstractRepositoryWithItems):
         '''
         return {'Name':"Enter \"+\"modification or \"-\"loss", 'Gain':"molecular formula to be added",
                 'Loss':"molecular formula to be subtracted", 'Nr.Mod.':"How often is species modified",
+                'Radicals': "Enter the number of radicals",
                 'Enabled':"Activate/Deactivate Species"}
 
 
@@ -63,7 +66,7 @@ class IntactRepository(AbstractRepositoryWithItems):
         '''
         listOfItems = list()
         for item in super(IntactRepository, self).getItems(patternId, [key for key in self._itemDict.keys()][0]):
-            listOfItems.append((item[1], item[2], item[3], item[4], item[5]) )
+            listOfItems.append((item[1], item[2], item[3], item[4], item[5], item[6]))
         return listOfItems
 
 

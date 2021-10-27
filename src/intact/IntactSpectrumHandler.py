@@ -2,6 +2,7 @@ import logging
 
 import numpy as np
 
+from src.entities.Ions import IntactIon
 from src.top_down.SpectrumHandler import AbstractSpectrumHandler
 
 
@@ -12,7 +13,8 @@ class IntactSpectrumHandler(AbstractSpectrumHandler):
         :param (dict[str,Any]) settings: search settings
         :param (set[tuple[float]] | None) peaks: set of peak tuples (m/z, I)
         '''
-        super(IntactSpectrumHandler, self).__init__(settings, self._settings['sprayMode'], peaks)
+        super(IntactSpectrumHandler, self).__init__(settings, settings['sprayMode'], IntactIon, peaks)
+
 
     def getChargeRange(self, mass):
         '''

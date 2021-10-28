@@ -5,25 +5,59 @@ from unittest import TestCase
 from src import path
 from src.intact.IntactFinder import Calibrator
 from src.intact.IntactLibraryBuilder import IntactLibraryBuilder
+from src.intact.IntactSpectrumHandler import IntactSpectrumHandler
+from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.top_down.SpectrumHandler import SpectrumHandler
 from tests.intact.test_IntactFinder import initConfigurations, initTestSequences
 from tests.top_down.test_SpectrumHandler import initTestLibraryBuilder
 
+
+def getTestIntactSettings():
+    settings = ConfigurationHandlerFactory.getFullIntactHandler().getAll()
+    spectralFile = os.path.join(path, 'tests', 'intact', '2511_neoRibo_3xRIO_CMCT_1.5mMPip_4mMIm_01_0.52.txt')
+    calFile = os.path.join(path, 'tests', 'intact', '2511_RIO_test.txt')
+    try:
+        settings.update({'sequName': 'neoRibo', 'modifications': 'CMCT', 'calibration': True,
+                         'spectralData': spectralFile, "calIons": calFile, 'noiseLimit': 520000, 'sprayMode':'negative',
+                         'minMz': 400, 'maxMz': 1600})
+    except:
+        settings = ConfigurationHandlerFactory.getIntactHandler().getAll()
+        settings.update({'sequName': 'neoRibo', 'modifications': 'CMCT', 'calibration': True,
+                         'spectralData': spectralFile, "calIons": calFile, 'noiseLimit': 520000, 'sprayMode':'negative',
+                         'minMz': 400, 'maxMz': 1600})
+    return settings
+
+def getTestIntactLibraryBuilder(settings):
+    libraryBuilder = IntactLibraryBuilder(settings['sequName'], settings['modifications'])
+    libraryBuilder.createLibrary()
+    libraryBuilder.addNewIsotopePattern()
+    return libraryBuilder
+
+def getCalibratedSpectrum():
+    settings = getTestIntactSettings()
+    libraryBuilder = getTestIntactLibraryBuilder(settings)
+    spectrumHandler = IntactSpectrumHandler(settings)
+    calibrator = Calibrator(libraryBuilder.getNeutralLibrary(), settings)
+    uncalibrated = deepcopy(spectrumHandler.getSpectrum())
+    calSpectrum = calibrator.calibratePeaks(spectrumHandler.getSpectrum())
+    return {'uncalibrated':uncalibrated, 'calSpectrum':calSpectrum, 'calibrator':calibrator,
+            'spectrumHandler':spectrumHandler,'settings':settings, 'libraryBuilder':libraryBuilder}
 
 class TestCalibrator(TestCase):
     def setUp(self):
         configHandlerRNA = initConfigurations()
         configHandlerRNA.update('sprayMode', 'negative')
         configHandlerRNA.update('sequName', 'neoRibo')
-        configHandlerRNA.update('spectralData', os.path.join(path, 'tests', 'intact', '2511_RIO_test_0.txt'))
+        configHandlerRNA.update2('calIons', os.path.join(path, 'tests', 'intact', '2511_RIO_test_0.txt'))
+
         #self._SNAP_list = os.path.join(path, 'tests', 'intact', '2511_RIO_test_0.txt')
         try:
             self._calibrator = Calibrator(IntactLibraryBuilder(configHandlerRNA.get('sequName'), 'CMCT').createLibrary(),
-                       configHandlerRNA)
+                       configHandlerRNA.getAll())
         except:
             initTestSequences()
             self._calibrator = Calibrator(IntactLibraryBuilder(configHandlerRNA.get('sequName'), 'CMCT').createLibrary(),
-                       configHandlerRNA)
+                       configHandlerRNA.getAll())
 
     def test_init(self):
         pass
@@ -35,5 +69,10 @@ class TestCalibrator(TestCase):
         uncalibrated = deepcopy(spectrumHandler.getSpectrum())
         calibrated = self._calibrator.calibratePeaks(uncalibrated)
         for uncal, cal in zip(spectrumHandler.getSpectrum(), calibrated):
+            self.assertNotEqual(uncal[0], cal[0])
+            self.assertAlmostEqual(uncal[1], cal[1])
+        #intact:
+        d = getCalibratedSpectrum()
+        for uncal, cal in zip(d['uncalibrated'], d['calSpectrum']):
             self.assertNotEqual(uncal[0], cal[0])
             self.assertAlmostEqual(uncal[1], cal[1])

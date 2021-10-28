@@ -21,6 +21,7 @@ from src.gui.IsotopePatternView import AddIonView
 from src.gui.widgets.InfoView import InfoView
 from src.intact.IntactAnalyser import IntactAnalyser
 from src.intact.IntactExcelWriter import IntactExcelWriter
+from src.intact.IntactFinder import Calibrator
 from src.intact.IntactLibraryBuilder import IntactLibraryBuilder
 from src.intact.IntactSpectrumHandler import IntactSpectrumHandler
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
@@ -152,12 +153,16 @@ class IntactMainController(object):
         print("\ndone\nexecution time: ", round((time.time() - start) / 60, 2), "min\n")"""
         self._libraryBuilder.addNewIsotopePattern()
 
+
         """Importing spectral pattern"""
         '''if self._settings['spectralData'] == '':
             return 1'''
         #spectralFile = os.path.join(path, 'Spectral_data','top-down', self._settings['spectralData'])
         print("\n********** Importing spectral pattern from:", self._settings['spectralData'], "**********")
         self._spectrumHandler = IntactSpectrumHandler(self._settings)
+        if self._settings['calibration']:
+            self._calibrator = Calibrator(self._libraryBuilder.getNeutralLibrary(),self._settings)
+            calSpectrum = self._calibrator.calibratePeaks(self._spectrumHandler.getSpectrum())
         """Finding fragments"""
         print("\n********** Search for ions **********")
         start = time.time()
@@ -241,12 +246,12 @@ class IntactMainController(object):
         '''
         self._mainWindow.createMenuBar()
         self._actions = dict()
-        _,actions = self._mainWindow.createMenu("File", {'Save': (self.saveAnalysis, None, "Ctrl+S"),
+        _,actions = self._mainWindow.createMenu("File", {#'Save': (self.saveAnalysis, None, "Ctrl+S"),
                                 'Export': (self.export,None,None), 'Close': (self.close,None,"Ctrl+Q")}, None)
         self._actions.update(actions)
         _,actions = self._mainWindow.createMenu("Edit", {'Repeat ovl. modelling':
                             (self.repeatModellingOverlaps,'Repeat overlap modelling involving user inputs',None),
-                                                         'Add new ion':(self.addNewIonView, 'Add an ion manually', None),
+                                                         #'Add new ion':(self.addNewIonView, 'Add an ion manually', None),
                                                          'Take Shot':(self.shootPic,'', None),
                                                          }, None)
         self._actions.update(actions)
@@ -522,7 +527,7 @@ class IntactMainController(object):
             avCharges, avErrors, stddevs = analyser.calculateAvChargeAndError()
             try:
                 excelWriter.writeAnalysis(parameters, analyser.getSortedIonList(),
-                                          avCharges, avErrors, stddevs, listOfCalibrationVals,
+                                          avCharges, avErrors, stddevs, [self._calibrator.getCalibrationValues()],
                                           analyser.calculateAverageModification(),
                                           analyser.calculateModifications())
                 print("saved in:", output)

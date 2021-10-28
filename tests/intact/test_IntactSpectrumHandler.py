@@ -3,6 +3,7 @@ from unittest import TestCase
 
 from src import path
 from src.intact.IntactSpectrumHandler import IntactSpectrumHandler
+from tests.intact.test_Calibrator import getCalibratedSpectrum
 
 
 class TestIntactSpectrumHandler(TestCase):
@@ -14,4 +15,11 @@ class TestIntactSpectrumHandler(TestCase):
         self.assertEqual(16, range[-1])
 
     def test_find_ions(self):
-        self.fail()
+        d = getCalibratedSpectrum()
+        d['spectrumHandler'].findIons(d['libraryBuilder'].getNeutralLibrary())
+        foundIons = [(ion.getName(),ion.getCharge()) for ion in d['spectrumHandler'].getFoundIons()]
+        for ion in d['calibrator'].getUsedIons():
+            self.assertIn((ion.getName(),ion.getCharge()), foundIons)
+        for ion in d['spectrumHandler'].getFoundIons():
+            print(ion.getName(), ion.getCharge())
+        print(len(foundIons), len(d['spectrumHandler'].getFoundIons()))

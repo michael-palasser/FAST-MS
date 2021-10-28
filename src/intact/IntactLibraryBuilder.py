@@ -89,8 +89,8 @@ class IntactLibraryBuilder(object):
         else:
             #logging.debug('Parallel calculation')
             p = Pool()
-            updatedneutralLibrary = p.map(self.calculateParallel, self._neutralLibrary)
-            self._neutralLibrary = sorted(updatedneutralLibrary, key=lambda obj:(obj.getName()))
+            updatedNeutralLibrary = p.map(self.calculateParallel, self._neutralLibrary)
+            self._neutralLibrary = sorted(updatedNeutralLibrary, key=lambda obj:(obj.getName()))
         return self._neutralLibrary
 
 

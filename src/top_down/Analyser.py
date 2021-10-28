@@ -98,7 +98,7 @@ class Analyser(object):
                 if ion.getType() not in absValues.keys():
                     absValues[ion.getType()] = np.zeros((len(self._sequence), 3))
                 #if self._modification in ion.getModification():
-                if ('+' in modification) or ('-' in modification):
+                if ('+' in modification[1:]) or ('-' in modification[1:]):
                     modifications = ion.getModification()
                 else:
                     modifications = ion.getModificationList()

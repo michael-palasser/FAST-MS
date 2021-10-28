@@ -32,7 +32,7 @@ def run(mainWindow):
     service = SequenceService()
     sequenceName = 'neoRibo'
     sequence = service.get(sequenceName).getSequenceList()
-    modification = 'CMCT'
+    modification = '+2DEPC+H2O-CO'
     '''dlg = OccupancyRecalcStartDialog(mainWindow, service.getAllSequenceNames())
     dlg.exec_()
     if dlg and dlg.sequence != None:
@@ -57,7 +57,7 @@ def run(mainWindow):
     for ion in arr:
         baseLoss = False
         for b in ['-G','-A','-C']:
-            if b in ion['name']:
+            if b in ion['name'][-2:]:
                 #print('not', ion['name'])
                 baseLoss = True
         if not baseLoss:
@@ -79,8 +79,9 @@ def run(mainWindow):
     excelWriter = BasicExcelWriter(os.path.join(path, "Spectral_data","Occupancies_out.xlsx"))
     excelWriter.writeDate()
     row = excelWriter.writeAbundancesOfSpecies(2, analyser.calculateRelAbundanceOfSpecies()[0])
+    unimportant = ['+DEPC','+DEPC+H2O-CO']
     excelWriter.addOccupOrCharges(0,row, sequence,
-                                  analyser.calculateOccupancies(speciesList)[0],1) #ToDo
+                                  analyser.calculateOccupancies(speciesList, unImportantMods=unimportant)[0],1) #ToDo
     excelWriter.closeWorkbook()
     try:
         subprocess.call(['open', os.path.join(path, "Spectral_data","Occupancies_out.xlsx")])

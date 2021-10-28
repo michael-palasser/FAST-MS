@@ -29,38 +29,38 @@ def run():
     6.  Output in xlsx file
     '''
     #dialog = IntactStartDialog()
-    configHandler = ConfigurationHandlerFactory.getIntactHandler()
-    #files = [os.path.join(path, 'Spectral_data','intact', file) for file in configHandler.get('spectralData')]
+    settings = ConfigurationHandlerFactory.getIntactHandler().getAll()
+    #files = [os.path.join(path, 'Spectral_data','intact', file) for file in settings['spectralData']]
     #print(files)
-    #spectralFile = os.path.join(path, 'Spectral_data','intact', configHandler.get('spectralData'))
+    #spectralFile = os.path.join(path, 'Spectral_data','intact', settings['spectralData'])
 
     """theoretical values"""
     print("\n********** calculating theoretical values **********")
-    libraryBuilder = IntactLibraryBuilder(configHandler.get('sequName'), configHandler.get('modification'))
-    finder = Finder(libraryBuilder.createLibrary(),configHandler)
+    libraryBuilder = IntactLibraryBuilder(settings['sequName'], settings['modification'])
+    finder = Finder(libraryBuilder.createLibrary(),settings)
 
     """calibrate spectra"""
     print("\n********** calibrating spectralFile **********")
     #with open(spectralFile) as f:
     #    finder.readData(f)
-    finder.readData(configHandler.get('spectralData'))
+    finder.readData(settings['spectralData'])
     listOfCalibrationVals = finder.calibrateAll()
 
     """find ions"""
     print("\n********** finding ions **********")
-    analyser = IntactAnalyser(finder.findIons(configHandler.get('k'), configHandler.get('d'), True))
+    analyser = IntactAnalyser(finder.findIons(settings['k'], settings['d'], True))
 
     """output"""
     print("\n********** output **********")
-    output = configHandler.get('output')
+    output = settings['output']
     if output == '':
         output =  datetime.now().strftime("%d.%m.%Y") + '.xlsx'
     else:
         output = os.path.join(path, 'Spectral_data','intact', output + '.xlsx')
     listOfParameters = []
-    for file in configHandler.get('spectralData'):
+    for file in settings['spectralData']:
         parameters = {'data:':file,'date:':datetime.now().strftime("%d/%m/%Y %H:%M")}
-        parameters.update(configHandler.getAll())
+        parameters.update(settings)
         del parameters['spectralData']
         listOfParameters.append(parameters)
     excelWriter = IntactExcelWriter(output)

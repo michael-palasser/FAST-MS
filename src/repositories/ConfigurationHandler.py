@@ -20,7 +20,6 @@ class ConfigHandler(object):
         #with openAgain(_configFile, "w") as f:
          #   json.dump(json.dumps(parameters), f)
         self._configFile = configFile
-        print('new')
         if isfile(configFile):
             with open(configFile, "r") as f:
                 try:
@@ -64,6 +63,9 @@ class ConfigHandler(object):
             raise Exception('Parameter ',parameter, ' not in configurations.')
         self.__parameters[parameter] = value
 
+    def update2(self, parameter, value):
+        self.__parameters[parameter] = value
+
 dataPath = join(path, "src", "data")
 
 class ConfigurationHandlerFactory(object):
@@ -85,7 +87,6 @@ class ConfigurationHandlerFactory(object):
 
     @staticmethod
     def getIntactHandler():
-        print('eig new configH')
         return ConfigHandler(join(dataPath, "configurations_intact.json"))
 
     @staticmethod

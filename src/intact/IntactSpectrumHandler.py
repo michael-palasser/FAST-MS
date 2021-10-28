@@ -2,6 +2,7 @@ import logging
 
 import numpy as np
 
+from src.MolecularFormula import MolecularFormula
 from src.entities.Ions import IntactIon
 from src.top_down.SpectrumHandler import AbstractSpectrumHandler
 
@@ -13,7 +14,10 @@ class IntactSpectrumHandler(AbstractSpectrumHandler):
         :param (dict[str,Any]) settings: search settings
         :param (set[tuple[float]] | None) peaks: set of peak tuples (m/z, I)
         '''
-        super(IntactSpectrumHandler, self).__init__(settings, settings['sprayMode'], IntactIon, peaks)
+        mode = 1
+        if settings['sprayMode'] == 'negative':
+            mode *= -1
+        super(IntactSpectrumHandler, self).__init__(settings, mode, IntactIon, peaks)
 
 
     def getChargeRange(self, mass):
@@ -37,11 +41,25 @@ class IntactSpectrumHandler(AbstractSpectrumHandler):
         :param (list) fragmentLibrary: list of Fragment-objects
         '''
         np.set_printoptions(suppress=True)
-        self.getProtonIsotopePatterns()
         sortedMasses = sorted([neutral.getIsotopePattern()['m/z'][0] for neutral in neutralLibrary])
         zRange = self.getChargeRange(sortedMasses[0])
+        self._maxZ = zRange[-1]
+        self.getProtonIsotopePatterns()
         for neutral in neutralLibrary:
             # neutralPatternFFT = formula.calculateIsotopePatternFFT(1, )
             logging.info(neutral.getName())
             self._searchedChargeStates[neutral.getName()] = []
             self.findIon(neutral, zRange)
+
+
+    def getProtonIsotopePatterns(self):
+        '''
+        Calculates the isotope patterns (rel.abundances) of various numbers of protons
+        :return: (ndArray[float,float]) array with 2 columns: rows represent proton nr + 1, column 1: monoisotopic,
+            column 2: M+1 peak
+        '''
+        protonIsotopePatterns = np.zeros((self._maxZ,2))
+        for i in range(self._maxZ):
+            protonIsotopePatterns[i] = MolecularFormula({'H':i+1}).calcIsotopePatternPart(2)['calcInt']
+            logging.debug(str(protonIsotopePatterns[i][0])+'\t'+str(protonIsotopePatterns[i][1]))
+        self._protonIsoPatterns = protonIsotopePatterns

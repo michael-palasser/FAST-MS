@@ -71,7 +71,6 @@ class PrecursorItem(AbstractItem3):
         :param (tuple[str,str,str,str,int|str,int]) item: name, atomic gain, atomic loss, corresponding residue,
             number of radicals, enabled
         '''
-        print(item)
         super(PrecursorItem, self).__init__(name=item[0], gain=item[1], loss=item[2],
                                             residue=item[3], radicals=item[4], enabled=item[5])
 
@@ -195,7 +194,7 @@ class IntactModification(AbstractItem2):
             nr. of modifications on object, enabled
         '''
         item = self.processItem(item)
-        super(IntactModification, self).__init__(name=item[0], gain=item[1], loss=item[2], radicals=item[3], enabled=item[4])
+        super(IntactModification, self).__init__(name=item[0], gain=item[1], loss=item[2], radicals=item[4], enabled=item[5])
         self._nrMod = item[3]
 
     def getNrMod(self):

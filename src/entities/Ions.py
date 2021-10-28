@@ -453,6 +453,19 @@ class IntactNeutral(object):
             self._monoisotopicRaw = self._formula.calculateMonoIsotopic()
         return self._monoisotopicRaw
 
+    def getNumberOfHighestIsotopes(self):
+        '''
+        Defines number of peaks to be searched for in first step of findIons function in SpectrumHandler
+        :return: (int) number of peaks
+        '''
+        abundances = self._isotopePattern['calcInt'] / self._isotopePattern[0]['calcInt']
+        if len(abundances) < 3:
+            return 1
+        elif abundances[2] > 0.6:
+            return 3
+        elif abundances[1] > 0.3:
+            return 2
+        return 1
 
 class IntactIon(IntactNeutral, Ion):
     '''
@@ -466,7 +479,7 @@ class IntactIon(IntactNeutral, Ion):
         :param (ndarray) isotopePattern: structured numpy-array: [m/z, intensity, m/z_theo, calcInt, error (ppm), used (for modelling)]
         :param (float) noise: noise level in the m/z area of the ion, calculated by calculateNoise function in SpectrumHandler
         '''
-        super(IntactNeutral, self).__init__(neutral.getSequName(), neutral.getModification(),
+        super(IntactIon, self).__init__(neutral.getSequName(), neutral.getModification(),
                                             neutral.getNrOfModifications(), neutral.getFormula(), neutral.getRadicals())
         self._monoisotopicRaw = monoisotopic
         self._charge = charge

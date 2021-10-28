@@ -45,7 +45,6 @@ def getMz(mass, z, radicals):
 
 class AbstractSpectrumHandler(ABC):
     def __init__(self, settings, spraymode, IonClass, peaks=None):
-        print('sdkfjl')
         self._settings = settings
         self._sprayMode = spraymode
         self._upperBound = 0

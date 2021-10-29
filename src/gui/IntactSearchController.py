@@ -15,7 +15,9 @@ from PyQt5 import QtWidgets, QtCore
 
 from src import path
 from src.Exceptions import InvalidInputException
+from src.Services import IntactIonService
 from src.entities.Info import Info
+from src.entities.IonTemplates import IntactModification
 from src.gui.GUI_functions import connectTable
 from src.gui.IsotopePatternView import AddIonView
 from src.gui.widgets.InfoView import InfoView
@@ -57,7 +59,9 @@ class IntactMainController(object):
         self._configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
         #self._propStorage = IntactSearchSettings(self._settings['sequName'], self._settings['modifications'])
         #self.__sequence = SequenceService().get(sequName)
-        self._info = Info(self._settings, self._configs, self._settings['sequName'], self._settings['modifications'])
+        print(self._settings)
+        modification = IntactIonService().getPatternWithObjects(self._settings['modifications'], IntactModification)
+        self._info = Info(self._settings, self._configs, self._settings['sequName'], modification)
         self._saved = False
         try:
             self._savedName = os.path.split(self._settings['spectralData'])[-1][:-4]
@@ -335,9 +339,7 @@ class IntactMainController(object):
         '''
         Makes an ion table
         '''
-        tableModel = IonTableModel(data,
-                                   self._intensityModeller.getPrecRegion(self._settings['sequName'], abs(self._settings['charge'])),
-                                   self._configs['shapeMarked'], self._configs['scoreMarked'])
+        tableModel = IonTableModel(data, None, self._configs['shapeMarked'], self._configs['scoreMarked'])
         """self.proxyModel = QSortFilterProxyModel()
         self.proxyModel.setSourceModel(model)"""
         table = QtWidgets.QTableView(parent)

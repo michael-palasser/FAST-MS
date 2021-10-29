@@ -7,6 +7,7 @@ import sys
 
 from PyQt5.QtWidgets import QApplication, QPushButton, QAction
 
+from src.gui.IntactSearchController import IntactMainController
 from src.gui.IsotopePatternView import IsotopePatternView
 from src.gui.EditorController import *
 from src.gui.dialogs.ParameterDialogs import TD_configurationDialog
@@ -16,6 +17,8 @@ from src.top_down.OccupancyRecalculator import run as occupancyRecalculator
 from src.top_down.SpectrumComparator import run as spectrumComparator
 from src.intact.Main import run as IntactIonsSearch
 from src.gui.TD_searchController import TD_MainController
+
+
 
 
 class Window(SimpleMainWindow):
@@ -47,7 +50,9 @@ class Window(SimpleMainWindow):
                          'Edit Modifications':
                              (lambda: self.editData(ModificationEditorController), 'Edit modification/ligand patterns',
                               None)}, None)
-        self.createMenu('Other Tools', {'Analyse Intact Ions': (lambda: self.editData(self.startIntactIonSearch),
+        self.createMenu('Other Tools',
+                        {'Analyse Intact Ion Spectrum':(lambda:self.startIntact(True), 'Starts analysis of intact ion spectrum', None),
+                         'Analyse Intact Ions': (lambda: self.editData(self.startIntactIonSearch),
                                                  'Starts analysis of spectra with unfragmented ions', None),
                          'Edit Intact Ions': (lambda: self.editData(IntactIonEditorController), 'Edit Intact Ions', None),
                          'Model Ion':
@@ -73,6 +78,10 @@ class Window(SimpleMainWindow):
     def startTopDown(self, new):
         self._lastSearch = SimpleMainWindow(None, '')
         TD_MainController(self, new, self._lastSearch)
+
+    def startIntact(self, new):
+        self._lastSearch = SimpleMainWindow(None, '')
+        IntactMainController(self, new, self._lastSearch)
 
     def reopen(self):
         if self._lastSearch is not None:

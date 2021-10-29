@@ -36,7 +36,7 @@ class TDStartDialog(StartDialog):
                     "fragmentation": (createComboBox(self,fragPatterns), "Name of the fragmentation - pattern"),
                     "modifications": (createComboBox(self,modPatterns), "Name of the modification/ligand - pattern"),
                     "nrMod": (QtWidgets.QSpinBox(self), "How often is the precursor ion modified?"),
-                    "spectralData": (OpenFileWidget(self,1, join(path, 'Spectral_data','top-down'),
+                    "spectralData": (OpenFileWidget(self, 1, join(path, 'Spectral_data','top-down'),
                                     "Open File","Plain Text Files (*txt);;Comma Separated Values (*csv);;All Files (*)"),
                                 "Name of the file with spectral peaks (txt or csv format)\n"
                                  "If no file is stated, the program will just calculate the fragment library"),
@@ -153,7 +153,7 @@ class IntactStartDialog(DialogWithTabs, StartDialog):
     def getWidgets(self, sequences, modPatterns):
         return  ({
                 "sequName": (createComboBox(self._settingTab, sequences), "Name of sequenceList"),
-                 "modification": (createComboBox(self._settingTab, modPatterns), "Name of the modification pattern"),
+                 "modifications": (createComboBox(self._settingTab, modPatterns), "Name of the modification pattern"),
                  "spectralData": (
                  OpenFileWidget(self._settingTab, 2, join(path, 'Spectral_data', 'intact'), "Open Files",  # changed here
                                 "Plain Text Files (*txt);;All Files (*)"),
@@ -206,7 +206,7 @@ class IntactStartDialogFull(IntactStartDialog):
     def __init__(self, parent=None):
         super().__init__(parent, "Full Intact Ion Search", ConfigurationHandlerFactory.getFullIntactHandler())
         self._configHandler = ConfigurationHandlerFactory.getFullIntactHandler()
-        self.setupUi()
+        #self.setupUi()
         self._widgets['noiseLimit'].setMinimum(0.01)
 
     def getLabels(self):
@@ -216,22 +216,29 @@ class IntactStartDialogFull(IntactStartDialog):
                 oldLabels[1])
 
     def getWidgets(self, sequences, modPatterns):
-        oldWidgets = super(IntactStartDialogFull, self).getWidgets(sequences, modPatterns)
+        #oldWidgets = super(IntactStartDialogFull, self).getWidgets(sequences, modPatterns)
         return ({"sequName": (createComboBox(self._settingTab, sequences), "Name of sequenceList"),
-                 "modification": (createComboBox(self._settingTab, modPatterns), "Name of the modification pattern"),
+                 "modifications": (createComboBox(self._settingTab, modPatterns), "Name of the modification pattern"),
                  "spectralData": (
-                    OpenFileWidget(self._settingTab, 2, join(path, 'Spectral_data', 'intact'), "Open Files",
+                    OpenFileWidget(self._settingTab, 1, join(path, 'Spectral_data', 'intact'), "Open Files",
                                    "Plain Text Files (*txt);;All Files (*)"),
                     "Name of the file with peaks (txt format)"),
                  "sprayMode": (createComboBox(self._settingTab, ("negative", "positive")), "Spray mode"),
                  'noiseLimit': (QtWidgets.QDoubleSpinBox(self), "Minimal noise level"),
                  "calibration": (QtWidgets.QCheckBox(), "Spectral data will be autocalibrated if option is ticked"),
-                 "calIons": (OpenFileWidget(self._settingTab, 2, join(path, 'Spectral_data', 'intact'), "Open Files",
+                 "calIons": (OpenFileWidget(self._settingTab, 1, join(path, 'Spectral_data', 'intact'), "Open Files",
                                             "Plain Text Files (*txt);;All Files (*)"),
-                             "Name of the file with ions for calibration (txt format)"),
-                 "output": (QtWidgets.QLineEdit(self._settingTab),
-                            "Name of the output txt file\ndefault: name of spectral pattern file + _out.txt")},
-                oldWidgets[1])
+                             "Name of the file with ions for calibration (txt format)")},
+                {
+                    "minMz": (QtWidgets.QSpinBox(), "m/z where search starts"),
+                    "maxMz": (QtWidgets.QSpinBox(), "m/z where search ends"),
+                    "errorLimitCalib": (QtWidgets.QSpinBox(), "max. ppm error in uncalbratied spectrum"),
+                    "maxStd": (QtWidgets.QDoubleSpinBox(), "max. allowed standard deviation of the ion errors for the "
+                                                           "calibration"),
+                    "k": (QtWidgets.QDoubleSpinBox(),
+                          "max. ppm error slope in calbratied spectrum (ppm = k/1000 + d)"),
+                    "d": (QtWidgets.QDoubleSpinBox(),
+                          "max. ppm error intercept in calbratied spectrum (ppm = k/1000 + d)")})
 
     def backToLast(self):
         super(IntactStartDialogFull, self).backToLast()
@@ -245,6 +252,8 @@ class IntactStartDialogFull(IntactStartDialog):
             self._configHandler.write(self._newSettings)
             super(IntactStartDialogFull, self).accept()
 
+    def checkSpectralDataFile(self, mode, fileName):
+        return super(IntactStartDialog, self).checkSpectralDataFile(mode, fileName)
 
 class SpectrumComparatorStartDialog(AbstractDialog):
     '''

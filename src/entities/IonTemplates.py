@@ -184,6 +184,12 @@ class IntactPattern(PatternWithItems):
         super(IntactPattern, self).__init__(name, items, id)
 
 
+    def toString(self):
+        string = '\nName\tGain\tLoss\tNr.Mod.\tRad.\tEnabled'
+        for item in self._items:
+            string += '\n\t' + '\t'.join(item.toString())
+        return string
+
 class IntactModification(AbstractItem2):
     '''
     Template for intact modifications
@@ -193,11 +199,17 @@ class IntactModification(AbstractItem2):
         :param (tuple[str,str,str,int,int] | list[str,str,str,int,int]) item: name, atomic gain, atomic loss,
             nr. of modifications on object, enabled
         '''
+        print('1',item)
         item = self.processItem(item)
+        print('2',item)
         super(IntactModification, self).__init__(name=item[0], gain=item[1], loss=item[2], radicals=item[4], enabled=item[5])
         self._nrMod = item[3]
 
     def getNrMod(self):
         return self._nrMod
 
+    def toString(self):
+        parentVals = super(IntactModification, self).toString()
+        print(parentVals[0:-2]+[str(self._nrMod), parentVals[-2:-1]])
+        return parentVals[0:-2]+[str(self._nrMod)]+ parentVals[-2:-1]
 

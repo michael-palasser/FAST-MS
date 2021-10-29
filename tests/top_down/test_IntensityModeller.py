@@ -4,6 +4,8 @@ import numpy as np
 
 from src.MolecularFormula import MolecularFormula
 from src.entities.Ions import FragmentIon, Fragment
+from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
+from tests.intact.test_Calibrator import getCalibratedSpectrum
 from tests.top_down.test_SpectrumHandler import initTestLibraryBuilder
 from src.top_down.SpectrumHandler import SpectrumHandler
 from src.top_down.IntensityModeller import IntensityModeller
@@ -249,6 +251,18 @@ class TestIntensityModeller(TestCase):
         self.assertEqual(simplePattern[1], self.intensityModeller.checkForOverlaps(
                 self.intensityModeller.getObservedIons()[simplePattern[0]]))
 
+    def test_for_intact(self):
+        d = getCalibratedSpectrum()
+        d['spectrumHandler'].findIons(d['libraryBuilder'].getNeutralLibrary())
+        self._intensityModeller = IntensityModeller(ConfigurationHandlerFactory.getTD_ConfigHandler().getAll())
+        for ion in d['spectrumHandler'].getFoundIons():
+            self._intensityModeller.processIons(ion)
+        for ion in d['spectrumHandler']._ionsInNoise:
+            self._intensityModeller.processNoiseIons(ion)
+        sameMonoisotopics = self._intensityModeller.findSameMonoisotopics()
+        if len(sameMonoisotopics) == 0:
+            complexPatterns = self._intensityModeller.remodelOverlaps()
+            self._intensityModeller.remodelComplexPatterns(complexPatterns, [])
 
     '''def test_remodel_complex_patterns(self):
         self.fail()'''

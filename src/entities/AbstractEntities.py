@@ -183,6 +183,8 @@ class AbstractItem2(AbstractItem1, ABC):
             return 0
         return self._radicals
 
+    def toString(self):
+        return [self._name, self._gain, self._loss, str(self._radicals), str(self._enabled)]
 
 class AbstractItem3(AbstractItem2):
     '''
@@ -204,4 +206,5 @@ class AbstractItem3(AbstractItem2):
         return self._residue
 
     def toString(self):
-        return [self._name, self._gain, self._loss, self._residue, str(self._radicals), str(self._enabled)]
+        parentVals = super(AbstractItem3, self).toString()
+        return parentVals[0:-2]+[self._residue] + parentVals[-2:-1]

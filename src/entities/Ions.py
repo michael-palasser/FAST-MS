@@ -155,6 +155,15 @@ class Ion(ABC):
         return peaks
 
 
+    def setIsotopePatternPart(self, col, vals):
+        '''
+        Sets only 1 column of the isotope pattern
+        :param col: index of column
+        :param vals: values
+        '''
+        self._isotopePattern[col] = vals
+
+
 class Fragment(object):
     '''
     Uncharged fragment
@@ -210,13 +219,13 @@ class Fragment(object):
         return self._isotopePattern
     def setIsotopePattern(self, isotopePattern):
         self._isotopePattern = isotopePattern
-    def setIsotopePatternPart(self, col, vals):
+    """def setIsotopePatternPart(self, col, vals):
         '''
         Sets only 1 column of the isotope pattern
         :param col: index of column
         :param vals: values
         '''
-        self._isotopePattern[col] = vals
+        self._isotopePattern[col] = vals"""
 
     def getRadicals(self):
         return self._radicals

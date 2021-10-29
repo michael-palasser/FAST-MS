@@ -108,7 +108,7 @@ class IonTableModel(AbstractTableModel):
         if role == Qt.ForegroundRole:
             col = index.column()
             item = self._data[index.row()][col]
-            if col == 0:
+            if (col == 0) and (self._precRegion is not None):
                 if self._precRegion[0]<item<self._precRegion[1]:
                     return QtGui.QColor('red')
             if col == 6:

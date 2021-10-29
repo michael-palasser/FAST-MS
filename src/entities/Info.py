@@ -13,9 +13,9 @@ class Info(object):
         if len(args)==3:
             self._infoString = 'Analysis: ' + datetime.now().strftime("%d/%m/%Y %H:%M") + '\n'
             self.start(args[0], args[1], args[2])
-        elif len(args) == 2:
+        elif len(args) == 4:
             self._infoString = 'Analysis: ' + datetime.now().strftime("%d/%m/%Y %H:%M") + '\n'
-            self.startIntact(args[0], args[1], args[2], args[3], args[4])
+            self.startIntact(args[0], args[1], args[2], args[3])
         else:
             self._infoString = args[0]
             self.load()

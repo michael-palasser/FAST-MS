@@ -3,10 +3,10 @@ Created on 5 Oct 2020
 
 @author: michael
 '''
-import os
-
 import xlsxwriter
 from xlsxwriter.utility import xl_rowcol_to_cell
+
+from src.top_down.ExcelWriter import ExcelWriter
 
 
 class IntactExcelWriter(object):
@@ -56,23 +56,27 @@ class IntactExcelWriter(object):
         '''
         Writes av. charge and the values of the calibration (av. error, std. dev. of the errors, and the parameters of
         the calibration function) of one spectrum to xlsx file
-        :param (float) averageCharge: average charge in a spectrum
+        :param (tuple[float,float]) averageCharge: average charge in a spectrum
         :param (float) avError:  average ppm error in a spectrum
         :param (float) stdDevOfErrors:  std. dev. of the ppm errors in a spectrum
         :param (tuple[float]) calibrationVals: the parameters (a,b,c) of the calibration function: y=ax^2+bx+c
         '''
-        worksheet.write(self._row, self._col, 'av.charge:')
-        worksheet.write(self._row + 1, self._col, averageCharge, self._format2digit)
-        worksheet.write(self._row + 3, self._col, 'calibration:')
-        worksheet.write(self._row + 4, self._col, 'av.error:')
-        worksheet.write(self._row + 4, self._col+1, avError, self._format2digit)
-        worksheet.write(self._row + 5, self._col, 'std.dev.:')
-        worksheet.write(self._row + 5, self._col+1, stdDevOfErrors, self._format2digit)
-        row = self._row + 6
-        for i,key in enumerate(('a','b','c')):
-            worksheet.write(row + i, self._col, key)
-            worksheet.write(row + i, self._col+1, calibrationVals[i])
-        self._col += 2
+        worksheet.write(self._row, self._col+1, 'av.charge:')
+        worksheet.write(self._row+1, self._col, 'using I')
+        worksheet.write(self._row + 1, self._col+1, averageCharge[0], self._format2digit)
+        worksheet.write(self._row+2, self._col, 'using I/z')
+        worksheet.write(self._row + 2, self._col+1, averageCharge[1], self._format2digit)
+        worksheet.write(self._row + 4, self._col, 'calibration:')
+        worksheet.write(self._row + 5, self._col, 'av.error:')
+        worksheet.write(self._row + 5, self._col+1, avError, self._format2digit)
+        worksheet.write(self._row + 6, self._col, 'std.dev.:')
+        worksheet.write(self._row + 6, self._col+1, stdDevOfErrors, self._format2digit)
+        row = self._row + 7
+        if calibrationVals is not None:
+            for i,key in enumerate(('a','b','c')):
+                worksheet.write(row + i, self._col, key)
+                worksheet.write(row + i, self._col+1, calibrationVals[i])
+        self._col += 3
 
     def writeAverageMod(self, worksheet, avModifPerCharge):
         '''
@@ -83,6 +87,7 @@ class IntactExcelWriter(object):
         worksheet.write_row(self._row + 1, self._col, ['z', 'value'])
         row = self._row + 1
         firstCell = xl_rowcol_to_cell(row + 1, self._col + 1)
+        print(avModifPerCharge)
         for z,val in avModifPerCharge.items():
             row += 1
             worksheet.write(row, self._col, int(z))
@@ -125,13 +130,13 @@ class IntactExcelWriter(object):
         self._col = currentCol + 3
 
 
-    def writeAnalysis(self, listOfParameters, listsOfIons, avCharges,avErrors, stdDevsOfErrors, listOfCalibrationVals,
-                      avModifPerCharges, modificationsInSpectra):
+    def writeIntactAnalysis(self, listOfParameters, listsOfIons, avCharges, avErrors, stdDevsOfErrors, listOfCalibrationVals,
+                            avModifPerCharges, modificationsInSpectra):
         '''
         Writes the analysis to xlsx file
         :param (list[dict[str,Any]]) parameters: lists of {name: value}
         :param (list[list[list[SimpleIntactIon]]]) listsOfIons: observed ions for each spectrum
-        :param (list[list[float]]) avCharges: average charges in each spectrum
+        :param (list[list[tuple[float,float]]]) avCharges: average charges in each spectrum
         :param (list[list[float]]) stdDevsOfErrors: list of std. dev. of the ppm errors in each spectrum
         :param (list[list[tuple[float]]]) listOfCalibrationVals: list of the parameters (a,b,c) of the calibration
             function (y=ax^2+bx+c) for each spectrum
@@ -158,8 +163,59 @@ class IntactExcelWriter(object):
                 self.writeAverageMod(worksheet, avModifPerCharges[i][j])
                 self.writeModifications(worksheet, modificationsInSpectra[i][j])
                 self._row = self._lastRow + 2
-                print(j)
 
 
     def closeWorkbook(self):
         self._workbook.close()
+
+
+class FullIntactExcelWriter(ExcelWriter, IntactExcelWriter):
+    def __init__(self, file, configurations, options):
+        super(FullIntactExcelWriter, self).__init__(file, configurations, options)
+        self._col, self._lastRow = 0, 0
+        self._intact = True
+
+
+    def toExcel(self, analyser, intensityModeller, sequence, fragmentLibrary, settings, spectrumHandler, infoString):
+        '''
+        Write results of top-down MS analysis to xlsx file
+        :param (Analyser) analyser: analyser
+        :param (IntensityModeller) intensityModeller: intensityModeller
+        :param (SearchSettings) properties: properties
+        :param (list[FragmentIon]) fragmentLibrary: fragmentLibrary
+        :param (dict[str:Any]) settings: settings
+        :param (SpectrumHandler) spectrumHandler: spectrumHandler
+        :param (str) infoString: infoString
+        '''
+        self._spraymode = 1
+        if settings['sprayMode'] == 'negative':
+            self._spraymode = -1
+        try:
+            #percentages = list()
+            #self.writeAnalysis({"spectral file:": settings['spectralData'], 'max. m/z:':spectrumHandler.getUpperBound()},
+                               #sequence,
+
+            self._row = self.writeGeneralParameters(0, {"spectral file:": settings['spectralData'], 'max. m/z:': spectrumHandler.getUpperBound()})
+            self._row += 1
+            self._worksheet1.write(self._row, 0, ("analysis:"))
+            self._row += 1
+            avCharges, avErrors, stddevs = analyser.calculateAvChargeAndError()
+            avModifPerCharges = analyser.calculateAverageModification()
+            modificationsInSpectra = analyser.calculateModifications()
+            self.writeGeneralAnalysis(self._worksheet1, avCharges[0][0], avErrors[0][0], stddevs[0][0], None)
+            self.writeAverageMod(self._worksheet1, avModifPerCharges[0][0])
+            self.writeModifications(self._worksheet1, modificationsInSpectra[0][0])
+            #self.analyser.createPlot(__maxMod)
+            precursorRegion = (0,0)
+            observedIons = self.sortByName(intensityModeller.getObservedIons().values())
+            deletedIons = self.sortByName(intensityModeller.getDeletedIons().values())
+            self.writeIons(self._worksheet2, observedIons, precursorRegion)
+            self.writePeaks(self._worksheet3, 0, 0, observedIons)
+            row = self.writeIons(self._worksheet4, deletedIons, precursorRegion)
+            self.writePeaks(self._worksheet4, row + 3, 0, deletedIons)
+            self.writeIons(self._worksheet5, self.sortByName(intensityModeller.getRemodelledIons()), precursorRegion)
+            self.writeSumFormulas(fragmentLibrary, spectrumHandler.getSearchedChargeStates())
+            self.writeInfos(infoString)
+        finally:
+            self.closeWorkbook()
+

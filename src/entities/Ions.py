@@ -121,7 +121,7 @@ class Ion(ABC):
                 round(self.getSignalToNoise(),1), round(self._quality, 2)]#"""
 
     def getId(self):
-        return self.getName()+', '+str(self._charge)
+        return self.getName() +', '+str(self._charge)
 
     def getHash(self):
         return (self.getName(),self._charge)
@@ -527,8 +527,8 @@ class SimpleIntactIon(IntactNeutral):
         self._theoMz = theoMz
         self._charge = charge
         self._intensity = intensity
-        self._isotopePattern = isotopePattern
-        self._comment = ''
+        #self._isotopePattern = isotopePattern
+        #self._comment = ''
 
 
     def getMonoisotopic(self):
@@ -539,6 +539,8 @@ class SimpleIntactIon(IntactNeutral):
         return self._charge
     def getIntensity(self):
         return self._intensity
+    def getRelAbundance(self):
+        return self._intensity/self._charge
 
     def getError(self):
         return (self._mz - self._theoMz) / self._theoMz * 10 ** 6

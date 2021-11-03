@@ -517,7 +517,7 @@ class TD_MainController(object):
         '''
         exportConfigHandler = ConfigurationHandlerFactory.getExportHandler()
         lastOptions= exportConfigHandler.getAll()
-        dlg = ExportDialog(self._mainWindow, lastOptions)
+        dlg = ExportDialog(self._mainWindow, ('occupancies','charges','reduced charges', 'sequence coverage'), lastOptions)
         dlg.exec_()
         if dlg and not dlg.canceled():
             self._info.export()

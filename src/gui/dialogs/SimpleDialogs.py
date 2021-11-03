@@ -94,7 +94,7 @@ class ExportDialog(AbstractDialog):
     '''
     Dialog to export the results of a top-down analysis
     '''
-    def __init__(self, parent, storedOptions):
+    def __init__(self, parent, analysisOptions, storedOptions):
         super(ExportDialog, self).__init__(parent, 'Export Results')
         if storedOptions is None:
             storedOptions = {'columns':[], 'analysis':[]}
@@ -107,17 +107,18 @@ class ExportDialog(AbstractDialog):
         formLayout.addItem(QtWidgets.QSpacerItem(0,1))
 
         index +=1
-        label = QtWidgets.QLabel(self)
-        label.setText(self._translate(self.objectName(), 'Analysis:'))
-        formLayout.setWidget(index, QtWidgets.QFormLayout.LabelRole, label)
         self._boxes = []
-        for i, name in enumerate(('occupancies','charges','reduced charges', 'sequence coverage')):
-            box = QtWidgets.QCheckBox(name, self)
-            if name in storedOptions['analysis']:
-                box.setChecked(True)
-            formLayout.setWidget(index,QtWidgets.QFormLayout.FieldRole, box)
-            self._boxes.append(box)
-            index +=1
+        if len(analysisOptions)>0:
+            label = QtWidgets.QLabel(self)
+            label.setText(self._translate(self.objectName(), 'Analysis:'))
+            formLayout.setWidget(index, QtWidgets.QFormLayout.LabelRole, label)
+            for i, name in enumerate(analysisOptions):#('occupancies','charges','reduced charges', 'sequence coverage')):
+                box = QtWidgets.QCheckBox(name, self)
+                if name in storedOptions['analysis']:
+                    box.setChecked(True)
+                formLayout.setWidget(index,QtWidgets.QFormLayout.FieldRole, box)
+                self._boxes.append(box)
+                index +=1
 
         options = ('m/z', 'z','intensity', 'int./z', 'fragment', 'error /ppm', 'S/N', 'quality', 'formula', 'score', 'comment',
                    'molecular mass', 'average mass', 'noise')

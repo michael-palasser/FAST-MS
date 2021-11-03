@@ -9,6 +9,7 @@ import subprocess
 import traceback
 from datetime import datetime
 
+from src.Services import SequenceService
 from src.intact.IntactLibraryBuilder import IntactLibraryBuilder
 from src.intact.IntactFinder import Finder
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
@@ -36,7 +37,7 @@ def run():
 
     """theoretical values"""
     print("\n********** calculating theoretical values **********")
-    libraryBuilder = IntactLibraryBuilder(settings['sequName'], settings['modification'])
+    libraryBuilder = IntactLibraryBuilder(SequenceService().get(settings['sequName']), settings['modifications'])
     finder = Finder(libraryBuilder.createLibrary(),settings)
 
     """calibrate spectra"""
@@ -66,10 +67,10 @@ def run():
     excelWriter = IntactExcelWriter(output)
     avCharges, avErrors, stddevs = analyser.calculateAvChargeAndError()
     try:
-        excelWriter.writeAnalysis(listOfParameters, analyser.getSortedIonList(),
-                                  avCharges, avErrors, stddevs, listOfCalibrationVals,
-                                  analyser.calculateAverageModification(),
-                                  analyser.calculateModifications())
+        excelWriter.writeIntactAnalysis(listOfParameters, analyser.getSortedIonList(),
+                                        avCharges, avErrors, stddevs, listOfCalibrationVals,
+                                        analyser.calculateAverageModification(),
+                                        analyser.calculateModifications())
         print("saved in:", output)
     except:
         traceback.print_exc()

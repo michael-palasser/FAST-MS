@@ -26,30 +26,22 @@ class IntactAnalyser(object):
         #value changed if reduced intensities are used
         listOfAverageCharges, listOfAverageErrors, listOfStddevOfErrors = [], [], []
         for ionlists in self._listOfIonLists:
+            print(ionlists)
             averageCharges, averageErrors, stddevOfErrors = [], [], []
             for ionList in ionlists:
-                chargeSum = 0
-                sumInt = 0
+                print('hey',ionList)
                 #exclude SNAP misassignments
                 errors = np.array([ion.getError() for ion in ionList if abs(ion.getError()) < 30])
                 averageErrors.append(np.average(errors))
                 stddevOfErrors.append(np.std(errors))
-                #errorSum = 0
-                #notCounted = 0
-                for ion in ionList:
-                    sumInt += ion.getIntensity()
-                    #if abs(ion.getError()) < 30:
-                        #errorSum += ion.getError()
-                    #else:
-                        #notCounted += 1
-                    chargeSum += ion.getCharge() *ion.getIntensity()
-                    charge = ion.getCharge()
-                    if charge < self._minCharge:
-                        self._minCharge = charge
-                    if charge > self._maxCharge:
-                        self._maxCharge = charge
-                averageCharges.append(chargeSum/sumInt)
-                #averageErrors.append(errorSum/(len(ionList)-notCounted))
+                intensities = np.array([(ion.getIntensity(),ion.getCharge()) for ion in ionList])
+                averageCharges.append((np.sum(intensities[:,0]*intensities[:,1])/np.sum(intensities[:,0]),
+                                       np.sum(intensities[:,0])/np.sum(intensities[:,0]/intensities[:,1])))
+                minCharge, maxCharge = np.min(intensities[:,1]), np.max(intensities[:,1])
+                if minCharge < self._minCharge:
+                    self._minCharge = int(minCharge)
+                if maxCharge > self._maxCharge:
+                    self._maxCharge = int(maxCharge)
             listOfAverageCharges.append(averageCharges)
             listOfAverageErrors.append(averageErrors)
             listOfStddevOfErrors.append(stddevOfErrors)

@@ -42,7 +42,12 @@ class AbstractTableModel(QtCore.QAbstractTableModel):
 
     def columnCount(self, index):
         #return self._data.columns.size
-        return len(self._data[0])
+        #if len(len(self._data))==0:
+        #    print('hey', self._data, len(self._data))
+        try:
+            return len(self._data[0])
+        except:
+            print('oh',self._data)
 
     def headerData(self, section, orientation, role):
         if role == QtCore.Qt.DisplayRole:
@@ -69,6 +74,10 @@ class IonTableModel(AbstractTableModel):
     TableModel for QTableView presenting ion values (in top-down search)
     '''
     def __init__(self, data, precRegion, maxQual, maxScore):
+        print('new table')
+        headers = ('m/z','z','intensity','fragment','error /ppm', 'S/N','quality', 'score', 'comment')
+        if len(data)==0:
+            data=[['' for _ in headers]]
         super(IonTableModel, self).__init__(data, ('{:10.5f}','{:2d}', '{:12d}', '','{:4.2f}', '{:6.1f}', '{:4.2f}',
                '{:4.1f}', ''), ('m/z','z','intensity','fragment','error /ppm', 'S/N','quality', 'score', 'comment'))
         self._precRegion = precRegion
@@ -84,6 +93,8 @@ class IonTableModel(AbstractTableModel):
         '''
         if index.isValid():
             if role == Qt.DisplayRole:
+                if self._data[0][0] == '':
+                    return ''
                 col = index.column()
                 item = self._data[index.row()][col]
                 formatString = self._format[col]
@@ -108,6 +119,8 @@ class IonTableModel(AbstractTableModel):
         if role == Qt.ForegroundRole:
             col = index.column()
             item = self._data[index.row()][col]
+            if item == '':
+                return QtGui.QColor('k')
             if (col == 0) and (self._precRegion is not None):
                 if self._precRegion[0]<item<self._precRegion[1]:
                     return QtGui.QColor('red')
@@ -125,11 +138,14 @@ class IonTableModel(AbstractTableModel):
         return self._data[rowIndex]
 
     def addData(self, newRow):
+        if self._data[0][0] == '':
+            del self._data[0]
         self._data.append(newRow)
 
     def removeData(self, indexToRemove):
-        #self.removeRow(indexToRemove)
         del self._data[indexToRemove]
+        if len(self._data)==0:
+            self._data.append(['' for _ in self._headers])
 
     def updateData(self, newRow):
         for i, row in enumerate(self._data):

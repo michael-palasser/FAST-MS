@@ -208,6 +208,8 @@ class IntactStartDialogFull(IntactStartDialog):
         self._configHandler = ConfigurationHandlerFactory.getFullIntactHandler()
         #self.setupUi()
         self._widgets['noiseLimit'].setMinimum(0.01)
+        self._widgets['calibration'].stateChanged.connect(lambda: self.updateCal(self._widgets['calibration'].isChecked()))
+        self.updateCal(self._widgets['calibration'].isChecked())
 
     def getLabels(self):
         oldLabels = super(IntactStartDialogFull, self).getLabels()
@@ -254,6 +256,12 @@ class IntactStartDialogFull(IntactStartDialog):
 
     def checkSpectralDataFile(self, mode, fileName):
         return super(IntactStartDialog, self).checkSpectralDataFile(mode, fileName)
+
+    def updateCal(self, cal):
+        if cal:
+            self._widgets['calIons'].setEnabled(True)
+        else:
+            self._widgets['calIons'].setEnabled(False)
 
 class SpectrumComparatorStartDialog(AbstractDialog):
     '''

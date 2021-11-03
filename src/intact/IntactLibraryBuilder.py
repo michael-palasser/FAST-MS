@@ -15,13 +15,13 @@ class IntactLibraryBuilder(object):
     '''
     Responsible for creating list of theoretical values of intact ions
     '''
-    def __init__(self, sequName, modificationName):
+    def __init__(self, sequence, modificationName):
         '''
 
         :param (str) sequName: Name of the Sequence
         :param (str) modificationName: Name of the Modification
         '''
-        self._sequence = SequenceService().get(sequName)
+        self._sequence = sequence
         self._sequenceList = self._sequence.getSequenceList()
         self._molecule = MoleculeService().get(self._sequence.getMolecule())
         self._modifications = IntactIonService().getPatternWithObjects(modificationName, IntactModification)
@@ -29,6 +29,8 @@ class IntactLibraryBuilder(object):
 
     def getNeutralLibrary(self):
         return self._neutralLibrary
+    def getSequence(self):
+        self._sequence.getSequenceList()
 
     def createLibrary(self, patternCalc=False):
         '''

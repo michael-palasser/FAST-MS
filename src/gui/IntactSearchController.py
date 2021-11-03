@@ -3,7 +3,7 @@ Created on 21 Jul 2020
 
 @author: michael
 '''
-
+import subprocess
 import traceback
 import os
 from datetime import datetime
@@ -15,14 +15,14 @@ from PyQt5 import QtWidgets, QtCore
 
 from src import path
 from src.Exceptions import InvalidInputException
-from src.Services import IntactIonService
+from src.Services import IntactIonService, SequenceService
 from src.entities.Info import Info
 from src.entities.IonTemplates import IntactModification
 from src.gui.GUI_functions import connectTable
 from src.gui.IsotopePatternView import AddIonView
 from src.gui.widgets.InfoView import InfoView
 from src.intact.IntactAnalyser import IntactAnalyser
-from src.intact.IntactExcelWriter import IntactExcelWriter
+from src.intact.IntactExcelWriter import IntactExcelWriter, FullIntactExcelWriter
 from src.intact.IntactFinder import Calibrator
 from src.intact.IntactLibraryBuilder import IntactLibraryBuilder
 from src.intact.IntactSpectrumHandler import IntactSpectrumHandler
@@ -58,10 +58,9 @@ class IntactMainController(object):
         self._settings = dialog.newSettings()
         self._configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
         #self._propStorage = IntactSearchSettings(self._settings['sequName'], self._settings['modifications'])
-        #self.__sequence = SequenceService().get(sequName)
-        print(self._settings)
+        self._sequence = SequenceService().get(self._settings['sequName'])
         modification = IntactIonService().getPatternWithObjects(self._settings['modifications'], IntactModification)
-        self._info = Info(self._settings, self._configs, self._settings['sequName'], modification)
+        self._info = Info(self._settings, self._configs, self._sequence.getSequenceList(), modification)
         self._saved = False
         try:
             self._savedName = os.path.split(self._settings['spectralData'])[-1][:-4]
@@ -124,7 +123,7 @@ class IntactMainController(object):
         models intensities, fixes problems by overlapping ions (2 user inputs possible for deleting ions)
         '''
         print("\n********** Creating fragment library **********")
-        self._libraryBuilder = IntactLibraryBuilder(self._settings['sequName'], self._settings['modifications'])
+        self._libraryBuilder = IntactLibraryBuilder(self._sequence, self._settings['modifications'])
         self._libraryBuilder.createLibrary()
 
         """read existing ion-list file or create new one"""
@@ -166,7 +165,9 @@ class IntactMainController(object):
         self._spectrumHandler = IntactSpectrumHandler(self._settings)
         if self._settings['calibration']:
             self._calibrator = Calibrator(self._libraryBuilder.getNeutralLibrary(),self._settings)
-            calSpectrum = self._calibrator.calibratePeaks(self._spectrumHandler.getSpectrum())
+            self._calibrator.calibratePeaks(self._spectrumHandler.getSpectrum())
+            vals = self._calibrator.getCalibrationValues()
+            self._info.calibrate(vals[0], vals[1], self._calibrator.getQuality(), self._calibrator.getUsedIons())
         """Finding fragments"""
         print("\n********** Search for ions **********")
         start = time.time()
@@ -305,6 +306,7 @@ class IntactMainController(object):
         :param name:
         :return:
         '''
+        #if len(data)>0:
         tab = QtWidgets.QWidget()
         verticalLayout = QtWidgets.QVBoxLayout(tab)
         #tab.setLayout(_verticalLayout)
@@ -340,6 +342,7 @@ class IntactMainController(object):
         Makes an ion table
         '''
         tableModel = IonTableModel(data, None, self._configs['shapeMarked'], self._configs['scoreMarked'])
+
         """self.proxyModel = QSortFilterProxyModel()
         self.proxyModel.setSourceModel(model)"""
         table = QtWidgets.QTableView(parent)
@@ -506,7 +509,8 @@ class IntactMainController(object):
         '''
         Exports the results to a xlsx file
         '''
-        dlg = ExportDialog(self._mainWindow, '')
+        lastOptions= ConfigurationHandlerFactory.getExportHandler().getAll()
+        dlg = ExportDialog(self._mainWindow, (), lastOptions)
         dlg.exec_()
         if dlg and not dlg.canceled():
             self._info.export()
@@ -524,14 +528,18 @@ class IntactMainController(object):
             parameters.update(self._settings)
             parameters.update(self._configs)
             del parameters['spectralData']
-            excelWriter = IntactExcelWriter(output)
-            analyser = IntactAnalyser([[self._intensityModeller.getObservedIons()]])
-            avCharges, avErrors, stddevs = analyser.calculateAvChargeAndError()
+            excelWriter = FullIntactExcelWriter(output, self._configs, newOptions)
+            analyser = IntactAnalyser([[self._intensityModeller.getObservedIons().values()]])
+            #avCharges, avErrors, stddevs = analyser.calculateAvChargeAndError()
             try:
-                excelWriter.writeAnalysis(parameters, analyser.getSortedIonList(),
-                                          avCharges, avErrors, stddevs, [self._calibrator.getCalibrationValues()],
-                                          analyser.calculateAverageModification(),
-                                          analyser.calculateModifications())
+                excelWriter.toExcel(analyser, self._intensityModeller, self._sequence.getSequenceList(),
+                                    self._libraryBuilder.getNeutralLibrary(), self._settings, self._spectrumHandler,
+                                    self._info.toString())
+                print("********** saved in:", output, "**********\n")
+                try:
+                    subprocess.call(['open', output])
+                except:
+                    pass
                 print("saved in:", output)
             except:
                 traceback.print_exc()

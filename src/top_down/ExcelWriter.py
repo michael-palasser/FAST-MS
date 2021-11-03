@@ -21,6 +21,7 @@ class BasicExcelWriter(object):
         self._worksheet1 = self._workbook.add_worksheet('analysis')
         self._percentFormat = self._workbook.add_format({'num_format': '0.0%'})
         self._format2digit = self._workbook.add_format({'num_format': '0.00'})
+        self._intact = False
 
     def writeDate(self):
         date = datetime.now().strftime("%d/%m/%Y %H:%M")
@@ -430,7 +431,7 @@ class ExcelWriter(BasicExcelWriter):
         worksheet.write_row(row,col,('m/z','z','intensity','fragment','error','used'))
         row += 1
         for ion in ionList:
-            if ion.getType() in self._configs['interestingIons']:
+            if self._intact or ion.getType() in self._configs['interestingIons']:
                 for peak in ion.getIsotopePattern():
                     worksheet.write(row, col, peak['m/z'], self._format5digit)
                     worksheet.write(row,col+1,ion.getCharge())
@@ -451,7 +452,7 @@ class ExcelWriter(BasicExcelWriter):
         self._worksheet6.write_row(0, 0, ('name', 'formula', 'searched charge st.'))
         row =1
         for fragment in listOfFragments:
-            if fragment.getType() in self._configs['interestingIons']:
+            if self._intact or fragment.getType() in self._configs['interestingIons']:
                 self._worksheet6.write(row, 0, fragment.getName())
                 self._worksheet6.write(row, 1, fragment.getFormula().toString())
                 #self._worksheet6.write(row, 2, self.listToString(chargeStates[fragment.getName()]))

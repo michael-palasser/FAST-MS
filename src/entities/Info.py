@@ -37,6 +37,14 @@ class Info(object):
         self._infoString += '* Sequence:\n\t' + ', '.join(sequenceList)
         self._infoString += '\n* Modification: ' + modification.toString()
 
+    def calibrate(self, values, errors, quality, usedIons):
+        self._infoString += '\n* Spectrum calibrated: m/z_cal = a * m/z + b * m/z + c'
+        for i, var in enumerate(['a','b','c']):
+            self._infoString += '\n\t'+var + ' = {} ± {}'.format(values[i], errors[i])
+        self._infoString += '\n\tquality: error std.dev. = {}, av. error = {}'.format(quality[0], quality[1])
+        self._infoString += '\n\tused ions: (' + '), ('.join([self.ionToString(ion) for ion in usedIons])+')'
+
+
     def searchFinished(self, mz):
         self._infoString += '\n* Search finished: ' + datetime.now().strftime("%d/%m/%Y %H:%M") +\
                             ';\tmax m/z: '+str(mz) + '\n'

@@ -26,14 +26,14 @@ class Calibrator(object):
         self._ionData = self._finder.readFile(settings['calIons'])[0]
         errorLimit = settings['errorLimitCalib']
         assignedIons = self._finder.findIonsInSpectrum(0, errorLimit, self._ionData)
-        self._calibrationValues, self._pcov, self._quality, self._usedIons = \
+        self._calibrationValues, self._errors, self._quality, self._usedIons = \
             self._finder.findCalibrationFunction(assignedIons, errorLimit, settings['maxStd'])
 
     def getCalibrationValues(self):
-        return self._calibrationValues
+        return self._calibrationValues, self._errors
 
     def getQuality(self):
-        return self._quality[0], self._quality[1], self._pcov
+        return self._quality
 
     def getUsedIons(self):
         return self._usedIons
@@ -380,7 +380,7 @@ class Finder(object):
             #if np.average(np.abs(errorList)) < 1.0 and np.std(errorList) < 2.0:  # ToDo: to parameters
             if np.std(errorList) < maxStd:  # ToDo: to parameters
                 break
-        return solution, pcov, (np.average(np.abs(errorList)), np.std(errorList)), usedIons
+        return solution, np.sqrt(np.diag(pcov)), (np.average(np.abs(errorList)), np.std(errorList)), usedIons
 
 
     def findCalibrationFunctionManually(self,ionList):

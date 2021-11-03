@@ -985,7 +985,7 @@ class SpectrumHandler(AbstractSpectrumHandler):
                     lowestErrorPeak = peak
             logging.debug('Selected Peak: '+'\t'+str(lowestErrorPeak[0])+'\t'+ str(lowestErrorPeak[1])+'\t'+
                           str(theoPeak['calcInt'])+'\t'+str(lowestError))
-            return (lowestErrorPeak[0], lowestErrorPeak[1], theoPeak['calcInt'], lowestError, True)
+            return (lowestErrorPeak[0], lowestErrorPeak[1], theoPeak['calcInt'], lowestError, True)"""
 
     def setSearchedChargeStates(self, searchedZStates):
-        self._searchedChargeStates = searchedZStates"""
+        self._searchedChargeStates = searchedZStates

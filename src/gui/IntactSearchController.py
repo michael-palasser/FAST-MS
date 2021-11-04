@@ -252,7 +252,8 @@ class IntactMainController(object):
         self._mainWindow.createMenuBar()
         self._actions = dict()
         _,actions = self._mainWindow.createMenu("File", {#'Save': (self.saveAnalysis, None, "Ctrl+S"),
-                                'Export': (self.export,None,None), 'Close': (self.close,None,"Ctrl+Q")}, None)
+                                'Export and Analysis': (self.export,'Analyses and exports the results to Excel',None),
+                                'Close': (self.close,None,"Ctrl+Q")}, None)
         self._actions.update(actions)
         _,actions = self._mainWindow.createMenu("Edit", {'Repeat ovl. modelling':
                             (self.repeatModellingOverlaps,'Repeat overlap modelling involving user inputs',None),
@@ -331,7 +332,6 @@ class IntactMainController(object):
         # _scrollArea.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         # _scrollArea.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         table = self.makeTable(scrollArea, data, fun)
-
         table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         scrollArea.setWidget(table)
@@ -509,12 +509,13 @@ class IntactMainController(object):
         '''
         Exports the results to a xlsx file
         '''
-        lastOptions= ConfigurationHandlerFactory.getExportHandler().getAll()
-        dlg = ExportDialog(self._mainWindow, (), lastOptions)
+        exportConfigHandler = ConfigurationHandlerFactory.getIntactExportHandler()
+        dlg = ExportDialog(self._mainWindow, (), exportConfigHandler.getAll())
         dlg.exec_()
         if dlg and not dlg.canceled():
             self._info.export()
             newOptions = dlg.getOptions()
+            exportConfigHandler.write(newOptions)
             outputPath, filename = dlg.getDir(), dlg.getFilename()
             if filename == '':
                 inputFileName = os.path.split(self._settings['spectralData'])[-1]
@@ -532,9 +533,8 @@ class IntactMainController(object):
             analyser = IntactAnalyser([[self._intensityModeller.getObservedIons().values()]])
             #avCharges, avErrors, stddevs = analyser.calculateAvChargeAndError()
             try:
-                excelWriter.toExcel(analyser, self._intensityModeller, self._sequence.getSequenceList(),
-                                    self._libraryBuilder.getNeutralLibrary(), self._settings, self._spectrumHandler,
-                                    self._info.toString())
+                excelWriter.toExcel(analyser, self._intensityModeller, self._libraryBuilder.getNeutralLibrary(),
+                                    self._settings, self._spectrumHandler, self._info.toString())
                 print("********** saved in:", output, "**********\n")
                 try:
                     subprocess.call(['open', output])

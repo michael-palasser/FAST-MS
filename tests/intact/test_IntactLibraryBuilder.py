@@ -16,9 +16,9 @@ class TestIntactLibraryBuilder(TestCase):
             self.initLibrary()
 
     def initLibrary(self):
-        self.builderRNA = IntactLibraryBuilder('dummyRNA', '-')
-        self.builderRNA_CMCT = IntactLibraryBuilder('dummyRNA', 'CMCT')
-        self.builderProt = IntactLibraryBuilder('dummyProt', '-')
+        self.builderRNA = IntactLibraryBuilder(SequenceService().get('dummyRNA'), '-')
+        self.builderRNA_CMCT = IntactLibraryBuilder(SequenceService().get('dummyRNA'), 'CMCT')
+        self.builderProt = IntactLibraryBuilder(SequenceService().get('dummyProt'), '-')
 
 
     """def test_create_library(self):

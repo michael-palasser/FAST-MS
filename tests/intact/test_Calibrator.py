@@ -3,6 +3,7 @@ from copy import deepcopy
 from unittest import TestCase
 
 from src import path
+from src.Services import SequenceService
 from src.intact.IntactFinder import Calibrator
 from src.intact.IntactLibraryBuilder import IntactLibraryBuilder
 from src.intact.IntactSpectrumHandler import IntactSpectrumHandler
@@ -28,7 +29,7 @@ def getTestIntactSettings():
     return settings
 
 def getTestIntactLibraryBuilder(settings):
-    libraryBuilder = IntactLibraryBuilder(settings['sequName'], settings['modifications'])
+    libraryBuilder = IntactLibraryBuilder(SequenceService().get(settings['sequName']), settings['modifications'])
     libraryBuilder.createLibrary()
     libraryBuilder.addNewIsotopePattern()
     return libraryBuilder
@@ -52,11 +53,13 @@ class TestCalibrator(TestCase):
 
         #self._SNAP_list = os.path.join(path, 'tests', 'intact', '2511_RIO_test_0.txt')
         try:
-            self._calibrator = Calibrator(IntactLibraryBuilder(configHandlerRNA.get('sequName'), 'CMCT').createLibrary(),
+            self._calibrator = Calibrator(IntactLibraryBuilder(SequenceService().get(configHandlerRNA.get('sequName')),
+                                                               'CMCT').createLibrary(),
                        configHandlerRNA.getAll())
         except:
             initTestSequences()
-            self._calibrator = Calibrator(IntactLibraryBuilder(configHandlerRNA.get('sequName'), 'CMCT').createLibrary(),
+            self._calibrator = Calibrator(IntactLibraryBuilder(SequenceService().get(configHandlerRNA.get('sequName')),
+                                                               'CMCT').createLibrary(),
                        configHandlerRNA.getAll())
 
     def test_init(self):

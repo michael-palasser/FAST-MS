@@ -45,7 +45,9 @@ def run():
     #with open(spectralFile) as f:
     #    finder.readData(f)
     finder.readData(settings['spectralData'])
-    listOfCalibrationVals = finder.calibrateAll()
+    listOfCalibrationVals = None
+    if settings['calibration']:
+        listOfCalibrationVals = finder.calibrateAll()
 
     """find ions"""
     print("\n********** finding ions **********")
@@ -60,17 +62,20 @@ def run():
         output = os.path.join(path, 'Spectral_data','intact', output + '.xlsx')
     listOfParameters = []
     for file in settings['spectralData']:
-        parameters = {'data:':file,'date:':datetime.now().strftime("%d/%m/%Y %H:%M")}
+        parameters = {'date:':datetime.now().strftime("%d/%m/%Y %H:%M"), 'data:':file}
         parameters.update(settings)
         del parameters['spectralData']
         listOfParameters.append(parameters)
     excelWriter = IntactExcelWriter(output)
     avCharges, avErrors, stddevs = analyser.calculateAvChargeAndError()
+    abundanceInput = False
+    if settings['inputMode'] != 'intensities':
+        abundanceInput = True
     try:
         excelWriter.writeIntactAnalysis(listOfParameters, analyser.getSortedIonList(),
                                         avCharges, avErrors, stddevs, listOfCalibrationVals,
-                                        analyser.calculateAverageModification(),
-                                        analyser.calculateModifications())
+                                        analyser.calculateAverageModification(abundanceInput),
+                                        analyser.calculateModifications(abundanceInput))
         print("saved in:", output)
     except:
         traceback.print_exc()

@@ -13,6 +13,9 @@ from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 noiseLimit = ConfigurationHandlerFactory.getTD_SettingHandler().get('noiseLimit')
 
 class Ion(ABC):
+    '''
+    Abstract superclass for ions
+    '''
     def getName(self):
         pass
 
@@ -168,7 +171,6 @@ class Fragment(object):
     '''
     Uncharged fragment
     '''
-
     def __init__(self, type, number, modification, formula, sequence, radicals):
         '''
         :param (str) type: typically a, b, c, d, w, x, y or z
@@ -264,6 +266,9 @@ class FragmentIon(Fragment, Ion):
         :param (int) charge: abs of ion _charge
         :param (ndarray) isotopePattern: structured numpy-array: [m/z, intensity, m/z_theo, calcInt, error (ppm), used (for modelling)]
         :param (float) noise: noise level in the m/z area of the ion, calculated by calculateNoise function in SpectrumHandler
+        :param (float) quality: quality error of the ion (optional)
+        :param (bool) calculate: intensity, error and score are calculated if true (for loading old search) (optional)
+        :param (str) comment: comment of ion (optional)
         '''
         super().__init__(fragment._type, fragment._number, fragment._modification,
                          fragment._formula, fragment._sequence, fragment._radicals, )
@@ -423,15 +428,16 @@ class FragmentIon(Fragment, Ion):
 
 
 class IntactNeutral(object):
+    '''
+    Class which represents a neutral intact species
+    '''
     def __init__(self, sequName, modification, nrOfModifications, formula, radicals):
         '''
-        :param (str) name: name of the ion
-        :param (str) modification: modification/ligand/loss
-        :param (float) mz: monoisotopic m/z
-        :param (float) theoMz: theoretical (calculated) m/z
-        :param (int) charge: charge
-        :param (float) intensity: intensity or relative abundance
-        :param (int) nrOfModifications: nr. of modifications on ion
+        :param (str) sequName: name of the sequence
+        :param (str) modification: modification/ligand/loss/adduct
+        :param (int) nrOfModifications: no. of modifications on ion
+        :param (MolecularFormula) formula: molecular formula of the species
+        :param (int) radicals: no. of radicals on species
         '''
         self._sequName = sequName
         self._modification = modification
@@ -482,11 +488,15 @@ class IntactIon(IntactNeutral, Ion):
     '''
     def __init__(self, neutral, monoisotopic, charge, isotopePattern, noise, quality=None, calculate=False, comment=''):
         '''
-        Constructor
-        :param (Fragment) fragment
+
+        :param (IntactNeutral) neutral: neutral version of ion
+        :param (float) monoisotopic: theoretical monoisotopic m/z
         :param (int) charge: abs of ion _charge
         :param (ndarray) isotopePattern: structured numpy-array: [m/z, intensity, m/z_theo, calcInt, error (ppm), used (for modelling)]
         :param (float) noise: noise level in the m/z area of the ion, calculated by calculateNoise function in SpectrumHandler
+        :param (float) quality: quality error of the ion (optional)
+        :param (bool) calculate: intensity, error and score are calculated if true (for loading old search) (optional)
+        :param (str) comment: comment of ion (optional)
         '''
         super(IntactIon, self).__init__(neutral.getSequName(), neutral.getModification(),
                                             neutral.getNrOfModifications(), neutral.getFormula(), neutral.getRadicals())
@@ -511,8 +521,7 @@ class SimpleIntactIon(IntactNeutral):
     '''
     Simplified ion for assignment in intact ion list
     '''
-    def __init__(self, sequName, modification, mz,theoMz, charge, intensity, nrOfModifications, radicals,
-                 isotopePattern=None):
+    def __init__(self, sequName, modification, mz,theoMz, charge, intensity, nrOfModifications, radicals):
         '''
         :param (str) name: name of the ion
         :param (str) modification: modification/ligand/loss
@@ -520,7 +529,8 @@ class SimpleIntactIon(IntactNeutral):
         :param (float) theoMz: theoretical (calculated) m/z
         :param (int) charge: charge
         :param (float) intensity: intensity or relative abundance
-        :param (int) nrOfModifications: nr. of modifications on ion
+        :param (int) nrOfModifications: no. of modifications on ion
+        :param (int) radicals: no. of radicals on ion
         '''
         super(SimpleIntactIon, self).__init__(sequName, modification, nrOfModifications, '', radicals) #ToDo: Radicals
         self._mz = mz

@@ -47,16 +47,21 @@ class IntactAnalyser(object):
             listOfStddevOfErrors.append(stddevOfErrors)
         return listOfAverageCharges, listOfAverageErrors, listOfStddevOfErrors
 
-    def calculateAverageModification(self):
+    def calculateAverageModification(self, useAbundance=False):
         '''
-        Calculates average numbers of modifications for each charge of each spectrum in each file
-        :return: (list[list[dict[int,float]]]) list of {charge:av.modification}
+        Calculates average numbers of modifications for each charge  and in total of each spectrum in each file
+        :return: (list[list[dict[int,float]]] , list[list[float]]) tuple of list of {z:av.modification per z} and
+            list of av.modification
         '''
         listOfAverageModifications = []
+        listOfTotalAverageModifications = []
         for ionlists in self._listOfIonLists:
             averageModifications = list()
+            totalAverageModifications = []
             for ionList in ionlists:
                 averageModificationPerZ = dict()
+                totalModified = 0
+                total = 0
                 for ion in ionList:
                     charge = ion.getCharge()
                     intensity = ion.getIntensity()
@@ -64,11 +69,19 @@ class IntactAnalyser(object):
                         averageModificationPerZ[charge] += np.array([float(ion.getNrOfModifications()) * intensity, intensity])
                     else:
                         averageModificationPerZ[charge] = np.array([float(ion.getNrOfModifications()) * intensity, intensity])
+                    if useAbundance:
+                        totalModified += float(ion.getNrOfModifications()) * intensity / charge
+                        total += intensity / charge
+                    else:
+                        totalModified += float(ion.getNrOfModifications()) * intensity
+                        total += intensity
                 for z,val in averageModificationPerZ.items():
                     averageModificationPerZ[z] = val[0]/val[1]  #ToDo: check if robust
                 averageModifications.append(averageModificationPerZ)
+                totalAverageModifications.append(totalModified/total)
             listOfAverageModifications.append(averageModifications)
-        return listOfAverageModifications
+            listOfTotalAverageModifications.append(totalAverageModifications)
+        return listOfAverageModifications, listOfTotalAverageModifications
 
     def makeChargeArray(self):
         '''
@@ -80,38 +93,53 @@ class IntactAnalyser(object):
             arr[i][0] = self._minCharge + i
         return arr
 
-    def calculateModifications(self):
+    def calculateModifications(self, useAbundance=False):
         '''
-        Calculates the abundance of each modification for each charge state in each spectrum in each file
-        :return: (list[list[dict[str,ndarray(dtype=(int,float)])]]) list of dicts {modification: array([charge, percentage])}
+        Calculates the abundance of each modification for each charge state and in total in each spectrum in each file
+        :return: (list[list[dict[str,ndarray(dtype=(int,float)])]], list[list[dict[str,float]]]) tuple of
+            list of dicts of proportion of a modification per charge {modification: array([charge, percentage])}
+            list of dicts of proportion of a modification {modification: percentage}
         '''
+        listOfModificationsPerZInSpectra = []
         listOfModificationsInSpectra = []
         for ionlists in self._listOfIonLists:
+            modificationsPerZInSpectra = list()
             modificationsInSpectra = list()
             #avOfModInSpectra = list()
             for ionList in ionlists:
-                modifications = dict()
+                modificationsPerZ = dict()
                 intensitiesPerCharge = self.makeChargeArray()
                 for ion in ionList:
-                    if ion.getModification() not in modifications:
-                        modifications[ion.getModification()] = self.makeChargeArray()
-                    modifications[ion.getModification()][ion.getCharge() - self._minCharge][1] = ion.getIntensity()
+                    if ion.getModification() not in modificationsPerZ:
+                        modificationsPerZ[ion.getModification()] = self.makeChargeArray()
+                    modificationsPerZ[ion.getModification()][ion.getCharge() - self._minCharge][1] = ion.getIntensity()
                     intensitiesPerCharge[ion.getCharge() - self._minCharge][1] += ion.getIntensity()
                 nonZero = np.where(intensitiesPerCharge[:,1] != 0)
                 dataLength = len(intensitiesPerCharge[nonZero])
                 #averageOfModifications = dict()
-                modifications2 = dict()
-                for mod,arr in modifications.items():
+                modificationsPerZ2 = dict()
+                modifications = dict()
+                if useAbundance:
+                    total = np.sum(intensitiesPerCharge[:,1]/intensitiesPerCharge[:,0])
+                else:
+                    total = np.sum(intensitiesPerCharge[:,1])
+                for mod,arr in modificationsPerZ.items():
                     newArr = np.zeros((dataLength,2))
                     for i in range(dataLength):
                         newArr[i] = [intensitiesPerCharge[nonZero][i,0],
                                      arr[nonZero][i,1]/intensitiesPerCharge[nonZero][i,1]]
                     #averageOfModifications[mod] = np.average(newArr[:,1])
-                    modifications2[mod] = newArr
-                modificationsInSpectra.append(modifications2)
+                    modificationsPerZ2[mod] = newArr
+                    if useAbundance:
+                        modifications[mod] = np.sum(arr[:,1]/arr[:,0])/ total
+                    else:
+                        modifications[mod] = np.sum(arr[:,1])/ total
+                modificationsPerZInSpectra.append(modificationsPerZ2)
+                modificationsInSpectra.append(modifications)
                 #avOfModInSpectra.append(averageOfModifications)
+            listOfModificationsPerZInSpectra.append(modificationsPerZInSpectra)
             listOfModificationsInSpectra.append(modificationsInSpectra)
-        return listOfModificationsInSpectra
+        return listOfModificationsPerZInSpectra, listOfModificationsInSpectra
 
     def getSortedIonList(self):
         '''

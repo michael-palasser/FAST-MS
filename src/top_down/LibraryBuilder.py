@@ -224,7 +224,6 @@ class FragmentLibraryBuilder(object):
         '''
         Calls calculateIsotopePattern() function (class MolecularFormula). Calculation is parallelized if length of
         (precursor) sequence is longer than criticalLength (depends on type of molecule)
-        :param (Callable) fun:
         :return (list[Fragment]) list of fragments with isotope patterns
         '''
         """factor = 1

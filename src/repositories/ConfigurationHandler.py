@@ -41,7 +41,7 @@ class ConfigHandler(object):
             #try:
             return self.__parameters[key]
             #except:
-            #    return ''
+            #    return 'intensities'
         raise Exception("Parameter",key, "does not exist")
 
     def write(self, parameters):
@@ -87,6 +87,10 @@ class ConfigurationHandlerFactory(object):
     @staticmethod
     def getExportHandler():
         return ConfigHandler(join(dataPath, "export_options.json"))
+
+    @staticmethod
+    def getIntactExportHandler():
+        return ConfigHandler(join(dataPath, "export_options_intact.json"))
 
     @staticmethod
     def getIntactHandler():

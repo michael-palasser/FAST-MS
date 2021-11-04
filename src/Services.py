@@ -541,7 +541,7 @@ class IntactIonService(AbstractServiceForPatterns):
     def getFormula(self, item):
         '''
         Returns the molecular formula of an intact modification (IntactModification)
-        :param (tuple[str,str,str,int,int]) item: corresponding intact modification
+        :param (tuple[str,str,str,int,int,int]) item: corresponding intact modification
         :return: (MolecularFormula) formula
         '''
         return IntactModification(item).getFormula()

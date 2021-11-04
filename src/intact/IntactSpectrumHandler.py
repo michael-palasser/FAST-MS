@@ -12,7 +12,7 @@ class IntactSpectrumHandler(AbstractSpectrumHandler):
         '''
         Constructor, also processes spectrum
         :param (dict[str,Any]) settings: search settings
-        :param (set[tuple[float]] | None) peaks: set of peak tuples (m/z, I)
+        :param (set[tuple[float]] | None) peaks: set of peak tuples (m/z, I) (optional)
         '''
         mode = 1
         if settings['sprayMode'] == 'negative':
@@ -24,8 +24,6 @@ class IntactSpectrumHandler(AbstractSpectrumHandler):
         '''
         Calculates possible charge states (z) in the given m/z window
         :param (float) mass: mass of the unmodified species
-        :param (float) minMz: minimal m/z
-        :param (float) maxMz: maximum m/z
         :return: (generator) range between lowest possible z and highest possible z
         '''
         return range(int(mass/self._settings['maxMz'])+1, int(mass/self._settings['minMz'])+1)
@@ -38,7 +36,7 @@ class IntactSpectrumHandler(AbstractSpectrumHandler):
         3. If found noise is calculated and the isotope peaks which could theoretically be above the noise are calculated:
             Programm searches for these peaks in spectrum
             If all isotope peaks are calculated to be below noise threshold, ion is added to deleted ion (comment = noise)
-        :param (list) fragmentLibrary: list of Fragment-objects
+        :param (list[Neutral]) neutralLibrary: list of possible neutral species
         '''
         np.set_printoptions(suppress=True)
         sortedMasses = sorted([neutral.getIsotopePattern()['m/z'][0] for neutral in neutralLibrary])

@@ -16,8 +16,8 @@ def initFinders():
     configHandlerProt = initConfigurations()
     configHandlerProt.update('sprayMode','positive')
     configHandlerProt.update('sequName', 'dummyProt')
-    finderRNA = Finder(IntactLibraryBuilder(configHandlerRNA.get('sequName'), 'CMCT').createLibrary(), configHandlerRNA.getAll())
-    finderProt = Finder(IntactLibraryBuilder(configHandlerProt.get('sequName'), '-').createLibrary(), configHandlerProt.getAll())
+    finderRNA = Finder(IntactLibraryBuilder(SequenceService().get(configHandlerRNA.get('sequName')), 'CMCT').createLibrary(), configHandlerRNA.getAll())
+    finderProt = Finder(IntactLibraryBuilder(SequenceService().get(configHandlerProt.get('sequName')), '-').createLibrary(), configHandlerProt.getAll())
     return finderRNA, configHandlerRNA, finderProt, configHandlerProt
 
 def initConfigurations():

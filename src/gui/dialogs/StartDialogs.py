@@ -147,7 +147,7 @@ class IntactStartDialog(DialogWithTabs, StartDialog):
         self._verticalLayout.addWidget(self.makeButtonWidget(self), 0, QtCore.Qt.AlignRight)
 
     def getLabels(self):
-        return (("Sequence Name", "Modifications", "Spectral File", "Spray Mode", 'Autocalibration', "Output"),
+        return (("Sequence Name", "Modifications", "Spectral File", "Spray Mode", 'Input Mode', 'Autocalibration', "Output"),
                 ("min. m/z", "max. m/z", "max. raw error", 'max. std.dev.', "slope (k) of error", "intercept (d) of error"))
 
     def getWidgets(self, sequences, modPatterns):
@@ -159,6 +159,7 @@ class IntactStartDialog(DialogWithTabs, StartDialog):
                                 "Plain Text Files (*txt);;All Files (*)"),
                  "Name of the file with unassigned ions (txt format)"),
                  "sprayMode": (createComboBox(self._settingTab, ("negative", "positive")), "Spray mode"),
+                 "inputMode": (createComboBox(self._settingTab, ("intensities", "abundances (int./z)")), "Spectral data will be autocalibrated if option is ticked"),
                  "calibration": (QtWidgets.QCheckBox(), "Spectral data will be autocalibrated if option is ticked"),
                  "output": (QtWidgets.QLineEdit(self._settingTab),
                             "Name of the output txt file\ndefault: name of spectral pattern file + _out.txt")},

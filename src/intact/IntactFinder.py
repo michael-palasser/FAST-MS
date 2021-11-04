@@ -20,7 +20,7 @@ class Calibrator(object):
     def __init__(self, theoValues, settings):
         '''
         :param (list[IntactNeutral]) theoValues: library of neutrals
-        :param configHandler: (ConfigHandler) configurationHandler for intact ions
+        :param (dict[str,Any]) settings: settings
         '''
         self._finder = Finder(theoValues, settings)
         self._ionData = self._finder.readFile(settings['calIons'])[0]

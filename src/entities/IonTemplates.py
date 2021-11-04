@@ -177,7 +177,7 @@ class IntactPattern(PatternWithItems):
     def __init__(self,  name, items, id):
         '''
         :param (str) name: name of the pattern
-        :type items: list[IntactModification] | list[tuple[str,str,str,int,int]] | list[list[str,str,str,int,int]]
+        :type items: list[IntactModification] | list[tuple[str,str,str,int,int,int]] | list[list[str,str,str,int,int,int]]
         :param items: list of modification templates
         :param (int | None) id:
         '''
@@ -196,12 +196,10 @@ class IntactModification(AbstractItem2):
     '''
     def __init__(self, item):
         '''
-        :param (tuple[str,str,str,int,int] | list[str,str,str,int,int]) item: name, atomic gain, atomic loss,
-            nr. of modifications on object, enabled
+        :param (tuple[str,str,str,int,int, int] | list[str,str,str,int,int, int]) item: name, atomic gain, atomic loss,
+            no. of modifications on object, radicals, enabled
         '''
-        print('1',item)
         item = self.processItem(item)
-        print('2',item)
         super(IntactModification, self).__init__(name=item[0], gain=item[1], loss=item[2], radicals=item[4], enabled=item[5])
         self._nrMod = item[3]
 
@@ -210,6 +208,5 @@ class IntactModification(AbstractItem2):
 
     def toString(self):
         parentVals = super(IntactModification, self).toString()
-        print(parentVals[0:-2]+[str(self._nrMod), parentVals[-2:-1]])
         return parentVals[0:-2]+[str(self._nrMod)]+ parentVals[-2:-1]
 

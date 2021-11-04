@@ -258,7 +258,8 @@ class TD_MainController(object):
         self._mainWindow.createMenuBar()
         self._actions = dict()
         _,actions = self._mainWindow.createMenu("File", {'Save': (self.saveAnalysis, None, "Ctrl+S"),
-                                'Export': (self.export,None,None), 'Close': (self.close,None,"Ctrl+Q")}, None)
+                                                         'Export': (self.export,'Exports the results to Excel',None),
+                                                         'Close': (self.close,None,"Ctrl+Q")}, None)
         self._actions.update(actions)
         _,actions = self._mainWindow.createMenu("Edit", {'Repeat ovl. modelling':
                             (self.repeatModellingOverlaps,'Repeat overlap modelling involving user inputs',None),

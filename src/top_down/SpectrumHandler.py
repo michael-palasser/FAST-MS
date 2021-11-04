@@ -44,6 +44,9 @@ def getMz(mass, z, radicals):
         return abs(mass) + radicals*(eMass + protMass)
 
 class AbstractSpectrumHandler(ABC):
+    '''
+    Abstract superclass for reading a spectrum (peak list), calculating the noise and finding isotope peaks
+    '''
     def __init__(self, settings, spraymode, IonClass, peaks=None):
         self._settings = settings
         self._sprayMode = spraymode
@@ -83,19 +86,6 @@ class AbstractSpectrumHandler(ABC):
 
     def getSprayMode(self):
         return self._sprayMode
-
-    def getSpectrum(self, *args):
-        '''
-        Returns either full or part of spectrum (peak list)
-        :param (tuple of float) args: if args (lowerbound, upperbound), just part of the spectrum is returned
-        :return: (ndarray(dtype=float, ndim=2)) spectrum
-        '''
-        if args and args[1]:
-            return self._spectrum[np.where((self._spectrum[:, 0] > args[0]) & (self._spectrum[:, 0] < args[1]))]
-        return self._spectrum
-
-    def setSpectrum(self, spectrum):
-        self._spectrum = spectrum
 
     def getUpperBound(self):
         return self._upperBound
@@ -465,7 +455,7 @@ class AbstractSpectrumHandler(ABC):
 
 class SpectrumHandler(AbstractSpectrumHandler):
     '''
-    Reads spectra, calculates noise and finds peaks in spectrum
+    Reads a top-down spectrum (peak list), calculates noise and finds peaks in the spectrum
     '''
     #ToDo:
     basicAA = {'H': 3, 'R': 10, 'K': 10,

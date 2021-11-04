@@ -62,7 +62,7 @@ class IntactRepository(AbstractRepositoryWithItems):
         Returns the subsidiary intact modification entries of a intact pattern entry
         :param (int) patternId: parent id
         :param (str) table: subtable which contains subsidiary entries
-        :return: (list[list[str,str,str,int,int]])
+        :return: (list[list[str,str,str,int,int,int]])
         '''
         listOfItems = list()
         for item in super(IntactRepository, self).getItems(patternId, [key for key in self._itemDict.keys()][0]):

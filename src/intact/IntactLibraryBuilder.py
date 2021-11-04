@@ -35,6 +35,7 @@ class IntactLibraryBuilder(object):
     def createLibrary(self, patternCalc=False):
         '''
         creates a library of modified ions
+        :param (bool) patternCalc: True if the isotope pattern should be calculated
         :return: (list[IntactNeutral]) library of neutral molecules
         '''
         unmodFormula = self.getUnmodifiedFormula()
@@ -68,8 +69,7 @@ class IntactLibraryBuilder(object):
         '''
         Calls calculateIsotopePattern() function (class MolecularFormula). Calculation is parallelized if length of
         (precursor) sequence is longer than criticalLength (depends on type of molecule)
-        :param (Callable) fun:
-        :return (list[Fragment]) list of fragments with isotope patterns
+        :return (list[IntactNeutral]) list of neutral species with isotope patterns
         '''
         """factor = 1
         if self.__sequence.getMolecule() == 'Protein':
@@ -99,9 +99,9 @@ class IntactLibraryBuilder(object):
     def calculateParallel(self, neutral):
         '''
         Calculates the isotope pattern
-        :type fragment: Fragment
-        :param fragment: fragment without isotopePattern
-        :return: (Fragment) fragment with isotopePattern
+        :type neutral: IntactNeutral
+        :param fragment: neutral species without isotopePattern
+        :return: (IntactNeutral)  neutral species with isotopePattern
         '''
         neutral.setIsotopePattern(neutral.getFormula().calculateIsotopePattern())
         #print(fragment.getName())

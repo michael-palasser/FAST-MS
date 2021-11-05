@@ -30,9 +30,9 @@ def run(mainWindow):
     :param (PyQt5.QtWidgets.QMainWindow | Any) mainWindow: Qt parent
     '''
     service = SequenceService()
-    sequenceName = 'neoRibo'
+    sequenceName = 'CR_1_3'
     sequence = service.get(sequenceName).getSequenceList()
-    modification = '+2DEPC+H2O-CO'
+    modification = '+CMCT'
     '''dlg = OccupancyRecalcStartDialog(mainWindow, service.getAllSequenceNames())
     dlg.exec_()
     if dlg and dlg.sequence != None:
@@ -42,8 +42,8 @@ def run(mainWindow):
 
     """import ion-list"""
     spectralFile = path + 'Spectral_data/Occupancies_in.csv'
-    with open(spectralFile, 'w') as f:
-        f.write("m/z,z,int,name")
+    #with open(spectralFile, 'w') as f:
+    #    f.write("m/z,z,int,name")
     subprocess.call(['open',spectralFile])
     '''start = QtWidgets.QMessageBox.question(mainWindow, 'Calculating Occupancies ',
         'Paste the ions (format: m/z, z, Int., fragment-name) in the csv-file and press "Ok"',

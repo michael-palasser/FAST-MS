@@ -5,9 +5,9 @@ Created on 20 Oct 2020
 '''
 import sys
 
-from PyQt5.QtWidgets import QApplication, QPushButton, QAction
+from PyQt5.QtWidgets import QApplication, QPushButton
 
-from src.gui.IntactSearchController import IntactMainController
+from src.gui.controller.IntactSearchController import IntactMainController
 from src.gui.IsotopePatternView import IsotopePatternView
 from src.gui.EditorController import *
 from src.gui.dialogs.ParameterDialogs import TD_configurationDialog
@@ -16,7 +16,7 @@ from src.gui.dialogs.StartDialogs import IntactStartDialog
 from src.top_down.OccupancyRecalculator import run as occupancyRecalculator
 from src.top_down.SpectrumComparator import run as spectrumComparator
 from src.intact.Main import run as IntactIonsSearch
-from src.gui.TD_searchController import TD_MainController
+from src.gui.controller.TD_searchController import TD_MainController
 
 
 

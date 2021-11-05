@@ -108,6 +108,7 @@ class SearchRepository(AbstractRepository):
             bar.update(1)
         searchedZStates = {ionVals[1]:ionVals[2] for ionVals in self.getItems(searchVals[0], 'chargeStates')}
         bar.update(2)
+        print(self.getItems(searchVals[0], 'logs'),searchVals[0])
         log = self.getItems(searchVals[0], 'logs')[0][1]
         bar.update(2)
         return Search(searchVals, ions, delIons, remIons, searchedZStates, log)
@@ -136,6 +137,7 @@ class SearchRepository(AbstractRepository):
         self.insertItems(searchId, search.getIons(), 0)
         self.insertItems(searchId, search.getDeletedIons(), 1)
         self.insertItems(searchId, search.getRemIons(), 2)
+        print(search.getInfo())
         self.createItem('logs', (search.getInfo(), searchId))
         [self.createItem('chargeStates', [frag,zList, searchId]) for frag,zList in search.getSearchedZStates().items()]
 
@@ -196,7 +198,7 @@ class SearchRepository(AbstractRepository):
         self.insertItems(searchId, search.getIons(), 0)
         self.insertItems(searchId, search.getDeletedIons(), 1)
         self.insertItems(searchId, search.getIons(), 2)
-        self.createItem('logs', (search.getInfo().toString(), searchId))
+        self.createItem('logs', (search.getInfo(), searchId))
 
     '''def update(self, vals): #ToDo
         """

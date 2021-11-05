@@ -1,10 +1,13 @@
+from functools import partial
 from math import log10
+import pandas as pd
 
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QTableWidget
 
 from src.Exceptions import InvalidInputException
+from src.gui.GUI_functions import connectTable
 
 
 class IonTableWidget(QTableWidget):
@@ -31,7 +34,7 @@ class IonTableWidget(QTableWidget):
         self.resizeColumnsToContents()
         #self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.setSortingEnabled(True)
-        #self.customContextMenuRequested['QPoint'].connect(partial(self.showOptions, self))
+        #connectTable(self, self.showOptions)
         # self.customContextMenuRequested['QPoint'].connect(partial(self.editRow, self, bools))
 
     def getIonValues(self):
@@ -87,25 +90,33 @@ class IonTableWidget(QTableWidget):
         copyAllAction = menu.addAction("Copy Table")
         copyAction = menu.addAction("Copy Cell")
         action = menu.exec_(table.viewport().mapToGlobal(pos))
-        #ToDo
+        vals = self.readTable()
         if action == copyAction:
             it = table.indexAt(pos)
             if it is None:
                 return
             selectedRow = it.row()
             selectedCol = it.column()
-            df = pd.DataFrame([self._ionValues[selectedRow][selectedCol]])
+            df = pd.DataFrame([vals[selectedRow][selectedCol]])
             df.to_clipboard(index=False, header=False)
         if action == copyAllAction:
-            df = pd.DataFrame(data=self._ionValues, columns=self.getHeaders())
+            df = pd.DataFrame(data=vals, columns=self.getHeaders())
             df.to_clipboard(index=False, header=True)'''
 
-
+    def readTable(self):
+        itemList = []
+        for row in range(self.rowCount()):
+            itemList.append([self.item(row, col).text() for col in range(len(self.getHeaders()))])
+        return itemList
 
 class IsoPatternIon(IonTableWidget):
     '''
     Interactive ion table table for isotope pattern tool.
     '''
+    def __init__(self, parent, ions, yPos):
+        super(IsoPatternIon, self).__init__(parent, ions, yPos)
+        connectTable(self, self.showOptions)
+
     def getFormat(self):
         return ['{:10.5f}','{:2d}', '{:12d}', '','{:4.2f}', '', '{:10.4f}','{:10.4f}']
 
@@ -151,6 +162,24 @@ class IsoPatternIon(IonTableWidget):
 
     def getIon(self, row):
         return self._ions[row]
+
+    def showOptions(self, table, pos):
+        menu = QtWidgets.QMenu()
+        copyAllAction = menu.addAction("Copy Table")
+        copyAction = menu.addAction("Copy Cell")
+        action = menu.exec_(table.viewport().mapToGlobal(pos))
+        vals = self.readTable()
+        if action == copyAction:
+            it = table.indexAt(pos)
+            if it is None:
+                return
+            selectedRow = it.row()
+            selectedCol = it.column()
+            df = pd.DataFrame([vals[selectedRow][selectedCol]])
+            df.to_clipboard(index=False, header=False)
+        if action == copyAllAction:
+            df = pd.DataFrame(data=vals, columns=self.getHeaders())
+            df.to_clipboard(index=False, header=True)
 
     '''def showOptions(self, table, pos):
         menu = QtWidgets.QMenu()

@@ -49,7 +49,7 @@ class TestFinder(TestCase):
             self.finderRNA, self.configRNA, self.finderProt, self.configProt = initFinders()
 
 
-    def test_read_data(self):
+    def test_read_file(self):
         self.finderRNA.readData([self.RNA_spectrum])
         self.assertEqual(4, len(self.finderRNA.getData()[0]))
         for spectrum in self.finderRNA.getData()[0]:
@@ -63,6 +63,10 @@ class TestFinder(TestCase):
         self.fail()'''
 
     def test_find_ions(self):
+        '''
+        Also tests findIonsInSpectrum
+        :return:
+        '''
         self.finderRNA.readData([self.RNA_spectrum])
         self.finderRNA.calibrateAll()
         for ionList in self.finderRNA.findIons(self.configRNA.get('k'), self.configRNA.get('d'), True)[0]:
@@ -71,7 +75,11 @@ class TestFinder(TestCase):
     '''def test_fun_parabola(self):
         self.fail()'''
 
-    def test_calibrate(self):
+    def test_calibrate_all(self):
+        '''
+        Also tests findCalibrationFunction
+        :return:
+        '''
         self.finderRNA.readData([self.RNA_spectrum])
         errors1 = []
         for ionList in self.finderRNA.findIons(0, 50)[0]:

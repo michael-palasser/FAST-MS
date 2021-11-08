@@ -42,7 +42,8 @@ def getCalibratedSpectrum():
     uncalibrated = deepcopy(spectrumHandler.getSpectrum())
     calSpectrum = calibrator.calibratePeaks(spectrumHandler.getSpectrum())
     return {'uncalibrated':uncalibrated, 'calSpectrum':calSpectrum, 'calibrator':calibrator,
-            'spectrumHandler':spectrumHandler,'settings':settings, 'libraryBuilder':libraryBuilder}
+            'spectrumHandler':spectrumHandler,'settings':settings, 'libraryBuilder':libraryBuilder,
+            'foundIons':calibrator.getFinder().findIonsInSpectrum(4.5,0.5, calibrator.getIonData())}
 
 class TestCalibrator(TestCase):
     def setUp(self):

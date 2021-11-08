@@ -130,13 +130,14 @@ class TD_configurationDialog(DialogWithTabs):
         self._widgets["d"].setMinimum(-9.99)
         #self._qualityBox = QtWidgets.QGroupBox(self._threshold1Tab)
         self._qualityBox = self.fillBox(self._threshold1Tab, "Quality thresholds",
-                                        ("quality (deletion)","quality (highlighting)","score (highlightening)"),
+                                        ("quality (deletion)","quality (highlighting)","score (highlighting)", 'SNR (deletion)'),
                                         {"shapeDel": (QtWidgets.QDoubleSpinBox(),
-                       "ions which have a higher value are deleted"),
+                       "ions which have a higher value will be deleted"),
                       "shapeMarked": (QtWidgets.QDoubleSpinBox(),
-                       "ions which have a higher value are highlighted"),
+                       "ions which have a higher value will be highlighted"),
                       "scoreMarked": (QtWidgets.QDoubleSpinBox(),
-                       "ions which have a higher value are highlighted")})
+                       "ions which have a higher value will be highlighted"),
+                      "SNR": (QtWidgets.QDoubleSpinBox(),"ions which have a lower value will be deleted")})
         self._noiseBox = self.fillBox(self._threshold2Tab, "noise calculation", ("window size", "noise threshold tolerance"),
                                       {"noiseWindowSize": (QtWidgets.QDoubleSpinBox(),
                                                  "window size for noise calculation"),

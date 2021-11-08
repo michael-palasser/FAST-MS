@@ -113,7 +113,29 @@ class TestIntensityModeller(TestCase):
 
 
     '''def test_process_ions(self):
-        self.fail()'''
+        configs = deepcopy(self.configs)
+        configs['SNR']=2
+        intensityModeller = IntensityModeller(configs)
+        peaksArrType = np.dtype([('m/z', np.float64), ('relAb', np.float64),
+                                 ('calcInt', np.float64), ('error', np.float32), ('used', np.bool_)])
+        for fragment in self.builder.getFragmentLibrary():
+            # isotopePattern = fragment.getIsotopePattern() *10**7
+            isotopePattern = deepcopy(fragment.getIsotopePattern())
+            intensities = isotopePattern['calcInt'] * 10 ** 7
+            # mzs = isotopePattern['m/z']
+            length = len(isotopePattern)
+            if not length % 2:
+                length -= 1
+            for i in range(length):
+                intensities[i] += 2 * 10 ** 3 * (-1) ** i
+
+            finIsoPattern = []
+            for i, peak in enumerate(isotopePattern):
+                finIsoPattern.append((peak['m/z'], intensities[i], peak['calcInt'], np.random.rand(), True))
+            finIsoPattern = np.array(finIsoPattern, dtype=peaksArrType)
+        
+        
+        intensityModeller.processIons()'''
 
     '''def test_process_noise_ions(self):
         self.fail()'''

@@ -18,8 +18,8 @@ class TestIntactSpectrumHandler(TestCase):
         d = getCalibratedSpectrum()
         d['spectrumHandler'].findIons(d['libraryBuilder'].getNeutralLibrary())
         foundIons = [(ion.getName(),ion.getCharge()) for ion in d['spectrumHandler'].getFoundIons()]
-        for ion in d['calibrator'].getUsedIons():
+        for ion in d['foundIons']:
             self.assertIn((ion.getName(),ion.getCharge()), foundIons)
-        for ion in d['spectrumHandler'].getFoundIons():
+        '''for ion in d['spectrumHandler'].getFoundIons():
             print(ion.getName(), ion.getCharge())
-        print(len(foundIons), len(d['spectrumHandler'].getFoundIons()))
+        print(len(foundIons), len(d['spectrumHandler'].getFoundIons()))'''

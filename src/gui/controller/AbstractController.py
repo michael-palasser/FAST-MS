@@ -10,30 +10,15 @@ from abc import ABC
 from datetime import datetime
 
 import numpy as np
-import time
 import pandas as pd
 from PyQt5 import QtWidgets, QtCore
 
 from src import path
-from src.Exceptions import InvalidInputException
-from src.Services import IntactIonService, SequenceService
-from src.entities.Info import Info
-from src.entities.IonTemplates import IntactModification
 from src.gui.GUI_functions import connectTable
 from src.gui.IsotopePatternView import AddIonView
 from src.gui.widgets.InfoView import InfoView
-from src.intact.IntactAnalyser import IntactAnalyser
-from src.intact.IntactExcelWriter import IntactExcelWriter, FullIntactExcelWriter
-from src.intact.IntactFinder import Calibrator
-from src.intact.IntactLibraryBuilder import IntactLibraryBuilder
-from src.intact.IntactSpectrumHandler import IntactSpectrumHandler
-from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
-from src.top_down.IntensityModeller import IntensityModeller
-from src.gui.dialogs.CheckIonView import CheckMonoisotopicOverlapView
 from src.gui.tableviews.TableModels import IonTableModel
 from src.gui.tableviews.ShowPeaksViews import PeakView, SimplePeakView
-from src.gui.dialogs.SimpleDialogs import ExportDialog
-from src.gui.dialogs.StartDialogs import IntactStartDialogFull
 from src.gui.widgets.SpectrumView import SpectrumView
 
 
@@ -51,120 +36,6 @@ class AbstractMainController(ABC):
         :param (bool) new: True if new search, False if old search is loaded
         '''
         self._mainWindow= window
-        #if new:
-        dialog = IntactStartDialogFull(None)
-        dialog.exec_()
-        if dialog.canceled():
-            return
-        self._settings = dialog.newSettings()
-        self._configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
-        #self._propStorage = IntactSearchSettings(self._settings['sequName'], self._settings['modifications'])
-        self._sequence = SequenceService().get(self._settings['sequName'])
-        modification = IntactIonService().getPatternWithObjects(self._settings['modifications'], IntactModification)
-        self._info = Info(self._settings, self._configs, self._sequence.getSequenceList(), modification)
-        self._saved = False
-        try:
-            self._savedName = os.path.split(self._settings['spectralData'])[-1][:-4]
-        except:
-            self._savedName = ''
-        try:
-            if self.search() == 0:
-                self.setUpUi()
-        except InvalidInputException as e:
-            traceback.print_exc()
-            QtWidgets.QMessageBox.warning(None, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
-
-
-
-    def search(self):
-        '''
-        Search for ions in spectrum: Calculates theo. isotope patterns, searches for these in the spectrum (peak list),
-        models intensities, fixes problems by overlapping ions (2 user inputs possible for deleting ions)
-        '''
-        print("\n********** Creating fragment library **********")
-        self._libraryBuilder = IntactLibraryBuilder(self._sequence, self._settings['modifications'])
-        self._libraryBuilder.createLibrary()
-
-        """read existing ion-list file or create new one"""
-        """libraryImported = False
-        patternReader = IsotopePatternRepository()
-        if self._settings['fragLib'] != '':
-            settings = [self._settings['fragLib']]
-        else:
-            settings = [self._settings[setting] for setting in ['sequName', 'fragmentation', 'nrMod', 'modifications']]
-        if patternReader.findFile(settings):
-            print("\n********** Importing list of isotope patterns from:", patternReader.getFile(), "**********")
-            try:
-                self._libraryBuilder.setFragmentLibrary(patternReader)
-                libraryImported = True
-                print("done")
-            except InvalidIsotopePatternException:
-                traceback.print_exc()
-                choice = QtWidgets.QMessageBox.question(None, "Problem with importing list of isotope patterns",
-                        "Imported Fragment Library from " + patternReader.getFile() + " incomplete\n"
-                        "Should a new library be created?\nThe search will be stopped otherwise",
-                                                        QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-                if choice != QtWidgets.QMessageBox.Yes:
-                    return 1
-                    #sys.exit()
-        if libraryImported == False:
-        print("\n********** Writing new list of isotope patterns to:", patternReader.getFile(), "**********\n")
-        #ld = LoadingWidget(len(self._libraryBuilder.getFragmentLibrary()), True)
-        start = time.time()
-        patternReader.saveIsotopePattern(self._libraryBuilder.addNewIsotopePattern())#ld.progress))
-        print("\ndone\nexecution time: ", round((time.time() - start) / 60, 2), "min\n")"""
-        self._libraryBuilder.addNewIsotopePattern()
-
-
-        """Importing spectral pattern"""
-        '''if self._settings['spectralData'] == '':
-            return 1'''
-        #spectralFile = os.path.join(path, 'Spectral_data','top-down', self._settings['spectralData'])
-        print("\n********** Importing spectral pattern from:", self._settings['spectralData'], "**********")
-        self._spectrumHandler = IntactSpectrumHandler(self._settings)
-        if self._settings['calibration']:
-            self._calibrator = Calibrator(self._libraryBuilder.getNeutralLibrary(),self._settings)
-            self._calibrator.calibratePeaks(self._spectrumHandler.getSpectrum())
-            vals = self._calibrator.getCalibrationValues()
-            self._info.calibrate(vals[0], vals[1], self._calibrator.getQuality(), self._calibrator.getUsedIons())
-        """Finding fragments"""
-        print("\n********** Search for ions **********")
-        start = time.time()
-        self._spectrumHandler.findIons(self._libraryBuilder.getNeutralLibrary())
-        print("\ndone\nexecution time: ", round((time.time() - start) / 60, 3), "min\n")
-
-        self._intensityModeller = IntensityModeller(self._configs)
-        start = time.time()
-        print("\n********** Calculating relative abundances **********")
-        for ion in self._spectrumHandler.getFoundIons():
-            self._intensityModeller.processIons(ion)
-        for ion in self._spectrumHandler._ionsInNoise:
-            self._intensityModeller.processNoiseIons(ion)
-        self._spectrumHandler.emptyLists()
-        print("\ndone\nexecution time: ", round((time.time() - start) / 60, 3), "min\n")
-
-        """Handle ions with same monoisotopic peak and charge"""
-        print("\n********** Handling overlaps **********")
-        sameMonoisotopics = self._intensityModeller.findSameMonoisotopics()
-        print('mono', sameMonoisotopics)
-        if len(sameMonoisotopics) > 0:
-            view = CheckMonoisotopicOverlapView(sameMonoisotopics, self._spectrumHandler.getSpectrum())
-            print("User Input requested")
-            view.exec_()
-            if view and not view.canceled():
-                dumpList = view.getDumplist()
-                [self._info.deleteMonoisotopic(ion) for ion in dumpList]
-                self._intensityModeller.deleteSameMonoisotopics(dumpList)
-            else:
-                return 1
-
-        """remodelling overlaps"""
-        print("\n********** Re-modelling overlaps **********")
-        complexPatterns = self._intensityModeller.remodelOverlaps()
-        self._intensityModeller.remodelComplexPatterns(complexPatterns, [])
-        self._info.searchFinished(self._spectrumHandler.getUpperBound())
-        print("done")
-        return 0
 
     def setUpUi(self):
         '''
@@ -438,46 +309,6 @@ class AbstractMainController(ABC):
                     'Sorry, not implemented yet', QtWidgets.QMessageBox.Ok, self._mainWindow, )
         if dlg.exec_() and dlg == QtWidgets.QMessageBox.Ok:
             return'''
-
-    def export(self):
-        '''
-        Exports the results to a xlsx file
-        '''
-        exportConfigHandler = ConfigurationHandlerFactory.getIntactExportHandler()
-        dlg = ExportDialog(self._mainWindow, (), exportConfigHandler.getAll())
-        dlg.exec_()
-        if dlg and not dlg.canceled():
-            self._info.export()
-            newOptions = dlg.getOptions()
-            exportConfigHandler.write(newOptions)
-            outputPath, filename = dlg.getDir(), dlg.getFilename()
-            if filename == '':
-                inputFileName = os.path.split(self._settings['spectralData'])[-1]
-                filename = inputFileName[0:-4] + '_out' + '.xlsx'
-            elif filename[-5:] != '.xlsx':
-                filename += '.xlsx'
-            if outputPath == '':
-                outputPath = os.path.join(path, 'Spectral_data', 'top-down')
-            output = os.path.join(outputPath, filename)
-            parameters = {'data:': outputPath, 'date:': datetime.now().strftime("%d/%m/%Y %H:%M")}
-            parameters.update(self._settings)
-            parameters.update(self._configs)
-            del parameters['spectralData']
-            excelWriter = FullIntactExcelWriter(output, self._configs, newOptions)
-            analyser = IntactAnalyser([[self._intensityModeller.getObservedIons().values()]])
-            #avCharges, avErrors, stddevs = analyser.calculateAvChargeAndError()
-            try:
-                excelWriter.toExcel(analyser, self._intensityModeller, self._libraryBuilder.getNeutralLibrary(),
-                                    self._settings, self._spectrumHandler, self._info.toString())
-                print("********** saved in:", output, "**********\n")
-                try:
-                    subprocess.call(['open', output])
-                except:
-                    pass
-                print("saved in:", output)
-            except:
-                traceback.print_exc()
-
 
     def close(self):
         '''

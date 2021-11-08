@@ -180,7 +180,13 @@ class IntensityModeller(object):
         correctedIon = self.calculateIntensity(ion)
         if correctedIon.getHash() in self._deletedIons.keys():
             return
-        if (correctedIon.getQuality() < self._configs['shapeDel']) :
+        if (correctedIon.getQuality() > self._configs['shapeDel']) :
+            correctedIon.addComment("qual.")
+            self._deletedIons[correctedIon.getHash()] = correctedIon
+        elif (correctedIon.getSignalToNoise() < self._configs['SNR']) :
+            correctedIon.addComment("SNR")
+            self._deletedIons[correctedIon.getHash()] = correctedIon
+        else:
             self._correctedIons[correctedIon.getHash()] = correctedIon
             self._monoisotopicList.append(np.array(
                 [(correctedIon.getName(), correctedIon.getCharge(), ion.getMonoisotopic())],
@@ -188,9 +194,6 @@ class IntensityModeller(object):
             '''self._monoisotopicList.append(
                 (correctedIon.getName(), correctedIon.getCharge(), ion.getMonoisotopic()))'''
             print('\tqual',correctedIon.getQuality())
-        else:
-            correctedIon.addComment("qual.")
-            self._deletedIons[correctedIon.getHash()]=correctedIon
 
     def processNoiseIons(self, ion):
         '''
@@ -455,6 +458,8 @@ class IntensityModeller(object):
                         sum_int += self._correctedIons[ion].getIntensity()  #for error calc
                     for ion in undeletedIons:
                         self._correctedIons[ion].setQuality(self.calcQuality(solution.fun, sum_int))
+                        if self._correctedIons[ion].getSignalToNoise() < self._configs['SNR']:
+                            self.deleteIon(ion, 'SNR')
                     print("\tqual:",round(solution.fun**(0.5) / sum_int,2))
                     break
             for ion in del_ions:

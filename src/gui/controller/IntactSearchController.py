@@ -20,6 +20,7 @@ from src.entities.Info import Info
 from src.entities.IonTemplates import IntactModification
 from src.gui.GUI_functions import connectTable
 from src.gui.IsotopePatternView import AddIonView
+from src.gui.controller.AbstractController import AbstractMainController
 from src.gui.widgets.InfoView import InfoView
 from src.intact.IntactAnalyser import IntactAnalyser
 from src.intact.IntactExcelWriter import IntactExcelWriter, FullIntactExcelWriter
@@ -39,7 +40,7 @@ from src.gui.widgets.SpectrumView import SpectrumView
 FOTO_SESSION=True
 
 
-class IntactMainController(object):
+class IntactMainController(AbstractMainController):
     '''
     Controller class for starting, saving, exporting and loading a top-down search/analysis
     '''
@@ -49,7 +50,8 @@ class IntactMainController(object):
         :param parent:
         :param (bool) new: True if new search, False if old search is loaded
         '''
-        self._mainWindow= window
+        super(IntactMainController, self).__init__(parent, new, window)
+        #self._mainWindow= window
         #if new:
         dialog = IntactStartDialogFull(None)
         dialog.exec_()
@@ -218,7 +220,7 @@ class IntactMainController(object):
         print("done")
         return 0
 
-    def setUpUi(self):
+    """def setUpUi(self):
         '''
         Opens a SimpleMainWindow with the ion lists and a InfoView with the protocol
         '''
@@ -241,7 +243,7 @@ class IntactMainController(object):
             self.makeTabWidget(data, name)
         self.verticalLayout.addWidget(self._tabWidget)'''
         self._mainWindow.resize(1000, 900)
-        self._mainWindow.show()
+        self._mainWindow.show()"""
 
 
     def createMenuBar(self):
@@ -280,16 +282,9 @@ class IntactMainController(object):
                 self._actions[action].setDisabled(True)
                 self._actions[action].setToolTip('Choose ions of interest within "Edit Parameters" menu to use this function')
 '''
-    def shootPic(self):
-        widgets = {w.windowTitle():w for w in self._openWindows}
-        item, ok = QtWidgets.QInputDialog.getItem(self._mainWindow, "Shoot",
-                                        "Select the window", list(widgets.keys()), 0, False)
-        if ok and item:
-            p=widgets[item].grab()
-            p.save(os.path.join(path,'pics',item+'.png'), 'png')
-            print('Shoot taken')
 
-    def fillMainWindow(self):
+
+    """def fillMainWindow(self):
         '''
         Makes a QTabWidget with the ion tables
         :return:
@@ -342,9 +337,6 @@ class IntactMainController(object):
         Makes an ion table
         '''
         tableModel = IonTableModel(data, None, self._configs['shapeMarked'], self._configs['scoreMarked'])
-
-        """self.proxyModel = QSortFilterProxyModel()
-        self.proxyModel.setSourceModel(model)"""
         table = QtWidgets.QTableView(parent)
         table.setModel(tableModel)
         table.setSortingEnabled(True)
@@ -496,7 +488,7 @@ class IntactMainController(object):
         self._tabWidget.hide()
         del self._tabWidget
         self._tabWidget = QtWidgets.QTabWidget(self._centralwidget)
-        self.fillMainWindow()
+        self.fillMainWindow()"""
 
     '''def dumb(self):
         print('not yet implemented')
@@ -545,7 +537,7 @@ class IntactMainController(object):
                 traceback.print_exc()
 
 
-    def close(self):
+    """def close(self):
         '''
         Closes the search
         '''
@@ -616,13 +608,13 @@ class IntactMainController(object):
             df.to_clipboard(index=False,header=True)
         elif action == copyTableAction:
             df=pd.DataFrame(data=table.model().getData(), columns=table.model().getHeaders())
-            df.to_clipboard(index=False,header=True)
+            df.to_clipboard(index=False,header=True)"""
 
     '''def showLogFile(self):
         self._infoView.show()'''
 
-    def getIonList(self):
-        return list(self._intensityModeller.getObservedIons().values())
+    """def getIonList(self):
+        return list(self._intensityModeller.getObservedIons().values())"""
 
     """def showFragmentation(self):
         '''

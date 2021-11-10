@@ -117,6 +117,11 @@ class TD_configurationDialog(DialogWithTabs):
                                                 "value is added to calculated upper m/z-bound for final value"),
                           "upperBoundWindowSize": (QtWidgets.QDoubleSpinBox(),
                                                    "window size for noise calculation to find upper m/z bound")})
+        self._calibrationBox = self.fillBox(self._spectrumTab, "Autocalibration",
+                                   ("max. raw error", "max. std. dev."),
+                                   {"errorLimitCalib": (QtWidgets.QSpinBox(), "max. ppm error in uncalbratied spectrum"),
+                  "maxStd": (QtWidgets.QDoubleSpinBox(), "max. allowed standard deviation of the ion errors for the "
+                                                         "calibration")})
         self._widgets['lowerBound'].setMaximum(9999)
         self._widgets['minUpperBound'].setMaximum(9999)
         self._widgets['upperBoundTolerance'].setMaximum(999)

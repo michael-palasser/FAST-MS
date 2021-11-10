@@ -38,10 +38,10 @@ class ConfigHandler(object):
         :return: (Any) value
         '''
         if self.__parameters:
-           # try:
-            return self.__parameters[key]
-            #except:
-            #    return 0
+            try:
+                return self.__parameters[key]
+            except:
+                return 0
         raise Exception("Parameter",key, "does not exist")
 
     def write(self, parameters):

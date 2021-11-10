@@ -26,7 +26,13 @@ class IntactSpectrumHandler(AbstractSpectrumHandler):
         :param (float) mass: mass of the unmodified species
         :return: (generator) range between lowest possible z and highest possible z
         '''
-        return range(int(mass/self._settings['maxMz'])+1, int(mass/self._settings['minMz'])+1)
+        minMz = self._settings['minMz']
+        if np.min(self._spectrum[:,0])>minMz:
+            minMz = np.min(self._spectrum[:,0])
+        maxMz = self._settings['maxMz']
+        if self._upperBound<maxMz:
+            maxMz = self._upperBound
+        return range(int(mass/maxMz+1), int(mass/minMz)+1)
 
     def findIons(self, neutralLibrary):
         '''

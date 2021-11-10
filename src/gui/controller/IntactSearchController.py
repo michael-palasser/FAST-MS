@@ -8,33 +8,25 @@ import traceback
 import os
 from datetime import datetime
 
-import numpy as np
 import time
-import pandas as pd
-from PyQt5 import QtWidgets, QtCore
+from PyQt5 import QtWidgets
 
 from src import path
 from src.Exceptions import InvalidInputException
 from src.Services import IntactIonService, SequenceService
 from src.entities.Info import Info
 from src.entities.IonTemplates import IntactModification
-from src.gui.GUI_functions import connectTable
-from src.gui.IsotopePatternView import AddIonView
 from src.gui.controller.AbstractController import AbstractMainController
-from src.gui.widgets.InfoView import InfoView
 from src.intact.IntactAnalyser import IntactAnalyser
-from src.intact.IntactExcelWriter import IntactExcelWriter, FullIntactExcelWriter
+from src.intact.IntactExcelWriter import FullIntactExcelWriter
 from src.intact.IntactFinder import Calibrator
 from src.intact.IntactLibraryBuilder import IntactLibraryBuilder
 from src.intact.IntactSpectrumHandler import IntactSpectrumHandler
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.top_down.IntensityModeller import IntensityModeller
 from src.gui.dialogs.CheckIonView import CheckMonoisotopicOverlapView
-from src.gui.tableviews.TableModels import IonTableModel
-from src.gui.tableviews.ShowPeaksViews import PeakView, SimplePeakView
 from src.gui.dialogs.SimpleDialogs import ExportDialog
 from src.gui.dialogs.StartDialogs import IntactStartDialogFull
-from src.gui.widgets.SpectrumView import SpectrumView
 
 
 FOTO_SESSION=True
@@ -166,7 +158,9 @@ class IntactMainController(AbstractMainController):
         print("\n********** Importing spectral pattern from:", self._settings['spectralData'], "**********")
         self._spectrumHandler = IntactSpectrumHandler(self._settings)
         if self._settings['calibration']:
-            self._calibrator = Calibrator(self._libraryBuilder.getNeutralLibrary(),self._settings)
+            allSettings = dict(self._settings)
+            allSettings.update(self._configs)
+            self._calibrator = Calibrator(self._libraryBuilder.getNeutralLibrary(),allSettings)
             self._calibrator.calibratePeaks(self._spectrumHandler.getSpectrum())
             vals = self._calibrator.getCalibrationValues()
             self._info.calibrate(vals[0], vals[1], self._calibrator.getQuality(), self._calibrator.getUsedIons())

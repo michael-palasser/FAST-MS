@@ -142,13 +142,12 @@ class IntactStartDialog(DialogWithTabs, StartDialog):
         self.fill(self._configTab, configLayout, labels[1], widgets[1])
         self._widgets['minMz'].setMaximum(9999)
         self._widgets['maxMz'].setMaximum(9999)
-        self._widgets["d"].setMinimum(-9.99)
         self.backToLast()
         self._verticalLayout.addWidget(self.makeButtonWidget(self), 0, QtCore.Qt.AlignRight)
 
     def getLabels(self):
         return (("Sequence Name", "Modifications", "Spectral File", "Spray Mode", 'Input Mode', 'Autocalibration', "Output"),
-                ("min. m/z", "max. m/z", "max. raw error", 'max. std.dev.', "slope (k) of error", "intercept (d) of error"))
+                ("min. m/z", "max. m/z"))
 
     def getWidgets(self, sequences, modPatterns):
         return  ({
@@ -163,16 +162,8 @@ class IntactStartDialog(DialogWithTabs, StartDialog):
                  "calibration": (QtWidgets.QCheckBox(), "Spectral data will be autocalibrated if option is ticked"),
                  "output": (QtWidgets.QLineEdit(self._settingTab),
                             "Name of the output txt file\ndefault: name of spectral pattern file + _out.txt")},
-             {
-                "minMz": (QtWidgets.QSpinBox(), "m/z where search starts"),
-                  "maxMz": (QtWidgets.QSpinBox(), "m/z where search ends"),
-                  "errorLimitCalib": (QtWidgets.QSpinBox(), "max. ppm error in uncalbratied spectrum"),
-                  "maxStd": (QtWidgets.QDoubleSpinBox(), "max. allowed standard deviation of the ion errors for the "
-                                                         "calibration"),
-                  "k": (QtWidgets.QDoubleSpinBox(),
-                        "max. ppm error slope in calbratied spectrum (ppm = k/1000 + d)"),
-                  "d": (QtWidgets.QDoubleSpinBox(),
-                        "max. ppm error intercept in calbratied spectrum (ppm = k/1000 + d)")})
+             {"minMz": (QtWidgets.QSpinBox(), "m/z where search starts"),
+              "maxMz": (QtWidgets.QSpinBox(), "m/z where search ends")})
 
     def makeButtonWidget(self, parent):
         widget = QtWidgets.QWidget(parent)
@@ -232,16 +223,8 @@ class IntactStartDialogFull(IntactStartDialog):
                  "calIons": (OpenFileWidget(self._settingTab, 1, join(path, 'Spectral_data', 'intact'), "Open Files",
                                             "Plain Text Files (*txt);;All Files (*)"),
                              "Name of the file with ions for calibration (txt format)")},
-                {
-                    "minMz": (QtWidgets.QSpinBox(), "m/z where search starts"),
-                    "maxMz": (QtWidgets.QSpinBox(), "m/z where search ends"),
-                    "errorLimitCalib": (QtWidgets.QSpinBox(), "max. ppm error in uncalbratied spectrum"),
-                    "maxStd": (QtWidgets.QDoubleSpinBox(), "max. allowed standard deviation of the ion errors for the "
-                                                           "calibration"),
-                    "k": (QtWidgets.QDoubleSpinBox(),
-                          "max. ppm error slope in calbratied spectrum (ppm = k/1000 + d)"),
-                    "d": (QtWidgets.QDoubleSpinBox(),
-                          "max. ppm error intercept in calbratied spectrum (ppm = k/1000 + d)")})
+                {"minMz": (QtWidgets.QSpinBox(), "m/z where search starts"),
+                 "maxMz": (QtWidgets.QSpinBox(), "m/z where search ends")})
 
     def backToLast(self):
         super(IntactStartDialogFull, self).backToLast()

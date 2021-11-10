@@ -38,6 +38,9 @@ def run():
     """theoretical values"""
     print("\n********** calculating theoretical values **********")
     libraryBuilder = IntactLibraryBuilder(SequenceService().get(settings['sequName']), settings['modifications'])
+    configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
+    for key in ('errorLimitCalib','maxStd', 'k', 'd'):
+        settings[key] = configs[key]
     finder = Finder(libraryBuilder.createLibrary(),settings)
 
     """calibrate spectra"""

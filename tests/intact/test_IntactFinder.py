@@ -24,9 +24,10 @@ def initConfigurations():
     configHandler = ConfigurationHandlerFactory.getIntactHandler()
     configHandler.update('minMz',700)
     configHandler.update('maxMz',1600)
-    configHandler.update('errorLimitCalib',50)
-    configHandler.update('k',2.)
-    configHandler.update('d',6.)
+    configHandler.update2('errorLimitCalib',50)
+    configHandler.update2('maxStd',2)
+    configHandler.update2('k',2.)
+    configHandler.update2('d',6.)
     return configHandler
 
 def initTestSequences(sequenceService=SequenceService()):

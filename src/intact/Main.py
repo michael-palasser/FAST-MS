@@ -9,12 +9,12 @@ import subprocess
 import traceback
 from datetime import datetime
 
-from src.Services import SequenceService
-from src.intact.IntactLibraryBuilder import IntactLibraryBuilder
-from src.intact.IntactFinder import Finder
+from src.services.DataServices import SequenceService
+from src.services.library_services.IntactLibraryBuilder import IntactLibraryBuilder
+from src.services.assign_services.IntactFinder import Finder
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
-from src.intact.IntactAnalyser import IntactAnalyser
-from src.intact.IntactExcelWriter import IntactExcelWriter
+from src.services.analyser_services import IntactAnalyser
+from src.services.export_services.IntactExcelWriter import IntactExcelWriter
 from src import path
 #from src.gui.ParameterDialogs import IntactStartDialog
 

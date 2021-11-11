@@ -6,12 +6,12 @@ import os
 from src import path
 from src.Exceptions import InvalidIsotopePatternException
 from src.MolecularFormula import MolecularFormula
-from src.Services import SequenceService
+from src.services.DataServices import SequenceService
 from src.entities.GeneralEntities import Sequence
 from src.entities.Ions import Fragment
 from src.entities.SearchSettings import SearchSettings
 from src.repositories.IsotopePatternRepository import IsotopePatternRepository
-from src.top_down.LibraryBuilder import FragmentLibraryBuilder
+from src.services.library_services.LibraryBuilder import FragmentLibraryBuilder
 
 
 class TestIsotopePatternRepository(TestCase):

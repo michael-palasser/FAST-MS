@@ -7,7 +7,7 @@ from src import path
 from os.path import join
 
 from src.Exceptions import InvalidInputException
-from src.Services import FragmentationService, ModificationService, SequenceService, IntactIonService
+from src.services.DataServices import FragmentationService, ModificationService, SequenceService, IntactIonService
 from src.gui.dialogs.AbstractDialogs import StartDialog, DialogWithTabs, AbstractDialog
 from src.gui.GUI_functions import createComboBox
 from src.gui.widgets.Widgets import OpenFileWidget

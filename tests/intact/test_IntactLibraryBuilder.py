@@ -1,7 +1,7 @@
 from unittest import TestCase
 
-from src.Services import SequenceService
-from src.intact.IntactLibraryBuilder import IntactLibraryBuilder
+from src.services.DataServices import SequenceService
+from src.services.library_services.IntactLibraryBuilder import IntactLibraryBuilder
 from tests.top_down.test_LibraryBuilder import initTestSequences
 
 def initSequences():

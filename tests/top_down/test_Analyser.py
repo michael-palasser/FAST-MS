@@ -3,7 +3,7 @@ from unittest import TestCase
 import numpy as np
 
 from src.entities.Ions import FragmentIon, Fragment
-from src.top_down.Analyser import Analyser
+from src.services.analyser_services.Analyser import Analyser
 from tests.top_down.test_IntensityModeller import initTestSpectrumHandler
 
 

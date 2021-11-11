@@ -2,7 +2,7 @@ import os
 from unittest import TestCase
 
 from src import path
-from src.intact.IntactSpectrumHandler import IntactSpectrumHandler
+from src.services.assign_services.IntactSpectrumHandler import IntactSpectrumHandler
 from tests.intact.test_Calibrator import getCalibratedSpectrum
 
 

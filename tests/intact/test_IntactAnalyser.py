@@ -2,7 +2,7 @@ from unittest import TestCase
 import numpy as np
 
 from src.entities.Ions import SimpleIntactIon
-from src.intact.IntactAnalyser import IntactAnalyser
+from src.services.analyser_services.IntactAnalyser import IntactAnalyser
 #from tests.intact.test_IntactFinder import initFinders, initTestSequences
 
 class TestIntactAnalyser(TestCase):

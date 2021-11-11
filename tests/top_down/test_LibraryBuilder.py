@@ -1,8 +1,8 @@
 from unittest import TestCase
 
-from src.top_down.LibraryBuilder import FragmentLibraryBuilder
+from src.services.library_services.LibraryBuilder import FragmentLibraryBuilder
 from src.entities.SearchSettings import SearchSettings, processTemplateName
-from src.Services import *
+from src.services.DataServices import *
 
 
 def initTestSequences(sequenceService=SequenceService()):

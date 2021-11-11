@@ -10,41 +10,30 @@ import os
 
 import numpy as np
 import time
-import pandas as pd
-from PyQt5 import QtWidgets, QtCore
+from PyQt5 import QtWidgets
 
 from src import path
 from src.Exceptions import InvalidIsotopePatternException, InvalidInputException
 from src.entities.Info import Info
-from src.gui.AbstractMainWindows import SimpleMainWindow
-from src.gui.GUI_functions import connectTable, shoot, createComboBox
-from src.gui.IsotopePatternView import AddIonView
 from src.gui.controller.AbstractController import AbstractMainController
-from src.gui.dialogs.AbstractDialogs import AbstractDialog
 from src.gui.tableviews.FragmentationTable import FragmentationTable
 from src.gui.widgets.OccupancyWidget import OccupancyWidget
 from src.gui.widgets.SequCovWidget import SequCovWidget
-from src.gui.widgets.InfoView import InfoView
-from src.gui.widgets.Widgets import LoadingWidget
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.repositories.IsotopePatternRepository import IsotopePatternRepository
-from src.top_down.Analyser import Analyser
+from src.services.analyser_services.Analyser import Analyser
 from src.entities.SearchSettings import SearchSettings
-from src.top_down.LibraryBuilder import FragmentLibraryBuilder
-from src.top_down.SearchService import SearchService
-from src.top_down.SpectrumHandler import SpectrumHandler
-from src.top_down.IntensityModeller import IntensityModeller
-from src.top_down.ExcelWriter import ExcelWriter
+from src.services.library_services.LibraryBuilder import FragmentLibraryBuilder
+from src.services.SearchService import SearchService
+from src.services.assign_services.SpectrumHandler import SpectrumHandler
+from src.IntensityModeller import IntensityModeller
+from src.services.export_services.ExcelWriter import ExcelWriter
 from src.gui.dialogs.CheckIonView import CheckMonoisotopicOverlapView, CheckOverlapsView
-from src.gui.tableviews.TableModels import IonTableModel
 from src.gui.tableviews.PlotTables import PlotTableView
-from src.gui.tableviews.ShowPeaksViews import PeakView, SimplePeakView
 from src.gui.widgets.SequencePlots import PlotFactory, plotBars
 from src.gui.dialogs.SimpleDialogs import ExportDialog, SelectSearchDlg, OpenSpectralDataDlg, SaveSearchDialog
 #from src.gui.ParameterDialogs import TDStartDialog
 from src.gui.dialogs.StartDialogs import TDStartDialog
-from src.gui.widgets.SpectrumView import SpectrumView
-
 
 """def sortIonsByName(ionList):
     #return sorted(ionList,key=lambda obj:(obj.type ,obj.number))

@@ -1,7 +1,7 @@
 from PyQt5 import QtWidgets, QtCore
 
-from src.IsotopePatternLogics import IsotopePatternLogics
-from src.Services import *
+from src.services.IsotopePatternLogics import IsotopePatternLogics
+from src.services.DataServices import *
 from src.gui.AbstractMainWindows import SimpleMainWindow
 from src.gui.GUI_functions import makeFormLayout, shoot
 from src.gui.widgets.IonTableWidgets import IsoPatternIon

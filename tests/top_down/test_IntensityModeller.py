@@ -7,8 +7,8 @@ from src.entities.Ions import FragmentIon, Fragment
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from tests.intact.test_Calibrator import getCalibratedSpectrum
 from tests.top_down.test_SpectrumHandler import initTestLibraryBuilder
-from src.top_down.SpectrumHandler import SpectrumHandler
-from src.top_down.IntensityModeller import IntensityModeller
+from src.services.assign_services.SpectrumHandler import SpectrumHandler
+from src.IntensityModeller import IntensityModeller
 
 def initTestSpectrumHandler():
     configs, settings, props, builder = initTestLibraryBuilder()

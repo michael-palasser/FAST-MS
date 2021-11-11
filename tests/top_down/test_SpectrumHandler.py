@@ -10,8 +10,8 @@ from src.MolecularFormula import MolecularFormula
 from src.entities.Ions import Fragment
 from src.entities.SearchSettings import SearchSettings
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
-from src.top_down.LibraryBuilder import FragmentLibraryBuilder
-from src.top_down.SpectrumHandler import SpectrumHandler, getErrorLimit, getMz, calculateError
+from src.services.library_services.LibraryBuilder import FragmentLibraryBuilder
+from src.services.assign_services.SpectrumHandler import SpectrumHandler, getErrorLimit, getMz, calculateError
 from tests.test_MolecularFormula import averaginine, averagine
 from tests.top_down.test_LibraryBuilder import initTestSequences
 

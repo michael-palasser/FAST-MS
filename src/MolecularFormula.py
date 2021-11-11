@@ -3,7 +3,7 @@ import copy
 from src.FormulaFunctions import stringToFormula
 from src.fastFunctions import *
 #import src.simpleFunctions as sf
-from src.Services import PeriodicTableService
+from src.services.DataServices import PeriodicTableService
 from scipy.fft import fft, ifft
 
 '''

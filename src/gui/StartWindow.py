@@ -28,7 +28,7 @@ class Window(SimpleMainWindow):
     def __init__(self):
         super(Window, self).__init__(None, 'SAUSAGE')
         self.createMenuBar()
-        self.createMenu('Top-Down Tools',
+        self.createMenu('Top-Down',
                         {'Analyse Spectrum':
                              (lambda:self.startTopDown(True), 'Starts analysis of top-down spectrum', None),
                          'Load Analysis':
@@ -37,28 +37,30 @@ class Window(SimpleMainWindow):
                              (self.reopen, 'Re-opens the last analysis', None),
                          #'Calc. Abundances':
                          #    (lambda: modellingTool(self), 'Calculates relative abundances of an ion list', None),
-                         'Calculate Occupancies':
-                             (lambda: occupancyRecalculator(self), 'Calculates occupancies of a given ion list', None),
-                         'Compare ion lists':
-                             (self.compareSpectra, 'Compares the ion lists of multiple spectra', None)},
-                        None)
-        #[print(action.toolTip()) for action in menuActions.values()]
-        #print(menu.toolTipsVisible())
-        self.createMenu('Top-Down Configurations',
-                        {'Edit Configurations':(self.editTopDownConfig, 'Edit configurations', None),
-                         'Edit Fragments':(lambda: self.editData(FragmentEditorController), 'Edit fragment patterns', None),
+                         'Edit Fragments': (
+                         lambda: self.editData(FragmentEditorController), 'Edit fragment patterns', None),
                          'Edit Modifications':
                              (lambda: self.editData(ModificationEditorController), 'Edit modification/ligand patterns',
                               None)}, None)
-        self.createMenu('Other Tools',
-                        {'Analyse Intact Ion Spectrum':(lambda:self.startIntact(True), 'Starts analysis of intact ion spectrum', None),
+        #[print(action.toolTip()) for action in menuActions.values()]
+        #print(menu.toolTipsVisible())
+        self.createMenu('Intact Ions',
+                        {'Analyse Intact Ion Spectrum': (
+                        lambda: self.startIntact(True), 'Starts analysis of intact ion spectrum', None),
                          'Analyse Intact Ions': (lambda: self.editData(self.startIntactIonSearch),
                                                  'Starts analysis of spectra with unfragmented ions', None),
-                         'Edit Intact Ions': (lambda: self.editData(IntactIonEditorController), 'Edit Intact Ions', None),
-                         'Model Ion':
-                             (lambda: IsotopePatternView(self), 'Calculates the isotope pattern of an ion', None)},None)
-        self.createMenu('Edit Data',
-                        {'Elements': (lambda: self.editData(ElementEditorController), 'Edit element table', None),
+                         'Edit Intact Ions': (
+                         lambda: self.editData(IntactIonEditorController), 'Edit Intact Ions', None)}, None)
+        self.createMenu('Other Tools',
+                        {'Model Ion':
+                             (lambda: IsotopePatternView(self), 'Calculates the isotope pattern of an ion', None),
+                         'Calculate Occupancies':
+                             (lambda: occupancyRecalculator(self), 'Calculates occupancies of a given (fragment) ion list', None),
+                         'Compare ion lists':
+                             (self.compareSpectra, 'Compares the ion lists of multiple spectra', None)},None)
+        self.createMenu('Edit',
+                        {'Configurations':(self.editTopDownConfig, 'Edit configurations', None),
+                         'Elements': (lambda: self.editData(ElementEditorController), 'Edit element table', None),
                          'Molecules': (lambda: self.editData(MoleculeEditorController), 'Edit Molecular Properties', None),
                          'Sequences': (lambda: self.editData(SequenceEditorController), 'Edit stored sequences', None)},
                         None)

@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import QMessageBox
 
 from src import path
 from src.Exceptions import InvalidInputException
-from src.Services import SequenceService
+from src.services.DataServices import SequenceService
 from src.gui.GUI_functions import makeFormLayout
 from src.gui.widgets.Widgets import OpenFileWidget
 

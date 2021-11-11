@@ -3,12 +3,12 @@ from copy import deepcopy
 from unittest import TestCase
 
 from src import path
-from src.Services import SequenceService
-from src.intact.IntactFinder import Calibrator
-from src.intact.IntactLibraryBuilder import IntactLibraryBuilder
-from src.intact.IntactSpectrumHandler import IntactSpectrumHandler
+from src.services.DataServices import SequenceService
+from src.services.assign_services.IntactFinder import Calibrator
+from src.services.library_services.IntactLibraryBuilder import IntactLibraryBuilder
+from src.services.assign_services.IntactSpectrumHandler import IntactSpectrumHandler
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
-from src.top_down.SpectrumHandler import SpectrumHandler
+from src.services.assign_services.SpectrumHandler import SpectrumHandler
 from tests.intact.test_IntactFinder import initConfigurations, initTestSequences
 from tests.top_down.test_SpectrumHandler import initTestLibraryBuilder
 

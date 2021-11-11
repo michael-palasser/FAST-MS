@@ -1,8 +1,8 @@
 from re import search as reSearch
 
-from src.Services import SequenceService, MoleculeService, FragmentationService, ModificationService, IntactIonService
+from src.services.DataServices import SequenceService, MoleculeService, FragmentationService, ModificationService
 from src.entities.GeneralEntities import BuildingBlock
-from src.entities.IonTemplates import FragItem, ModificationItem, IntactModification
+from src.entities.IonTemplates import FragItem, ModificationItem
 
 
 def processTemplateName(templName):

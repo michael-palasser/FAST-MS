@@ -6,11 +6,11 @@ import os
 from re import findall
 from PyQt5 import QtWidgets
 
-from src.Services import SequenceService
+from src.services.DataServices import SequenceService
 from src.entities.Ions import Fragment,FragmentIon
 from src.gui.dialogs.StartDialogs import OccupancyRecalcStartDialog
-from src.top_down.Analyser import Analyser
-from src.top_down.ExcelWriter import BasicExcelWriter
+from src.services.analyser_services.Analyser import Analyser
+from src.services.export_services.ExcelWriter import BasicExcelWriter
 from src import path
 
 

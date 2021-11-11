@@ -96,7 +96,7 @@ class SearchRepository(AbstractRepository):
                                            ('used', bool)])
             type, modification = processTemplateName(ionVals[1])
 
-            ion = FragmentIon(Fragment(type, ionVals[2], modification, ionVals[3], [],None),
+            ion = FragmentIon(Fragment(type, ionVals[2], modification, ionVals[3], [],0),
                               ionVals[4], ionVals[5], peaks,ionVals[6], ionVals[7], True, ionVals[8])
             #ion.setRemaining(ionVals[10], ionVals[11], ionVals[12], ionVals[13])
             if ionVals[9] == 0:
@@ -108,7 +108,6 @@ class SearchRepository(AbstractRepository):
             bar.update(1)
         searchedZStates = {ionVals[1]:ionVals[2] for ionVals in self.getItems(searchVals[0], 'chargeStates')}
         bar.update(2)
-        print(self.getItems(searchVals[0], 'logs'),searchVals[0])
         log = self.getItems(searchVals[0], 'logs')[0][1]
         bar.update(2)
         return Search(searchVals, ions, delIons, remIons, searchedZStates, log)

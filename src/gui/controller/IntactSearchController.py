@@ -13,17 +13,17 @@ from PyQt5 import QtWidgets
 
 from src import path
 from src.Exceptions import InvalidInputException
-from src.Services import IntactIonService, SequenceService
+from src.services.DataServices import IntactIonService, SequenceService
 from src.entities.Info import Info
 from src.entities.IonTemplates import IntactModification
 from src.gui.controller.AbstractController import AbstractMainController
-from src.intact.IntactAnalyser import IntactAnalyser
-from src.intact.IntactExcelWriter import FullIntactExcelWriter
-from src.intact.IntactFinder import Calibrator
-from src.intact.IntactLibraryBuilder import IntactLibraryBuilder
-from src.intact.IntactSpectrumHandler import IntactSpectrumHandler
+from src.services.analyser_services import IntactAnalyser
+from src.services.export_services.IntactExcelWriter import FullIntactExcelWriter
+from src.services.assign_services.IntactFinder import Calibrator
+from src.services.library_services.IntactLibraryBuilder import IntactLibraryBuilder
+from src.services.assign_services.IntactSpectrumHandler import IntactSpectrumHandler
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
-from src.top_down.IntensityModeller import IntensityModeller
+from src.IntensityModeller import IntensityModeller
 from src.gui.dialogs.CheckIonView import CheckMonoisotopicOverlapView
 from src.gui.dialogs.SimpleDialogs import ExportDialog
 from src.gui.dialogs.StartDialogs import IntactStartDialogFull

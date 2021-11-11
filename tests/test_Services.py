@@ -1,7 +1,7 @@
 from copy import deepcopy
 from unittest import TestCase
 
-from src.Services import *
+from src.services.DataServices import *
 from src.entities.GeneralEntities import Element
 
 knownElements = ('C', 'H', 'N', 'O', 'P', 'S')

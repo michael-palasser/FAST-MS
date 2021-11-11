@@ -3,9 +3,9 @@ from unittest import TestCase
 import numpy as np
 
 from src import path
-from src.Services import SequenceService
-from src.intact.IntactFinder import Finder
-from src.intact.IntactLibraryBuilder import IntactLibraryBuilder
+from src.services.DataServices import SequenceService
+from src.services.assign_services.IntactFinder import Finder
+from src.services.library_services.IntactLibraryBuilder import IntactLibraryBuilder
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 
 

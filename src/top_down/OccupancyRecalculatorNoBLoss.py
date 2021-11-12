@@ -29,9 +29,9 @@ def run(mainWindow):
     :param (PyQt5.QtWidgets.QMainWindow | Any) mainWindow: Qt parent
     '''
     service = SequenceService()
-    sequenceName = 'CR_1_3'
+    sequenceName = 'CR_1_2'
     sequence = service.get(sequenceName).getSequenceList()
-    modification = '+CMCT'
+    modification = '+2DEPC+H2O-CO'
     '''dlg = OccupancyRecalcStartDialog(mainWindow, service.getAllSequenceNames())
     dlg.exec_()
     if dlg and dlg.sequence != None:
@@ -41,14 +41,14 @@ def run(mainWindow):
 
     """import ion-list"""
     spectralFile = path + 'Spectral_data/Occupancies_in.csv'
-    with open(spectralFile, 'w') as f:
-        f.write("m/z,z,int,name")
+    #with open(spectralFile, 'w') as f:
+    #    f.write("m/z,z,int,name")
     subprocess.call(['open',spectralFile])
     '''start = QtWidgets.QMessageBox.question(mainWindow, 'Calculating Occupancies ',
         'Paste the ions (format: m/z, z, Int., fragment-name) in the csv-file and press "Ok"',
                                                     QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
     if start == QtWidgets.QMessageBox.Ok:'''
-    input('Press any key')
+    #input('Press any key')
     arr = readCsv(spectralFile)
     ionList = list()
     speciesList = list()
@@ -78,7 +78,9 @@ def run(mainWindow):
     excelWriter = BasicExcelWriter(os.path.join(path, "Spectral_data","Occupancies_out.xlsx"))
     excelWriter.writeDate()
     row = excelWriter.writeAbundancesOfSpecies(2, analyser.calculateRelAbundanceOfSpecies()[0])
-    unimportant = ['+DEPC','+DEPC+H2O-CO']
+    unimportant = []
+    if modification == '+2DEPC+H2O-CO':
+        unimportant = ['+DEPC','+DEPC+H2O-CO', '+72','+62']
     excelWriter.addOccupOrCharges(0,row, sequence,
                                   analyser.calculateOccupancies(speciesList, unImportantMods=unimportant)[0],1) #ToDo
     excelWriter.closeWorkbook()

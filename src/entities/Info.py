@@ -81,7 +81,7 @@ class Info(object):
 
     @staticmethod
     def formatPeak(peak):
-        return ',  '.join([round(peak[0],5) + int(peak[1]) + int(peak[2]) + round(peak[4],2)])
+        return ',  '.join([str(val) for val in [round(peak[0],5) + int(peak[1]) + int(peak[2]) + round(peak[3],2) + peak[4]]])
 
     def addNewIon(self, ion):
         self._infoString += '\n* manually added ' + self.ionToString(ion)

@@ -7,7 +7,7 @@ from src.services.DataServices import MoleculeService, FragmentationService, Mod
 from src.entities.GeneralEntities import Sequence
 from src.entities.Ions import Fragment, FragmentIon
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
-from src.IntensityModeller import IntensityModeller
+from src.services.IntensityModeller import IntensityModeller
 from src.entities.SearchSettings import processTemplateName
 
 

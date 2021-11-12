@@ -8,7 +8,7 @@ from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from tests.intact.test_Calibrator import getCalibratedSpectrum
 from tests.top_down.test_SpectrumHandler import initTestLibraryBuilder
 from src.services.assign_services.SpectrumHandler import SpectrumHandler
-from src.IntensityModeller import IntensityModeller
+from src.services.IntensityModeller import IntensityModeller
 
 def initTestSpectrumHandler():
     configs, settings, props, builder = initTestLibraryBuilder()

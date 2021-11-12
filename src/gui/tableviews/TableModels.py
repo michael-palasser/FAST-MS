@@ -44,10 +44,7 @@ class AbstractTableModel(QtCore.QAbstractTableModel):
         #return self._data.columns.size
         #if len(len(self._data))==0:
         #    print('hey', self._data, len(self._data))
-        try:
-            return len(self._data[0])
-        except:
-            print('oh',self._data)
+        return len(self._data[0])
 
     def headerData(self, section, orientation, role):
         if role == QtCore.Qt.DisplayRole:
@@ -74,7 +71,6 @@ class IonTableModel(AbstractTableModel):
     TableModel for QTableView presenting ion values (in top-down search)
     '''
     def __init__(self, data, precRegion, maxQual, maxScore):
-        print('new table')
         headers = ('m/z','z','intensity','fragment','error /ppm', 'S/N','quality', 'score', 'comment')
         if len(data)==0:
             data=[['' for _ in headers]]

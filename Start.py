@@ -1,7 +1,5 @@
-#!/Users/eva-maria/.conda/envs/SAUSAGE_beta1/bin/python
 import os
 import sys
-
 import pip
 
 def checkInstallation(package):
@@ -15,9 +13,9 @@ for package in ['numpy', 'scipy', 'matplotlib', 'pandas', 'PyQt5', 'pyqtgraph', 
     checkInstallation(package)
 print(sys.executable)
 
-abspath = os.path.abspath(__file__)
+'''abspath = os.path.abspath(__file__)
 directory = os.path.dirname(abspath)
-os.chdir(directory)
+os.chdir(directory)'''
 os.system("python -m src.gui.StartWindow")
 
-# !/usr/bin/env python3
+#!/usr/bin/env python3

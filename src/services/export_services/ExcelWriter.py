@@ -142,7 +142,8 @@ class BasicExcelWriter(object):
         :return:
         '''
         chart = self._workbook.add_chart({'type': 'line'})
-        lastRow = row + len(sequence)
+        sequLength= len(sequence)
+        lastRow = row + sequLength
         col = 2
         '''if args and args[0]:
             backwardFrags = args[0]
@@ -167,12 +168,13 @@ class BasicExcelWriter(object):
                     'line': {'width': 2.5},
                 })
             col+=1
-        chart.set_size({'width': len(sequence) * 20 + 100, 'height': 400})
+        chart.set_size({'width': sequLength * 20 + 100, 'height': 400})
         chart.set_title({'name': title})
         chart.set_x_axis({'name': 'cleavage site',
                            'name_font': {'size': 13},
-                           'position_axis': 'on_tick',
-                           'num_font': {'size': 10}, })
+                          'min':0, 'max':sequLength-1,
+                           'position_axis': 'between',
+                           'num_font': {'size': 10},})
         chart.set_y_axis({'name': '5\'-O /%',
                            'name_font': {'size': 13},
                            'min': 0, 'max': maxVal,

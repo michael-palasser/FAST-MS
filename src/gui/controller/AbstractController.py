@@ -142,11 +142,11 @@ class AbstractMainController(ABC):
         scrollArea.setWidget(table)
         return scrollArea, table
 
-    def makeTable(self, parent, data,fun):
+    def makeTable(self, parent, data,fun, precursorRegion=None):
         '''
         Makes an ion table
         '''
-        tableModel = IonTableModel(data, None, self._configs['shapeMarked'], self._configs['scoreMarked'])
+        tableModel = IonTableModel(data, precursorRegion, self._configs['shapeMarked'], self._configs['scoreMarked'])
 
         """self.proxyModel = QSortFilterProxyModel()
         self.proxyModel.setSourceModel(model)"""

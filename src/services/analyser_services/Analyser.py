@@ -98,10 +98,11 @@ class Analyser(object):
                 if ion.getType() not in absValues.keys():
                     absValues[ion.getType()] = np.zeros((len(self._sequence), 3))
                 #if self._modification in ion.getModification():
-                if ('+' in modification[1:]) or ('-' in modification[1:]):
-                    modifications = ion.getModification()
-                else:
+                '''if ('+' in modification[1:]) or ('-' in modification[1:]):
                     modifications = ion.getModificationList()
+                else:'''
+                modifications = ion.getModification()
+                print(ion.getName(),modifications, modification, modification in modifications)
                 if modification in modifications:
                     absValues[ion.getType()][ion.getNumber() - 1] += \
                         np.array([ion.getRelAbundance(),

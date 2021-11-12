@@ -23,7 +23,7 @@ from src.services.assign_services.IntactFinder import Calibrator
 from src.services.library_services.IntactLibraryBuilder import IntactLibraryBuilder
 from src.services.assign_services.IntactSpectrumHandler import IntactSpectrumHandler
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
-from src.IntensityModeller import IntensityModeller
+from src.services.IntensityModeller import IntensityModeller
 from src.gui.dialogs.CheckIonView import CheckMonoisotopicOverlapView
 from src.gui.dialogs.SimpleDialogs import ExportDialog
 from src.gui.dialogs.StartDialogs import IntactStartDialogFull

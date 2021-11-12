@@ -26,7 +26,7 @@ from src.entities.SearchSettings import SearchSettings
 from src.services.library_services.LibraryBuilder import FragmentLibraryBuilder
 from src.services.SearchService import SearchService
 from src.services.assign_services.SpectrumHandler import SpectrumHandler
-from src.IntensityModeller import IntensityModeller
+from src.services.IntensityModeller import IntensityModeller
 from src.services.export_services.ExcelWriter import ExcelWriter
 from src.gui.dialogs.CheckIonView import CheckMonoisotopicOverlapView, CheckOverlapsView
 from src.gui.tableviews.PlotTables import PlotTableView
@@ -323,13 +323,15 @@ class TD_MainController(AbstractMainController):
         table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         scrollArea.setWidget(table)
-        return scrollArea, table
+        return scrollArea, table"""
 
     def makeTable(self, parent, data,fun):
         '''
         Makes an ion table
         '''
-        tableModel = IonTableModel(data,
+        return super(TD_MainController, self).makeTable(parent, data,fun,
+                    self._intensityModeller.getPrecRegion(self._settings['sequName'], abs(self._settings['charge'])))
+        """tableModel = IonTableModel(data,
                                    self._intensityModeller.getPrecRegion(self._settings['sequName'], abs(self._settings['charge'])),
                                    self._configs['shapeMarked'], self._configs['scoreMarked'])
         '''self.proxyModel = QSortFilterProxyModel()
@@ -344,11 +346,11 @@ class TD_MainController(AbstractMainController):
         #table.setSelectionBehavior(QAbstractItemView.SelectRows)
         table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        return table
+        return table"""
 
 
 
-    def showOptions(self, table, pos):
+    """def showOptions(self, table, pos):
         '''
         Right-click options of an ion table
         '''

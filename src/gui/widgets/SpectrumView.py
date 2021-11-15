@@ -25,9 +25,9 @@ class AbstractSpectrumView(QtWidgets.QWidget):
         super(AbstractSpectrumView, self).__init__(parent)
         self._peaks = peaks
         self._ions = ions
+        self._layout = QtWidgets.QVBoxLayout(self)
         self._translate = QtCore.QCoreApplication.translate
         width = 0.02
-        self._layout=QtWidgets.QVBoxLayout(self)
         styles = {"black": "#f00", "font-size": lblSize}
         self._graphWidget = pg.PlotWidget(self)
         self._graphWidget.setLabel('left', 'Rel.Ab.in au', **styles)
@@ -41,49 +41,49 @@ class AbstractSpectrumView(QtWidgets.QWidget):
         self.makeWidthWidgets(width)
         self._mzRange = range(int(min(self._peaks[:,0])), int(max(self._peaks[:,0]))+1)
         self._layout.addWidget(self._graphWidget)
-        #pg.SignalProxy(self._graphWidget.scene().sigMouseClicked, rateLimit=60, slot=self.mouseMoved)
+
         self._vb = self._graphWidget.plotItem.vb
         #print(np.average(self._peaks[:,0]))
-        #self._cursorLabel = pg.TextItem(text='Hello' ,anchor=(np.average(self._peaks[:,0]),0))
-
-        '''self._cursorLabel = QtWidgets.QLabel(self)
-        self._cursorLabel.setGeometry(QtCore.QRect(70, 40, 200, 26))
-        self._cursorLabel.setText('halloo')'''
-
+        #self._cursorLabel = pg.TextItem(text='Hello' ,anchor=(0,0))
+        self._cursorLabel = QtWidgets.QLabel(self)
+        self._cursorLabel.setGeometry(QtCore.QRect(85, 40, 80, 52))
+        #self._cursorLabel.setStyleSheet("border: 0.1px solid black;")
         #self._graphWidget.addItem(self._cursorLabel)
-
-        #pg.SignalProxy(self._graphWidget.scene().sigMouseMoved, rateLimit=60, slot=self.mouseMoved)
-        #self._graphWidget.scene().sigMouseMoved.connect(self.mouseMoved)
+        pg.SignalProxy(self._graphWidget.scene().sigMouseMoved, rateLimit=60, slot=self.mouseMoved)
+        self._graphWidget.scene().sigMouseMoved.connect(self.mouseMoved)
         pg.SignalProxy(self._graphWidget.scene().sigMouseMoved, rateLimit=60, slot=self.mouseClicked)
         self._graphWidget.scene().sigMouseClicked.connect(self.mouseClicked)
 
         self.show()
 
-    '''def mouseMoved(self, evt):
+    def mouseMoved(self, evt):
         pos = evt
-        mousePoint = self._vb.mapSceneToView(pos)
-        index = int(mousePoint.x())
+        position = self._vb.mapSceneToView(pos)
+        index = int(position.x())
         if index in self._mzRange:
-            self._cursorLabel.setHtml(
+            '''self._cursorLabel.setHtml(
                 "<span style='font-size: 12pt'>x={:0.1f}, \
                  <span style='color: red'>y={:0.1f}</span>".format(
-                    mousePoint.x(), mousePoint.y()))
-            self._cursorLabel.setText(str(mousePoint.x())+', ' +str(mousePoint.y()))
-            self._cursorLabel.setAnchor((index, 0))'''
+                    mousePoint.x(), mousePoint.y()))'''
+            self._cursorLabel.setText(str(round(position.x(),5))+'\n' +str(round(position.y())))
+            #self._cursorLabel.setAnchor((index, 0))
 
     def mouseClicked(self,evt):  # action if start button clicked
-        pos = evt
         # mousePoint = self._vb.mapSceneToView(pos)
-        mousePoint = pos.pos()
-        index = int(mousePoint.x())
+        position = self._vb.mapSceneToView(evt.pos())
+        index = int(position.x())
+        #print(self._vb.mapSceneToView(position).x())
+        print(evt.pos().x())
         if index in self._mzRange:
-            print(mousePoint.x(), mousePoint.y())
+            print(index, position.y())
+        '''else:
+            print('not', mousePoint.x(), mousePoint.y())'''
 
     def makeWidthWidgets(self, width):
         self._spinBox = QtWidgets.QDoubleSpinBox(self)
         self._spinBox.setDecimals(3)
         self._spinBox.setValue(width)
-        self._spinBox.setGeometry(QtCore.QRect(70, 10, 65, 26))
+        self._spinBox.setGeometry(QtCore.QRect(85, 10, 65, 26))
         self._spinBox.setToolTip("Change Width of Peaks (in Da)")
         self._spinBox.setStepType(QtWidgets.QAbstractSpinBox.AdaptiveDecimalStepType)
         #self._cursorLabel = QtWidgets.QLabel(self)

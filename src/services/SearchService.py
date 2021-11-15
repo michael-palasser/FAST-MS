@@ -5,6 +5,7 @@ from src.MolecularFormula import MolecularFormula
 from src.FormulaFunctions import stringToFormula2
 from src.entities.Search import Search
 from src.repositories.SearchRepository import SearchRepository
+from src.services.IntensityModeller import calcScore
 
 
 class SearchService(object):
@@ -27,14 +28,17 @@ class SearchService(object):
             fragment {fragment name: charge states}, information log
         '''
         search =self._rep.getSearch(name)
-        ions = [self.ionFromDB(ion) for ion in search.getIons()]
-        deletedIons = [self.ionFromDB(ion) for ion in search.getDeletedIons()]
-        remIons = [self.ionFromDB(ion) for ion in search.getRemIons()]
+        if search.getNoiseLevel() == 0:
+            search.setNoiseLevel(search.getSettings()['noiseLimit'])
+        noiseLevel = search.getNoiseLevel()
+        ions = [self.ionFromDB(ion, noiseLevel) for ion in search.getIons()]
+        deletedIons = [self.ionFromDB(ion, noiseLevel) for ion in search.getDeletedIons()]
+        remIons = [self.ionFromDB(ion, noiseLevel) for ion in search.getRemIons()]
         searchedZStates = {frag: zsString.split(',') for frag,zsString in search.getSearchedZStates().items()}
-        return search.getSettings(), ions, deletedIons, remIons, searchedZStates, search.getInfo()
+        return search.getSettings(), search.getNoiseLevel(), ions, deletedIons, remIons, searchedZStates, search.getInfo()
 
 
-    def saveSearch(self, name, settings, ions, deletedIons, remIons, searchedZStates, info):
+    def saveSearch(self, name, noiseLevel, settings, ions, deletedIons, remIons, searchedZStates, info):
         '''
         Saves or updates a search/analysis
         :param (str) name: name of the search/analysis
@@ -49,7 +53,7 @@ class SearchService(object):
         deletedIons = [self.ionToDB(ion) for ion in deletedIons]
         remIons = [self.ionToDB(ion) for ion in remIons]
         searchedZStates = {frag: ','.join([str(z) for z in zs]) for frag,zs in searchedZStates.items()}
-        search = Search([None,name, datetime.now().strftime("%d/%m/%Y %H:%M")]+ list(settings.values()),
+        search = Search([None,name, datetime.now().strftime("%d/%m/%Y %H:%M"), int(noiseLevel)]+ list(settings.values()),
                         ions, deletedIons, remIons, searchedZStates, info)
         if name in self._rep.getAllNames():
             self._rep.updateSearch(search)
@@ -57,7 +61,7 @@ class SearchService(object):
             self._rep.createSearch(search)
 
 
-    def ionFromDB(self, ion):
+    def ionFromDB(self, ion, noiseLevel):
         '''
         Processes the sequence and the formula of an ion which was read from the database
         :param (FragmentIon) ion: ion with strings as sequence and formula
@@ -65,6 +69,7 @@ class SearchService(object):
         '''
         #ion.setSequence(ion.getSequence().split(','))
         ion.setFormula(MolecularFormula(stringToFormula2(ion.getFormula(), {}, 1)))
+        ion.setScore(calcScore(ion.getIntensity(), ion.getQuality(), noiseLevel))
         return ion
 
     def ionToDB(self, ion):

@@ -82,7 +82,7 @@ class TD_MainController(AbstractMainController):
             if dialog.exec_() and not dialog.canceled():
                 self._configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
                 start=time.time()
-                self._settings, observedIons, delIons, remIons, searchedZStates, logFile = \
+                self._settings, noiseLevel, observedIons, delIons, remIons, searchedZStates, logFile = \
                     searchService.getSearch(dialog.getName())
                 print('time:', time.time()-start)
                 self._info = Info(logFile)
@@ -108,7 +108,7 @@ class TD_MainController(AbstractMainController):
                 self._spectrumHandler = SpectrumHandler(self._propStorage, self._libraryBuilder.getPrecursor(),
                                                         self._settings, peaks)
                 self._spectrumHandler.setSearchedChargeStates(searchedZStates)
-                self._intensityModeller = IntensityModeller(self._configs)
+                self._intensityModeller = IntensityModeller(self._configs, noiseLevel)
                 self._intensityModeller.setIonLists(observedIons, delIons, remIons)
                 self._analyser = Analyser(None, self._propStorage.getSequenceList(), self._settings['charge'],
                                           self._propStorage.getModificationName())
@@ -164,13 +164,14 @@ class TD_MainController(AbstractMainController):
         #spectralFile = os.path.join(path, 'Spectral_data','top-down', self._settings['spectralData'])
         print("\n********** Importing spectral pattern from:", self._settings['spectralData'], "**********")
         self._spectrumHandler = SpectrumHandler(self._propStorage, self._libraryBuilder.getPrecursor(), self._settings)
+        self._info.spectrumProcessed(self._spectrumHandler.getUpperBound(), self._spectrumHandler.getNoiseLevel())
         """Finding fragments"""
         print("\n********** Search for ions **********")
         start = time.time()
         self._spectrumHandler.findIons(self._libraryBuilder.getFragmentLibrary())
         print("\ndone\nexecution time: ", round((time.time() - start) / 60, 3), "min\n")
 
-        self._intensityModeller = IntensityModeller(self._configs)
+        self._intensityModeller = IntensityModeller(self._configs, self._spectrumHandler.getNoiseLevel())
         start = time.time()
         print("\n********** Calculating relative abundances **********")
         for ion in self._spectrumHandler.getFoundIons():
@@ -508,12 +509,13 @@ class TD_MainController(AbstractMainController):
             self._info.export()
             newOptions = dlg.getOptions()
             exportConfigHandler.write(newOptions)
-            outputPath, filename = dlg.getDir(), dlg.getFilename()
+            filename = dlg.getFilename()
             if filename == '':
                 inputFileName = os.path.split(self._settings['spectralData'])[-1]
                 filename = inputFileName[0:-4] + '_out' + '.xlsx'
             elif filename[-5:] != '.xlsx':
                 filename += '.xlsx'
+            outputPath = newOptions['dir']
             if outputPath == '':
                 outputPath = os.path.join(path, 'Spectral_data', 'top-down')
             output = os.path.join(outputPath, filename)
@@ -661,8 +663,8 @@ class TD_MainController(AbstractMainController):
             forwardVals = self._propStorage.filterByDir(percentageDict,1)
             backwardVals = self._propStorage.filterByDir(percentageDict,-1)
             sequence = self._propStorage.getSequenceList()
-            plotFactory.showOccupancyPlot(sequence, forwardVals, backwardVals,
-                                          self._settings['nrMod'], modification)
+            self._openWindows.append(plotFactory.showOccupancyPlot(sequence, forwardVals, backwardVals,
+                                                                   self._settings['nrMod'], modification))
 
             #absTable = np.zeros((len(sequence),len(absDict.keys())))
             forwardAbsVals = self._propStorage.filterByDir(absDict,1)
@@ -716,8 +718,8 @@ class TD_MainController(AbstractMainController):
         backwardVals = self._propStorage.filterByDir(chargeDict,-1)
         forwardLimits = self._propStorage.filterByDir(minMaxCharges,1)
         backwardLimits = self._propStorage.filterByDir(minMaxCharges,-1)
-        plotFactory1.showChargePlot(self._propStorage.getSequenceList(), forwardVals, backwardVals,
-                                    self._settings['charge'], forwardLimits, backwardLimits)
+        self._openWindows.append(plotFactory1.showChargePlot(self._propStorage.getSequenceList(), forwardVals,
+                                                backwardVals,self._settings['charge'], forwardLimits, backwardLimits))
         chargeView = PlotTableView(self._analyser.toTable(forwardVals.values(), backwardVals.values()),
                                        list(chargeDict.keys()), 'Av. Charge per Fragment', 1)
         self._openWindows.append(chargeView)
@@ -764,7 +766,8 @@ class TD_MainController(AbstractMainController):
         print('Saving analysis', self._savedName)
         self._info.save()
         start=time.time()
-        searchService.saveSearch(self._savedName, self._settings, self._intensityModeller.getObservedIons().values(),
+        searchService.saveSearch(self._savedName, self._spectrumHandler.getNoiseLevel(), self._settings,
+                                 self._intensityModeller.getObservedIons().values(),
                                  self._intensityModeller.getDeletedIons().values(),
                                  self._intensityModeller.getRemodelledIons(),
                                  self._spectrumHandler.getSearchedChargeStates(), self._info.toString())

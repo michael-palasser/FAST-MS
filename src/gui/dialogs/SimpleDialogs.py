@@ -97,10 +97,14 @@ class ExportDialog(AbstractDialog):
     def __init__(self, parent, analysisOptions, storedOptions):
         super(ExportDialog, self).__init__(parent, 'Export Results')
         if storedOptions is None:
-            storedOptions = {'columns':[], 'analysis':[]}
+            storedOptions = {'columns':[], 'analysis':[], 'dir':[]}
         formLayout = self.makeFormLayout(self)
+        if isdir(storedOptions['dir']):
+            startPath = storedOptions['dir']
+        else:
+            startPath = join(path, 'Spectral_data', 'top-down')
         index=self.fill(self, formLayout,('Directory:','Filename:'),
-                  {'dir': (OpenFileWidget(self, 0, join(path, 'Spectral_data', 'top-down'), "Select directory", ""),
+                  {'dir': (OpenFileWidget(self, 0, startPath, "Select directory", ""),
                               'Select the directory where the output-file should be saved\n(default: output'),
                    'name': (QtWidgets.QLineEdit(self), "Name of the output-file\n"
                                                        "(default: name of spectral input file + _out)")})
@@ -120,6 +124,8 @@ class ExportDialog(AbstractDialog):
                 self._boxes.append(box)
                 index +=1
 
+        self._widgets['dir'].setText(storedOptions['dir'])
+
         options = ('m/z', 'z','intensity', 'int./z', 'fragment', 'error /ppm', 'S/N', 'quality', 'formula', 'score', 'comment',
                    'molecular mass', 'average mass', 'noise')
         label = QtWidgets.QLabel(self)
@@ -131,6 +137,7 @@ class ExportDialog(AbstractDialog):
         formLayout.setWidget(index + 2, QtWidgets.QFormLayout.SpanningRole, self._table)
         formLayout.addItem(QtWidgets.QSpacerItem(0,1))
         formLayout.setWidget(index + 4, QtWidgets.QFormLayout.FieldRole, self._buttonBox)
+
         self.show()
 
     def accept(self):
@@ -142,16 +149,15 @@ class ExportDialog(AbstractDialog):
     '''def getFormat(self):
         return self._widgets['format'].currentText()'''
 
-    def getDir(self):
-        return self._widgets['dir'].text()
+    '''def getDir(self):
+        return self._widgets['dir'].text()'''
 
     def getFilename(self):
         return self._widgets['name'].text()
 
     def getOptions(self):
         ticked = [box.text() for box in self._boxes if box.isChecked()]
-        print(ticked)
-        return {'columns':self._table.readTable(), 'analysis':ticked}
+        return {'columns':self._table.readTable(), 'analysis':ticked, 'dir':self._widgets['dir'].text()}
 
 class SaveSearchDialog(AbstractDialog):
     '''

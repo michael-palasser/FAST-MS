@@ -21,7 +21,7 @@ class IsotopePatternLogics(object):
         self._modService = ModificationService()
         self._elements = PeriodicTableService().getAllPatternNames()
         self._molecules = self._moleculeService.getAllPatternNames()
-        self._intensityModeller = IntensityModeller(ConfigurationHandlerFactory.getTD_ConfigHandler().getAll())
+        self._intensityModeller = IntensityModeller(ConfigurationHandlerFactory.getTD_ConfigHandler().getAll(), 10**6)
         self._peakDtype = np.dtype([('m/z', np.float64), ('relAb', np.int32), ('calcInt', np.float64), ('used', np.bool_)])
         #self._peakDtype = np.dtype([('m/z', float), ('relAb', float), ('calcInt', float), ('used', np.bool_)])
 

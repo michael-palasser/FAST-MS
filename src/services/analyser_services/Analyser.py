@@ -139,7 +139,7 @@ class Analyser(object):
         Calculates the proportion of the interesting value (col 2)
         :param (dict[str,ndarray(dtype=[float,float,float])]) tempDict: dict {fragment type: array} with array columns:
             summed values, interesting values, 0
-        :return: (dict[str,ndarray(dtype=[float,float,float])]) dict {fragment type: array} with array columns:
+        :return: (dict[str,ndarray(dtype=[float])]) dict {fragment type: array} with array columns:
             summed values, interesting values, interesting proportion
         '''
         proportions = dict()

@@ -4,6 +4,7 @@ Created on 6 Aug 2020
 @author: michael
 '''
 import logging
+from math import exp
 from re import findall
 import numpy as np
 from copy import deepcopy
@@ -15,11 +16,23 @@ from src.services.assign_services.SpectrumHandler import getErrorLimit, calculat
 logging.basicConfig(level=logging.INFO)
 logging.basicConfig(filename='logfile_IntensityModeller.log',level=logging.INFO)
 
+
+def calcScore(intensity, quality, noiseLevel):
+    if quality > 1.5:
+        return 10 ** 6
+    else:
+        if noiseLevel != 0:
+            return exp(10 * quality) / 20 * quality * intensity / noiseLevel
+        else:
+            print('Warning: noiseLevel = 0')
+            return 0
+
+
 class IntensityModeller(object):
     '''
     Class which models signal intensities (including ppm errors and qualities) and for storage of ion values
     '''
-    def __init__(self, configurations):
+    def __init__(self, configurations, noiseLevel):
         '''
         :param (dict[str,Any]) configurations: configurations
         '''
@@ -28,6 +41,7 @@ class IntensityModeller(object):
         self._deletedIons = dict()
         self._remodelledIons = list()
         self._monoisotopicList = list()
+        self._noiseLevel = noiseLevel
 
     def getObservedIons(self):
         return self._correctedIons
@@ -143,13 +157,21 @@ class IntensityModeller(object):
                     correctedIon.setIntensity(np.sum(isoPattern['calcInt'] * solution.x))
                     #isoPattern['calcInt'] = correctedIon.getIsotopePattern()['calcInt'] * solution.x
                     correctedIon.setIsotopePatternPart('calcInt',correctedIon.getIsotopePattern()['calcInt']*solution.x)
-            correctedIon.setQuality(self.calcQuality(solution.fun, correctedIon.getIntensity()))
+            self.setQualityAndScore(correctedIon, solution)
+            '''correctedIon.setQuality(self.calcQuality(solution.fun, correctedIon.getIntensity()))
+            ion.setScore(calcScore(ion.getIntensity(), ion.getQuality(), self._noiseLevel))'''
             correctedIon.setError(np.average(ion.getIsotopePattern()['error'][noOutliers]
                                             [np.where(ion.getIsotopePattern()['relAb'][noOutliers] != 0)]))
             for peak in correctedIon.getIsotopePattern():
                 if peak['m/z'] in outlierList:
                     peak['used'] = False
         return correctedIon
+
+    def setQualityAndScore(self, ion, solution):
+        intensity = ion.getIntensity()
+        quality = self.calcQuality(solution.fun, intensity)
+        ion.setQuality(quality)
+        ion.setScore(calcScore(intensity, quality, self._noiseLevel))
 
     def modelIon(self, ion):
         '''
@@ -168,7 +190,9 @@ class IntensityModeller(object):
         #ion.isotopePattern['calcInt'] = ion.isotopePattern['calcInt'] * solution.x
         ion.setIsotopePatternPart('calcInt',ion.getIsotopePattern()['calcInt']*solution.x)
         if ion.getIntensity() != 0:
-            ion.setQuality(self.calcQuality(solution.fun, ion.getIntensity()))
+            '''ion.setQuality(self.calcQuality(solution.fun, ion.getIntensity()))
+            ion.setScore(calcScore(ion.getIntensity(), ion.getQuality(), self._noiseLevel))'''
+            self.setQualityAndScore(ion, solution)
         return ion, outliers
 
     def processIons(self, ion):
@@ -457,7 +481,9 @@ class IntensityModeller(object):
                         self._correctedIons[ion].setIntensity(self._correctedIons[ion].getIntensity() * factor)
                         sum_int += self._correctedIons[ion].getIntensity()  #for error calc
                     for ion in undeletedIons:
-                        self._correctedIons[ion].setQuality(self.calcQuality(solution.fun, sum_int))
+                        quality = self.calcQuality(solution.fun, sum_int)
+                        self._correctedIons[ion].setQuality(quality)
+                        self._correctedIons[ion].setScore(calcScore(sum_int, quality, self._noiseLevel))
                         if self._correctedIons[ion].getSignalToNoise() < self._configs['SNR']:
                             self.deleteIon(ion, 'SNR')
                     print("\tqual:",round(solution.fun**(0.5) / sum_int,2))

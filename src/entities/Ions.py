@@ -4,13 +4,10 @@ Created on 3 Jul 2020
 @author: michael
 '''
 from abc import ABC
-from math import exp
 import numpy as np
 #from numpy import array, dtype
 from src.FormulaFunctions import eMass, protMass
-from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 
-noiseLimit = ConfigurationHandlerFactory.getTD_SettingHandler().get('noiseLimit')
 
 class Ion(ABC):
     '''
@@ -36,19 +33,23 @@ class Ion(ABC):
 
     def getQuality(self):
         return self._quality
-    def setQuality(self, quality):
+    def setQuality(self, quality, score=0):
         self._quality = quality
-        self.calcScore()
 
     def getScore(self):
         return self._score
+    def setScore(self, score):
+        self._score = score
 
-    def calcScore(self):
+    '''def calcScore(self, noiseLevel):
         if self._quality > 1.5:
             print('warning:', round(self._quality, 2), self.getName())
             self._score = 10 ** 6
         else:
-            self._score = exp(10 * self._quality) / 20 * self._quality * self.getIntensity() / noiseLimit
+            if noiseLevel != 0:
+                self._score = exp(10 * self._quality) / 20 * self._quality * self.getIntensity() / noiseLevel
+            else:
+                return 0'''
         # return self.score
 
     def getNeutral(self, mz, mode):
@@ -72,7 +73,7 @@ class Ion(ABC):
     def addComment(self, comment):
         self._comment += comment + ','
 
-    def setRemaining(self, intensity, error, quality, comment):
+    """def setRemaining(self, intensity, error, quality, score, comment):
         '''
         Setter method for all values which are not already set by the constructor
         :param (float) intensity:
@@ -82,8 +83,8 @@ class Ion(ABC):
         '''
         self._intensity = int(intensity)
         self._error = error
-        self.setQuality(quality)
-        self._comment = comment
+        self.setQuality(quality, score)
+        self._comment = comment"""
 
     def setIsoIntQual(self, isotopePattern, intensity, quality):
         self._isotopePattern = isotopePattern
@@ -259,7 +260,8 @@ class FragmentIon(Fragment, Ion):
     '''
     charged fragment
     '''
-    def __init__(self, fragment, monoisotopic, charge, isotopePattern, noise, quality=None, calculate=False, comment=''):
+    def __init__(self, fragment, monoisotopic, charge, isotopePattern, noise, quality=None, calculate=False,
+                 comment='', score=None):
         '''
         Constructor
         :param (Fragment) fragment
@@ -276,15 +278,14 @@ class FragmentIon(Fragment, Ion):
         self._charge = charge
         self._isotopePattern = isotopePattern
         self._quality = quality
+        self._score = score
         if calculate:
             self._intensity= np.sum(self._isotopePattern['calcInt'])
             self._error = np.average(self._isotopePattern['error'][np.where(self._isotopePattern['relAb'] != 0 &
                                                                             self._isotopePattern['used'])])
-            self.calcScore()
         else:
             self._intensity = 0
             self._error = 0
-            self._score = 0
         self._noise = noise
         self._comment = comment
 
@@ -486,7 +487,8 @@ class IntactIon(IntactNeutral, Ion):
     '''
     Ion for intact ion search
     '''
-    def __init__(self, neutral, monoisotopic, charge, isotopePattern, noise, quality=None, calculate=False, comment=''):
+    def __init__(self, neutral, monoisotopic, charge, isotopePattern, noise, quality=None, calculate=False, comment='',
+                 score=None):
         '''
 
         :param (IntactNeutral) neutral: neutral version of ion
@@ -508,7 +510,7 @@ class IntactIon(IntactNeutral, Ion):
             self._intensity= np.sum(self._isotopePattern['calcInt'])
             self._error = np.average(self._isotopePattern['error'][np.where(self._isotopePattern['relAb'] != 0 &
                                                                             self._isotopePattern['used'])])
-            self.calcScore()
+            self._score = score
         else:
             self._intensity = 0
             self._error = 0

@@ -44,6 +44,9 @@ class Info(object):
         self._infoString += '\n\tquality: error std.dev. = {}, av. error = {}'.format(quality[0], quality[1])
         self._infoString += '\n\tused ions: (' + '), ('.join([self.ionToString(ion) for ion in usedIons])+')'
 
+    def spectrumProcessed(self, upperBound, noiseLevel):
+        self._infoString += '\n* Max. m/z: ' + str(upperBound)
+        self._infoString += '\n* Av. noise: ' + str(noiseLevel)
 
     def searchFinished(self, mz):
         self._infoString += '\n* Search finished: ' + datetime.now().strftime("%d/%m/%Y %H:%M") +\
@@ -91,7 +94,6 @@ class Info(object):
 
     def resetIon(self, ion):
         self._infoString += '\n* reset ' + self.ionToString(ion)
-
 
     def export(self):
         self._infoString += '\n* Exported to Excel: ' + datetime.now().strftime("%d/%m/%Y %H:%M")

@@ -47,7 +47,7 @@ class AbstractSpectrumHandler(ABC):
     '''
     Abstract superclass for reading a spectrum (peak list), calculating the noise and finding isotope peaks
     '''
-    def __init__(self, settings, spraymode, IonClass, peaks=None):
+    def __init__(self, settings, spraymode, IonClass, peaks=None, noiseLevel=None):
         self._settings = settings
         self._sprayMode = spraymode
         self._upperBound = 0
@@ -55,12 +55,14 @@ class AbstractSpectrumHandler(ABC):
         self._foundIons = list()
         self._ionsInNoise = list()
         self._searchedChargeStates = dict()
-        if peaks == None:
+        self._noiseLevel = 0
+        if peaks is None:
             print('hey', self._settings['spectralData'])
             self.addSpectrum(self._settings['spectralData'])
         else:
             self._spectrum = np.array(sorted(list(peaks), key=lambda tup: tup[0]))
             self._upperBound = np.max(peaks)
+            self._noiseLevel = noiseLevel
         self._IonClass = IonClass
         self._foundIons = list()
         self._ionsInNoise = list()
@@ -70,6 +72,9 @@ class AbstractSpectrumHandler(ABC):
                                        ('calcInt', float), ('error', np.float32), ('used', bool)])
         self._peaksArrType = np.dtype([('m/z', float), ('relAb', float),
                                        ('calcInt', float), ('error', np.float32), ('used', bool)])
+
+    def getNoiseLevel(self):
+        return self._noiseLevel
 
     def getSpectrum(self, *args):
         '''
@@ -185,12 +190,14 @@ class AbstractSpectrumHandler(ABC):
 
         peaksHigherThanNoise = list()
         logging.debug('********** Calculating noise **********\nm/z\tnoise')
+        noiseList = []
         while currentMz < np.max(self._spectrum[:,0]):#2500:
             currentWindow = self.getPeaksInWindow(self._spectrum, currentMz, windowSize)
             noise = self.calculateNoise(currentMz,windowSize,currentWindow)
             logging.debug(str(currentMz)+'\t'+ str(noise))
             #currentWindow = self.getPeaksInWindow(self._spectrum, currentMz, windowSize)
             peaksHigherThanNoise.append((currentMz, currentWindow[np.where(currentWindow > (noise * 5))].size))
+            noiseList.append((currentMz,noise))
             currentMz += 1
         peaksHigherThanNoise = np.array(peaksHigherThanNoise)
         windowSize, currentMz = 100 , configs['minUpperBound']
@@ -212,6 +219,9 @@ class AbstractSpectrumHandler(ABC):
 
         logging.info('Final upper m/z limit: '+ str(currentMz))
         self._upperBound = currentMz
+        self._noiseLevel = np.average(np.array([tup[1] for tup in noiseList if tup[0]<currentMz]))
+        logging.info('Final upper m/z limit: '+ str(self._noiseLevel))
+        print('noiseLevel',self._noiseLevel)
         return currentMz
 
     def calculateNoise(self, point, windowSize, currentWindow=None):

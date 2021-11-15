@@ -157,6 +157,7 @@ class IntactMainController(AbstractMainController):
         #spectralFile = os.path.join(path, 'Spectral_data','top-down', self._settings['spectralData'])
         print("\n********** Importing spectral pattern from:", self._settings['spectralData'], "**********")
         self._spectrumHandler = IntactSpectrumHandler(self._settings)
+        self._info.spectrumProcessed(self._spectrumHandler.getUpperBound(), self._spectrumHandler.getNoiseLevel())
         if self._settings['calibration']:
             allSettings = dict(self._settings)
             allSettings.update(self._configs)
@@ -170,7 +171,7 @@ class IntactMainController(AbstractMainController):
         self._spectrumHandler.findIons(self._libraryBuilder.getNeutralLibrary())
         print("\ndone\nexecution time: ", round((time.time() - start) / 60, 3), "min\n")
 
-        self._intensityModeller = IntensityModeller(self._configs)
+        self._intensityModeller = IntensityModeller(self._configs, self._spectrumHandler.getNoiseLevel())
         start = time.time()
         print("\n********** Calculating relative abundances **********")
         for ion in self._spectrumHandler.getFoundIons():
@@ -502,12 +503,13 @@ class IntactMainController(AbstractMainController):
             self._info.export()
             newOptions = dlg.getOptions()
             exportConfigHandler.write(newOptions)
-            outputPath, filename = dlg.getDir(), dlg.getFilename()
+            filename = dlg.getFilename()
             if filename == '':
                 inputFileName = os.path.split(self._settings['spectralData'])[-1]
                 filename = inputFileName[0:-4] + '_out' + '.xlsx'
             elif filename[-5:] != '.xlsx':
                 filename += '.xlsx'
+            outputPath = newOptions['dir']
             if outputPath == '':
                 outputPath = os.path.join(path, 'Spectral_data', 'top-down')
             output = os.path.join(outputPath, filename)

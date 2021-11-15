@@ -1,7 +1,7 @@
-#!/Users/eva-maria/.conda/envs/SAUSAGE_beta1/bin/python
+#!/usr/bin/env python3
+
 import os
 import sys
-
 import pip
 
 def checkInstallation(package):
@@ -20,4 +20,5 @@ directory = os.path.dirname(abspath)
 os.chdir(directory)
 os.system("python -m src.gui.StartWindow")
 
-# !/usr/bin/env python3
+
+#!/Users/eva-maria/.conda/envs/SAUSAGE_beta1/bin/python

@@ -9,14 +9,16 @@ from src.repositories.AbstractRepositories import AbstractRepository
 from tqdm import tqdm
 
 
+
 class SearchRepository(AbstractRepository):
     '''
     Repository for storing values of a top-down analysis
     '''
     def __init__(self):
         super(SearchRepository, self).__init__('search.db', 'searches',
-                                               ('name', "date","sequName", "charge", "fragmentation", "modifications",
-                                                "nrMod", "spectralData", "noiseLimit", "fragLib"), (), (), 'DEFERRED')
+                                               ('name', "date", 'noiseLevel',"sequName", "charge", "fragmentation",
+                                                "modifications","nrMod", "spectralData", "noiseLimit", "fragLib"),
+                                               (), (), 'DEFERRED')
         #self.__conn = sqlite3.connect(':memory:')
         self._depTables = {'ions': ("name", "number", "formula", "monoiso", "charge",
                                     "noise", "qual", "comment", 'status', "parentId"),
@@ -30,13 +32,14 @@ class SearchRepository(AbstractRepository):
                 "id"	integer PRIMARY KEY UNIQUE ,
                 "name"	text NOT NULL UNIQUE ,
                 "date"	text NOT NULL ,
+                "noiseLevel"	integer NOT NULL,
                 "sequName"	text NOT NULL ,
                 "charge"	integer NOT NULL ,
                 "fragmentation"	text NOT NULL,
                 "modifications"	text NOT NULL,
                 "nrMod"	integer NOT NULL ,
                 "spectralData"	text NOT NULL,
-                "noiseLimit"	real NOT NULL,
+                "noiseLimit"	integer NOT NULL,
                 "fragLib"	text NOT NULL);""")
         self._conn.cursor().execute("""
             CREATE TABLE IF NOT EXISTS ions (

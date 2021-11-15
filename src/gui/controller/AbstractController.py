@@ -321,7 +321,12 @@ class AbstractMainController(ABC):
                                                 message + "Do you really want to close the analysis?",
                                                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
         if choice == QtWidgets.QMessageBox.Yes:
-            [w.close() for w in self._openWindows]
+            for w in self._openWindows:
+                #if w is not None:
+                try:
+                    w.close()
+                except AttributeError:
+                    pass
             self._mainWindow.close()
             self._infoView.close()
 

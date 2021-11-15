@@ -18,7 +18,7 @@ def initTestSpectrumHandler():
 class TestIntensityModeller(TestCase):
     def setUp(self):
         self.configs, settings, props, self.builder, self.spectrumHandler = initTestSpectrumHandler()
-        self.intensityModeller = IntensityModeller(self.configs)
+        self.intensityModeller = IntensityModeller(self.configs, self.spectrumHandler.getNoiseLevel())
 
     '''def test_get_observed_ions(self):
         self.fail()
@@ -276,7 +276,7 @@ class TestIntensityModeller(TestCase):
     def test_for_intact(self):
         d = getCalibratedSpectrum()
         d['spectrumHandler'].findIons(d['libraryBuilder'].getNeutralLibrary())
-        self._intensityModeller = IntensityModeller(ConfigurationHandlerFactory.getTD_ConfigHandler().getAll())
+        self._intensityModeller = IntensityModeller(ConfigurationHandlerFactory.getTD_ConfigHandler().getAll(), d['spectrumHandler'].getNoiseLevel())
         for ion in d['spectrumHandler'].getFoundIons():
             self._intensityModeller.processIons(ion)
         for ion in d['spectrumHandler']._ionsInNoise:

@@ -1,4 +1,7 @@
+import sys
+
 import numpy as np
+from PyQt5.QtWidgets import QApplication
 from matplotlib import pyplot as plt
 from PyQt5 import QtGui
 import pyqtgraph as pg
@@ -16,10 +19,12 @@ class PlotFactory(object):
     def showOccupancyPlot(self, sequence, forwardVals, backwardVals, maxY, modification):
         self.initiatePlot(sequence, forwardVals, backwardVals, maxY, lambda: self.formatForOccupancies(modification))
         #self.initiateAbsPlot(sequence, absVals, maxY, 'Abs. Occupancies '+modification)
+        return self._plot1
 
     def showChargePlot(self, sequence, forwardVals, backwardVals, maxY, forwardVals2, backwardVals2):
         self.initiatePlot(sequence, forwardVals, backwardVals, abs(maxY), self.formatForCharges)
         self.plotMinMaxVals(forwardVals2, backwardVals2)
+        return self._plot1
 
 
     def initiatePlot(self, sequence, forwardVals, backwardVals, maxY, func):
@@ -145,10 +150,23 @@ class PlotFactory(object):
             scatter = pg.ScatterPlotItem(x=xVals, y=vals, symbol=markers[i],
                                          pen =pg.mkPen(color=colours[i], width=2),
                                          brush=(0,0,0,0), size=10, pxMode=True, name = name)
-            curve = pg.PlotCurveItem(x=xVals, y=vals, pen=pg.mkPen(color=colours[i], width=2))
+            newXVals, newVals = self.removeNANVals(xVals,vals)
+            curve = pg.PlotCurveItem(x=newXVals,y=newVals,pen=pg.mkPen(color=colours[i], width=2))
             self._plot1.addItem(scatter)
             self._plot1.addItem(curve)
             i+=1
+
+    def removeNANVals(self, xVals, vals):
+        '''
+        PlotCurveItem does not like nan values
+        '''
+        newXVals, newVals = [],[]
+        for xVal,val in zip(xVals,vals):
+            if not np.isnan(val):
+                newXVals.append(xVal)
+                newVals.append(val)
+        return newXVals, newVals
+
 
     def plotMinMaxVals(self, forwardVals, backwardVals):
         '''
@@ -298,6 +316,7 @@ def plotBars(sequence, values, headers, title, occup=False):
     ax.set_xlim([0, nrRows+1])
     plt.show()
 
+#Test
 if __name__ == '__main__':
     arr = np.zeros((26,2))
     for i in range(26):
@@ -310,4 +329,19 @@ if __name__ == '__main__':
         for j in range(4):
             arr[i,j] = np.random.randint(100000)
     plotBars(sequ, arr, ['c','c+CMCT','y','y+CMCT'], 'hey', False)
-    print(list(arr[:][1]))
+
+    app = QApplication(sys.argv)
+    plotFactory = PlotFactory(None)
+    forwardVals = {'c':np.random.rand(len(sequ))}
+    backwardVals =  {'y':np.random.rand(len(sequ))}
+    #plotFactory.showOccupancyPlot(sequ, forwardVals, backwardVals,1, 'CMCT')
+    sequ = sequ[:15]
+    forwardVals={'c': np.array([np.nan, 0.62842433, 0.55673973, 0.56883476, 0.52191535,
+                 0.81935084, 0.69020276, 0.75760611, 1., 1.,
+                 0.68116389, 1., 1., 0.5610877, np.nan])}
+    backwardVals= {'y': np.array([np.nan, 0., 0., 0., 0.,
+                 0., 0., 0., 0., 0.,
+                 0., 0.08697064, 0.09865665, 0., np.nan])}
+    plotFactory.showOccupancyPlot(sequ, forwardVals, backwardVals,1, 'CMCT')
+
+    sys.exit(app.exec_())

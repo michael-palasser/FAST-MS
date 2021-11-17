@@ -11,7 +11,8 @@ from src.entities.Ions import Fragment
 from src.entities.SearchSettings import SearchSettings
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.services.library_services.LibraryBuilder import FragmentLibraryBuilder
-from src.services.assign_services.SpectrumHandler import SpectrumHandler, getErrorLimit, getMz, calculateError
+from src.services.assign_services.TD_SpectrumHandler import SpectrumHandler
+from src.services.assign_services.AbstractSpectrumHandler import getErrorLimit, calculateError, getMz
 from tests.test_MolecularFormula import averaginine, averagine
 from tests.top_down.test_LibraryBuilder import initTestSequences
 
@@ -41,7 +42,7 @@ class TestSpectrumHandler(TestCase):
         self.builder.createFragmentLibrary()
         self.builder.addNewIsotopePattern()'''
         self.configs, self.settings, self.props, self.builder = initTestLibraryBuilder()
-        self.spectrumHandler = SpectrumHandler(self.props, self.builder.getPrecursor(), self.settings)
+        self.spectrumHandler = SpectrumHandler(self.props, self.builder.getPrecursor(), self.settings, self.configs)
 
         self.settingsProt = {'sequName': 'dummyProt', 'charge': 4, 'fragmentation': 'Protein_CAD', 'modifications': '-',
                              'nrMod': 0, 'spectralData': os.path.join(path, 'tests', 'top_down', 'dummySpectrum.txt'),
@@ -50,7 +51,8 @@ class TestSpectrumHandler(TestCase):
                                         self.settingsProt['modifications'])
         self.builderProt = FragmentLibraryBuilder(self.propsProt, 0)
         self.builderProt.createFragmentLibrary()
-        self.spectrumHandlerProt = SpectrumHandler(self.propsProt, self.builderProt.getPrecursor(), self.settingsProt)
+        self.spectrumHandlerProt = SpectrumHandler(self.propsProt, self.builderProt.getPrecursor(), self.settingsProt,
+                                                   self.configs)
         self.spectrumHandler.setNormalizationFactor(self.spectrumHandler.getNormalizationFactor())
         '''builder2 = FragmentLibraryBuilder(self.props,2)
         builder2.createFragmentLibrary()
@@ -77,9 +79,11 @@ class TestSpectrumHandler(TestCase):
         self.assertAlmostEqual(1800 + self.configs['upperBoundTolerance'], self.spectrumHandler.findUpperBound())
 
     def test_calculate_noise(self):
+        window = 40
         for i in range(10):
-            self.assertAlmostEqual(0.95, self.spectrumHandler.calculateNoise(400 + i * 100, 40) / (
-                        10 ** 6 + 100 * 400 + i * 100), delta=0.1)
+            point = 400 + i * 100
+            self.assertAlmostEqual(1.05, self.spectrumHandler.calculateNoise(point, window) / (
+                        10 ** 6 + 100 * point), delta=0.12)
 
     def test_get_peaks_in_window(self):
         allPeaks = np.column_stack((np.arange(100., 300.), np.ones(200)))
@@ -182,10 +186,13 @@ class TestSpectrumHandler(TestCase):
             theoPeak['m/z'] += 100
 
     def getDummyPeak(self, theoPeak, outside=False):
+        configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
         if outside == False:
-            randomError = np.random.rand(1) * (-1) ** (np.random.randint(2)) * getErrorLimit(theoPeak['m/z'])
+            randomError = np.random.rand(1) * (-1) ** (np.random.randint(2)) * getErrorLimit(theoPeak['m/z'],
+                                                                            configs['k'], configs['d'])
         else:
-            randomError = (np.random.rand(1) + 1) * (-1) ** (np.random.randint(2)) * getErrorLimit(theoPeak['m/z'])
+            randomError = (np.random.rand(1) + 1) * (-1) ** (np.random.randint(2)) * getErrorLimit(theoPeak['m/z'],
+                                                                            configs['k'], configs['d'])
         mz = theoPeak['m/z'] * (1 + randomError / 10 ** 6)
         return np.array([(mz[0], (theoPeak['calcInt'] + np.random.rand(1) / 10 * (-1) ** (np.random.randint(2)))[0])]), \
                randomError[0]
@@ -295,9 +302,9 @@ class TestSpectrumHandler(TestCase):
 
     def test_get_charged_isotope_pattern(self):
         configs, settings, props, builder = initTestLibraryBuilder(30)
-        spectrumHandlerPos = SpectrumHandler(props, builder.getPrecursor(), settings)
+        spectrumHandlerPos = SpectrumHandler(props, builder.getPrecursor(), settings, configs)
         configs, settings, props, builder = initTestLibraryBuilder(-30)
-        spectrumHandlerNeg = SpectrumHandler(props, builder.getPrecursor(), settings)
+        spectrumHandlerNeg = SpectrumHandler(props, builder.getPrecursor(), settings, configs)
         spectrumHandlerPos.getProtonIsotopePatterns()
         spectrumHandlerNeg.getProtonIsotopePatterns()
         for i in range(10):

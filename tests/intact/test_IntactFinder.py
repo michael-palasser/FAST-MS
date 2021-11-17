@@ -4,7 +4,7 @@ import numpy as np
 
 from src import path
 from src.services.DataServices import SequenceService
-from src.services.assign_services.IntactFinder import Finder
+from src.services.assign_services.Finders import Finder
 from src.services.library_services.IntactLibraryBuilder import IntactLibraryBuilder
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 

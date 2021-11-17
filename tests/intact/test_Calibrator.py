@@ -4,11 +4,11 @@ from unittest import TestCase
 
 from src import path
 from src.services.DataServices import SequenceService
-from src.services.assign_services.IntactFinder import Calibrator
+from src.services.assign_services.Calibrator import Calibrator
 from src.services.library_services.IntactLibraryBuilder import IntactLibraryBuilder
 from src.services.assign_services.IntactSpectrumHandler import IntactSpectrumHandler
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
-from src.services.assign_services.SpectrumHandler import SpectrumHandler
+from src.services.assign_services.TD_SpectrumHandler import SpectrumHandler
 from tests.intact.test_IntactFinder import initConfigurations, initTestSequences
 from tests.top_down.test_SpectrumHandler import initTestLibraryBuilder
 
@@ -37,7 +37,7 @@ def getTestIntactLibraryBuilder(settings):
 def getCalibratedSpectrum():
     settings = getTestIntactSettings()
     libraryBuilder = getTestIntactLibraryBuilder(settings)
-    spectrumHandler = IntactSpectrumHandler(settings)
+    spectrumHandler = IntactSpectrumHandler(settings, ConfigurationHandlerFactory.getTD_ConfigHandler().getAll())
     calibrator = Calibrator(libraryBuilder.getNeutralLibrary(), settings)
     uncalibrated = deepcopy(spectrumHandler.getSpectrum())
     calSpectrum = calibrator.calibratePeaks(spectrumHandler.getSpectrum())
@@ -68,7 +68,7 @@ class TestCalibrator(TestCase):
 
     def test_calibrate_peaks(self):
         configs, settings, props, builder = initTestLibraryBuilder()
-        spectrumHandler = SpectrumHandler(props, builder.getPrecursor(), settings)
+        spectrumHandler = SpectrumHandler(props, builder.getPrecursor(), settings, configs)
         spectrumHandler.addSpectrum(os.path.join(path, 'tests', 'top_down', 'dummySpectrum.txt'))
         uncalibrated = deepcopy(spectrumHandler.getSpectrum())
         calibrated = self._calibrator.calibratePeaks(uncalibrated)

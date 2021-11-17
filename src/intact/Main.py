@@ -11,9 +11,9 @@ from datetime import datetime
 
 from src.services.DataServices import SequenceService
 from src.services.library_services.IntactLibraryBuilder import IntactLibraryBuilder
-from src.services.assign_services.IntactFinder import Finder
+from src.services.assign_services.Finders import Finder
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
-from src.services.analyser_services import IntactAnalyser
+from src.services.analyser_services.IntactAnalyser import IntactAnalyser
 from src.services.export_services.IntactExcelWriter import IntactExcelWriter
 from src import path
 #from src.gui.ParameterDialogs import IntactStartDialog

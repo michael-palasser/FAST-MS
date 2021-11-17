@@ -19,7 +19,7 @@ from src.entities.IonTemplates import IntactModification
 from src.gui.controller.AbstractController import AbstractMainController
 from src.services.analyser_services import IntactAnalyser
 from src.services.export_services.IntactExcelWriter import FullIntactExcelWriter
-from src.services.assign_services.IntactFinder import Calibrator
+from src.services.assign_services.Calibrator import Calibrator
 from src.services.library_services.IntactLibraryBuilder import IntactLibraryBuilder
 from src.services.assign_services.IntactSpectrumHandler import IntactSpectrumHandler
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
@@ -156,7 +156,7 @@ class IntactMainController(AbstractMainController):
             return 1'''
         #spectralFile = os.path.join(path, 'Spectral_data','top-down', self._settings['spectralData'])
         print("\n********** Importing spectral pattern from:", self._settings['spectralData'], "**********")
-        self._spectrumHandler = IntactSpectrumHandler(self._settings)
+        self._spectrumHandler = IntactSpectrumHandler(self._settings, self._configs)
         self._info.spectrumProcessed(self._spectrumHandler.getUpperBound(), self._spectrumHandler.getNoiseLevel())
         if self._settings['calibration']:
             allSettings = dict(self._settings)

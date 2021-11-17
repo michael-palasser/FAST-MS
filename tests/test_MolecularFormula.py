@@ -4,7 +4,7 @@ from random import randint
 from src.fastFunctions import getByIndex
 
 from src.MolecularFormula import MolecularFormula
-from src.services.assign_services.SpectrumHandler import calculateError
+from src.services.assign_services.AbstractSpectrumHandler import calculateError
 
 averagine ={'C': 4.9384, 'H': 7.7583, 'N': 1.3577, 'O': 1.4773, 'S': 0.0417}
 averaginine = {'C': 9.5, 'H': 11.75, 'N': 3.75, 'O': 7, 'P': 1}

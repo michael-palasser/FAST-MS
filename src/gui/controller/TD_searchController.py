@@ -25,7 +25,7 @@ from src.services.analyser_services.Analyser import Analyser
 from src.entities.SearchSettings import SearchSettings
 from src.services.library_services.LibraryBuilder import FragmentLibraryBuilder
 from src.services.SearchService import SearchService
-from src.services.assign_services.SpectrumHandler import SpectrumHandler
+from src.services.assign_services.TD_SpectrumHandler import SpectrumHandler
 from src.services.IntensityModeller import IntensityModeller
 from src.services.export_services.ExcelWriter import ExcelWriter
 from src.gui.dialogs.CheckIonView import CheckMonoisotopicOverlapView, CheckOverlapsView
@@ -106,7 +106,7 @@ class TD_MainController(AbstractMainController):
                 self._libraryBuilder.createFragmentLibrary()
 
                 self._spectrumHandler = SpectrumHandler(self._propStorage, self._libraryBuilder.getPrecursor(),
-                                                        self._settings, peaks)
+                                                        self._settings, self._configs, peaks)
                 self._spectrumHandler.setSearchedChargeStates(searchedZStates)
                 self._intensityModeller = IntensityModeller(self._configs, noiseLevel)
                 self._intensityModeller.setIonLists(observedIons, delIons, remIons)
@@ -163,7 +163,8 @@ class TD_MainController(AbstractMainController):
             return 1
         #spectralFile = os.path.join(path, 'Spectral_data','top-down', self._settings['spectralData'])
         print("\n********** Importing spectral pattern from:", self._settings['spectralData'], "**********")
-        self._spectrumHandler = SpectrumHandler(self._propStorage, self._libraryBuilder.getPrecursor(), self._settings)
+        self._spectrumHandler = SpectrumHandler(self._propStorage, self._libraryBuilder.getPrecursor(), self._settings,
+                                                self._configs)
         self._info.spectrumProcessed(self._spectrumHandler.getUpperBound(), self._spectrumHandler.getNoiseLevel())
         """Finding fragments"""
         print("\n********** Search for ions **********")

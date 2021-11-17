@@ -10,8 +10,7 @@ import numpy as np
 from copy import deepcopy
 from scipy.optimize import minimize, minimize_scalar
 
-from src.services.assign_services.SpectrumHandler import getErrorLimit, calculateError
-
+from src.services.assign_services.AbstractSpectrumHandler import getErrorLimit, calculateError
 
 logging.basicConfig(level=logging.INFO)
 logging.basicConfig(filename='logfile_IntensityModeller.log',level=logging.INFO)
@@ -240,7 +239,7 @@ class IntensityModeller(object):
                                           dtype=[('name','U32'),('charge', np.uint8),('mono',float)])
         for elem in self._monoisotopicList:
             same_mono_index = np.where((abs(calculateError(self._monoisotopicList['mono'], elem['mono']))
-                 < getErrorLimit(elem['mono'])) & \
+                 < getErrorLimit(elem['mono'], self._configs['k'], self._configs['d'])) & \
                                        (self._monoisotopicList['name'] != elem['name']) &
                                        (self._monoisotopicList['charge'] == elem['charge']))
             if len(self._monoisotopicList[same_mono_index]) > 0:    #direkte elemente von corrected spectrum uebernehmen

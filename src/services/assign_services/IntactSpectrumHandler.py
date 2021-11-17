@@ -4,11 +4,11 @@ import numpy as np
 
 from src.MolecularFormula import MolecularFormula
 from src.entities.Ions import IntactIon
-from src.services.assign_services.SpectrumHandler import AbstractSpectrumHandler
+from src.services.assign_services.AbstractSpectrumHandler import AbstractSpectrumHandler
 
 
 class IntactSpectrumHandler(AbstractSpectrumHandler):
-    def __init__(self, settings, peaks=None):
+    def __init__(self, settings, configs, peaks=None):
         '''
         Constructor, also processes spectrum
         :param (dict[str,Any]) settings: search settings
@@ -17,7 +17,7 @@ class IntactSpectrumHandler(AbstractSpectrumHandler):
         mode = 1
         if settings['sprayMode'] == 'negative':
             mode *= -1
-        super(IntactSpectrumHandler, self).__init__(settings, mode, IntactIon, peaks)
+        super(IntactSpectrumHandler, self).__init__(settings, configs, mode, IntactIon, peaks)
 
 
     def getChargeRange(self, mass):

@@ -5,7 +5,7 @@ import numpy as np
 from src.MolecularFormula import MolecularFormula
 from src.entities.Ions import FragmentIon, Fragment
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
-from tests.intact.test_Calibrator import getCalibratedSpectrum
+from tests.test_Calibrator import getCalibratedSpectrum
 from tests.top_down.test_SpectrumHandler import initTestLibraryBuilder
 from src.services.assign_services.TD_SpectrumHandler import SpectrumHandler
 from src.services.IntensityModeller import IntensityModeller

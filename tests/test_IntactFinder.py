@@ -4,7 +4,7 @@ import numpy as np
 
 from src import path
 from src.services.DataServices import SequenceService
-from src.services.assign_services.Finders import Finder
+from src.services.assign_services.Finders import IntactFinder
 from src.services.library_services.IntactLibraryBuilder import IntactLibraryBuilder
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 
@@ -16,8 +16,8 @@ def initFinders():
     configHandlerProt = initConfigurations()
     configHandlerProt.update('sprayMode','positive')
     configHandlerProt.update('sequName', 'dummyProt')
-    finderRNA = Finder(IntactLibraryBuilder(SequenceService().get(configHandlerRNA.get('sequName')), 'CMCT').createLibrary(), configHandlerRNA.getAll())
-    finderProt = Finder(IntactLibraryBuilder(SequenceService().get(configHandlerProt.get('sequName')), '-').createLibrary(), configHandlerProt.getAll())
+    finderRNA = IntactFinder(IntactLibraryBuilder(SequenceService().get(configHandlerRNA.get('sequName')), 'CMCT').createLibrary(), configHandlerRNA.getAll())
+    finderProt = IntactFinder(IntactLibraryBuilder(SequenceService().get(configHandlerProt.get('sequName')), '-').createLibrary(), configHandlerProt.getAll())
     return finderRNA, configHandlerRNA, finderProt, configHandlerProt
 
 def initConfigurations():

@@ -23,6 +23,7 @@ from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.repositories.IsotopePatternRepository import IsotopePatternRepository
 from src.services.analyser_services.Analyser import Analyser
 from src.entities.SearchSettings import SearchSettings
+from src.services.assign_services.Calibrator import Calibrator
 from src.services.library_services.LibraryBuilder import FragmentLibraryBuilder
 from src.services.SearchService import SearchService
 from src.services.assign_services.TD_SpectrumHandler import SpectrumHandler
@@ -166,6 +167,16 @@ class TD_MainController(AbstractMainController):
         self._spectrumHandler = SpectrumHandler(self._propStorage, self._libraryBuilder.getPrecursor(), self._settings,
                                                 self._configs)
         self._info.spectrumProcessed(self._spectrumHandler.getUpperBound(), self._spectrumHandler.getNoiseLevel())
+
+        '''if self._settings['calibration']:
+            allSettings = dict(self._settings)
+            allSettings.update(self._configs)
+            self._calibrator = Calibrator(self._libraryBuilder.getFragmentLibrary(),allSettings,
+                                          self._spectrumHandler.getChargeRange)
+            self._calibrator.calibratePeaks(self._spectrumHandler.getSpectrum())
+            vals = self._calibrator.getCalibrationValues()
+            self._info.calibrate(vals[0], vals[1], self._calibrator.getQuality(), self._calibrator.getUsedIons())'''
+
         """Finding fragments"""
         print("\n********** Search for ions **********")
         start = time.time()

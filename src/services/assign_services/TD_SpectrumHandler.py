@@ -17,6 +17,50 @@ logging.basicConfig(level=logging.INFO)
 logging.basicConfig(filename='logfile_SpectrumHandler.log',level=logging.INFO)
 
 
+# ToDo: Test SearchParameters, Proteins!, Parameters
+def getFragmentChargeRange(molecule, sprayMode, normalisationFactor, fragment, precModCharge, fragModCharge, precCharge,
+                           tolerance):
+    '''
+    Calculates the most probable charge (z) for a given fragment and returns a range of this z +/- a tolerance
+    The charge is calculated using the number of phosphates (RNA/DNA) or using the length of the sequence (proteins)
+    :param (str) molecule: name of molecule
+    :param (int) sprayMode: +1 for positive, -1 for negative
+    :param (float) normalisationFactor:
+    :param fragment: corresponding fragment
+    :type fragment: Fragment
+    :param (float) precModCharge: charge effect of precursor modification
+    :param (float) fragModCharge: charge effect of fragment modification
+    :param (int) precCharge: (absolute) charge of precursor
+    :param (float) tolerance: the higher the larger the charge range
+    :return: (generator, int) tuple of:
+            range between lowest possible z and highest possible z,
+            most probable z
+    '''
+    if molecule in ['RNA', 'DNA'] and sprayMode == -1:
+        formula = fragment.getFormula().getFormulaDict()
+        if ('P' not in formula.keys()) or (fragment.getFormula().getFormulaDict()['P'] == 0):
+            return range(0, 0), 0
+        probableZ = fragment.getFormula().getFormulaDict()['P'] * normalisationFactor
+    elif molecule == 'Protein':
+        probableZ = len(fragment.getSequence()) * normalisationFactor
+    elif molecule in ['RNA', 'DNA'] and sprayMode == 1:
+        probableZ = len(fragment.getSequence()) * normalisationFactor
+    else:
+        probableZ = len(fragment.getSequence()) * normalisationFactor
+    probableZ -= fragment.getRadicals()
+    lowZ, highZ = 1, precCharge
+    zEffect = (fragModCharge - precModCharge) * sprayMode
+    # print(1,fragment.getName(),probableZ)
+    probableZ += zEffect
+    # print(2,fragment.getName(),probableZ)
+    if (probableZ - tolerance) > lowZ:
+        lowZ = round(probableZ - tolerance)
+    if (probableZ + tolerance) < highZ:
+        highZ = round(probableZ + tolerance)
+    # print(fragment.getName(),lowZ,round(probableZ,2),highZ)
+    return range(lowZ, highZ + 1), probableZ
+
+
 class SpectrumHandler(AbstractSpectrumHandler):
     '''
     Reads a top-down spectrum (peak list), calculates noise and finds peaks in the spectrum
@@ -49,16 +93,21 @@ class SpectrumHandler(AbstractSpectrumHandler):
         if self._settings['charge'] < 0:
             self._sprayMode = -1
         self._upperBound=0'''
-        '''self._normalizationFactor = None'''
+        '''self._normalisationFactor = None'''
+        self._moleculeName = self._properties.getMolecule().getName()
         self._precursor = precursor
         self._charge = self.calcPrecCharge(self._settings['charge'], self._precursor.getRadicals())
+        self._normalisationFactor = self.getNormalisationFactor()
+        self._precModCharge = self.getModCharge(self._precursor)
 
+    def setPrecModCharge(self, precModCharge):
+        self._precModCharge = precModCharge
 
     def calcPrecCharge(self, charge, radicals):
         return abs(charge) - radicals #must be changed if radicals turns to electrons
 
-    def setNormalizationFactor(self, factor):
-        self._normalizationFactor = factor
+    def setNormalisationFactor(self, factor):
+        self._normalisationFactor = factor
 
     '''def getSprayMode(self):
         return self._sprayMode'''
@@ -274,20 +323,21 @@ class SpectrumHandler(AbstractSpectrumHandler):
     def calculateError(value, theoValue):
         return (value - theoValue) / theoValue * 10 ** 6'''
 
-    def getNormalizationFactor(self):
+    def getNormalisationFactor(self):
         '''
         Calculates factor to normalise charge to number of precursor charges
         :return: (float) normalisation factor
         '''
-        molecule = self._properties.getMolecule().getName()
-        if molecule in ['RNA', 'DNA'] and self._sprayMode == -1:
+        if self._moleculeName in ['RNA', 'DNA'] and self._sprayMode == -1:
+            print(self._moleculeName, self._charge,len(self._sequList), self._precursor.getFormula().getFormulaDict()['P'])
             return self._charge / self._precursor.getFormula().getFormulaDict()['P']
             #return self._charge / len(self._sequList)
-        #elif molecule == 'Protein' and self._sprayMode == 1:
+        #elif self._moleculeName == 'Protein' and self._sprayMode == 1:
          #   return self._charge / self.getChargeScore(self._sequList)
-        #elif molecule in ['RNA', 'DNA'] and self._sprayMode == 1:
+        #elif self._moleculeName in ['RNA', 'DNA'] and self._sprayMode == 1:
         #    return self._charge / len(self._sequList)
         else:
+            print(self._moleculeName, self._charge,len(self._sequList))
             return self._charge  / len(self._sequList)#self.getChargeScore(self._sequList)
 
     def getChargeScore(self, fragment): #ToDo: For proteins, currently not use
@@ -318,7 +368,7 @@ class SpectrumHandler(AbstractSpectrumHandler):
         return modCharge
 
     #ToDo: Test SearchParameters, Proteins!, Parameters
-    def getChargeRange(self, fragment, precModCharge):
+    def getChargeRange(self, fragment):
         '''
         Calculates the most probable charge (z) for a given fragment and returns a range of this z +/- a tolerance
         The charge is calculated using the number of phosphates (RNA/DNA) or using the length of the sequence (proteins)
@@ -327,25 +377,24 @@ class SpectrumHandler(AbstractSpectrumHandler):
         :param (float) precModCharge: charge effect of precursor modification
         :return: (generator) range between lowest possible z and highest possible z
         '''
-        molecule = self._properties.getMolecule().getName()
-        if molecule in ['RNA' ,'DNA'] and self._sprayMode == -1:
-            #probableZ = (fragment.number-1) * self._normalizationFactor
+        if self._moleculeName in ['RNA' ,'DNA'] and self._sprayMode == -1:
+            #probableZ = (fragment.number-1) * self._normalisationFactor
             formula = fragment.getFormula().getFormulaDict()
             if ('P' not in formula.keys()) or (fragment.getFormula().getFormulaDict()['P'] == 0):
                 return range(0,0)
-            probableZ = fragment.getFormula().getFormulaDict()['P']* self._normalizationFactor
-            #probableZ = fragment.formula.formulaDict['P'] * self._normalizationFactor
-        elif molecule == 'Protein':
-            #probableZ = self.getChargeScore(fragment) * self._normalizationFactor
-            probableZ = len(fragment.getSequence()) * self._normalizationFactor
-        elif molecule in ['RNA' ,'DNA'] and self._sprayMode == 1:
-            probableZ = len(fragment.getSequence()) * self._normalizationFactor
+            probableZ = fragment.getFormula().getFormulaDict()['P']* self._normalisationFactor
+            #probableZ = fragment.formula.formulaDict['P'] * self._normalisationFactor
+        elif self._moleculeName == 'Protein':
+            #probableZ = self.getChargeScore(fragment) * self._normalisationFactor
+            probableZ = len(fragment.getSequence()) * self._normalisationFactor
+        elif self._moleculeName in ['RNA' ,'DNA'] and self._sprayMode == 1:
+            probableZ = len(fragment.getSequence()) * self._normalisationFactor
         else:
-            probableZ = len(fragment.getSequence()) * self._normalizationFactor
+            probableZ = len(fragment.getSequence()) * self._normalisationFactor
         probableZ -= fragment.getRadicals()
         tolerance = self._configs['zTolerance']
         lowZ, highZ = 1, self._charge
-        zEffect = (self.getModCharge(fragment)-precModCharge) * self._sprayMode
+        zEffect = (self.getModCharge(fragment)-self._precModCharge) * self._sprayMode
         #print(1,fragment.getName(),probableZ)
         probableZ += zEffect
         #print(2,fragment.getName(),probableZ)
@@ -357,6 +406,18 @@ class SpectrumHandler(AbstractSpectrumHandler):
         logging.info(fragment.getName()+'\tmin z: '+str(lowZ)+'\tcalc. z: '+str(round(probableZ,2))+'\tmax z: '+str(highZ))
         return range(lowZ,highZ+1)
 
+    '''print(getFragmentChargeRange(self._properties.getMolecule().getName(), self._sprayMode,
+                                               self._normalisationFactor, fragment, self._precModCharge,
+                                               self.getModCharge(fragment), self._charge, self._configs['zTolerance']))
+    zRange, probableZ = getFragmentChargeRange(self._properties.getMolecule().getName(), self._sprayMode,
+                                               self._normalisationFactor, fragment, self._precModCharge,
+                                               self.getModCharge(fragment), self._charge, self._configs['zTolerance'])
+    if probableZ != 0:
+        logging.info(fragment.getName()+'\tmin z: '+str(zRange[0])+'\tcalc. z: '+str(round(probableZ,2))+'\tmax z: '
+                     +str(zRange[-1]))
+    else:
+        logging.info(fragment.getName()+'\tmin z: 0\tcalc. z: 0\tmax z: 0')
+    return zRange'''
 
     def findIons(self, fragmentLibrary):
         '''
@@ -369,15 +430,14 @@ class SpectrumHandler(AbstractSpectrumHandler):
         :param (list) fragmentLibrary: list of Fragment-objects
         '''
         np.set_printoptions(suppress=True)
-        precModCharge = self.getModCharge(self._precursor)
-        self._normalizationFactor = self.getNormalizationFactor()
-        logging.debug('Normalisation factor: '+ str(self._normalizationFactor))
+        #precModCharge = self.getModCharge(self._precursor)
+        logging.debug('Normalisation factor: '+ str(self._normalisationFactor))
         self.getProtonIsotopePatterns()
         for fragment in fragmentLibrary:
             #neutralPatternFFT = formula.calculateIsotopePatternFFT(1, )
             logging.info(fragment.getName())
             self._searchedChargeStates[fragment.getName()] = []
-            zRange = self.getChargeRange(fragment, precModCharge)
+            zRange = self.getChargeRange(fragment)
             self.findIon(fragment, zRange)
 
             '''sortedPattern = np.sort(fragment.getIsotopePattern(), order='calcInt')[::-1]

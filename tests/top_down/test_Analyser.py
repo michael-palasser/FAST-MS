@@ -11,10 +11,10 @@ class TestAnalyser(TestCase):
     def setUp(self):
         self.configs, settings, self.props, builder, self.spectrumHandler = initTestSpectrumHandler()
         fragments = builder.getFragmentLibrary()
-        self.spectrumHandler.setNormalizationFactor(self.spectrumHandler.getNormalizationFactor())
+        #self.spectrumHandler.setNormalisationFactor(self.spectrumHandler.getNormalizationFactor())
         self.ions = {}
         for fragment in fragments:
-            zRange = self.spectrumHandler.getChargeRange(fragment, 0)
+            zRange = self.spectrumHandler.getChargeRange(fragment)
             for z in zRange:
                 ion = FragmentIon(fragment, 1., z, fragment.getIsotopePattern(), 10e5)
                 self.ions[ion.getHash()] = ion

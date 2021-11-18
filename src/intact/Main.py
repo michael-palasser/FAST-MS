@@ -11,7 +11,7 @@ from datetime import datetime
 
 from src.services.DataServices import SequenceService
 from src.services.library_services.IntactLibraryBuilder import IntactLibraryBuilder
-from src.services.assign_services.Finders import Finder
+from src.services.assign_services.Finders import IntactFinder
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.services.analyser_services.IntactAnalyser import IntactAnalyser
 from src.services.export_services.IntactExcelWriter import IntactExcelWriter
@@ -41,7 +41,7 @@ def run():
     configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
     for key in ('errorLimitCalib','maxStd', 'k', 'd'):
         settings[key] = configs[key]
-    finder = Finder(libraryBuilder.createLibrary(),settings)
+    finder = IntactFinder(libraryBuilder.createLibrary(), settings)
 
     """calibrate spectra"""
     print("\n********** calibrating spectralFile **********")

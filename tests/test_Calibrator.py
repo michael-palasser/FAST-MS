@@ -1,15 +1,20 @@
 import os
 from copy import deepcopy
 from unittest import TestCase
+import numpy as np
 
 from src import path
+from src.entities.SearchSettings import SearchSettings
 from src.services.DataServices import SequenceService
+from src.services.assign_services.AbstractSpectrumHandler import calculateError
 from src.services.assign_services.Calibrator import Calibrator
+from src.services.assign_services.Finders import TD_Finder
 from src.services.library_services.IntactLibraryBuilder import IntactLibraryBuilder
 from src.services.assign_services.IntactSpectrumHandler import IntactSpectrumHandler
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.services.assign_services.TD_SpectrumHandler import SpectrumHandler
-from tests.intact.test_IntactFinder import initConfigurations, initTestSequences
+from src.services.library_services.LibraryBuilder import FragmentLibraryBuilder
+from tests.test_IntactFinder import initConfigurations, initTestSequences
 from tests.top_down.test_SpectrumHandler import initTestLibraryBuilder
 
 
@@ -80,3 +85,56 @@ class TestCalibrator(TestCase):
         for uncal, cal in zip(d['uncalibrated'], d['calSpectrum']):
             self.assertNotEqual(uncal[0], cal[0])
             self.assertAlmostEqual(uncal[1], cal[1])
+
+        configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
+        filePath = os.path.join(path, 'tests', 'top_down', 'CR_1_2_annealed_noMg_ESI_500mMDEPC_125min_Sk75_CAD12p5_134_uncal.txt')
+        settings = {'sequName': 'CR_1_2', 'charge': -4, 'fragmentation': 'RNA_CAD', 'modifications': +134,
+                    'nrMod': 1, 'spectralData': filePath, 'noiseLimit': 10 ** 6, 'fragLib': '',
+                    'calIons': os.path.join(path, 'tests', 'top_down', 'CR_1_2_annealed_noMg_ESI_500mMDEPC_125min_Sk75_CAD12p5_134_SNAP.txt')}
+        props = SearchSettings(settings['sequName'], settings['fragmentation'], settings['modifications'])
+        builder = FragmentLibraryBuilder(props, 1)
+        builder.createFragmentLibrary()
+        builder.addNewIsotopePattern()
+        spectrumHandler = SpectrumHandler(props, builder.getPrecursor(), settings, configs)
+        uncalibrated = deepcopy(spectrumHandler.getSpectrum())
+
+        allSettings = dict(settings)
+        allSettings.update(configs)
+        calibrator = Calibrator(builder.getFragmentLibrary(), allSettings, spectrumHandler)
+        calibrated = calibrator.calibratePeaks(uncalibrated)
+        for uncal, cal in zip(spectrumHandler.getSpectrum(), calibrated):
+            self.assertNotEqual(uncal[0], cal[0])
+            self.assertAlmostEqual(uncal[1], cal[1])
+
+        finder1 = TD_Finder(builder.getFragmentLibrary(), settings, spectrumHandler.getChargeRange)
+        finder2 = calibrator.getFinder()
+        file = os.path.join(path, 'tests', 'top_down', 'CR_1_2_annealed_noMg_ESI_500mMDEPC_125min_Sk75_CAD12p5_134_SNAP_cal.txt')
+        data = calibrator.getIonData()
+        data['m/z'] = finder2.calibrate(data['m/z'], calibrator.getCalibrationValues()[0])
+        #manCalData = np.array([row[0] for row in finder1.readFile(file)[0]])
+        #for
+
+
+        manCalIons = {(ion.getName(), ion.getCharge()):ion for ion in finder1.findIonsInSpectrum(0, configs['errorLimitCalib'], finder1.readFile(file)[0])}
+        autoCalIons = {(ion.getName(), ion.getCharge()):ion for ion in finder2.findIonsInSpectrum(0, configs['errorLimitCalib'], data)}
+        deviations, autoErrors, manErrors = [], [], []
+
+        for key in manCalIons.keys():
+            deviation = calculateError(autoCalIons[key].getMonoisotopic(),manCalIons[key].getMonoisotopic())
+            '''if abs(deviation)> 0.1:
+                print(deviation, autoCalIons[key].getMonoisotopic(), autoCalIons[key].getName())'''
+            self.assertLess(abs(deviation),0.4)
+            autoError = calculateError(autoCalIons[key].getMonoisotopic(),autoCalIons[key].getTheoMz())
+            manError = calculateError(manCalIons[key].getMonoisotopic(),manCalIons[key].getTheoMz())
+            if abs(manError) < 10:
+                autoErrors.append(autoError)
+                manErrors.append(manError)
+                deviations.append(deviation)
+        print(np.std(deviations), np.average([abs(error) for error in deviations]))
+
+        self.assertLess(np.std(deviations),0.2)
+        self.assertLess(np.average([abs(error) for error in deviations]),0.25)
+        print(np.average([abs(error) for error in autoErrors]), np.average([abs(error) for error in manErrors]))
+        self.assertLess(np.average([abs(error) for error in autoErrors]), np.average([abs(error) for error in manErrors]))
+
+        #for hash in assignedIons:

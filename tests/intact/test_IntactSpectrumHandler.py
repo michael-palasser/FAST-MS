@@ -4,7 +4,7 @@ from unittest import TestCase
 from src import path
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.services.assign_services.IntactSpectrumHandler import IntactSpectrumHandler
-from tests.intact.test_Calibrator import getCalibratedSpectrum
+from tests.test_Calibrator import getCalibratedSpectrum
 
 
 class TestIntactSpectrumHandler(TestCase):

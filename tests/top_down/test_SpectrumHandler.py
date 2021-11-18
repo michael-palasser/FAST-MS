@@ -53,7 +53,7 @@ class TestSpectrumHandler(TestCase):
         self.builderProt.createFragmentLibrary()
         self.spectrumHandlerProt = SpectrumHandler(self.propsProt, self.builderProt.getPrecursor(), self.settingsProt,
                                                    self.configs)
-        self.spectrumHandler.setNormalizationFactor(self.spectrumHandler.getNormalizationFactor())
+        self.spectrumHandler.setNormalisationFactor(self.spectrumHandler.getNormalisationFactor())
         '''builder2 = FragmentLibraryBuilder(self.props,2)
         builder2.createFragmentLibrary()
         settings2 = self.settings
@@ -101,50 +101,47 @@ class TestSpectrumHandler(TestCase):
         self.assertAlmostEqual(2 * zEffect, self.spectrumHandler.getModCharge(fragment2))
 
     def test_get_normalization_factor(self):
-        normalizationFactor = abs(self.settings['charge']) / (len(self.props.getSequenceList()) - 1)
-        self.assertAlmostEqual(normalizationFactor, self.spectrumHandler.getNormalizationFactor())
+        normalisationFactor = abs(self.settings['charge']) / (len(self.props.getSequenceList()) - 1)
+        self.assertAlmostEqual(normalisationFactor, self.spectrumHandler.getNormalisationFactor())
 
     def test_get_charge_range(self):
         nrP = len(self.props.getSequenceList()) - 1
         precModCharge = self.spectrumHandler.getModCharge(Fragment('c', 3, '+CMCT', '', [], 0))
-        self.spectrumHandler.setNormalizationFactor(self.spectrumHandler.getNormalizationFactor())
+        #self.spectrumHandler.setNormalisationFactor(self.spectrumHandler.getNormalisationFactor())
         tolerance = self.configs['zTolerance']
         precCharge = abs(self.settings['charge'])
-        self.spectrumHandlerProt.setNormalizationFactor(self.spectrumHandlerProt.getNormalizationFactor())
-
-        rangeCalc = self.spectrumHandler.getChargeRange(Fragment('y', 1, '', MolecularFormula({'P': 0}), [], 0),
-                                                        precModCharge)
+        #self.spectrumHandlerProt.setNormalisationFactor(self.spectrumHandlerProt.getNormalisationFactor())
+        self.spectrumHandler.setPrecModCharge(precModCharge)
+        rangeCalc = self.spectrumHandler.getChargeRange(Fragment('y', 1, '', MolecularFormula({'P': 0}), [], 0))
         self.assertEqual(0, rangeCalc.stop)
 
         rangeTheo = self.getRange(precCharge / nrP + precModCharge, tolerance, precCharge)
-        rangeCalc = self.spectrumHandler.getChargeRange(Fragment('c', 3, '', MolecularFormula({'P': 1}), [], 0),
-                                                        precModCharge)
+        rangeCalc = self.spectrumHandler.getChargeRange(Fragment('c', 3, '', MolecularFormula({'P': 1}), [], 0))
         self.assertEqual(rangeTheo.start, rangeCalc.start)
         self.assertEqual(rangeTheo.stop, rangeCalc.stop)
 
         rangeTheo = self.getRange(2 * precCharge / nrP + precModCharge, tolerance, precCharge)
-        rangeCalc = self.spectrumHandler.getChargeRange(Fragment('c', 3, '', MolecularFormula({'P': 2}), [], 0),
-                                                        precModCharge)
+        rangeCalc = self.spectrumHandler.getChargeRange(Fragment('c', 3, '', MolecularFormula({'P': 2}), [], 0))
         self.assertEqual(rangeTheo.start, rangeCalc.start)
         self.assertEqual(rangeTheo.stop, rangeCalc.stop)
 
         rangeTheo = self.getRange(2 * precCharge / nrP, tolerance, precCharge)
-        rangeCalc = self.spectrumHandler.getChargeRange(Fragment('c', 3, '+CMCT', MolecularFormula({'P': 2}), [], 0),
-                                                        precModCharge)
+        rangeCalc = self.spectrumHandler.getChargeRange(Fragment('c', 3, '+CMCT', MolecularFormula({'P': 2}), [], 0))
         self.assertEqual(rangeTheo.start, rangeCalc.start)
         self.assertEqual(rangeTheo.stop, rangeCalc.stop)
 
         rangeTheo = self.getRange(abs(self.settingsProt['charge'] * 3) / len(self.propsProt.getSequenceList()),
                                   tolerance, self.settingsProt['charge'])
+        self.spectrumHandlerProt.setPrecModCharge(0)
         rangeCalc = self.spectrumHandlerProt.getChargeRange(
-            Fragment('c', 3, '', MolecularFormula({'P': 1}), ['G', 'A', 'P'], 0), 0)
+            Fragment('c', 3, '', MolecularFormula({'P': 1}), ['G', 'A', 'P'], 0))
         self.assertEqual(rangeTheo.start, rangeCalc.start)
         self.assertEqual(rangeTheo.stop, rangeCalc.stop)
 
         rangeTheo = self.getRange(abs(self.settingsProt['charge'] * 3) / len(self.propsProt.getSequenceList()) - 1,
                                   tolerance, self.settingsProt['charge'])
         rangeCalc = self.spectrumHandlerProt.getChargeRange(
-            Fragment('c', 3, '', MolecularFormula({'P': 1}), ['G', 'A', 'P'], 1), 0)
+            Fragment('c', 3, '', MolecularFormula({'P': 1}), ['G', 'A', 'P'], 1))
         self.assertEqual(rangeTheo.start, rangeCalc.start)
         self.assertEqual(rangeTheo.stop, rangeCalc.stop)
 
@@ -225,7 +222,7 @@ class TestSpectrumHandler(TestCase):
         upperBound = self.spectrumHandler.getUpperBound()
         for i, fragment in enumerate(self.builder.getFragmentLibrary()):
             isotopePattern = fragment.getIsotopePattern()
-            for z in self.spectrumHandler.getChargeRange(fragment, precModCharge):
+            for z in self.spectrumHandler.getChargeRange(fragment):
                 theoreticalPeaks = deepcopy(isotopePattern)
                 # if self.__settings['dissociation'] in ['ECD', 'EDD', 'ETD'] and fragment.number == 0:
                 #    theoreticalPeaks['mass'] += ((self.protonMass-self.eMass) * (self.__charge - z))
@@ -266,7 +263,7 @@ class TestSpectrumHandler(TestCase):
         for i in range(2):
             fragment = library[np.random.randint(low=0, high=len(library))]
             isotopePattern = fragment.getIsotopePattern()
-            for z in self.spectrumHandler.getChargeRange(fragment, precModCharge):
+            for z in self.spectrumHandler.getChargeRange(fragment):
                 theoreticalPeaks = deepcopy(isotopePattern)
                 theoreticalPeaks['m/z'] = getMz(theoreticalPeaks['m/z'], z * -1,
                                                 fragment.getRadicals())

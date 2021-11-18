@@ -255,6 +255,8 @@ class Fragment(object):
             return 2
         return 1
 
+    def getMonoisotopicMass(self):
+        return self._isotopePattern['m/z'][0]
 
 class FragmentIon(Fragment, Ion):
     '''
@@ -464,7 +466,7 @@ class IntactNeutral(object):
         return self._radicals
     def setIsotopePattern(self, isotopePattern):
         self._isotopePattern = isotopePattern
-    def getMonoisotopic(self):
+    def getMonoisotopicMass(self):
         if self._monoisotopicRaw is None:
             self._monoisotopicRaw = self._formula.calculateMonoIsotopic()
         return self._monoisotopicRaw

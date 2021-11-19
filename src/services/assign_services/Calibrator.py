@@ -5,15 +5,15 @@ class Calibrator(object):
     '''
     Responsible for calibrating ions in a spectrum
     '''
-    def __init__(self, theoValues, settings, spectrumHandler=None):
+    def __init__(self, theoValues, settings, getChargeRange=None):
         '''
         :param (list[IntactNeutral]) theoValues: library of neutrals
         :param (dict[str,Any]) settings: settings
         '''
-        if spectrumHandler is None:
+        if getChargeRange is None:
             self._finder = IntactFinder(theoValues, settings)
         else:
-            self._finder = TD_Finder(theoValues, settings, spectrumHandler.getChargeRange)
+            self._finder = TD_Finder(theoValues, settings, getChargeRange)
         self._ionData = self._finder.readFile(settings['calIons'])[0]
         errorLimit = settings['errorLimitCalib']
         assignedIons = self._finder.findIonsInSpectrum(0, errorLimit, self._ionData)

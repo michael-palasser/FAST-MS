@@ -202,6 +202,13 @@ class StartDialog(AbstractDialog):
         return configs
 
 
+    def updateCal(self, cal):
+        if cal:
+            self._widgets['calIons'].setEnabled(True)
+        else:
+            self._widgets['calIons'].setEnabled(False)
+
+
 class DialogWithTabs(AbstractDialog):
     '''
     Parent class for IntactStartDialog

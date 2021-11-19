@@ -9,7 +9,7 @@ from tests.test_Calibrator import getCalibratedSpectrum
 
 class TestIntactSpectrumHandler(TestCase):
     def test_get_charge_range(self):
-        filePath = os.path.join(path, 'tests', 'top_down', 'dummySpectrum.txt')
+        filePath = os.path.join(path, 'tests', 'test_files', 'dummySpectrum.txt')
         handler = IntactSpectrumHandler({'minMz':300,'maxMz':1500, 'sprayMode':1, 'spectralData':filePath, 'noiseLimit': 10 ** 6},
                                         ConfigurationHandlerFactory.getTD_ConfigHandler().getAll())
         range = handler.getChargeRange(5000)

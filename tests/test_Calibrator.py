@@ -20,8 +20,8 @@ from tests.top_down.test_SpectrumHandler import initTestLibraryBuilder
 
 def getTestIntactSettings():
     settings = ConfigurationHandlerFactory.getFullIntactHandler().getAll()
-    spectralFile = os.path.join(path, 'tests', 'intact', '2511_neoRibo_3xRIO_CMCT_1.5mMPip_4mMIm_01_0.52.txt')
-    calFile = os.path.join(path, 'tests', 'intact', '2511_RIO_test.txt')
+    spectralFile = os.path.join(path, 'tests', 'test_files', '2511_neoRibo_3xRIO_CMCT_1.5mMPip_4mMIm_01_0.52.txt')
+    calFile = os.path.join(path, 'tests', 'test_files', '2511_RIO_test.txt')
     try:
         settings.update({'sequName': 'neoRibo', 'modifications': 'CMCT', 'calibration': True,
                          'spectralData': spectralFile, "calIons": calFile, 'noiseLimit': 520000, 'sprayMode':'negative',
@@ -57,7 +57,7 @@ class TestCalibrator(TestCase):
         configHandlerRNA.update('sequName', 'neoRibo')
         configHandlerRNA.update2('calIons', os.path.join(path, 'tests', 'intact', '2511_RIO_test_0.txt'))
 
-        #self._SNAP_list = os.path.join(path, 'tests', 'intact', '2511_RIO_test_0.txt')
+        #self._SNAP_list = os.path.join(path, 'test_files', 'intact', '2511_RIO_test_0.txt')
         try:
             self._calibrator = Calibrator(IntactLibraryBuilder(SequenceService().get(configHandlerRNA.get('sequName')),
                                                                'CMCT').createLibrary(),
@@ -74,7 +74,7 @@ class TestCalibrator(TestCase):
     def test_calibrate_peaks(self):
         configs, settings, props, builder = initTestLibraryBuilder()
         spectrumHandler = SpectrumHandler(props, builder.getPrecursor(), settings, configs)
-        spectrumHandler.addSpectrum(os.path.join(path, 'tests', 'top_down', 'dummySpectrum.txt'))
+        spectrumHandler.addSpectrum(os.path.join(path, 'tests', 'test_files', 'dummySpectrum.txt'))
         uncalibrated = deepcopy(spectrumHandler.getSpectrum())
         calibrated = self._calibrator.calibratePeaks(uncalibrated)
         for uncal, cal in zip(spectrumHandler.getSpectrum(), calibrated):
@@ -87,10 +87,10 @@ class TestCalibrator(TestCase):
             self.assertAlmostEqual(uncal[1], cal[1])
 
         configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
-        filePath = os.path.join(path, 'tests', 'top_down', 'CR_1_2_annealed_noMg_ESI_500mMDEPC_125min_Sk75_CAD12p5_134_uncal.txt')
+        filePath = os.path.join(path, 'tests', 'test_files', 'CR_1_2_annealed_noMg_ESI_500mMDEPC_125min_Sk75_CAD12p5_134_uncal.txt')
         settings = {'sequName': 'CR_1_2', 'charge': -4, 'fragmentation': 'RNA_CAD', 'modifications': +134,
                     'nrMod': 1, 'spectralData': filePath, 'noiseLimit': 10 ** 6, 'fragLib': '',
-                    'calIons': os.path.join(path, 'tests', 'top_down', 'CR_1_2_annealed_noMg_ESI_500mMDEPC_125min_Sk75_CAD12p5_134_SNAP.txt')}
+                    'calIons': os.path.join(path, 'tests', 'test_files', 'CR_1_2_annealed_noMg_ESI_500mMDEPC_125min_Sk75_CAD12p5_134_SNAP.txt')}
         props = SearchSettings(settings['sequName'], settings['fragmentation'], settings['modifications'])
         builder = FragmentLibraryBuilder(props, 1)
         builder.createFragmentLibrary()
@@ -108,7 +108,7 @@ class TestCalibrator(TestCase):
 
         finder1 = TD_Finder(builder.getFragmentLibrary(), settings, spectrumHandler.getChargeRange)
         finder2 = calibrator.getFinder()
-        file = os.path.join(path, 'tests', 'top_down', 'CR_1_2_annealed_noMg_ESI_500mMDEPC_125min_Sk75_CAD12p5_134_SNAP_cal.txt')
+        file = os.path.join(path, 'tests', 'test_files', 'CR_1_2_annealed_noMg_ESI_500mMDEPC_125min_Sk75_CAD12p5_134_SNAP_cal.txt')
         data = calibrator.getIonData()
         data['m/z'] = finder2.calibrate(data['m/z'], calibrator.getCalibrationValues()[0])
         #manCalData = np.array([row[0] for row in finder1.readFile(file)[0]])

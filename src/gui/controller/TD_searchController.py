@@ -167,16 +167,17 @@ class TD_MainController(AbstractMainController):
         self._spectrumHandler = SpectrumHandler(self._propStorage, self._libraryBuilder.getPrecursor(), self._settings,
                                                 self._configs)
         self._info.spectrumProcessed(self._spectrumHandler.getUpperBound(), self._spectrumHandler.getNoiseLevel())
-
-        '''if self._settings['calibration']:
+        #try:
+        if self._settings['calibration']:
             allSettings = dict(self._settings)
             allSettings.update(self._configs)
             self._calibrator = Calibrator(self._libraryBuilder.getFragmentLibrary(),allSettings,
                                           self._spectrumHandler.getChargeRange)
             self._calibrator.calibratePeaks(self._spectrumHandler.getSpectrum())
             vals = self._calibrator.getCalibrationValues()
-            self._info.calibrate(vals[0], vals[1], self._calibrator.getQuality(), self._calibrator.getUsedIons())'''
-
+            self._info.calibrate(vals[0], vals[1], self._calibrator.getQuality(), self._calibrator.getUsedIons())
+        #except KeyError:
+        #    pass
         """Finding fragments"""
         print("\n********** Search for ions **********")
         start = time.time()

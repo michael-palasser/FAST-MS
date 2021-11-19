@@ -41,14 +41,14 @@ def run(mainWindow):
 
     """import ion-list"""
     spectralFile = path + 'Spectral_data/Occupancies_in.csv'
-    #with open(spectralFile, 'w') as f:
-    #    f.write("m/z,z,int,name")
+    with open(spectralFile, 'w') as f:
+        f.write("m/z,z,int,name")
     subprocess.call(['open',spectralFile])
     '''start = QtWidgets.QMessageBox.question(mainWindow, 'Calculating Occupancies ',
         'Paste the ions (format: m/z, z, Int., fragment-name) in the csv-file and press "Ok"',
                                                     QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
     if start == QtWidgets.QMessageBox.Ok:'''
-    #input('Press any key')
+    input('Press any key')
     arr = readCsv(spectralFile)
     ionList = list()
     speciesList = list()

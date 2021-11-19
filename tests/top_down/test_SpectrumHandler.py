@@ -20,7 +20,7 @@ from tests.top_down.test_LibraryBuilder import initTestSequences
 def initTestLibraryBuilder(charge=-3, modif='CMCT'):
     initTestSequences()
     configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
-    filePath = os.path.join(path, 'tests', 'top_down', 'dummySpectrum.txt')
+    filePath = os.path.join(path, 'tests', 'test_files', 'dummySpectrum.txt')
     settings = {'sequName': 'dummyRNA', 'charge': charge, 'fragmentation': 'RNA_CAD', 'modifications': modif,
                 'nrMod': 1, 'spectralData': filePath, 'noiseLimit': 10 ** 6, 'fragLib': ''}
     props = SearchSettings(settings['sequName'], settings['fragmentation'], settings['modifications'])
@@ -45,7 +45,7 @@ class TestSpectrumHandler(TestCase):
         self.spectrumHandler = SpectrumHandler(self.props, self.builder.getPrecursor(), self.settings, self.configs)
 
         self.settingsProt = {'sequName': 'dummyProt', 'charge': 4, 'fragmentation': 'Protein_CAD', 'modifications': '-',
-                             'nrMod': 0, 'spectralData': os.path.join(path, 'tests', 'top_down', 'dummySpectrum.txt'),
+                             'nrMod': 0, 'spectralData': os.path.join(path, 'tests', 'test_files', 'dummySpectrum.txt'),
                              'noiseLimit': 10 ** 5, 'fragLib': ''}
         self.propsProt = SearchSettings(self.settingsProt['sequName'], self.settingsProt['fragmentation'],
                                         self.settingsProt['modifications'])
@@ -65,7 +65,7 @@ class TestSpectrumHandler(TestCase):
         self.assertEqual(5, self.spectrumHandler.calcPrecCharge(-6, 1))
 
     def test_add_spectrum_from_csv_and_txt(self):
-        with open(os.path.join(path, 'tests', 'top_down', 'dummySpectrum.csv'), 'r') as f:
+        with open(os.path.join(path, 'tests', 'test_files', 'dummySpectrum.csv'), 'r') as f:
             fromCsv = self.spectrumHandler.addSpectrumFromCsv(f)
         with open(self.settings['spectralData'], 'r') as f:
             fromTxt = self.spectrumHandler.addSpectrumFromTxt(f)

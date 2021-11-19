@@ -41,6 +41,8 @@ class ConfigHandler(object):
             try:
                 return self.__parameters[key]
             except:
+                if key == 'calIons':
+                    return ''
                 return 0
         raise Exception("Parameter",key, "does not exist")
 

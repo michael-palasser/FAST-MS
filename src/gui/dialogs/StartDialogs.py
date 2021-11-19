@@ -27,7 +27,8 @@ class TDStartDialog(StartDialog):
 
     def setupUi(self):
         labelNames = ("Sequence Name:", "Charge:", "Fragmentation:", "Modifications:", "Nr. of Modifications:",
-                           "Spectral Data:", "Noise Threshold (x10^6):", "Fragment Library:")
+                      "Spectral Data:", "Noise Threshold (x10^6):", "Fragment Library:", 'Autocalibration',
+                      'Ions for Cal.')
         fragPatterns = FragmentationService().getAllPatternNames()
         modPatterns = ModificationService().getAllPatternNames()
         sequences = SequenceService().getAllSequenceNames()
@@ -43,7 +44,11 @@ class TDStartDialog(StartDialog):
                     'noiseLimit': (QtWidgets.QDoubleSpinBox(self), "Minimal noise level"),
                     "fragLib": (QtWidgets.QLineEdit(self), "If the fragment list has / should have a special name.\n"
                             "If no file is stated, the program will search for the file with the standard name or create"
-                                                           " a new one with that name")}
+                                                           " a new one with that name"),
+                 "calibration": (QtWidgets.QCheckBox(), "Spectral data will be autocalibrated if option is ticked"),
+                 "calIons": (OpenFileWidget(self, 1, join(path, 'Spectral_data', 'intact'), "Open Files",
+                                            "Plain Text Files (*txt);;All Files (*)"),
+                             "Name of the file with ions for calibration (txt format)")}
                #(QtWidgets.QLineEdit(startDialog), "output",
                     #"Name of the output Excel file\ndefault: name of spectral pattern file + _out.xlsx"))
         index = self.fill(self, self._formLayout, labelNames, widgets)
@@ -66,6 +71,8 @@ class TDStartDialog(StartDialog):
         self._defaultButton = self.makeDefaultButton(self)
         self._formLayout.setWidget(index + 1, QtWidgets.QFormLayout.FieldRole, self._buttonBox)
         self._formLayout.setWidget(index+1, QtWidgets.QFormLayout.LabelRole, self._defaultButton)
+        self._widgets['calibration'].stateChanged.connect(lambda: self.updateCal(self._widgets['calibration'].isChecked()))
+        self.updateCal(self._widgets['calibration'].isChecked())
         self.backToLast()
 
     def changeNrOfMods(self):
@@ -188,7 +195,6 @@ class IntactStartDialog(DialogWithTabs, StartDialog):
     def checkSpectralDataFile(self, mode, fileName):
         files = []
         for file in fileName.split(',  '):
-            print(file)
             files.append(super(IntactStartDialog, self).checkSpectralDataFile(mode, file))
         return files
 
@@ -206,7 +212,7 @@ class IntactStartDialogFull(IntactStartDialog):
     def getLabels(self):
         oldLabels = super(IntactStartDialogFull, self).getLabels()
         return (("Sequence Name", "Modifications", "Spectral File", "Spray Mode", "Noise Threshold (x10^6):",
-                 'Autocalibration', 'cal. ions', "Output"),
+                 'Autocalibration', 'Ions for Cal.'),
                 oldLabels[1])
 
     def getWidgets(self, sequences, modPatterns):
@@ -241,11 +247,6 @@ class IntactStartDialogFull(IntactStartDialog):
     def checkSpectralDataFile(self, mode, fileName):
         return super(IntactStartDialog, self).checkSpectralDataFile(mode, fileName)
 
-    def updateCal(self, cal):
-        if cal:
-            self._widgets['calIons'].setEnabled(True)
-        else:
-            self._widgets['calIons'].setEnabled(False)
 
 class SpectrumComparatorStartDialog(AbstractDialog):
     '''

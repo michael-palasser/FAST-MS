@@ -47,7 +47,6 @@ class AbstractSpectrumHandler(ABC):
         self._searchedChargeStates = dict()
         self._noiseLevel = 0
         if peaks is None:
-            print('hey', self._settings['spectralData'])
             self.addSpectrum(self._settings['spectralData'])
         else:
             self._spectrum = np.array(sorted(list(peaks), key=lambda tup: tup[0]))

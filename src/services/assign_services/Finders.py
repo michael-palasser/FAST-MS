@@ -140,7 +140,7 @@ class AbstractFinder(ABC):
             2.  Spectral ion list is calibrated by least square method
             3.  If the average ppm error is below 2.5 the spectrum the calibration is used. Otherwise the ppm threshold
                 is decreased by 10 ppm and step 2 and 3 are repeated until the average ppm error is below 2.5
-        :param (ndarray[float,float,float]) ionList: structured array, dtype=([('m/z', float), ('z', np.uint8), ('relAb', float)]) #Todo incorrect
+        :param (list[SimpleIntactIon]) ionList: list of ions
         :param (float) errorLimit: ppm error threshold
         :param (float) maxStd: max. standard deviation of errors of the ions used for calibration
         :return: ([ndArray[float], ndArray[float], tuple[float], list[SimpleIntactIon]]) calibration variables (a,b,c),

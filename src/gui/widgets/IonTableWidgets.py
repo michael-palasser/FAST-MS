@@ -241,6 +241,111 @@ class TickIonTableWidget(IonTableWidget):
 
 
 
+class CalibrationIonTableWidget(QTableWidget):
+    '''
+    Interactive ion table table for checking monoisotopic overlaps and to show ion values when "show peaks" is pressed
+    (right click on ion table in top-down search).
+    Parent class of IsoPatternIon and TickIonTableWidget
+    '''
+    def __init__(self, parent, ions):
+        super(CalibrationIonTableWidget, self).__init__(parent)
+        #self._headers = ['m/z', 'z', 'I', 'fragment', 'error /ppm', 'S/N', 'qual.']
+        self._ions = ions
+        self.setColumnCount(len(self.getHeaders()))
+        #self.move(20, yPos)  # 70
+        self.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        self.setRowCount(len(ions))
+        self._ionValues = []
+        for i, ion in enumerate(ions):
+            self.fill(i, ion)
+        self.setHorizontalHeaderLabels(self.getHeaders())
+        self.resizeColumnsToContents()
+        #self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.setSortingEnabled(True)
+        #connectTable(self, self.showOptions)
+        # self.customContextMenuRequested['QPoint'].connect(partial(self.editRow, self, bools))
+
+    '''def getIonValues(self):
+        return self._ionValues'''
+
+    def getFormat(self):
+        return ['','{:10.5f}','{:2d}', '{:12d}', '{:4.2f}', '']
+
+    def getHeaders(self):
+        return ['name','m/z','z','intensity','error /ppm', 'use']
+
+    '''def getValue(self,ion):
+        return ion.getValues()'''
+
+    def fill(self, row, ionVals):
+        '''
+        Fills a row with data of an ion
+        :param (int) row: index of the row
+        :param (FragmentIon) ion:
+        '''
+        formats=self.getFormat()
+        #ionVal = []
+        for j, item in enumerate(ionVals):
+            #ionVal.append(item)
+            if j == 3:
+                newItem = QtWidgets.QTableWidgetItem(str(item))
+                newItem.setTextAlignment(QtCore.Qt.AlignLeft)
+            else:
+                newItem = QtWidgets.QTableWidgetItem()
+                newItem.setTextAlignment(QtCore.Qt.AlignRight)
+                if j == 2:
+                    formatString = formats[2]
+                    if item >= 10 ** 13:
+                        lg10 = str(int(log10(item) + 1))
+                        formatString = '{:' + lg10 + 'd}'
+                    newItem.setData(QtCore.Qt.DisplayRole, formatString.format(item))
+                elif j == 5:
+                    continue
+                elif j == 6:
+                    checkItem = QtWidgets.QTableWidgetItem()
+                    if item:
+                        checkItem.setCheckState(QtCore.Qt.Checked)  # QtCore.Qt.Unchecked
+                    else:
+                        checkItem.setCheckState(QtCore.Qt.Unchecked)  # QtCore.Qt.Unchecked
+                    self.setItem(row, 5, checkItem)
+                else:
+                    newItem.setData(QtCore.Qt.DisplayRole, formats[j].format(item))
+            newItem.setFlags(QtCore.Qt.ItemIsEnabled)
+            self.setItem(row, j, newItem)
+        #self.resizeRowsToContents()
+
+    '''def getIon(self, row):
+        for ion in self._ions:
+            if ion.getName() == self.item(row, 3).text() and ion.getCharge() == int(self.item(row, 1).text()):
+                return ion'''
+
+    '''def showOptions(self, table, pos):
+        menu = QtWidgets.QMenu()
+        copyAllAction = menu.addAction("Copy Table")
+        copyAction = menu.addAction("Copy Cell")
+        action = menu.exec_(table.viewport().mapToGlobal(pos))
+        vals = self.readTable()
+        if action == copyAction:
+            it = table.indexAt(pos)
+            if it is None:
+                return
+            selectedRow = it.row()
+            selectedCol = it.column()
+            df = pd.DataFrame([vals[selectedRow][selectedCol]])
+            df.to_clipboard(index=False, header=False)
+        if action == copyAllAction:
+            df = pd.DataFrame(data=vals, columns=self.getHeaders())
+            df.to_clipboard(index=False, header=True)'''
+
+    def readTable(self):
+        itemList = []
+        for row in range(self.rowCount()):
+            itemList.append((self.item(row, 3).text(),self.item(row, 1).text(),self.item(row, 5).checkState()))
+            #itemList.append([self.item(row, col).text() for col in range(len(self.getHeaders()))])
+        return itemList
+
+
 """class FinalIonTable(TickIonTableWidget):
     def getHeaders(self):
         return ['m/z', 'z', 'I', 'fragment', 'error /ppm', 'S/N', 'qual.','comment', 'del.?']

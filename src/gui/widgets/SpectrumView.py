@@ -37,7 +37,7 @@ class AbstractSpectrumView(QtWidgets.QWidget):
         self._graphWidget.setYRange(0, maxY * 1.1, padding=0)
         baseLine = pg.InfiniteLine(pos=0,angle=0,pen='k',movable=False)
         self._graphWidget.addItem(baseLine)
-        self.plot(width) #ToDo: Correct Width (linear fct)
+        self.plot(width, True) #ToDo: Correct Width (linear fct)
         self.makeWidthWidgets(width)
         self._mzRange = range(int(min(self._peaks[:,0])), int(max(self._peaks[:,0]))+1)
         self._layout.addWidget(self._graphWidget)

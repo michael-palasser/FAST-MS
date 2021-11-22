@@ -1,4 +1,8 @@
+from copy import deepcopy
+
+from src.services.assign_services.AbstractSpectrumHandler import calculateError
 from src.services.assign_services.Finders import IntactFinder, TD_Finder
+from numpy import array
 
 
 class Calibrator(object):
@@ -15,6 +19,7 @@ class Calibrator(object):
         else:
             self._finder = TD_Finder(theoValues, settings, getChargeRange)
         self._ionData = self._finder.readFile(settings['calIons'])[0]
+        self._settings = settings
         errorLimit = settings['errorLimitCalib']
         assignedIons = self._finder.findIonsInSpectrum(0, errorLimit, self._ionData)
         self._calibrationValues, self._errors, self._quality, self._usedIons = \
@@ -33,6 +38,26 @@ class Calibrator(object):
     def getUsedIons(self):
         return self._usedIons
 
+    def getIonArray(self):
+        l = []
+        usedIons = [(ion.getName(),ion.getCharge()) for ion in self._usedIons]
+        calData = deepcopy(self._ionData)
+        print('1a',calData)
+        calData['m/z']=self._finder.calibrate(calData['m/z'], self._calibrationValues)
+        print('1b',calData)
+        print('hey',self._settings['k'], self._settings['d'])
+        for ion in self._finder.findIonsInSpectrum(0, self._settings['errorLimitCalib'], self._ionData, False):
+            used = False
+            if (ion.getName(),ion.getCharge()) in usedIons:
+                used=True
+            #calMz = self._finder.calibrate(ion.getMonoisotopic(), self._calibrationValues)
+            x = ion.getMonoisotopic()
+            l.append((x,ion.getCharge(),int(ion.getIntensity()),ion.getName(),
+                      round(calculateError(self._calibrationValues[0]*x**2+self._calibrationValues[1]*x+self._calibrationValues[2],ion.getTheoMz()),2),
+                                           ion.getTheoMz(),used))
+                      #round(calculateError(x,ion.getTheoMz()),2),ion.getTheoMz(),used))
+        return array(l, dtype=[('m/z',float),('z',int),('int',int),('name','U32'),('error',float),('m/z_theo',float),('used',bool)])
+
     def calibratePeaks(self, peaks):
         '''
         Calibrates a peak array
@@ -47,3 +72,4 @@ class Calibrator(object):
             f.write('m/z\tI\n')
             for peak in peaks:
                 f.write(str(peak[0]+'\t'+str(peak[1])+'\n'))
+

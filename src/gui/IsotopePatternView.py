@@ -177,7 +177,7 @@ class IsotopePatternView(SimpleMainWindow):
         if self._modeBox.currentIndex() == 0:
             self._options['nrMod'].setValue(0)
             self._options['nrMod'].setDisabled(True)
-            for box in self._options.values()[:-1]:
+            for box in list(self._options.values())[:-1]:
                 box.setCurrentText('')
                 box.setDisabled(True)
         elif self._modeBox.currentIndex() != 0:

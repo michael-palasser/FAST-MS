@@ -61,9 +61,9 @@ class IsotopePatternLogics(object):
 
     def getRadicals(self, moleculeName, sequString, fragmentationName, fragTemplName, modifPatternName, modifName,
                     nrMod):
-        print('2l',fragmentationName,fragTemplName)
+        if moleculeName == self.getMolecules()[0]:
+            return 0
         if fragTemplName == '':
-            print('hye')
             fragTemplName = self.getFragItems(fragmentationName)[0][0]
         fragment = self.getFragment(moleculeName, sequString, fragmentationName, fragTemplName, modifPatternName,
                                     modifName, nrMod)
@@ -110,12 +110,13 @@ class IsotopePatternLogics(object):
         :param (int) nrMod: nr. of modifications (optional)
         :return: (tuple[FragmentIon, float]) calculated ion, mass of neutral molecule
         '''
-        print('1l',fragTemplName)
         if inputString[0].islower():
             raise InvalidInputException(inputString, ", Unvalid format, first character must not be lower case")
         if mode == self.getMolecules()[0]:
             fragment = Fragment('-',0,'',MolecularFormula(self.checkFormula(inputString)),[],electrons)
         else:
+            if fragTemplName=='':
+                raise InvalidInputException('', "Please choose a fragment")
             fragment = self.getFragment(mode, inputString, fragmentationName, fragTemplName, modifPatternName,
                                         modifName, nrMod)
         formula = fragment.getFormula()
@@ -210,8 +211,8 @@ class IsotopePatternLogics(object):
             fragTempl = [precTempl for precTempl in fragmentation.getItems2() if precTempl.getName()==fragTemplName][0]
             number = 0
         else:
-            for fragTemp in fragmentation.getItems():
-                print(fragTemp.getName(), fragTemplName)
+            #for fragTemp in fragmentation.getItems():
+            #    print(fragTemp.getName(), fragTemplName)
             fragTempl = [fragTemp for fragTemp in fragmentation.getItems() if fragTemp.getName()==fragTemplName][0]
             number = len(sequenceList)
         species, rest = processTemplateName(fragTempl.getName())

@@ -188,6 +188,7 @@ class PeakTableModel(AbstractTableModel):
         if role == Qt.TextAlignmentRole:
             return Qt.AlignRight
 
+
     """def rowCount(self, index):
         return len(self._data.values)
 
@@ -201,3 +202,36 @@ class PeakTableModel(AbstractTableModel):
 
 
 
+class CalibrationInfoTable(AbstractTableModel):
+    '''
+    TableModel for QTableView in SimplePeakView, used to show original peak values of remodelled ions
+    '''
+    def __init__(self, data):
+        super(CalibrationInfoTable, self).__init__(data, ('','{:4.8f}', '{:4.8f}'),
+                         ('variable','value', 'error'))
+        self._data = data
+        #print('data',data)
+        #self._format = ['{:10.5f}', '{:11d}', '{:11d}','{:4.2f}', '']
+
+    def flags(self, index):
+        return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
+
+
+    def data(self, index, role):
+        '''
+        Overwrites the data method of AbstractTableModel to correctly format each value
+        '''
+        if index.isValid():
+            if role == Qt.DisplayRole:
+                col = index.column()
+                item = self._data[index.row()][col]
+                if col == 0:
+                    return item
+                #print(item)
+                formatString = self._format[col]
+                return formatString.format(item)
+        if role == Qt.TextAlignmentRole:
+            col = index.column()
+            if col == 0:
+                return Qt.AlignCenter
+            return Qt.AlignRight

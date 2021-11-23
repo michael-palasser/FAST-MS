@@ -162,9 +162,12 @@ class IntactMainController(AbstractMainController):
             allSettings = dict(self._settings)
             allSettings.update(self._configs)
             self._calibrator = Calibrator(self._libraryBuilder.getNeutralLibrary(),allSettings)
-            self._calibrator.calibratePeaks(self._spectrumHandler.getSpectrum())
+            if not self.calibrate():
+                return 1
+            '''self._calibrator.calibratePeaks(self._spectrumHandler.getSpectrum())
             vals = self._calibrator.getCalibrationValues()
-            self._info.calibrate(vals[0], vals[1], self._calibrator.getQuality(), self._calibrator.getUsedIons())
+            self._info.calibrate(vals[0], vals[1], self._calibrator.getQuality(), self._calibrator.getUsedIons())'''
+
         """Finding fragments"""
         print("\n********** Search for ions **********")
         start = time.time()

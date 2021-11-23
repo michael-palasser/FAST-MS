@@ -31,7 +31,7 @@ def run(mainWindow):
     service = SequenceService()
     sequenceName = 'CR_1_2'
     sequence = service.get(sequenceName).getSequenceList()
-    modification = '+2DEPC+H2O-CO'
+    modification = '+DEPC'
     '''dlg = OccupancyRecalcStartDialog(mainWindow, service.getAllSequenceNames())
     dlg.exec_()
     if dlg and dlg.sequence != None:

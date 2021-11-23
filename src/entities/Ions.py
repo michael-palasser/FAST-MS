@@ -536,7 +536,7 @@ class SimpleIntactIon(IntactNeutral):
         :param (int) nrOfModifications: no. of modifications on ion
         :param (int) radicals: no. of radicals on ion
         '''
-        super(SimpleIntactIon, self).__init__(sequName, modification, nrOfModifications, '', radicals) #ToDo: Radicals
+        super(SimpleIntactIon, self).__init__(sequName, modification, nrOfModifications, '', radicals)
         self._mz = mz
         self._theoMz = theoMz
         self._charge = charge
@@ -561,3 +561,22 @@ class SimpleIntactIon(IntactNeutral):
 
     def toList(self):
         return [self._mz, self._charge, self._intensity, self.getName(), round(self.getError(), 2)]
+
+
+class SimpleIon(SimpleIntactIon):
+    '''
+    Simplified ion for assignment in intact ion list
+    '''
+    def __init__(self, neutral, mz, theoMz, z, intensity):
+        '''
+        :param (Fragment) neutral: neutral fragment
+        :param (float) mz: monoisotopic m/z
+        :param (float) theoMz: theoretical (calculated) m/z
+        :param (int) charge: charge
+        :param (float) intensity: intensity or relative abundance
+        '''
+        name = neutral.getType()
+        if neutral.getNumber() != 0:
+            name +=format(neutral.getNumber(), "02d")
+        super(SimpleIon, self).__init__(name, neutral.getModification(), mz, theoMz, z, intensity,
+                                        0, neutral.getRadicals())

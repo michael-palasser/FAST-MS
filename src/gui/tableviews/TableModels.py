@@ -202,14 +202,13 @@ class PeakTableModel(AbstractTableModel):
 
 
 
-class CalibrationInfoTable(AbstractTableModel):
+class CalibrationInfoTable1(AbstractTableModel):
     '''
     TableModel for QTableView in SimplePeakView, used to show original peak values of remodelled ions
     '''
-    def __init__(self, data):
-        super(CalibrationInfoTable, self).__init__(data, ('','{:4.8f}', '{:4.8f}'),
-                         ('variable','value', 'error'))
-        self._data = data
+    def __init__(self, data, precision):
+        super(CalibrationInfoTable1, self).__init__(data, ['',precision],
+                         ['variable','value'])
         #print('data',data)
         #self._format = ['{:10.5f}', '{:11d}', '{:11d}','{:4.2f}', '']
 
@@ -235,3 +234,13 @@ class CalibrationInfoTable(AbstractTableModel):
             if col == 0:
                 return Qt.AlignCenter
             return Qt.AlignRight
+
+class CalibrationInfoTable2(CalibrationInfoTable1):
+    '''
+    TableModel for QTableView in SimplePeakView, used to show original peak values of remodelled ions
+    '''
+    def __init__(self, data, precision):
+        super(CalibrationInfoTable2, self).__init__(data, precision)
+        self._format.append(precision)
+        self._headers.append('error')
+

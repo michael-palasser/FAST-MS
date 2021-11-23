@@ -21,9 +21,9 @@ class Calibrator(object):
         self._ionData = self._finder.readFile(settings['calIons'])[0]
         self._settings = settings
         errorLimit = settings['errorLimitCalib']
-        assignedIons = self._finder.findIonsInSpectrum(0, errorLimit, self._ionData)
+        self._assignedIons = self._finder.findIonsInSpectrum(0, errorLimit, self._ionData)
         self._calibrationValues, self._errors, self._quality, self._usedIons = \
-            self._finder.findCalibrationFunction(assignedIons, errorLimit, settings['maxStd'])
+            self._finder.findCalibrationFunction(self._assignedIons, errorLimit, settings['maxStd'])
 
     def getIonData(self):
         return self._ionData
@@ -42,10 +42,7 @@ class Calibrator(object):
         l = []
         usedIons = [(ion.getName(),ion.getCharge()) for ion in self._usedIons]
         calData = deepcopy(self._ionData)
-        print('1a',calData)
         calData['m/z']=self._finder.calibrate(calData['m/z'], self._calibrationValues)
-        print('1b',calData)
-        print('hey',self._settings['k'], self._settings['d'])
         for ion in self._finder.findIonsInSpectrum(0, self._settings['errorLimitCalib'], self._ionData, False):
             used = False
             if (ion.getName(),ion.getCharge()) in usedIons:
@@ -56,6 +53,7 @@ class Calibrator(object):
                       round(calculateError(self._calibrationValues[0]*x**2+self._calibrationValues[1]*x+self._calibrationValues[2],ion.getTheoMz()),2),
                                            ion.getTheoMz(),used))
                       #round(calculateError(x,ion.getTheoMz()),2),ion.getTheoMz(),used))
+
         return array(l, dtype=[('m/z',float),('z',int),('int',int),('name','U32'),('error',float),('m/z_theo',float),('used',bool)])
 
     def calibratePeaks(self, peaks):
@@ -73,3 +71,7 @@ class Calibrator(object):
             for peak in peaks:
                 f.write(str(peak[0]+'\t'+str(peak[1])+'\n'))
 
+    def recalibrate(self, usedIons):
+        updatedIons = [ion for ion in self._assignedIons if (ion.getName(),ion.getCharge()) in usedIons]
+        self._calibrationValues, self._errors, self._quality, self._usedIons = \
+            self._finder.findCalibrationFunction(updatedIons, self._settings['errorLimitCalib'], self._settings['maxStd'])

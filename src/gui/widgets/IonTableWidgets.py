@@ -270,10 +270,10 @@ class CalibrationIonTableWidget(QTableWidget):
         return self._ionValues'''
 
     def getFormat(self):
-        return ['','{:10.5f}','{:2d}', '{:12d}', '{:4.2f}', '']
+        return ['{:10.5f}','{:2d}', '{:12d}', '', '{:4.2f}', '']
 
     def getHeaders(self):
-        return ['name','m/z','z','intensity','error /ppm', 'use']
+        return ['m/z','z','intensity','name','error /ppm', 'use']
 
     '''def getValue(self,ion):
         return ion.getValues()'''
@@ -341,7 +341,7 @@ class CalibrationIonTableWidget(QTableWidget):
     def readTable(self):
         itemList = []
         for row in range(self.rowCount()):
-            itemList.append((self.item(row, 3).text(),self.item(row, 1).text(),self.item(row, 5).checkState()))
+            itemList.append((self.item(row, 3).text(),int(self.item(row, 1).text()),self.item(row, 5).checkState()))
             #itemList.append([self.item(row, col).text() for col in range(len(self.getHeaders()))])
         return itemList
 

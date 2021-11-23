@@ -9,7 +9,7 @@ import numpy as np
 from scipy.optimize import curve_fit
 
 from src.Exceptions import InvalidInputException
-from src.entities.Ions import SimpleIntactIon, FragmentIon
+from src.entities.Ions import SimpleIntactIon, FragmentIon, SimpleIon
 from src.services.assign_services.AbstractSpectrumHandler import calculateError, getMz, getErrorLimit
 
 #protonMass = 1.00727647
@@ -125,6 +125,8 @@ class AbstractFinder(ABC):
                             ions.append(self.getIon(mz, neutral, sortedArr[-1]))
                             #    Ion(self._settings['sequName'], modif, sortedArr[-1]['m/z'], mz,
                             #        sortedArr[-1]['z'], sortedArr[-1]['relAb'], nrMod, radicals))
+        '''for i in ions:
+            print(i.getName(), i.getModification())'''
         return ions
 
     @abstractmethod
@@ -525,5 +527,4 @@ class TD_Finder(AbstractFinder):
         '''return FragmentIon(neutral, found['m/z'], found['z'], [], mz,
                                ,
                                found['relAb'], neutral.getNrOfModifications(), neutral.getRadicals())'''
-        return SimpleIntactIon(neutral.getName(), neutral.getModification(), found['m/z'], mz, found['z'],
-                               found['relAb'], 0, neutral.getRadicals())
+        return SimpleIon(neutral, found['m/z'], mz, found['z'],found['relAb'])

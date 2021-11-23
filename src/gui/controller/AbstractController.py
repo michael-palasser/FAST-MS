@@ -16,11 +16,12 @@ from PyQt5 import QtWidgets, QtCore
 from src import path
 from src.gui.GUI_functions import connectTable
 from src.gui.IsotopePatternView import AddIonView
+from src.gui.dialogs.CalibrationPlot import CalibrationPlot
 from src.gui.widgets.InfoView import InfoView
 from src.gui.tableviews.TableModels import IonTableModel
 from src.gui.tableviews.ShowPeaksViews import PeakView, SimplePeakView
 from src.gui.widgets.SpectrumView import SpectrumView
-
+from src.services.assign_services.Calibrator import Calibrator
 
 FOTO_SESSION=True
 
@@ -36,6 +37,18 @@ class AbstractMainController(ABC):
         :param (bool) new: True if new search, False if old search is loaded
         '''
         self._mainWindow= window
+
+
+    def calibrate(self):
+        dlg = CalibrationPlot(self._mainWindow, self._calibrator)
+        dlg.exec_()
+        if dlg and not dlg.canceled():
+            self._calibrator.calibratePeaks(self._spectrumHandler.getSpectrum())
+            vals = self._calibrator.getCalibrationValues()
+            self._info.calibrate(vals[0], vals[1], self._calibrator.getQuality(), self._calibrator.getUsedIons())
+            return True
+        else:
+            return False
 
     def setUpUi(self):
         '''

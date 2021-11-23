@@ -17,7 +17,7 @@ from src.Exceptions import InvalidIsotopePatternException, InvalidInputException
 from src.entities.Info import Info
 from src.gui.controller.AbstractController import AbstractMainController
 from src.gui.tableviews.FragmentationTable import FragmentationTable
-from src.gui.widgets.CalibrationPlot import CalibrationPlot
+from src.gui.dialogs.CalibrationPlot import CalibrationPlot
 from src.gui.widgets.OccupancyWidget import OccupancyWidget
 from src.gui.widgets.SequCovWidget import SequCovWidget
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
@@ -174,14 +174,18 @@ class TD_MainController(AbstractMainController):
             allSettings.update(self._configs)
             self._calibrator = Calibrator(self._libraryBuilder.getFragmentLibrary(),allSettings,
                                           self._spectrumHandler.getChargeRange)
-            vals = self._calibrator.getCalibrationValues()
-            dlg = CalibrationPlot(self._mainWindow, self._calibrator.getQuality(), self._calibrator.getIonArray(),vals[0],
-                            vals[1])
+            '''allSettings = dict(self._settings)
+            allSettings.update(self._configs)
+            self._calibrator = Calibrator(self._libraryBuilder.getFragmentLibrary(),allSettings,
+                                          self._spectrumHandler.getChargeRange)
+            dlg = CalibrationPlot(self._mainWindow, self._calibrator)
             dlg.exec_()
             if dlg and not dlg.canceled():
                 self._calibrator.calibratePeaks(self._spectrumHandler.getSpectrum())
                 vals = self._calibrator.getCalibrationValues()
-                self._info.calibrate(vals[0], vals[1], self._calibrator.getQuality(), self._calibrator.getUsedIons())
+                self._info.calibrate(vals[0], vals[1], self._calibrator.getQuality(), self._calibrator.getUsedIons())'''
+            if not self.calibrate():
+                return 1
         #except KeyError:
         #    pass
         """Finding fragments"""

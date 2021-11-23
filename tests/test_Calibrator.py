@@ -55,7 +55,7 @@ class TestCalibrator(TestCase):
         configHandlerRNA = initConfigurations()
         configHandlerRNA.update('sprayMode', 'negative')
         configHandlerRNA.update('sequName', 'neoRibo')
-        configHandlerRNA.update2('calIons', os.path.join(path, 'tests', 'intact', '2511_RIO_test_0.txt'))
+        configHandlerRNA.update2('calIons', os.path.join(path, 'tests', 'test_files', '2511_RIO_test_0.txt'))
 
         #self._SNAP_list = os.path.join(path, 'test_files', 'intact', '2511_RIO_test_0.txt')
         try:
@@ -100,7 +100,7 @@ class TestCalibrator(TestCase):
 
         allSettings = dict(settings)
         allSettings.update(configs)
-        calibrator = Calibrator(builder.getFragmentLibrary(), allSettings, spectrumHandler)
+        calibrator = Calibrator(builder.getFragmentLibrary(), allSettings, spectrumHandler.getChargeRange)
         calibrated = calibrator.calibratePeaks(uncalibrated)
         for uncal, cal in zip(spectrumHandler.getSpectrum(), calibrated):
             self.assertNotEqual(uncal[0], cal[0])

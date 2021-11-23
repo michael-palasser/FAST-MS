@@ -42,7 +42,7 @@ def initTestSequences(sequenceService=SequenceService()):
 class TestFinder(TestCase):
     #ToDo: test for protein
     def setUp(self):
-        self.RNA_spectrum = os.path.join(path, 'tests', 'intact', '2511_RIO_test.txt')
+        self.RNA_spectrum = os.path.join(path, 'tests', 'test_files', '2511_RIO_test.txt')
         try:
             self.finderRNA, self.configRNA, self.finderProt, self.configProt = initFinders()
         except:

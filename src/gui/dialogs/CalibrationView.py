@@ -8,9 +8,12 @@ from src.gui.tableviews.TableModels import CalibrationInfoTable2, CalibrationInf
 from src.gui.widgets.IonTableWidgets import CalibrationIonTableWidget
 
 
-class CalibrationPlot(QtWidgets.QDialog):
+class CalibrationView(QtWidgets.QDialog):
+    '''
+    Dialog for controlling calibration
+    '''
     def __init__(self, parent, calibrator):
-        super(CalibrationPlot, self).__init__(parent)
+        super(CalibrationView, self).__init__(parent)
         self._calibrator = calibrator
         self._canceled = False
         self._layout = QtWidgets.QVBoxLayout(self)
@@ -36,7 +39,7 @@ class CalibrationPlot(QtWidgets.QDialog):
         self._table2 = CalibrationIonTableWidget(scrollArea, self._ionsVals)
         #connectTable(table2,self.showOptions)
         scrollArea.setWidget(self._table2)
-        connectTable(self._table2, self.showOptions)
+        #connectTable(self._table2, self.showOptions)
         self.addWidget(scrollArea)
         self.addWidget(self.makeButtonBox())
 
@@ -117,31 +120,41 @@ class CalibrationPlot(QtWidgets.QDialog):
 
     def reject(self):
         self._canceled = True
-        super(CalibrationPlot, self).reject()
+        super(CalibrationView, self).reject()
 
 
     def canceled(self):
         return self._canceled
 
     def showOptions(self, table, pos):
+        print('hey')
         menu = QtWidgets.QMenu()
         copyAllAction = menu.addAction("Copy Table")
         copyAction = menu.addAction("Copy Cell")
+        print('hey')
         action = menu.exec_(table.viewport().mapToGlobal(pos))
+        print('hey2')
+
+        #print(selectedRow,selectedCol)
+
+
+        df = pd.DataFrame(data=table.model().getData(), columns=table.model().getHeaders())
+        df.to_clipboard(index=False, header=True)
+        print(action == copyAction,action, copyAction)
         if action == copyAction:
             it = table.indexAt(pos)
             if it is None:
                 return
             selectedRow = it.row()
             selectedCol = it.column()
-            if table == self._table2:
-                df = pd.DataFrame(data = [table.readTable()[selectedRow][selectedCol]], columns=table.getHeaders())
-            else:
-                df = pd.DataFrame(data=[table.model().getRow(selectedRow)], columns=table.model().getHeaders())
+            #if table == self._table2:
+            #    df = pd.DataFrame(data = [table.getData()[selectedRow][selectedCol]])
+            #else:
+            df = pd.DataFrame(data=[table.model().getRow(selectedRow)[selectedCol]])
             df.to_clipboard(index=False, header=True)
         elif action == copyAllAction:
-            if table == self._table2:
-                df = pd.DataFrame(data = table.readTable(), columns=table.getHeaders())
-            else:
-                df = pd.DataFrame(data=table.model().getData(), columns=table.model().getHeaders())
+            #if table == self._table2:
+            #    df = pd.DataFrame(data = table.getData(), columns=table.getHeaders())
+            #else:
+            df = pd.DataFrame(data=table.model().getData(), columns=table.model().getHeaders())
             df.to_clipboard(index=False, header=True)

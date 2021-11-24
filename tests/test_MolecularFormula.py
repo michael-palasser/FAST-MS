@@ -24,6 +24,7 @@ uni_pattern = np.array([(174.03917908, 0.92733003), (175.04099458, 0.06836688), 
 dict0 = {'C': 5, 'H': 4, 'N': 3, 'O': 1}
 dict1 = {'C': 5, 'H': 4, 'N': 3, 'O': 1, 'S': 10}
 dict2 = {'C': 10, 'H': 8, 'N': 6, 'O': 2, 'S': 10}
+MIN_SUM = 0.996
 
 
 class MolecularFormulaTest(TestCase):
@@ -110,17 +111,17 @@ class MolecularFormulaTest(TestCase):
         self.assertAlmostEqual(912.375965, peptideFormulaDummy.calculateMonoIsotopic(), delta=5 * 10 ** (-6))
 
     def test_calculate_isotope_pattern(self):
-        P2 = MolecularFormula('P2').calculateIsotopePattern()
+        P2 = MolecularFormula('P2').calculateIsotopePattern(MIN_SUM)
         self.assertAlmostEqual(2 * 30.973762, P2['m/z'][0])
         self.assertAlmostEqual(1, P2['calcInt'][0])
-        self.testIsotopePattern(RNA_pattern, RNA_formulaDummy.calculateIsotopePattern())
-        self.testIsotopePattern(peptide_pattern, peptideFormulaDummy.calculateIsotopePattern())
-        self.testIsotopePattern(uni_pattern, uniFormulaDummy.calculateIsotopePattern())
+        self.testIsotopePattern(RNA_pattern, RNA_formulaDummy.calculateIsotopePattern(MIN_SUM))
+        self.testIsotopePattern(peptide_pattern, peptideFormulaDummy.calculateIsotopePattern(MIN_SUM))
+        self.testIsotopePattern(uni_pattern, uniFormulaDummy.calculateIsotopePattern(MIN_SUM))
         for i in range(10):
             molFormulaDummy_i = MolecularFormula({'C': randint(5, 50), 'H': randint(10, 100),
                                                   'N': randint(1, 40), 'O': randint(1, 40),
                                                   'P': randint(0, 2), 'S': randint(0, 2)})
-            calcIsotopePattern = molFormulaDummy_i.calculateIsotopePattern()
+            calcIsotopePattern = molFormulaDummy_i.calculateIsotopePattern(MIN_SUM)
             try:
                 self.assertAlmostEqual(1.0, float(np.sum(calcIsotopePattern['calcInt'])), delta=0.004)
                 self.assertTrue(np.sum(calcIsotopePattern['calcInt']) < 1)
@@ -195,7 +196,7 @@ class MolecularFormulaTest(TestCase):
             molFormulaDummy_i = MolecularFormula({'C': randint(5, 50), 'H': randint(10, 100),
                                                   'N': randint(1, 40), 'O': randint(1, 40),
                                                   'P': randint(0, 2), 'S': randint(0, 2)})
-            #exactIsotopePattern = molFormulaDummy_i.calculateIsotopePattern()
+            #exactIsotopePattern = molFormulaDummy_i.calculateIsotopePattern(MIN_SUM)
             abundanceTable, elemNrs, _ = molFormulaDummy_i.makeFFTTables(molFormulaDummy_i.calculateMonoIsotopic())
             fastIsotopePattern = molFormulaDummy.calculateAbundancesFFT(abundanceTable, elemNrs)
             try:
@@ -216,8 +217,8 @@ class MolecularFormulaTest(TestCase):
                                                   'N': randint(50, 400), 'O': randint(50, 400),
                                                   'P': randint(0, 20), 'S': randint(0, 20)})'''
             for j,molFormulaDummy_i in enumerate([molFormulaDummy_RNA, molFormulaDummy_prot]):#, molFormulaDummy_both]:
-                exactIsotopePattern = molFormulaDummy_i.calculateIsotopePattern()
-                fastIsotopePattern = molFormulaDummy_i.calculateIsotopePatternFFT(1)
+                exactIsotopePattern = molFormulaDummy_i.calculateIsotopePattern(MIN_SUM)
+                fastIsotopePattern = molFormulaDummy_i.calculateIsotopePatternFFT(MIN_SUM, 1)
                 '''print(molFormulaDummy_i)
                 print(exactIsotopePattern)
                 print(fastIsotopePattern)'''
@@ -236,8 +237,8 @@ class MolecularFormulaTest(TestCase):
         molFormulaDummy_RNA = MolecularFormula('C630H778N255O459P65') #rre2
         molFormulaDummy_prot = MolecularFormula('C714H1120N188O255S9') #calmodulin
         for j,molFormulaDummy_i in enumerate([molFormulaDummy_RNA, molFormulaDummy_prot]):#, molFormulaDummy_both]:
-            exactIsotopePattern = molFormulaDummy_i.calculateIsotopePattern()
-            fastIsotopePattern = molFormulaDummy_i.calculateIsotopePatternFFT(1)
+            exactIsotopePattern = molFormulaDummy_i.calculateIsotopePattern(MIN_SUM)
+            fastIsotopePattern = molFormulaDummy_i.calculateIsotopePatternFFT(MIN_SUM, 1)
             print(j%2,'max error', molFormulaDummy_i.toString(),
                   self.testIsotopePattern(exactIsotopePattern,fastIsotopePattern,max_ppm=0.6, deltaCalcInt=1*10e-4))
 

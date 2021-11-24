@@ -21,10 +21,10 @@ class IsotopePatternLogics(object):
         self._modService = ModificationService()
         self._elements = PeriodicTableService().getAllPatternNames()
         self._molecules = self._moleculeService.getAllPatternNames()
-        self._intensityModeller = IntensityModeller(ConfigurationHandlerFactory.getTD_ConfigHandler().getAll(), 10**6)
+        self._configs = ConfigurationHandlerFactory.getConfigHandler().getAll()
+        self._intensityModeller = IntensityModeller(self._configs, 1)
         self._peakDtype = np.dtype([('m/z', np.float64), ('relAb', np.int32), ('calcInt', np.float64), ('used', np.bool_)])
         #self._peakDtype = np.dtype([('m/z', float), ('relAb', float), ('calcInt', float), ('used', np.bool_)])
-
         self._formula = None
         self._isotopePattern = None
         self._ion = None
@@ -128,9 +128,9 @@ class IsotopePatternLogics(object):
                 raise InvalidInputException('Nr of H = '+str(tempFormula.getFormulaDict()['H']), 'not enough Hs for deprotonation')
             #if tempFormula.calcIsotopePatternSlowly(1)['m/z'][0]>6000:
             if accelerate is None:
-                self._isotopePattern = tempFormula.calculateIsotopePattern()
+                self._isotopePattern = tempFormula.calculateIsotopePattern(self._configs['maxIso'])
             else:
-                self._isotopePattern = tempFormula.calculateIsotopePatternFFT(accelerate)
+                self._isotopePattern = tempFormula.calculateIsotopePatternFFT(self._configs['maxIso'], accelerate)
             '''else:
                 self._isotopePattern = tempFormula.calcIsotopePatternSlowly()'''
         #isotopePattern = copy.deepcopy(self._isotopePattern)

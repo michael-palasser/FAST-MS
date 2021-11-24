@@ -50,7 +50,7 @@ class IntactMainController(AbstractMainController):
         if dialog.canceled():
             return
         self._settings = dialog.newSettings()
-        self._configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
+        self._configs = ConfigurationHandlerFactory.getConfigHandler().getAll()
         #self._propStorage = IntactSearchSettings(self._settings['sequName'], self._settings['modifications'])
         self._sequence = SequenceService().get(self._settings['sequName'])
         modification = IntactIonService().getPatternWithObjects(self._settings['modifications'], IntactModification)
@@ -71,7 +71,7 @@ class IntactMainController(AbstractMainController):
             #self._search =
             dialog = SelectSearchDlg(parent, searchService.getAllSearchNames(),self.deleteSearch, searchService)
             if dialog.exec_() and not dialog.canceled():
-                self._configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
+                self._configs = ConfigurationHandlerFactory.getConfigHandler().getAll()
                 start=time.time()
                 self._settings, observedIons, delIons, remIons, searchedZStates, logFile = \
                     searchService.getSearch(dialog.getName())
@@ -117,7 +117,8 @@ class IntactMainController(AbstractMainController):
         models intensities, fixes problems by overlapping ions (2 user inputs possible for deleting ions)
         '''
         print("\n********** Creating fragment library **********")
-        self._libraryBuilder = IntactLibraryBuilder(self._sequence, self._settings['modifications'])
+        self._libraryBuilder = IntactLibraryBuilder(self._sequence, self._settings['modifications'],
+                                                              self._configs['maxIso'], self._configs['approxIso'])
         self._libraryBuilder.createLibrary()
 
         """read existing ion-list file or create new one"""

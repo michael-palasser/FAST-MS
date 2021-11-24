@@ -243,9 +243,7 @@ class TickIonTableWidget(IonTableWidget):
 
 class CalibrationIonTableWidget(QTableWidget):
     '''
-    Interactive ion table table for checking monoisotopic overlaps and to show ion values when "show peaks" is pressed
-    (right click on ion table in top-down search).
-    Parent class of IsoPatternIon and TickIonTableWidget
+    Interactive ion table table for choosing ions for calibration in CalibrationView
     '''
     def __init__(self, parent, ions):
         super(CalibrationIonTableWidget, self).__init__(parent)
@@ -344,6 +342,17 @@ class CalibrationIonTableWidget(QTableWidget):
             itemList.append((self.item(row, 3).text(),int(self.item(row, 1).text()),self.item(row, 5).checkState()))
             #itemList.append([self.item(row, col).text() for col in range(len(self.getHeaders()))])
         return itemList
+
+    def getData(self):
+        data = []
+        for i, row in enumerate(self._ions):
+            used = True
+            if self.item(i, 5).checkState():
+                used = False #ToDo
+            #newRow = (row[])['used']= used
+            data.append(row)
+            #itemList.append([self.item(row, col).text() for col in range(len(self.getHeaders()))])
+        return data
 
 
 """class FinalIonTable(TickIonTableWidget):

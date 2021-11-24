@@ -11,7 +11,7 @@ from src.entities.GeneralEntities import Sequence
 from src.entities.Ions import Fragment
 from src.entities.SearchSettings import SearchSettings
 from src.repositories.IsotopePatternRepository import IsotopePatternRepository
-from src.services.library_services.LibraryBuilder import FragmentLibraryBuilder
+from src.services.library_services.FragmentLibraryBuilder import FragmentLibraryBuilder
 
 
 class TestIsotopePatternRepository(TestCase):
@@ -51,7 +51,7 @@ class TestIsotopePatternRepository(TestCase):
         for i in range(15):
             fragment = Fragment('c',2,'',MolecularFormula({'C': randint(10, 20), 'H': randint(20, 50),
                                               'N': randint(5, 40), 'O': randint(5, 40), 'P': randint(0, 2)}), [],0)
-            isotopePattern = fragment.getFormula().calculateIsotopePattern()
+            isotopePattern = fragment.getFormula().calculateIsotopePattern(0.996)
             fragment.setIsotopePattern(isotopePattern)
             randNr = (randint(-1,+1)/10**5)
             if randNr == 0.:

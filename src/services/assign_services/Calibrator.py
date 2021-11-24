@@ -7,12 +7,13 @@ from numpy import array
 
 class Calibrator(object):
     '''
-    Responsible for calibrating ions in a spectrum
+    Responsible for calibrating a peak list using a ion list
     '''
     def __init__(self, theoValues, settings, getChargeRange=None):
         '''
         :param (list[IntactNeutral]) theoValues: library of neutrals
         :param (dict[str,Any]) settings: settings
+        :param (Callable) getChargeRange: optional, method to calculate the charge range of a fragment
         '''
         if getChargeRange is None:
             self._finder = IntactFinder(theoValues, settings)
@@ -39,6 +40,10 @@ class Calibrator(object):
         return self._usedIons
 
     def getIonArray(self):
+        '''
+        Searches for ions in ion list and returns their values as an array
+        :return: (ndarray[dtype = [('m/z',float),('z',int),('int',int),('name','U32'),('error',float),('m/z_theo',float),('used',bool)]])
+        '''
         l = []
         usedIons = [(ion.getName(),ion.getCharge()) for ion in self._usedIons]
         calData = deepcopy(self._ionData)
@@ -59,19 +64,28 @@ class Calibrator(object):
     def calibratePeaks(self, peaks):
         '''
         Calibrates a peak array
-        :param (ndarray[float,float]) peaks: m/z, int
-        :return:
+        :param (ndarray[float,float]) peaks: array with columns m/z, int
+        :return: (ndarray[float,float]) calibrated peaks
         '''
         peaks[:,0] = self._finder.calibrate(peaks[:,0], self._calibrationValues)
         return peaks
 
     def writePeaks(self, peaks, fileName):
-        with open(fileName) as f:
+        '''
+        Writes a calibrated peak list to a file
+        :param (ndarray[float,float]) peaks: array with columns m/z, int
+        :param (str) fileName: name of the file
+        '''
+        with open(fileName, 'w') as f:
             f.write('m/z\tI\n')
             for peak in peaks:
-                f.write(str(peak[0]+'\t'+str(peak[1])+'\n'))
+                f.write(str(peak[0])+'\t'+str(peak[1])+'\n')
 
     def recalibrate(self, usedIons):
+        '''
+        Calculates the calibration function by a given ion list
+        :param (tuple[str,int]) usedIons: hashes of ions (name, charge) that should be used for calibration
+        '''
         updatedIons = [ion for ion in self._assignedIons if (ion.getName(),ion.getCharge()) in usedIons]
         self._calibrationValues, self._errors, self._quality, self._usedIons = \
             self._finder.findCalibrationFunction(updatedIons, self._settings['errorLimitCalib'], self._settings['maxStd'])

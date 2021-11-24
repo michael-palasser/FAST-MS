@@ -82,8 +82,8 @@ class ConfigurationHandlerFactory(object):
         return ConfigHandler(join(dataPath,"settings_top_down.json"))
 
     @staticmethod
-    def getTD_ConfigHandler():
-        return ConfigHandler(join(dataPath,"configurations_top_down.json"))
+    def getConfigHandler():
+        return ConfigHandler(join(dataPath,"configurations.json"))
 
 
     @staticmethod
@@ -96,11 +96,11 @@ class ConfigurationHandlerFactory(object):
 
     @staticmethod
     def getIntactHandler():
-        return ConfigHandler(join(dataPath, "configurations_intact.json"))
+        return ConfigHandler(join(dataPath, "settings_intact.json"))
 
     @staticmethod
     def getFullIntactHandler():
-        return ConfigHandler(join(dataPath, "configurations_intactFull.json"))
+        return ConfigHandler(join(dataPath, "settings_intactFull.json"))
 
 
 conf = {'sequName' : 'ribA',

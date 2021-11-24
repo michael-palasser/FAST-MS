@@ -11,7 +11,7 @@ class TestIntactSpectrumHandler(TestCase):
     def test_get_charge_range(self):
         filePath = os.path.join(path, 'tests', 'test_files', 'dummySpectrum.txt')
         handler = IntactSpectrumHandler({'minMz':300,'maxMz':1500, 'sprayMode':1, 'spectralData':filePath, 'noiseLimit': 10 ** 6},
-                                        ConfigurationHandlerFactory.getTD_ConfigHandler().getAll())
+                                        ConfigurationHandlerFactory.getConfigHandler().getAll())
         range = handler.getChargeRange(5000)
         self.assertEqual(4, range[0])
         self.assertEqual(16, range[-1])

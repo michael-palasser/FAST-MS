@@ -126,7 +126,7 @@ class TDStartDialog(StartDialog):
 
 class IntactStartDialog(DialogWithTabs, StartDialog):
     '''
-    Dialog which pops up when intact ion search is started. Values are stored in configurations_intact.json.
+    Dialog which pops up when intact ion search is started. Values are stored in settings_intact.json.
     '''
     def __init__(self, parent=None, title="Intact Ion Search", full= False):
         super().__init__(parent,title)
@@ -200,7 +200,9 @@ class IntactStartDialog(DialogWithTabs, StartDialog):
 
 
 class IntactStartDialogFull(IntactStartDialog):
-
+    '''
+    Dialog which pops up when full intact ion search is started. Values are stored in settings_intactFull.json.
+    '''
     def __init__(self, parent=None):
         super().__init__(parent, "Full Intact Ion Search", ConfigurationHandlerFactory.getFullIntactHandler())
         self._configHandler = ConfigurationHandlerFactory.getFullIntactHandler()

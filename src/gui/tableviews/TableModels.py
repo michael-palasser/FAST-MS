@@ -204,7 +204,7 @@ class PeakTableModel(AbstractTableModel):
 
 class CalibrationInfoTable1(AbstractTableModel):
     '''
-    TableModel for QTableView in SimplePeakView, used to show original peak values of remodelled ions
+    TableModel for QTableView that shows the values of average error and standard dev. of errors in CalibrationView
     '''
     def __init__(self, data, precision):
         super(CalibrationInfoTable1, self).__init__(data, ['',precision],
@@ -237,7 +237,7 @@ class CalibrationInfoTable1(AbstractTableModel):
 
 class CalibrationInfoTable2(CalibrationInfoTable1):
     '''
-    TableModel for QTableView in SimplePeakView, used to show original peak values of remodelled ions
+    TableModel for QTableView that shows the values of calibration function in CalibrationView
     '''
     def __init__(self, data, precision):
         super(CalibrationInfoTable2, self).__init__(data, precision)

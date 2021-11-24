@@ -26,7 +26,7 @@ class FragmentLibraryBuilder(object):
         molecule:
     '''
 
-    def __init__(self, properties, maxMod):
+    def __init__(self, properties, maxMod, maxIso=0.996, accelerate=20):
         '''
         :type properties: SearchSettings
         :param properties: propertyStorage of search
@@ -39,6 +39,8 @@ class FragmentLibraryBuilder(object):
         self.__fragmentation = properties.getFragmentation()
         self.__modifPattern = properties.getModification()
         self.__maxMod = maxMod
+        self._maxIso = maxIso
+        self._accelerate = accelerate
         self.__fragmentLibrary = list()
         self.__precursor = None
 
@@ -188,7 +190,7 @@ class FragmentLibraryBuilder(object):
                                     MolecularFormula(modifTemplate.getFormula()).multiplyFormula(nrMod).getFormulaDict()),
                                     sequence, templateRadicals+modifTemplate.getRadicals())
                             precursorFragments.append(newFragment)
-                            print(sequenceName+name,precName,sequenceName+name == precName)
+                            #print(sequenceName+name,precName,sequenceName+name == precName)
                             if (sequenceName+name == precName):
                                 self.__precursor = newFragment
         #[print(frag.getName(),frag.getRadicals()) for frag in precursorFragments]
@@ -238,7 +240,8 @@ class FragmentLibraryBuilder(object):
             #self._bar = tqdm(total=len(self.__fragmentLibrary))
             logging.debug('Normal calculation')
             for fragment in self.__fragmentLibrary:
-                fragment.setIsotopePattern(fragment.getFormula().calculateIsotopePattern())
+                #fragment.setIsotopePattern(fragment.getFormula().calculateIsotopePattern(self._maxIso))
+                fragment.setIsotopePattern(fragment.getFormula().calculateIsotopePatternFFT(self._maxIso,self._accelerate))
                 #print(fragment.getName())
                 logging.info('\t'+fragment.getName())
                 #self._bar.update(1)
@@ -258,8 +261,8 @@ class FragmentLibraryBuilder(object):
         :param fragment: fragment without isotopePattern
         :return: (Fragment) fragment with isotopePattern
         '''
-        fragment.setIsotopePattern(fragment.getFormula().calculateIsotopePattern())
-        #print(fragment.getName())
+        #fragment.setIsotopePattern(fragment.getFormula().calculateIsotopePattern(self._maxIso))
+        fragment.setIsotopePattern(fragment.getFormula().calculateIsotopePatternFFT(self._maxIso,self._accelerate))
         logging.info('\t'+fragment.getName())
         #self._bar.update(1) does not work in python 3.8
         #self._fun()

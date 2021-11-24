@@ -3,11 +3,8 @@ Created on 21 Jul 2020
 
 @author: michael
 '''
-import subprocess
-import traceback
 import os
 from abc import ABC
-from datetime import datetime
 
 import numpy as np
 import pandas as pd
@@ -16,12 +13,11 @@ from PyQt5 import QtWidgets, QtCore
 from src import path
 from src.gui.GUI_functions import connectTable
 from src.gui.IsotopePatternView import AddIonView
-from src.gui.dialogs.CalibrationPlot import CalibrationPlot
+from src.gui.dialogs.CalibrationView import CalibrationView
 from src.gui.widgets.InfoView import InfoView
 from src.gui.tableviews.TableModels import IonTableModel
 from src.gui.tableviews.ShowPeaksViews import PeakView, SimplePeakView
 from src.gui.widgets.SpectrumView import SpectrumView
-from src.services.assign_services.Calibrator import Calibrator
 
 FOTO_SESSION=True
 
@@ -40,10 +36,16 @@ class AbstractMainController(ABC):
 
 
     def calibrate(self):
-        dlg = CalibrationPlot(self._mainWindow, self._calibrator)
+        dlg = CalibrationView(self._mainWindow, self._calibrator)
         dlg.exec_()
         if dlg and not dlg.canceled():
-            self._calibrator.calibratePeaks(self._spectrumHandler.getSpectrum())
+            peaks = self._calibrator.calibratePeaks(self._spectrumHandler.getSpectrum())
+            fileName = self._settings['spectralData']
+            if not self._configs['overwrite']:
+                fileName = fileName[:-4]+'_cal'+fileName[-4:]
+                self._settings['spectralData'] = fileName
+                print(fileName)
+            self._calibrator.writePeaks(peaks, fileName)
             vals = self._calibrator.getCalibrationValues()
             self._info.calibrate(vals[0], vals[1], self._calibrator.getQuality(), self._calibrator.getUsedIons())
             return True

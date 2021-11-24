@@ -180,7 +180,7 @@ class TestIntensityModeller(TestCase):
                                     ['a', 'b', 'c', 'd']):
             formula = MolecularFormula(formulaStr)
             theoIsotopePattern = []
-            for peak in formula.calculateIsotopePattern():
+            for peak in formula.calculateIsotopePattern(0.996):
                 mz, intensity = round(peak['m/z'],0) / 2, peak['calcInt'] * 10 ** 7 * i
                 theoIsotopePattern.append((mz, intensity, peak['calcInt'], 0., True))
                 if mz in allPeaks.keys():
@@ -206,7 +206,7 @@ class TestIntensityModeller(TestCase):
             #observedIons[key] = ion
         formula = MolecularFormula('C155H290N30O10')
         isotopePattern = []
-        for peak in formula.calculateIsotopePattern():
+        for peak in formula.calculateIsotopePattern(0.996):
             mz, intensity = round(peak['m/z'] / 2, 2), peak['calcInt'] * 10 ** 7
             isotopePattern.append((mz, intensity, peak['calcInt'], 0., True))
         isotopePattern = np.array(isotopePattern, dtype=dtype)
@@ -276,7 +276,7 @@ class TestIntensityModeller(TestCase):
     def test_for_intact(self):
         d = getCalibratedSpectrum()
         d['spectrumHandler'].findIons(d['libraryBuilder'].getNeutralLibrary())
-        self._intensityModeller = IntensityModeller(ConfigurationHandlerFactory.getTD_ConfigHandler().getAll(), d['spectrumHandler'].getNoiseLevel())
+        self._intensityModeller = IntensityModeller(ConfigurationHandlerFactory.getConfigHandler().getAll(), d['spectrumHandler'].getNoiseLevel())
         for ion in d['spectrumHandler'].getFoundIons():
             self._intensityModeller.processIons(ion)
         for ion in d['spectrumHandler']._ionsInNoise:

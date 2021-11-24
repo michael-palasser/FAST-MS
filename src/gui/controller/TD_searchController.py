@@ -17,7 +17,7 @@ from src.Exceptions import InvalidIsotopePatternException, InvalidInputException
 from src.entities.Info import Info
 from src.gui.controller.AbstractController import AbstractMainController
 from src.gui.tableviews.FragmentationTable import FragmentationTable
-from src.gui.dialogs.CalibrationPlot import CalibrationPlot
+from src.gui.dialogs.CalibrationView import CalibrationView
 from src.gui.widgets.OccupancyWidget import OccupancyWidget
 from src.gui.widgets.SequCovWidget import SequCovWidget
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
@@ -25,7 +25,7 @@ from src.repositories.IsotopePatternRepository import IsotopePatternRepository
 from src.services.analyser_services.Analyser import Analyser
 from src.entities.SearchSettings import SearchSettings
 from src.services.assign_services.Calibrator import Calibrator
-from src.services.library_services.LibraryBuilder import FragmentLibraryBuilder
+from src.services.library_services.FragmentLibraryBuilder import FragmentLibraryBuilder
 from src.services.SearchService import SearchService
 from src.services.assign_services.TD_SpectrumHandler import SpectrumHandler
 from src.services.IntensityModeller import IntensityModeller
@@ -62,7 +62,7 @@ class TD_MainController(AbstractMainController):
             if dialog.canceled():
                 return
             self._settings = dialog.newSettings()
-            self._configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
+            self._configs = ConfigurationHandlerFactory.getConfigHandler().getAll()
             self._propStorage = SearchSettings(self._settings['sequName'], self._settings['fragmentation'],
                                                self._settings['modifications'])
             self._info = Info(self._settings, self._configs, self._propStorage)
@@ -82,7 +82,7 @@ class TD_MainController(AbstractMainController):
             #self._search =
             dialog = SelectSearchDlg(parent, searchService.getAllSearchNames(),self.deleteSearch, searchService)
             if dialog.exec_() and not dialog.canceled():
-                self._configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
+                self._configs = ConfigurationHandlerFactory.getConfigHandler().getAll()
                 start=time.time()
                 self._settings, noiseLevel, observedIons, delIons, remIons, searchedZStates, logFile = \
                     searchService.getSearch(dialog.getName())
@@ -104,7 +104,8 @@ class TD_MainController(AbstractMainController):
                         peaks = searchService.getAllAssignedPeaks(observedIons+delIons)
                 self._propStorage = SearchSettings(self._settings['sequName'], self._settings['fragmentation'],
                                                    self._settings['modifications'])
-                self._libraryBuilder = FragmentLibraryBuilder(self._propStorage, self._settings['nrMod'])
+                self._libraryBuilder = FragmentLibraryBuilder(self._propStorage, self._settings['nrMod'],
+                                                              self._configs['maxIso'], self._configs['approxIso'])
                 self._libraryBuilder.createFragmentLibrary()
 
                 self._spectrumHandler = SpectrumHandler(self._propStorage, self._libraryBuilder.getPrecursor(),
@@ -128,7 +129,8 @@ class TD_MainController(AbstractMainController):
         models intensities, fixes problems by overlapping ions (2 user inputs possible for deleting ions)
         '''
         print("\n********** Creating fragment library **********")
-        self._libraryBuilder = FragmentLibraryBuilder(self._propStorage, self._settings['nrMod'])
+        self._libraryBuilder = FragmentLibraryBuilder(self._propStorage, self._settings['nrMod'],
+                                                      self._configs['maxIso'], self._configs['approxIso'])
         self._libraryBuilder.createFragmentLibrary()
 
         """read existing ion-list file or create new one"""
@@ -178,7 +180,7 @@ class TD_MainController(AbstractMainController):
             allSettings.update(self._configs)
             self._calibrator = Calibrator(self._libraryBuilder.getFragmentLibrary(),allSettings,
                                           self._spectrumHandler.getChargeRange)
-            dlg = CalibrationPlot(self._mainWindow, self._calibrator)
+            dlg = CalibrationView(self._mainWindow, self._calibrator)
             dlg.exec_()
             if dlg and not dlg.canceled():
                 self._calibrator.calibratePeaks(self._spectrumHandler.getSpectrum())
@@ -295,7 +297,7 @@ class TD_MainController(AbstractMainController):
         self._actions.update(actions)
         '''if self._settings['modifications'] == '-':
             self._actions['Occupancy-Plot'].setDisabled(True)'''
-        '''if len(ConfigurationHandlerFactory.getTD_ConfigHandler())<1:
+        '''if len(ConfigurationHandlerFactory.getConfigHandler())<1:
             for action in ['Occupancy-Plot','Charge-Plot','Reduced Charge-Plot']:
                 self._actions[action].setDisabled(True)
                 self._actions[action].setToolTip('Choose ions of interest within "Edit Parameters" menu to use this function')'''
@@ -709,7 +711,7 @@ class TD_MainController(AbstractMainController):
             plotBars(sequence, np.array(absTable)[:,2:-2].astype(float), headers, 'Abs. Occupancies: '+modification, True)
 
     def getInterestingIons(self):
-        interestingIons = ConfigurationHandlerFactory.getTD_ConfigHandler().get('interestingIons')
+        interestingIons = ConfigurationHandlerFactory.getConfigHandler().get('interestingIons')
         if len(interestingIons) < 1:
             raise InvalidInputException('No interesting ions found',
                 'Choose ions of interest within "Edit Parameters" menu to use this function')

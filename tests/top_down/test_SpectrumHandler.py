@@ -10,7 +10,7 @@ from src.MolecularFormula import MolecularFormula
 from src.entities.Ions import Fragment
 from src.entities.SearchSettings import SearchSettings
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
-from src.services.library_services.LibraryBuilder import FragmentLibraryBuilder
+from src.services.library_services.FragmentLibraryBuilder import FragmentLibraryBuilder
 from src.services.assign_services.TD_SpectrumHandler import SpectrumHandler
 from src.services.assign_services.AbstractSpectrumHandler import getErrorLimit, calculateError, getMz
 from tests.test_MolecularFormula import averaginine, averagine
@@ -19,7 +19,7 @@ from tests.top_down.test_LibraryBuilder import initTestSequences
 
 def initTestLibraryBuilder(charge=-3, modif='CMCT'):
     initTestSequences()
-    configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
+    configs = ConfigurationHandlerFactory.getConfigHandler().getAll()
     filePath = os.path.join(path, 'tests', 'test_files', 'dummySpectrum.txt')
     settings = {'sequName': 'dummyRNA', 'charge': charge, 'fragmentation': 'RNA_CAD', 'modifications': modif,
                 'nrMod': 1, 'spectralData': filePath, 'noiseLimit': 10 ** 6, 'fragLib': ''}
@@ -33,7 +33,7 @@ def initTestLibraryBuilder(charge=-3, modif='CMCT'):
 class TestSpectrumHandler(TestCase):
     def setUp(self):
         '''filePath = os.path.join(path, 'tests', 'dummySpectrum.txt')
-        self._configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
+        self._configs = ConfigurationHandlerFactory.getConfigHandler().getAll()
 
         self.settings = {'sequName': 'dummyRNA', 'charge': -3, 'fragmentation': 'RNA_CAD', 'modifications': 'CMCT',
                     'nrMod': 1, 'spectralData': filePath, 'noiseLimit': 10**5, 'fragLib': ''}
@@ -183,7 +183,7 @@ class TestSpectrumHandler(TestCase):
             theoPeak['m/z'] += 100
 
     def getDummyPeak(self, theoPeak, outside=False):
-        configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
+        configs = ConfigurationHandlerFactory.getConfigHandler().getAll()
         if outside == False:
             randomError = np.random.rand(1) * (-1) ** (np.random.randint(2)) * getErrorLimit(theoPeak['m/z'],
                                                                             configs['k'], configs['d'])
@@ -309,7 +309,7 @@ class TestSpectrumHandler(TestCase):
             molFormulaDummy_RNA = MolecularFormula({key:int(round(val*randNr)) for key,val in averaginine.items()})
             molFormulaDummy_prot = MolecularFormula({key:int(round(val*randNr)) for key,val in averagine.items()})
             for molFormulaDummy_i in [molFormulaDummy_RNA,molFormulaDummy_prot]:
-                exactIsotopePattern = molFormulaDummy_i.calculateIsotopePattern()
+                exactIsotopePattern = molFormulaDummy_i.calculateIsotopePattern(0.996)
                 #neutralIsotopePatternFFT = molFormulaDummy_i.calculateIsotopePatternFFT(1,exactIsotopePattern)
                 exactIsotopePattern['calcInt'] /= np.sum(exactIsotopePattern['calcInt'])
                 #print('exact:',exactIsotopePattern[0])
@@ -317,8 +317,8 @@ class TestSpectrumHandler(TestCase):
                 z = randint(1,maxZ)
                 molForm_i_pos = molFormulaDummy_i.subtractFormula({'H': z})
                 molForm_i_neg = molFormulaDummy_i.addFormula({'H': z})
-                correctedPos = spectrumHandlerPos.getChargedIsotopePattern2(molForm_i_pos, molForm_i_pos.calculateIsotopePattern(),
-                                                                            z)#,neutralIsotopePatternFFT)
+                correctedPos = spectrumHandlerPos.getChargedIsotopePattern2(molForm_i_pos,
+                                                molForm_i_pos.calculateIsotopePattern(0.996),z)#,neutralIsotopePatternFFT)
                 correctedPos['m/z'] =getMz(correctedPos['m/z'], z, 0)
                 exactIsotopePattern_pos = deepcopy(exactIsotopePattern)
                 exactIsotopePattern_pos['m/z']=exactIsotopePattern_pos['m/z']/z-eMass
@@ -326,8 +326,8 @@ class TestSpectrumHandler(TestCase):
                 exactIsotopePattern_neg['m/z']=exactIsotopePattern_neg['m/z']/z+eMass
                 #print(correctedPos['m/z'], exactIsotopePattern['m/z'])
 
-                correctedNeg = spectrumHandlerNeg.getChargedIsotopePattern2(molForm_i_neg, molForm_i_neg.calculateIsotopePattern(),
-                                                                            z)#,neutralIsotopePatternFFT)
+                correctedNeg = spectrumHandlerNeg.getChargedIsotopePattern2(molForm_i_neg,
+                                                                        molForm_i_neg.calculateIsotopePattern(0.996),z)#,neutralIsotopePatternFFT)
                 correctedNeg['m/z'] =getMz(correctedNeg['m/z'], -z, 0)
                 print(self.testIsotopePattern(exactIsotopePattern_pos,correctedPos,deltaCalcInt=1*10e-4))
                 print(self.testIsotopePattern(exactIsotopePattern_neg,correctedNeg,deltaCalcInt=1*10e-4))

@@ -13,7 +13,7 @@ from src.services.library_services.IntactLibraryBuilder import IntactLibraryBuil
 from src.services.assign_services.IntactSpectrumHandler import IntactSpectrumHandler
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.services.assign_services.TD_SpectrumHandler import SpectrumHandler
-from src.services.library_services.LibraryBuilder import FragmentLibraryBuilder
+from src.services.library_services.FragmentLibraryBuilder import FragmentLibraryBuilder
 from tests.test_IntactFinder import initConfigurations, initTestSequences
 from tests.top_down.test_SpectrumHandler import initTestLibraryBuilder
 
@@ -42,7 +42,7 @@ def getTestIntactLibraryBuilder(settings):
 def getCalibratedSpectrum():
     settings = getTestIntactSettings()
     libraryBuilder = getTestIntactLibraryBuilder(settings)
-    spectrumHandler = IntactSpectrumHandler(settings, ConfigurationHandlerFactory.getTD_ConfigHandler().getAll())
+    spectrumHandler = IntactSpectrumHandler(settings, ConfigurationHandlerFactory.getConfigHandler().getAll())
     calibrator = Calibrator(libraryBuilder.getNeutralLibrary(), settings)
     uncalibrated = deepcopy(spectrumHandler.getSpectrum())
     calSpectrum = calibrator.calibratePeaks(spectrumHandler.getSpectrum())
@@ -86,7 +86,7 @@ class TestCalibrator(TestCase):
             self.assertNotEqual(uncal[0], cal[0])
             self.assertAlmostEqual(uncal[1], cal[1])
 
-        configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
+        configs = ConfigurationHandlerFactory.getConfigHandler().getAll()
         filePath = os.path.join(path, 'tests', 'test_files', 'CR_1_2_annealed_noMg_ESI_500mMDEPC_125min_Sk75_CAD12p5_134_uncal.txt')
         settings = {'sequName': 'CR_1_2', 'charge': -4, 'fragmentation': 'RNA_CAD', 'modifications': +134,
                     'nrMod': 1, 'spectralData': filePath, 'noiseLimit': 10 ** 6, 'fragLib': '',

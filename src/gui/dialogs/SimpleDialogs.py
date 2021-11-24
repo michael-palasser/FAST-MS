@@ -92,7 +92,7 @@ class OpenSpectralDataDlg(AbstractDialog):
 
 class ExportDialog(AbstractDialog):
     '''
-    Dialog to export the results of a top-down analysis
+    Dialog to export the results of a top-down or intact analysis
     '''
     def __init__(self, parent, analysisOptions, storedOptions):
         super(ExportDialog, self).__init__(parent, 'Export Results')

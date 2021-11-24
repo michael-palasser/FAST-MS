@@ -15,7 +15,7 @@ class IntactLibraryBuilder(object):
     '''
     Responsible for creating list of theoretical values of intact ions
     '''
-    def __init__(self, sequence, modificationName):
+    def __init__(self, sequence, modificationName, maxIso=0.996, accelerate=20):
         '''
 
         :param (str) sequName: Name of the Sequence
@@ -25,6 +25,8 @@ class IntactLibraryBuilder(object):
         self._sequenceList = self._sequence.getSequenceList()
         self._molecule = MoleculeService().get(self._sequence.getMolecule())
         self._modifications = IntactIonService().getPatternWithObjects(modificationName, IntactModification)
+        self._maxIso = maxIso
+        self._accelerate = accelerate
         self._neutralLibrary = None
 
     def getNeutralLibrary(self):
@@ -83,7 +85,8 @@ class IntactLibraryBuilder(object):
             #self._bar = tqdm(total=len(self.__fragmentLibrary))
             #logging.debug('Normal calculation')
             for neutral in self._neutralLibrary:
-                neutral.setIsotopePattern(neutral.getFormula().calculateIsotopePattern())
+                neutral.setIsotopePattern(neutral.getFormula().calculateIsotopePatternFFT(self._maxIso,self._accelerate))
+                #neutral.setIsotopePattern(neutral.getFormula().calculateIsotopePattern(self._maxIso))
                 #print(fragment.getName())
                 #logging.info('\t'+fragment.getName())
                 #self._bar.update(1)
@@ -103,7 +106,7 @@ class IntactLibraryBuilder(object):
         :param fragment: neutral species without isotopePattern
         :return: (IntactNeutral)  neutral species with isotopePattern
         '''
-        neutral.setIsotopePattern(neutral.getFormula().calculateIsotopePattern())
+        neutral.setIsotopePattern(neutral.getFormula().calculateIsotopePatternFFT(self._maxIso,self._accelerate))
         #print(fragment.getName())
         #logging.info('\t'+fragment.getName())
         #self._bar.update(1) does not work in python 3.8

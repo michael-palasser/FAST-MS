@@ -386,9 +386,9 @@ class AbstractSpectrumHandler(ABC):
         sortedNeutralPattern = np.sort(neutralPattern, order='m/z')
         if self._sprayMode:
             #print('old',neutralPattern[0])
-            ionPatternFFT = formula.addFormula({'H': nrHs}).calculateIsotopePatternFFT(2,neutralPattern) #Warum besser mit neutral???
+            ionPatternFFT = formula.addFormula({'H': nrHs}).calculateIsotopePatternFFT(self._configs['maxIso'],2,neutralPattern) #Warum besser mit neutral???
         else:
-            ionPatternFFT = formula.subtractFormula({'H': nrHs}).calculateIsotopePatternFFT(2,neutralPattern)
+            ionPatternFFT = formula.subtractFormula({'H': nrHs}).calculateIsotopePatternFFT(self._configs['maxIso'],2,neutralPattern)
         ionPattern = sortedNeutralPattern
         maxIndexArr = np.array((len(ionPattern),len(ionPatternFFT)))
         maxIndex = np.min(maxIndexArr)

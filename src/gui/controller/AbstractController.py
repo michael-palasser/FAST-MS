@@ -11,9 +11,9 @@ import pandas as pd
 from PyQt5 import QtWidgets, QtCore
 
 from src import path
-from src.gui.GUI_functions import connectTable
 from src.gui.IsotopePatternView import AddIonView
 from src.gui.dialogs.CalibrationView import CalibrationView
+from src.gui.tableviews.TableViews import TableView
 from src.gui.widgets.InfoView import InfoView
 from src.gui.tableviews.TableModels import IonTableModel
 from src.gui.tableviews.ShowPeaksViews import PeakView, SimplePeakView
@@ -26,7 +26,7 @@ class AbstractMainController(ABC):
     '''
     Controller class for starting, saving, exporting and loading a top-down search/analysis
     '''
-    def __init__(self, parent, new, window):
+    def __init__(self, window):
         '''
         Starts either the search or loads a search from the database. Afterwards, result windows are shown.
         :param parent:
@@ -36,7 +36,7 @@ class AbstractMainController(ABC):
 
 
     def calibrate(self):
-        dlg = CalibrationView(self._mainWindow, self._calibrator)
+        dlg = CalibrationView(self._calibrator)
         dlg.exec_()
         if dlg and not dlg.canceled():
             peaks = self._calibrator.calibratePeaks(self._spectrumHandler.getSpectrum())
@@ -44,7 +44,6 @@ class AbstractMainController(ABC):
             if not self._configs['overwrite']:
                 fileName = fileName[:-4]+'_cal'+fileName[-4:]
                 self._settings['spectralData'] = fileName
-                print(fileName)
             self._calibrator.writePeaks(peaks, fileName)
             vals = self._calibrator.getCalibrationValues()
             self._info.calibrate(vals[0], vals[1], self._calibrator.getQuality(), self._calibrator.getUsedIons())
@@ -162,10 +161,8 @@ class AbstractMainController(ABC):
         Makes an ion table
         '''
         tableModel = IonTableModel(data, precursorRegion, self._configs['shapeMarked'], self._configs['scoreMarked'])
-
-        """self.proxyModel = QSortFilterProxyModel()
-        self.proxyModel.setSourceModel(model)"""
-        table = QtWidgets.QTableView(parent)
+        table = TableView(parent, tableModel, fun)
+        """table = QtWidgets.QTableView(parent)
         table.setModel(tableModel)
         table.setSortingEnabled(True)
         #table.setModel(self.proxyModel)
@@ -174,7 +171,7 @@ class AbstractMainController(ABC):
         connectTable(table, fun)
         #table.setSelectionBehavior(QAbstractItemView.SelectRows)
         table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
-        table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)"""
         return table
 
 
@@ -239,7 +236,6 @@ class AbstractMainController(ABC):
                 ovHash = self._intensityModeller.switchIon(selectedIon)
                 table.model().removeData(selectedRow)
                 self._tables[other].model().addData(selectedIon.getMoreValues())
-                print(actionStrings[mode]+"d",selectedRow, selectedHash)
                 if ovHash is not None:
                     choice = QtWidgets.QMessageBox.question(self._mainWindow, "Attention",
                                                             'Deleted Ion overlapped with '+ovHash[0]+', '+str(ovHash[1])+'\n'+
@@ -280,7 +276,6 @@ class AbstractMainController(ABC):
                 #newIon.addComment('man.mod.')
                 #ionDict[newIonHash] = newIon
                 self._tables[index].model().updateData(self._intensityModeller.addRemodelledIon(newIon, index).getMoreValues())
-                print('Saved', newIon.getId())
 
 
     def addNewIonView(self):
@@ -349,7 +344,7 @@ class AbstractMainController(ABC):
         '''
         Makes a table with the original values of the remodelled ions
         '''
-        remView = QtWidgets.QWidget()
+        remView = QtWidgets.QWidget(self._mainWindow)
         #title = 'Original Values of Overlapping Ions'
         remView._translate = QtCore.QCoreApplication.translate
         remView.setWindowTitle(self._translate(remView.objectName(), 'Original Values of Overlapping Ions'))
@@ -357,7 +352,6 @@ class AbstractMainController(ABC):
         verticalLayout = QtWidgets.QVBoxLayout(remView)
         scrollArea, table = self.makeScrollArea(remView, [ion.getMoreValues() for ion in ions], self.showRedOptions)
         #table.customContextMenuRequested['QPoint'].connect(partial(self.showRedOptions, table))
-        connectTable(table, self.showRedOptions)
         verticalLayout.addWidget(scrollArea)
         remView.resize(1000, 750)
         self._openWindows.append(remView)

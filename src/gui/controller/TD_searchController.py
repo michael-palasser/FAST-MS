@@ -55,7 +55,7 @@ class TD_MainController(AbstractMainController):
         :param parent:
         :param (bool) new: True if new search, False if old search is loaded
         '''
-        super(TD_MainController, self).__init__(parent, new, window)
+        super(TD_MainController, self).__init__(window)
         if new:
             dialog = TDStartDialog(None)
             dialog.exec_()
@@ -797,6 +797,5 @@ class TD_MainController(AbstractMainController):
                                  self._intensityModeller.getRemodelledIons(),
                                  self._spectrumHandler.getSearchedChargeStates(), self._info.toString())
         self._saved = True
-        print('time:',time.time()-start)
         print('done')
         self._infoView.update()

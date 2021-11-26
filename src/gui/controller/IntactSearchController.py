@@ -42,7 +42,7 @@ class IntactMainController(AbstractMainController):
         :param parent:
         :param (bool) new: True if new search, False if old search is loaded
         '''
-        super(IntactMainController, self).__init__(parent, new, window)
+        super(IntactMainController, self).__init__(window)
         #self._mainWindow= window
         #if new:
         dialog = IntactStartDialogFull(None)

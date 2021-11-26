@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import QApplication, QPushButton
 from src.gui.controller.IntactSearchController import IntactMainController
 from src.gui.IsotopePatternView import IsotopePatternView
 from src.gui.controller.EditorController import *
-from src.gui.dialogs.ParameterDialogs import TD_configurationDialog
+from src.gui.dialogs.ParameterDialogs import ConfigurationDialog
 from src.gui.dialogs.StartDialogs import IntactStartDialog
 #from src.top_down.ModellingTool import main as modellingTool
 from src.top_down.OccupancyRecalculator import run as occupancyRecalculator
@@ -26,7 +26,7 @@ class Window(SimpleMainWindow):
     Main window which pops up when SAUSAGE is started
     '''
     def __init__(self):
-        super(Window, self).__init__(None, 'SAUSAGE')
+        super(Window, self).__init__(None, 'FAST MS')
         self.createMenuBar()
         self.createMenu('Top-Down',
                         {'Analyse Spectrum':
@@ -45,7 +45,7 @@ class Window(SimpleMainWindow):
         #[print(action.toolTip()) for action in menuActions.values()]
         #print(menu.toolTipsVisible())
         self.createMenu('Intact Ions',
-                        {'Analyse Intact Ion Spectrum': (
+                        {'Analyse Spectrum': (
                         lambda: self.startIntact(True), 'Starts analysis of intact ion spectrum', None),
                          'Analyse Intact Ions': (lambda: self.editData(self.startIntactIonSearch),
                                                  'Starts analysis of spectra with unfragmented ions', None),
@@ -120,7 +120,7 @@ class Window(SimpleMainWindow):
         sys.exit()
 
     def editTopDownConfig(self):
-        dialog = TD_configurationDialog(self)
+        dialog = ConfigurationDialog(self)
         dialog.exec_()
 
     def editData(self, controller):

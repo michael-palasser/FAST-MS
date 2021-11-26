@@ -3,7 +3,8 @@ import copy
 import pandas as pd
 from PyQt5 import QtCore, QtWidgets
 
-from src.gui.GUI_functions import connectTable
+from src.gui.GUI_functions import connectTable, showOptions
+from src.gui.tableviews.TableViews import TableView
 from src.gui.widgets.IonTableWidgets import IonTableWidget
 from src.gui.widgets.PeakWidgets import PeakWidget
 from src.gui.tableviews.TableModels import PeakTableModel
@@ -17,10 +18,12 @@ class SimplePeakView(QtWidgets.QWidget):
         super().__init__(parent)
         print(ion.getIsotopePattern())
         self._peaks = ion.getIsotopePattern()
-        model = PeakTableModel(self._peaks)
         # self.proxyModel = QSortFilterProxyModel()
         # self.proxyModel.setSourceModel(_model)
         layout = QtWidgets.QVBoxLayout(self)
+        self._table = TableView(self, PeakTableModel(self._peaks))
+        """
+        model = PeakTableModel(self._peaks)
         self._table = QtWidgets.QTableView(self)
         self._table.setSortingEnabled(True)
         self._table.setModel(model)
@@ -29,7 +32,7 @@ class SimplePeakView(QtWidgets.QWidget):
         # self._table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self._table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
 
-        connectTable(self._table,self.showOptions)
+        connectTable(self._table,self.showOptions)"""
         #self._table.customContextMenuRequested['QPoint'].connect(partial(self.showOptions, self._table))
         # self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         # self._table.move(0,0)
@@ -41,7 +44,7 @@ class SimplePeakView(QtWidgets.QWidget):
         #self.resize(650, (len(self._peaks)) * 38 + 30)
         self.show()
 
-    def showOptions(self, table, pos):
+    """def showOptions(self, table, pos):
         menu = QtWidgets.QMenu()
         copyAllAction = menu.addAction("Copy Table")
         copyAction = menu.addAction("Copy Cell")
@@ -57,13 +60,13 @@ class SimplePeakView(QtWidgets.QWidget):
             selectedRow = it.row()
             selectedCol = it.column()
             df = pd.DataFrame([self._peaks[selectedRow][selectedCol]])
-            df.to_clipboard(index=False, header=False)
+            df.to_clipboard(index=False, header=False)"""
 
 
 class PeakView(QtWidgets.QMainWindow):
     '''
     Window which is used in top-down search. It pops up when a user right-clicks on an ion in the table.
-    User can then view the peak values, manually change intensities in the spectrum and re-modell the ion intensity.
+    User can then view the peak values, manually change intensities in the spectrum and re-model the ion intensity.
     '''
     def __init__(self, parent, ion, model, save):
         super(PeakView, self).__init__(parent)
@@ -90,7 +93,7 @@ class PeakView(QtWidgets.QMainWindow):
         self._verticalLayout.addWidget(self._ionTable)
         self._verticalLayout.addWidget(self._peakTable)
 
-        connectTable(self._ionTable,self.showOptions)
+        connectTable(self._ionTable,showOptions)
         '''self._ionTable.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self._ionTable.customContextMenuRequested['QPoint'].connect(partial(self.showOptions, self._ionTable))'''
 
@@ -131,7 +134,7 @@ class PeakView(QtWidgets.QMainWindow):
     def saveIon(self):
         self._save(self._ion)
 
-    def showOptions(self, table, pos):
+    '''def showOptions(self, table, pos):
         menu = QtWidgets.QMenu()
         copyAllAction = menu.addAction("Copy Table")
         copyAction = menu.addAction("Copy Cell")
@@ -145,4 +148,4 @@ class PeakView(QtWidgets.QMainWindow):
             df.to_clipboard(index=False, header=False)
         if action == copyAllAction:
             df = pd.DataFrame(data=[self._ion.getValues()], columns=table.getHeaders())
-            df.to_clipboard(index=False, header=True)
+            df.to_clipboard(index=False, header=True)'''

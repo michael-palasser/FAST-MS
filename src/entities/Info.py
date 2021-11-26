@@ -49,8 +49,7 @@ class Info(object):
         self._infoString += '\n* Av. noise: ' + str(noiseLevel)
 
     def searchFinished(self, mz):
-        self._infoString += '\n* Search finished: ' + datetime.now().strftime("%d/%m/%Y %H:%M") +\
-                            ';\tmax m/z: '+str(mz) + '\n'
+        self._infoString += '\n* Search finished: ' + datetime.now().strftime("%d/%m/%Y %H:%M") + '\n'
 
 
     def ionToString(self, ion):

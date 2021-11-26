@@ -2,13 +2,14 @@ from PyQt5 import QtCore, QtWidgets
 from os.path import join
 
 from src import path
+#from src.gui.GUI_functions import shoot
 from src.gui.dialogs.AbstractDialogs import DialogWithTabs
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 
 dataPath = join(path, 'src', 'data')
 
 
-class TD_configurationDialog(DialogWithTabs):
+class ConfigurationDialog(DialogWithTabs):
     '''
     Dialog for editing top-down search parameters/configurations
     '''
@@ -21,9 +22,11 @@ class TD_configurationDialog(DialogWithTabs):
         self._boxSizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         self.setupUi(self)
         self._verticalLayout.addWidget(self._buttonBox, 0, QtCore.Qt.AlignRight)
+        #shoot(self)
+
 
     def createTab(self,name):
-        tab = super(TD_configurationDialog, self).createTab(name)
+        tab = super(ConfigurationDialog, self).createTab(name)
         verticalLayout = QtWidgets.QVBoxLayout(tab)
         tab.setLayout(verticalLayout)
         return tab
@@ -118,7 +121,7 @@ class TD_configurationDialog(DialogWithTabs):
                          "upperBoundWindowSize": (QtWidgets.QDoubleSpinBox(),
                                                    "window size for noise calculation to find upper m/z bound")})
         self._calibrationBox = self.fillBox(self._spectrumTab, "Autocalibration",
-                            ("max. raw error", "max. std. dev.",'overwrite peak list'),
+                            ("uncal. error threshold", "max. std. dev.",'overwrite peak list'),
                             {"errorLimitCalib": (QtWidgets.QSpinBox(), "max. ppm error in uncalbratied spectrum"),
                              "maxStd": (QtWidgets.QDoubleSpinBox(), "max. allowed standard deviation of the ion errors "
                                                                     "for the calibration"),
@@ -129,7 +132,7 @@ class TD_configurationDialog(DialogWithTabs):
         self._widgets['upperBoundTolerance'].setMaximum(999)
 
         self._errorBox=self.fillBox(self._findingTab, "error threshold: threshold [ppm] = k/1000 * (m/z) +d",
-                            ("charge tolerance", "k", "d", "tolerance for isotope peaks"),
+                            ("charge tolerance", "error threshold k", "error threshold d", "tolerance for isotope peaks"),
                             {"zTolerance": (QtWidgets.QDoubleSpinBox(),"ions with charge states between the calculated "
                                                                        "charge +/- tolerance will be searched for"),
                              "k": (QtWidgets.QDoubleSpinBox(), "slope of ppm error threshold function"),
@@ -147,13 +150,13 @@ class TD_configurationDialog(DialogWithTabs):
                                           {"maxIso": (QtWidgets.QDoubleSpinBox(),
                                                       "the calculation of the isotope peaks will be stopped when "
                                                       "their summed abundances are higher than the stated proportion"),
-                                           "approxIso": (QtWidgets.QSpinBox(),"enter the number of the lowest isotope "
-                                                                              "peak that should not be exactly calculated")
+                                           "approxIso": (QtWidgets.QSpinBox(),"enter the number of the last isotope "
+                                                                              "peak that should be exactly calculated")
                                            })
         self._widgets["maxIso"].setDecimals(3)
         self._widgets["maxIso"].setMaximum(0.999)
         self._modellingBox = self.fillBox(self._modellingTab, "modelling",
-                            ("outlier peak threshold","max. nr. of overlapping ions","threshold"),
+                            ("outlier peak threshold","max. nr. of overlapping ions","overlap threshold"),
                             {"outlierLimit": (QtWidgets.QDoubleSpinBox(),
                              "isotope peaks with higher values are not used for intensity modelling"),
                              "manualDeletion": (QtWidgets.QSpinBox(),"if more ions are overlapping in one pattern, the "
@@ -167,7 +170,7 @@ class TD_configurationDialog(DialogWithTabs):
                         {"shapeDel": (QtWidgets.QDoubleSpinBox(),"ions which have a higher value will be deleted"),
                          "shapeMarked": (QtWidgets.QDoubleSpinBox(), "ions which have a higher value will be highlighted"),
                          "scoreMarked": (QtWidgets.QDoubleSpinBox(),"ions which have a higher value will be highlighted"),
-                         "SNR": (QtWidgets.QDoubleSpinBox(),"ions which have a lower value will be deleted")})
+                         "SNR": (QtWidgets.QDoubleSpinBox(),"ions which have a lower signal to noise ratio will be deleted")})
 
         self._interestingIonsBox = self.fillInterestingIonsBox(self._outputTab)
         self._verticalLayout.addWidget(self._buttonBox, 0, QtCore.Qt.AlignHCenter)
@@ -190,6 +193,6 @@ class TD_configurationDialog(DialogWithTabs):
                     interestingIons.append(text)
         newConfigurations['interestingIons'] = interestingIons
         self._configHandler.write(newConfigurations)
-        super(TD_configurationDialog, self).accept()
+        super(ConfigurationDialog, self).accept()
 
 

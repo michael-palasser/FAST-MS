@@ -154,6 +154,8 @@ class AbstractDialog(QtWidgets.QDialog):
 
 
     def checkSpectralDataFile(self, mode, fileName):
+        if fileName == '':
+            raise InvalidInputException('Empty Filename', "Name must not be empty")
         if not os.path.isfile(fileName):
             spectralDataPath = os.path.join(path, 'Spectral_data', mode, fileName)
             if os.path.isfile(spectralDataPath):
@@ -170,6 +172,19 @@ class StartDialog(AbstractDialog):
     '''
     def __init__(self, parent, title):
         super(StartDialog, self).__init__(parent, title)
+        self._formLayout = self.makeFormLayout(self)
+
+    def setupUi(self, *args):
+        widgets = self.getWidgets(args)
+        # (QtWidgets.QLineEdit(startDialog), "output",
+        # "Name of the output Excel file\ndefault: name of spectral pattern file + _out.xlsx"))
+        index = self.fill(self, self._formLayout, self.getLabels(), widgets)
+        self._formLayout.addItem(QtWidgets.QSpacerItem(0, 1))
+        self._defaultButton = self.makeDefaultButton(self)
+        self._formLayout.setWidget(index + 1, QtWidgets.QFormLayout.FieldRole, self._buttonBox)
+        self._formLayout.setWidget(index + 1, QtWidgets.QFormLayout.LabelRole, self._defaultButton)
+        self.backToLast()
+        #return index
 
     def makeDefaultButton(self, parent):
         self._defaultButton = QtWidgets.QPushButton(parent)

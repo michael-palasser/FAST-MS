@@ -225,6 +225,8 @@ class AbstractSpectrumHandler(ABC):
         :return: (float) noise
         '''
         noise = self._settings['noiseLimit']
+        if noise == 0:
+            noise = 1.1*np.min(self._spectrum[:,1])
         if currentWindow is None:
             currentWindow = self.getPeaksInWindow(self._spectrum, point, windowSize)
         if currentWindow[:, 1].size < 11:

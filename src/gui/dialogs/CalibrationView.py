@@ -1,10 +1,10 @@
 from PyQt5 import QtWidgets
 import pyqtgraph as pg
 import numpy as np
-import pandas as pd
 
-from src.gui.GUI_functions import translate, connectTable
+from src.gui.GUI_functions import translate, showOptions
 from src.gui.tableviews.TableModels import CalibrationInfoTable2, CalibrationInfoTable1
+from src.gui.tableviews.TableViews import TableView
 from src.gui.widgets.IonTableWidgets import CalibrationIonTableWidget
 
 
@@ -12,14 +12,15 @@ class CalibrationView(QtWidgets.QDialog):
     '''
     Dialog for controlling calibration
     '''
-    def __init__(self, parent, calibrator):
-        super(CalibrationView, self).__init__(parent)
+    def __init__(self, calibrator):
+        super(CalibrationView, self).__init__()
         self._calibrator = calibrator
         self._canceled = False
         self._layout = QtWidgets.QVBoxLayout(self)
         self.fillUI()
 
     def fillUI(self):
+        self.setWindowTitle(translate(self.objectName(), 'Calibration'))
         self._widgets = []
         upperWidget = QtWidgets.QWidget(self)
         upperWidgetLayout = QtWidgets.QHBoxLayout(upperWidget)
@@ -28,20 +29,17 @@ class CalibrationView(QtWidgets.QDialog):
         upperWidgetLayout.addWidget(self._table1a)
         self._table1b = self.makeCalTable(qualityVals, upperWidget, 'quality of the calibration')
         upperWidgetLayout.addWidget(self._table1b)
-
         self.addWidget(upperWidget)
-
-        #connectTable(table1,self.showOptions)
-        #self.addWidget(table1)
         self.plot()
         scrollArea = QtWidgets.QScrollArea(self)
         scrollArea.setWidgetResizable(True)
         self._table2 = CalibrationIonTableWidget(scrollArea, self._ionsVals)
-        #connectTable(table2,self.showOptions)
         scrollArea.setWidget(self._table2)
-        #connectTable(self._table2, self.showOptions)
+        #connectTable(self._table2, showOptions)
         self.addWidget(scrollArea)
         self.addWidget(self.makeButtonBox())
+        #self._table2.viewport().installEventFilter(self)
+
 
     def addWidget(self, widget):
         self._layout.addWidget(widget)
@@ -65,15 +63,17 @@ class CalibrationView(QtWidgets.QDialog):
             model = CalibrationInfoTable1(data, '{:1.2}')
         else:
             model = CalibrationInfoTable2(data, '{:2.6}')
-        table = QtWidgets.QTableView(parent)
+        '''table = QtWidgets.QTableView(parent)
         table.setSortingEnabled(True)
         table.setModel(model)
         table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
-        table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)'''
+        table = TableView(parent, model)
         table.resizeRowsToContents()
-        connectTable(table, self.showOptions)
+        #connectTable(table, self.showOptions)
         table.setToolTip(toolTip)
         return table
+
 
     def plot(self):
         self._plot1 = pg.plot()
@@ -110,7 +110,7 @@ class CalibrationView(QtWidgets.QDialog):
         return btn
 
     def update(self):
-        ions = [(row[0],row[1]) for row in self._table2.readTable() if row[2]]
+        ions = [(row[0],row[1]) for row in self._table2.checkStatus() if row[2]]
         self._calibrator.recalibrate(ions)
         for widget in self._widgets:
             self._layout.removeWidget(widget)
@@ -126,35 +126,30 @@ class CalibrationView(QtWidgets.QDialog):
     def canceled(self):
         return self._canceled
 
-    def showOptions(self, table, pos):
-        print('hey')
+    '''def showOptions(self, table, pos):
         menu = QtWidgets.QMenu()
         copyAllAction = menu.addAction("Copy Table")
         copyAction = menu.addAction("Copy Cell")
-        print('hey')
         action = menu.exec_(table.viewport().mapToGlobal(pos))
-        print('hey2')
-
-        #print(selectedRow,selectedCol)
-
-
-        df = pd.DataFrame(data=table.model().getData(), columns=table.model().getHeaders())
+        if table == self._table2:
+            df = pd.DataFrame(data = table.getData(), columns=table.getHeaders())
+        else:
+            df = pd.DataFrame(data=table.model().getData(), columns=table.model().getHeaders())
         df.to_clipboard(index=False, header=True)
-        print(action == copyAction,action, copyAction)
         if action == copyAction:
             it = table.indexAt(pos)
             if it is None:
                 return
             selectedRow = it.row()
             selectedCol = it.column()
-            #if table == self._table2:
-            #    df = pd.DataFrame(data = [table.getData()[selectedRow][selectedCol]])
-            #else:
-            df = pd.DataFrame(data=[table.model().getRow(selectedRow)[selectedCol]])
+            if table == self._table2:
+                df = pd.DataFrame(data = [table.getData()[selectedRow][selectedCol]])
+            else:
+                df = pd.DataFrame(data=[table.model().getData()[selectedRow][selectedCol]])
             df.to_clipboard(index=False, header=True)
         elif action == copyAllAction:
-            #if table == self._table2:
-            #    df = pd.DataFrame(data = table.getData(), columns=table.getHeaders())
-            #else:
-            df = pd.DataFrame(data=table.model().getData(), columns=table.model().getHeaders())
-            df.to_clipboard(index=False, header=True)
+            if table == self._table2:
+                df = pd.DataFrame(data = table.getData(), columns=table.getHeaders())
+            else:
+                df = pd.DataFrame(data=table.model().getData(), columns=table.model().getHeaders())
+            df.to_clipboard(index=False, header=True)'''

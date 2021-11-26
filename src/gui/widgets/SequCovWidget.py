@@ -16,6 +16,7 @@ from matplotlib.patches import Rectangle
 
 from src.gui.GUI_functions import connectTable, showOptions, makeLabelInputWidget, createComboBox
 from src.gui.tableviews.TableModels import AbstractTableModel
+from src.gui.tableviews.TableViews import TableView
 
 
 class SequCovPlotTableModel(AbstractTableModel):
@@ -79,15 +80,16 @@ class SequCovWidget(QtWidgets.QWidget):
         self._globalData = globalData
         self._sequLength = len(sequence)
         verticalLayout = QtWidgets.QVBoxLayout(self)
-        model = SequCovTableModel(values)
+        """model = SequCovTableModel(values)
         table = QtWidgets.QTableView(self)
         table.setModel(model)
+        table.setSortingEnabled(True)
+        connectTable(table,showOptions)"""
+        table = TableView(self, SequCovTableModel(values))
         #table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         table.resizeColumnsToContents()
-        table.setSortingEnabled(True)
         [table.setRowHeight(i,23) for i in range(len(values))]
         table.setMinimumHeight((len(values)+1)*23)
-        connectTable(table,showOptions)
         verticalLayout.addWidget(table)
         all = deepcopy(coveragesForw)
         all.update(coveragesBackw)
@@ -134,15 +136,16 @@ class SequCovWidget(QtWidgets.QWidget):
         self._fragments[type] = (tickBox,comboBox)
 
     def makeCoverageTable(self, data, headers):
-        model = SequCovPlotTableModel(data, headers)
+        """model = SequCovPlotTableModel(data, headers)
         table = QtWidgets.QTableView(self)
         # self._table.setSortingEnabled(True)
         table.setModel(model)
+        connectTable(table,showOptions)"""
         #table.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+        table = TableView(self, SequCovPlotTableModel(data, headers))
         table.resizeColumnsToContents()
         table.setColumnWidth(0,70)
         table.resizeRowsToContents()
-        connectTable(table,showOptions)
         #table.resize(70+len(data[0])*table.columnWidth(1), (len(data)+1)*table.rowHeight(0))
         return table
 

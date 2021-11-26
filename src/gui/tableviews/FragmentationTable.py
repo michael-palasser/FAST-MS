@@ -2,9 +2,9 @@
 from PyQt5 import QtCore, QtWidgets
 
 
-from src.gui.GUI_functions import connectTable, showOptions
 from src.gui.tableviews.PlotTables import PlotTableView
 from src.gui.tableviews.TableModels import AbstractTableModel
+from src.gui.tableviews.TableViews import TableView
 
 
 class FragmentationTableModel(AbstractTableModel):
@@ -45,15 +45,15 @@ class FragmentationTable(QtWidgets.QWidget):
         scrollArea.setWidgetResizable(True)
         # _scrollArea.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         # _scrollArea.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-
-        model = FragmentationTableModel(typeData)
+        self._table = TableView(self, FragmentationTableModel(typeData))
+        """model = FragmentationTableModel(typeData)
         self._table = QtWidgets.QTableView(self)
         self._table.setSortingEnabled(True)
         self._table.setModel(model)
         self._table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         self._table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         #self._table.setSelectionBehavior(QAbstractItemView.SelectRows)
-        connectTable(self._table, showOptions)
+        connectTable(self._table, showOptions)"""
         '''self._table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self._table.customContextMenuRequested['QPoint'].connect(partial(self.showOptions, self._table))'''
         scrollArea.setWidget(self._table)

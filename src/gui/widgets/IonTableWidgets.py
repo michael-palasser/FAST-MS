@@ -1,13 +1,11 @@
-from functools import partial
 from math import log10
-import pandas as pd
 
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QTableWidget
 
 from src.Exceptions import InvalidInputException
-from src.gui.GUI_functions import connectTable
+from src.gui.GUI_functions import connectTable, showOptions
 
 
 class IonTableWidget(QTableWidget):
@@ -37,8 +35,14 @@ class IonTableWidget(QTableWidget):
         #connectTable(self, self.showOptions)
         # self.customContextMenuRequested['QPoint'].connect(partial(self.editRow, self, bools))
 
-    def getIonValues(self):
-        return self._ionValues
+    '''def getIonValues(self):
+        return self._ionValues'''
+    def getData(self):
+        data = []
+        for i in range(self.rowCount()):
+            data.append([self.item(i,j).text() for j in range(5)] + [self.item(i, 5).checkState()==2])
+            #itemList.append([self.item(row, col).text() for col in range(len(self.getHeaders()))])
+        return data
 
     def getFormat(self):
         return ['{:10.5f}','{:2d}', '{:12d}', '','{:4.2f}', '{:6.1f}', '{:4.2f}', '']
@@ -90,7 +94,7 @@ class IonTableWidget(QTableWidget):
         copyAllAction = menu.addAction("Copy Table")
         copyAction = menu.addAction("Copy Cell")
         action = menu.exec_(table.viewport().mapToGlobal(pos))
-        vals = self.readTable()
+        vals = self.getData()
         if action == copyAction:
             it = table.indexAt(pos)
             if it is None:
@@ -103,7 +107,7 @@ class IonTableWidget(QTableWidget):
             df = pd.DataFrame(data=vals, columns=self.getHeaders())
             df.to_clipboard(index=False, header=True)'''
 
-    def readTable(self):
+    def getData(self):
         itemList = []
         for row in range(self.rowCount()):
             itemList.append([self.item(row, col).text() for col in range(len(self.getHeaders()))])
@@ -115,7 +119,7 @@ class IsoPatternIon(IonTableWidget):
     '''
     def __init__(self, parent, ions, yPos):
         super(IsoPatternIon, self).__init__(parent, ions, yPos)
-        connectTable(self, self.showOptions)
+        connectTable(self, showOptions)
 
     def getFormat(self):
         return ['{:10.5f}','{:2d}', '{:12d}', '','{:4.2f}', '', '{:10.4f}','{:10.4f}']
@@ -163,12 +167,12 @@ class IsoPatternIon(IonTableWidget):
     def getIon(self, row):
         return self._ions[row]
 
-    def showOptions(self, table, pos):
+    '''def showOptions(self, table, pos):
         menu = QtWidgets.QMenu()
         copyAllAction = menu.addAction("Copy Table")
         copyAction = menu.addAction("Copy Cell")
         action = menu.exec_(table.viewport().mapToGlobal(pos))
-        vals = self.readTable()
+        vals = self.getData()
         if action == copyAction:
             it = table.indexAt(pos)
             if it is None:
@@ -179,7 +183,7 @@ class IsoPatternIon(IonTableWidget):
             df.to_clipboard(index=False, header=False)
         if action == copyAllAction:
             df = pd.DataFrame(data=vals, columns=self.getHeaders())
-            df.to_clipboard(index=False, header=True)
+            df.to_clipboard(index=False, header=True)'''
 
     '''def showOptions(self, table, pos):
         menu = QtWidgets.QMenu()
@@ -261,6 +265,7 @@ class CalibrationIonTableWidget(QTableWidget):
         self.resizeColumnsToContents()
         #self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.setSortingEnabled(True)
+        connectTable(self, showOptions)
         #connectTable(self, self.showOptions)
         # self.customContextMenuRequested['QPoint'].connect(partial(self.editRow, self, bools))
 
@@ -323,7 +328,7 @@ class CalibrationIonTableWidget(QTableWidget):
         copyAllAction = menu.addAction("Copy Table")
         copyAction = menu.addAction("Copy Cell")
         action = menu.exec_(table.viewport().mapToGlobal(pos))
-        vals = self.readTable()
+        vals = self.checkStatus()
         if action == copyAction:
             it = table.indexAt(pos)
             if it is None:
@@ -336,21 +341,16 @@ class CalibrationIonTableWidget(QTableWidget):
             df = pd.DataFrame(data=vals, columns=self.getHeaders())
             df.to_clipboard(index=False, header=True)'''
 
-    def readTable(self):
+    def checkStatus(self):
         itemList = []
         for row in range(self.rowCount()):
             itemList.append((self.item(row, 3).text(),int(self.item(row, 1).text()),self.item(row, 5).checkState()))
-            #itemList.append([self.item(row, col).text() for col in range(len(self.getHeaders()))])
         return itemList
 
     def getData(self):
         data = []
-        for i, row in enumerate(self._ions):
-            used = True
-            if self.item(i, 5).checkState():
-                used = False #ToDo
-            #newRow = (row[])['used']= used
-            data.append(row)
+        for i in range(self.rowCount()):
+            data.append([self.item(i,j).text() for j in range(5)] + [self.item(i, 5).checkState()==2])
             #itemList.append([self.item(row, col).text() for col in range(len(self.getHeaders()))])
         return data
 

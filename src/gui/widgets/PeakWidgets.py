@@ -4,7 +4,7 @@ import pandas as pd
 from PyQt5 import QtWidgets, QtCore
 
 from src.Exceptions import InvalidInputException
-from src.gui.GUI_functions import connectTable
+from src.gui.GUI_functions import connectTable, showOptions
 
 
 class GeneralPeakWidget(QtWidgets.QTableWidget):

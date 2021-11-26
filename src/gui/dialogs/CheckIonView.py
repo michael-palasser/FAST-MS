@@ -2,7 +2,7 @@ from PyQt5 import QtWidgets, QtCore
 import numpy as np
 import pandas as pd
 
-from src.gui.GUI_functions import createComboBox, connectTable
+from src.gui.GUI_functions import createComboBox, connectTable, translate
 from src.gui.widgets.IonTableWidgets import IonTableWidget, TickIonTableWidget
 from src.gui.tableviews.ShowPeaksViews import SimplePeakView
 from src.gui.widgets.SpectrumView import SpectrumView
@@ -23,7 +23,7 @@ class AbstractIonView(QtWidgets.QDialog):
         self._spectrum = spectrum
         label = QtWidgets.QLabel(self)
         label.setGeometry(QtCore.QRect(20, 20, 400, 16))
-        label.setText(self._translate(self.objectName(), message))
+        label.setText(translate(self.objectName(), message))
         self._verticalLayout.addWidget(label)
         self._verticalLayout.addSpacing(12)
         """self.loading_lbl = QLabel(self)
@@ -59,8 +59,8 @@ class AbstractIonView(QtWidgets.QDialog):
     def makeTables(self, yPos):
         return yPos
 
-    def connectTable(self, table):
-        connectTable(table, self.showOptions)
+    '''def connectTable(self, table):
+        connectTable(table, self.showOptions)'''
 
     @staticmethod
     def hash(ion):
@@ -68,8 +68,7 @@ class AbstractIonView(QtWidgets.QDialog):
 
     def setUpUi(self, title):
         self._verticalLayout = QtWidgets.QVBoxLayout(self)
-        self._translate = QtCore.QCoreApplication.translate
-        self.setWindowTitle(self._translate(self.objectName(), title))
+        self.setWindowTitle(translate(self.objectName(), title))
         self._scrollArea = QtWidgets.QScrollArea(self)
         self._contents = QtWidgets.QWidget()
         self._formlayout = QtWidgets.QFormLayout(self._contents)
@@ -131,10 +130,10 @@ class AbstractIonView(QtWidgets.QDialog):
             if it is None:
                 return
             selectedCol = it.column()
-            df = pd.DataFrame([table.getIonValues()[selectedRow][selectedCol]])
+            df = pd.DataFrame([table.getData()[selectedRow][selectedCol]])
             df.to_clipboard(index=False, header=False)
         elif action == copyAllAction:
-            df = pd.DataFrame(data=table.getIonValues(), columns=table.getHeaders())
+            df = pd.DataFrame(data=table.getData(), columns=table.getHeaders())
             df.to_clipboard(index=False, header=True)
 
     def getIons(self, *args):
@@ -184,7 +183,7 @@ class CheckOverlapsView(AbstractIonView):
             for i,width in enumerate(self._widths):
                 table.setColumnWidth(i,width)
             #self.formLayout.setWidget(i+1, QtWidgets.QFormLayout.SpanningRole, table)  # ToDo
-            self.connectTable(table)
+            connectTable(table, self.showOptions)
             self._tables.append(table)
             yPos += len(pattern.values())*20+50
             self._formlayout.addWidget(table)
@@ -215,7 +214,7 @@ class CheckMonoisotopicOverlapView(AbstractIonView):
             table = IonTableWidget(self._contents, pattern.values(), yPos + 40)
             for i,width in enumerate(self._widths):
                 table.setColumnWidth(i,width)
-            self.connectTable(table)
+            connectTable(table, self.showOptions)
             self._tables.append(table)
             yPos += len(pattern.values())*20+50+50
             self._formlayout.addWidget(table)

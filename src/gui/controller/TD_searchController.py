@@ -114,7 +114,7 @@ class TD_MainController(AbstractMainController):
                 self._intensityModeller = IntensityModeller(self._configs, noiseLevel)
                 self._intensityModeller.setIonLists(observedIons, delIons, remIons)
                 self._analyser = Analyser(None, self._propStorage.getSequenceList(), self._settings['charge'],
-                                          self._propStorage.getModificationName())
+                                          self._propStorage.getModificationName(), self._configs['useAb'])
                 self._saved = True
                 self.setUpUi()
 
@@ -235,7 +235,7 @@ class TD_MainController(AbstractMainController):
             else:
                 return 1
         self._analyser = Analyser(None, self._propStorage.getSequenceList(),
-                                  self._settings['charge'], self._propStorage.getModificationName())
+                                  self._settings['charge'], self._propStorage.getModificationName(), self._configs['useAb'])
         self._info.searchFinished(self._spectrumHandler.getUpperBound())
         print("done")
         return 0

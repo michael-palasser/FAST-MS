@@ -532,7 +532,7 @@ class SimpleIntactIon(IntactNeutral):
         :param (float) mz: monoisotopic m/z
         :param (float) theoMz: theoretical (calculated) m/z
         :param (int) charge: charge
-        :param (float) intensity: intensity or relative abundance
+        :param (float) intensity: intensity
         :param (int) nrOfModifications: no. of modifications on ion
         :param (int) radicals: no. of radicals on ion
         '''
@@ -560,7 +560,7 @@ class SimpleIntactIon(IntactNeutral):
         return (self._mz - self._theoMz) / self._theoMz * 10 ** 6
 
     def toList(self):
-        return [self._mz, self._charge, self._intensity, self.getName(), round(self.getError(), 2)]
+        return [self._mz, self._charge, self._intensity, self.getRelAbundance(), self.getName(), round(self.getError(), 2)]
 
 
 class SimpleIon(SimpleIntactIon):
@@ -573,7 +573,7 @@ class SimpleIon(SimpleIntactIon):
         :param (float) mz: monoisotopic m/z
         :param (float) theoMz: theoretical (calculated) m/z
         :param (int) charge: charge
-        :param (float) intensity: intensity or relative abundance
+        :param (float) intensity: intensity
         '''
         name = neutral.getType()
         if neutral.getNumber() != 0:

@@ -4,7 +4,7 @@ from os.path import join, isdir
 from src import path
 from src.Exceptions import InvalidInputException
 from src.gui.dialogs.AbstractDialogs import AbstractDialog
-from src.gui.GUI_functions import createComboBox
+from src.gui.GUI_functions import createComboBox, shoot
 from src.gui.widgets.ExportTable import ExportTable
 from src.gui.widgets.Widgets import OpenFileWidget
 
@@ -99,10 +99,13 @@ class ExportDialog(AbstractDialog):
         if storedOptions is None:
             storedOptions = {'columns':[], 'analysis':[], 'dir':[]}
         formLayout = self.makeFormLayout(self)
+        #try:
         if isdir(storedOptions['dir']):
             startPath = storedOptions['dir']
         else:
             startPath = join(path, 'Spectral_data', 'top-down')
+        #except KeyError:
+        #    startPath = join(path, 'Spectral_data', 'top-down')
         index=self.fill(self, formLayout,('Directory:','Filename:'),
                   {'dir': (OpenFileWidget(self, 0, startPath, "Select directory", ""),
                               'Select the directory where the output-file should be saved\n(default: output'),
@@ -124,7 +127,7 @@ class ExportDialog(AbstractDialog):
                 self._boxes.append(box)
                 index +=1
 
-        self._widgets['dir'].setText(storedOptions['dir'])
+        self._widgets['dir'].setText(startPath)
 
         options = ('m/z', 'z','intensity', 'int./z', 'fragment', 'error /ppm', 'S/N', 'quality', 'formula', 'score', 'comment',
                    'molecular mass', 'average mass', 'noise')
@@ -139,6 +142,7 @@ class ExportDialog(AbstractDialog):
         formLayout.setWidget(index + 4, QtWidgets.QFormLayout.FieldRole, self._buttonBox)
 
         self.show()
+        shoot(self)
 
     def accept(self):
         dir = self._widgets['dir'].text()

@@ -44,13 +44,14 @@ class IntactExcelWriter(object):
         '''
         worksheet.write(self._row, 0, 'observed ions:')
         row = self._row + 1
-        worksheet.write_row(row, 0, ['m/z', 'z', 'int', 'name', 'error'])
+        headers = ('m/z', 'z', 'int', 'int/z','name', 'error')
+        worksheet.write_row(row, 0, headers)
         for ion in listOfIons:
             row += 1
             worksheet.write_row(row, 0, ion.toList())
         if row>self._lastRow:
             self._lastRow = row
-        self._col = 6
+        self._col = len(headers)+1
 
     def writeGeneralAnalysis(self, worksheet, averageCharge, avError, stdDevOfErrors, calibrationVals):
         '''
@@ -62,9 +63,9 @@ class IntactExcelWriter(object):
         :param (tuple[float]) calibrationVals: the parameters (a,b,c) of the calibration function: y=ax^2+bx+c
         '''
         worksheet.write(self._row, self._col+1, 'av.charge:')
-        worksheet.write(self._row+1, self._col, 'using I')
+        worksheet.write(self._row+1, self._col, 'using int')
         worksheet.write(self._row + 1, self._col+1, averageCharge[0], self._format2digit)
-        worksheet.write(self._row+2, self._col, 'using I/z')
+        worksheet.write(self._row+2, self._col, 'using int/z')
         worksheet.write(self._row + 2, self._col+1, averageCharge[1], self._format2digit)
         worksheet.write(self._row + 4, self._col, 'calibration:')
         worksheet.write(self._row + 5, self._col, 'av.error:')

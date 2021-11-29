@@ -22,11 +22,8 @@ class AbstractDialog(QtWidgets.QDialog):
         #self.lineSpacing = lineSpacing
         self._widgets = dict()
         #self.sizePolicy = self.makeSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-
         self._translate = QtCore.QCoreApplication.translate
         self.setWindowTitle(self._translate(self.objectName(), title))
-
-
         self._widgetSizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         self._widgetSizePolicy.setHorizontalStretch(0)
         self._widgetSizePolicy.setVerticalStretch(0)

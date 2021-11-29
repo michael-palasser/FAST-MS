@@ -26,7 +26,7 @@ class AbstractFinder(ABC):
         '''
         self._theoValues = theoValues
         self._settings = settings
-        self._mode = 1
+        self._sprayMode = 1
         self._data = list()
         #self._foundIons = None
         self._listOfCalibrationValues = []
@@ -87,7 +87,7 @@ class AbstractFinder(ABC):
             #nrMod = neutral.getNrOfModifications()
             radicals = neutral.getRadicals()
             for z in self.getZRange(neutral):
-                mz = getMz(mass, z*self._mode, radicals)
+                mz = getMz(mass, z * self._sprayMode, radicals)
                 errorLimit = getErrorLimit(mz,k, d)
                 mask = np.where((abs(calculateError(spectrum['m/z'], mz)) < errorLimit)
                                 & (spectrum['z'] == z))
@@ -96,11 +96,11 @@ class AbstractFinder(ABC):
                 elif flag:
                     if len(mask[0]) == 0:
                         mask = np.where(
-                            (abs(calculateError(spectrum['m/z'], getMz(mass + 1.00266, z*self._mode, radicals)))
+                            (abs(calculateError(spectrum['m/z'], getMz(mass + 1.00266, z * self._sprayMode, radicals)))
                              < errorLimit) & (spectrum['z'] == z))
                         if len(mask[0]) == 0:
                             mask = np.where(
-                                (abs(calculateError(spectrum['m/z'], getMz(mass - 1.00266, z*self._mode, radicals)))
+                                (abs(calculateError(spectrum['m/z'], getMz(mass - 1.00266, z * self._sprayMode, radicals)))
                                  < errorLimit) & (spectrum['z'] == z))
 
                         if (len(mask[0]) == 1):
@@ -211,7 +211,10 @@ class IntactFinder(AbstractFinder):
         '''
         super(IntactFinder, self).__init__(theoValues, settings, self.getChargeRange)
         if self._settings['sprayMode'] == 'negative':
-            self._mode *= -1
+            self._sprayMode *= -1
+        self._abundanceInput = False
+        if 'inputMode' in settings.keys():
+            self._abundanceInput = settings['inputMode']
 
 
     def getChargeRange(self, neutral):
@@ -256,7 +259,7 @@ class IntactFinder(AbstractFinder):
 
 
     """def getMz(self, mass, z):
-        return mass / z + protonMass * self._mode"""
+        return mass / z + protonMass * self._sprayMode"""
 
     '''@staticmethod
     def getError(value, theoValue):
@@ -370,7 +373,7 @@ class IntactFinder(AbstractFinder):
             radicals = neutral.getRadicals()
             z = 1
             while True:
-                mz = getMz(mass, z*self._mode, radicals)
+                mz = getMz(mass, z*self._sprayMode, radicals)
                 if mz < self._settings['minMz']:
                     break
                 elif mz < self._settings['maxMz']:
@@ -383,11 +386,11 @@ class IntactFinder(AbstractFinder):
                     elif flag:
                         if len(mask[0]) == 0:
                             mask = np.where(
-                                (abs(calculateError(spectrum['m/z'], getMz(mass + 1.00266, z*self._mode, radicals)))
+                                (abs(calculateError(spectrum['m/z'], getMz(mass + 1.00266, z*self._sprayMode, radicals)))
                                  < errorLimit) & (spectrum['z'] == z))
                             if len(mask[0]) == 0:
                                 mask = np.where(
-                                    (abs(calculateError(spectrum['m/z'], getMz(mass - 1.00266, z*self._mode, radicals)))
+                                    (abs(calculateError(spectrum['m/z'], getMz(mass - 1.00266, z*self._sprayMode, radicals)))
                                      < errorLimit) & (spectrum['z'] == z))
 
                             if (len(mask[0]) == 1):
@@ -416,8 +419,11 @@ class IntactFinder(AbstractFinder):
         return ions"""
 
     def getIon(self, mz, neutral, found):
+        intensity = found['relAb']
+        if self._abundanceInput:
+            intensity *= found['z']
         return SimpleIntactIon(self._settings['sequName'], neutral.getModification(), found['m/z'], mz, found['z'],
-                               found['relAb'], neutral.getNrOfModifications(), neutral.getRadicals())
+                               intensity, neutral.getNrOfModifications(), neutral.getRadicals())
 
     def calibrateAll(self):
         '''
@@ -520,7 +526,7 @@ class TD_Finder(AbstractFinder):
         '''
         super(TD_Finder, self).__init__(theoValues, settings, getZRange)
         if self._settings['charge'] < 0:
-            self._mode *= -1
+            self._sprayMode *= -1
 
 
     def getIon(self, mz, neutral, found):

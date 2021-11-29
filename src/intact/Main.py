@@ -54,7 +54,7 @@ def run():
 
     """find ions"""
     print("\n********** finding ions **********")
-    analyser = IntactAnalyser(finder.findIons(settings['k'], settings['d'], True))
+    analyser = IntactAnalyser(finder.findIons(settings['k'], settings['d'], True), configs['useAb'])
 
     """output"""
     print("\n********** output **********")
@@ -70,15 +70,15 @@ def run():
         del parameters['spectralData']
         listOfParameters.append(parameters)
     excelWriter = IntactExcelWriter(output)
+    #abundanceInput = False
+    #if settings['inputMode'] != 'intensities':
+    #    abundanceInput = True
     avCharges, avErrors, stddevs = analyser.calculateAvChargeAndError()
-    abundanceInput = False
-    if settings['inputMode'] != 'intensities':
-        abundanceInput = True
     try:
         excelWriter.writeIntactAnalysis(listOfParameters, analyser.getSortedIonList(),
                                         avCharges, avErrors, stddevs, listOfCalibrationVals,
-                                        analyser.calculateAverageModification(abundanceInput),
-                                        analyser.calculateModifications(abundanceInput))
+                                        analyser.calculateAverageModification(),
+                                        analyser.calculateModifications())
         print("saved in:", output)
     except:
         traceback.print_exc()

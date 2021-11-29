@@ -10,11 +10,13 @@ class IntactAnalyser(object):
     '''
     Responsible for analysing lists of observed ion
     '''
-    def __init__(self, listOfIonLists):
+    def __init__(self, listOfIonLists, useAbundances=True):
         '''
         :param (list[list[list[SimpleIntactIon]]]) listOfIonLists: nested lists of IntactIons (ions in each spectrum in each file)
+        :param (bool) useIntensities
         '''
         self._listOfIonLists = listOfIonLists
+        self._useAbundances = useAbundances
         self._minCharge = 250
         self._maxCharge = 0
 
@@ -29,15 +31,16 @@ class IntactAnalyser(object):
             print(ionlists)
             averageCharges, averageErrors, stddevOfErrors = [], [], []
             for ionList in ionlists:
-                print('hey',ionList)
                 #exclude SNAP misassignments
                 errors = np.array([ion.getError() for ion in ionList if abs(ion.getError()) < 30])
                 averageErrors.append(np.average(errors))
                 stddevOfErrors.append(np.std(errors))
-                intensities = np.array([(ion.getIntensity(),ion.getCharge()) for ion in ionList])
-                averageCharges.append((np.sum(intensities[:,0]*intensities[:,1])/np.sum(intensities[:,0]),
-                                       np.sum(intensities[:,0])/np.sum(intensities[:,0]/intensities[:,1])))
-                minCharge, maxCharge = np.min(intensities[:,1]), np.max(intensities[:,1])
+                arr = np.array([(ion.getIntensity(),ion.getCharge()) for ion in ionList])
+                #if abundanceMode:
+                #    arr[:,0] *= arr[:,1]
+                averageCharges.append((np.sum(arr[:,0]*arr[:,1])/np.sum(arr[:,0]),
+                                       np.sum(arr[:,0])/np.sum(arr[:,0]/arr[:,1])))
+                minCharge, maxCharge = np.min(arr[:,1]), np.max(arr[:,1])
                 if minCharge < self._minCharge:
                     self._minCharge = int(minCharge)
                 if maxCharge > self._maxCharge:
@@ -47,7 +50,7 @@ class IntactAnalyser(object):
             listOfStddevOfErrors.append(stddevOfErrors)
         return listOfAverageCharges, listOfAverageErrors, listOfStddevOfErrors
 
-    def calculateAverageModification(self, useAbundance=False):
+    def calculateAverageModification(self):
         '''
         Calculates average numbers of modifications for each charge  and in total of each spectrum in each file
         :return: (list[list[dict[int,float]]] , list[list[float]]) tuple of list of {z:av.modification per z} and
@@ -64,17 +67,20 @@ class IntactAnalyser(object):
                 total = 0
                 for ion in ionList:
                     charge = ion.getCharge()
-                    intensity = ion.getIntensity()
+                    if self._useAbundances:
+                        intensity = ion.getRelAbundance()
+                    else:
+                        intensity = ion.getIntensity()
                     if charge in averageModificationPerZ:
                         averageModificationPerZ[charge] += np.array([float(ion.getNrOfModifications()) * intensity, intensity])
                     else:
                         averageModificationPerZ[charge] = np.array([float(ion.getNrOfModifications()) * intensity, intensity])
-                    if useAbundance:
+                    #if self._useIntensities:
+                    totalModified += float(ion.getNrOfModifications()) * intensity
+                    total += intensity
+                    '''else:
                         totalModified += float(ion.getNrOfModifications()) * intensity / charge
-                        total += intensity / charge
-                    else:
-                        totalModified += float(ion.getNrOfModifications()) * intensity
-                        total += intensity
+                        total += intensity / charge'''
                 for z,val in averageModificationPerZ.items():
                     averageModificationPerZ[z] = val[0]/val[1]  #ToDo: check if robust
                 averageModifications.append(averageModificationPerZ)
@@ -93,7 +99,7 @@ class IntactAnalyser(object):
             arr[i][0] = self._minCharge + i
         return arr
 
-    def calculateModifications(self, useAbundance=False):
+    def calculateModifications(self):
         '''
         Calculates the abundance of each modification for each charge state and in total in each spectrum in each file
         :return: (list[list[dict[str,ndarray(dtype=(int,float)])]], list[list[dict[str,float]]]) tuple of
@@ -110,19 +116,24 @@ class IntactAnalyser(object):
                 modificationsPerZ = dict()
                 intensitiesPerCharge = self.makeChargeArray()
                 for ion in ionList:
-                    if ion.getModification() not in modificationsPerZ:
-                        modificationsPerZ[ion.getModification()] = self.makeChargeArray()
-                    modificationsPerZ[ion.getModification()][ion.getCharge() - self._minCharge][1] = ion.getIntensity()
-                    intensitiesPerCharge[ion.getCharge() - self._minCharge][1] += ion.getIntensity()
+                    currentModification = ion.getModification()
+                    if self._useAbundances:
+                        intensity = ion.getRelAbundance()
+                    else:
+                        intensity = ion.getIntensity()
+                    if currentModification not in modificationsPerZ:
+                        modificationsPerZ[currentModification] = self.makeChargeArray()
+                    modificationsPerZ[currentModification][ion.getCharge() - self._minCharge][1] = intensity
+                    intensitiesPerCharge[ion.getCharge() - self._minCharge][1] += intensity
                 nonZero = np.where(intensitiesPerCharge[:,1] != 0)
                 dataLength = len(intensitiesPerCharge[nonZero])
                 #averageOfModifications = dict()
                 modificationsPerZ2 = dict()
                 modifications = dict()
-                if useAbundance:
-                    total = np.sum(intensitiesPerCharge[:,1]/intensitiesPerCharge[:,0])
-                else:
-                    total = np.sum(intensitiesPerCharge[:,1])
+                #if abundanceMode:
+                total = np.sum(intensitiesPerCharge[:,1])
+                #else:
+                #    total = np.sum(intensitiesPerCharge[:,1]/intensitiesPerCharge[:,0])
                 for mod,arr in modificationsPerZ.items():
                     newArr = np.zeros((dataLength,2))
                     for i in range(dataLength):
@@ -130,10 +141,10 @@ class IntactAnalyser(object):
                                      arr[nonZero][i,1]/intensitiesPerCharge[nonZero][i,1]]
                     #averageOfModifications[mod] = np.average(newArr[:,1])
                     modificationsPerZ2[mod] = newArr
-                    if useAbundance:
-                        modifications[mod] = np.sum(arr[:,1]/arr[:,0])/ total
-                    else:
-                        modifications[mod] = np.sum(arr[:,1])/ total
+                    #if abundanceMode:
+                    modifications[mod] = np.sum(arr[:,1])/ total
+                    #else:
+                    #    modifications[mod] = np.sum(arr[:,1]/arr[:,0])/ total
                 modificationsPerZInSpectra.append(modificationsPerZ2)
                 modificationsInSpectra.append(modifications)
                 #avOfModInSpectra.append(averageOfModifications)

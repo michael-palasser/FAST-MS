@@ -75,13 +75,14 @@ class TestIntactAnalyser(TestCase):
             totalModifiedAb += ion.getNrOfModifications()* intensity/z
             totalAb += intensity/z
         analyser = IntactAnalyser([[ions]])
-        averageModificationsPerZList, averageModificationsList = analyser.calculateAverageModification(False)
+        averageModificationsPerZList, averageModificationsList = analyser.calculateAverageModification()
         averageModificationsPerZ = averageModificationsPerZList[0][0]
         for z in averageModificationsPerZ.keys():
             self.assertAlmostEqual(weigthedMod[z]/sumInt[z], averageModificationsPerZ[z])
-        self.assertAlmostEqual(totalModified/total, averageModificationsList[0][0])
-        _, averageModificationsList = analyser.calculateAverageModification(True)
         self.assertAlmostEqual(totalModifiedAb/totalAb, averageModificationsList[0][0])
+        analyser = IntactAnalyser([[ions]], False)
+        _, averageModificationsList = analyser.calculateAverageModification()
+        self.assertAlmostEqual(totalModified/total, averageModificationsList[0][0])
 
 
     """def test_make_charge_array(self):
@@ -120,7 +121,7 @@ class TestIntactAnalyser(TestCase):
                 self.assertAlmostEqual(modifRelInts[int(row[0]-1),mods[mod]],row[1])
         for mod,val in listOfcalcModifs[0][0].items():
             self.assertAlmostEqual(modifIntsTotal[mods[mod]]/totalInt,val)
-        for mod,val in analyser.calculateModifications(True)[1][0][0].items():
+        for mod,val in analyser.calculateModifications()[1][0][0].items():
             self.assertAlmostEqual(modifAbsTotal[mods[mod]]/totalAb,val)
 
     """def test_get_sorted_ion_list(self):

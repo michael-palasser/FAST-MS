@@ -3,6 +3,7 @@ from os.path import join
 
 from src import path
 #from src.gui.GUI_functions import shoot
+from src.gui.GUI_functions import shoot
 from src.gui.dialogs.AbstractDialogs import DialogWithTabs
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 
@@ -22,7 +23,7 @@ class ConfigurationDialog(DialogWithTabs):
         self._boxSizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         self.setupUi(self)
         self._verticalLayout.addWidget(self._buttonBox, 0, QtCore.Qt.AlignRight)
-        #shoot(self)
+        shoot(self)
 
 
     def createTab(self,name):
@@ -171,7 +172,10 @@ class ConfigurationDialog(DialogWithTabs):
                          "shapeMarked": (QtWidgets.QDoubleSpinBox(), "ions which have a higher value will be highlighted"),
                          "scoreMarked": (QtWidgets.QDoubleSpinBox(),"ions which have a higher value will be highlighted"),
                          "SNR": (QtWidgets.QDoubleSpinBox(),"ions which have a lower signal to noise ratio will be deleted")})
-
+        self._analysisBox = self.fillBox(self._outputTab, "Analysis", ("Use Abundances (int./z)",),
+                                        {"useAb": (QtWidgets.QCheckBox(),
+                                                   "Ticked if the abundaces (int./z) of the ions should be used for the "
+                                                   "quantitative analysis. Otherwise, the intensities (int.) are used.")})
         self._interestingIonsBox = self.fillInterestingIonsBox(self._outputTab)
         self._verticalLayout.addWidget(self._buttonBox, 0, QtCore.Qt.AlignHCenter)
         self.backToLast()

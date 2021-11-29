@@ -17,7 +17,7 @@ from src.services.DataServices import IntactIonService, SequenceService
 from src.entities.Info import Info
 from src.entities.IonTemplates import IntactModification
 from src.gui.controller.AbstractController import AbstractMainController
-from src.services.analyser_services import IntactAnalyser
+from src.services.analyser_services.IntactAnalyser import IntactAnalyser
 from src.services.export_services.IntactExcelWriter import FullIntactExcelWriter
 from src.services.assign_services.Calibrator import Calibrator
 from src.services.library_services.IntactLibraryBuilder import IntactLibraryBuilder
@@ -522,7 +522,7 @@ class IntactMainController(AbstractMainController):
             parameters.update(self._configs)
             del parameters['spectralData']
             excelWriter = FullIntactExcelWriter(output, self._configs, newOptions)
-            analyser = IntactAnalyser([[self._intensityModeller.getObservedIons().values()]])
+            analyser = IntactAnalyser([[self._intensityModeller.getObservedIons().values()]], self._configs['useAb'])
             #avCharges, avErrors, stddevs = analyser.calculateAvChargeAndError()
             try:
                 excelWriter.toExcel(analyser, self._intensityModeller, self._libraryBuilder.getNeutralLibrary(),

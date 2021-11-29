@@ -213,7 +213,7 @@ class IsotopePatternView(SimpleMainWindow):
         try:
             charge = int(self._charge.text())
             self._intensity = self._ionTable.getIntensity()
-            accelerate = 5
+            accelerate = 10
             if self._exact.isChecked():
                 accelerate = None
             if self._modeBox.currentIndex() == 0:

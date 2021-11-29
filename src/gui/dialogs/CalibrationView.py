@@ -2,7 +2,7 @@ from PyQt5 import QtWidgets
 import pyqtgraph as pg
 import numpy as np
 
-from src.gui.GUI_functions import translate, showOptions
+from src.gui.GUI_functions import translate, showOptions, shoot
 from src.gui.tableviews.TableModels import CalibrationInfoTable2, CalibrationInfoTable1
 from src.gui.tableviews.TableViews import TableView
 from src.gui.widgets.IonTableWidgets import CalibrationIonTableWidget
@@ -18,6 +18,8 @@ class CalibrationView(QtWidgets.QDialog):
         self._canceled = False
         self._layout = QtWidgets.QVBoxLayout(self)
         self.fillUI()
+        self.show()
+        shoot(self)
 
     def fillUI(self):
         self.setWindowTitle(translate(self.objectName(), 'Calibration'))
@@ -81,7 +83,7 @@ class CalibrationView(QtWidgets.QDialog):
         self._plot1.setBackground('w')
         styles = {"black": "#f00", "font-size": "14px"}
         self._plot1.setLabel('bottom', 'm/z (observed)', **styles)
-        self._plot1.setLabel('left', 'delta', **styles)
+        self._plot1.setLabel('left', 'delta m/z', **styles)
         usedIons = self._ionsVals[self._ionsVals['used']==True]
         scatter = pg.ScatterPlotItem(x=usedIons['m/z'], y=usedIons['m/z']-usedIons['m/z_theo'], symbol='star',
                                      pen=pg.mkPen(color='g', width=2),
@@ -117,11 +119,14 @@ class CalibrationView(QtWidgets.QDialog):
             del widget
         self.fillUI()
 
+    def accept(self):
+        ions = [(row[0],row[1]) for row in self._table2.checkStatus() if row[2]]
+        self._calibrator.recalibrate(ions)
+        super(CalibrationView, self).accept()
 
     def reject(self):
         self._canceled = True
         super(CalibrationView, self).reject()
-
 
     def canceled(self):
         return self._canceled

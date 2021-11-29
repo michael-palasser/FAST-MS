@@ -35,7 +35,8 @@ class TDStartDialog(StartDialog):
         super(TDStartDialog, self).setupUi(SequenceService().getAllSequenceNames(),
                                   FragmentationService().getAllPatternNames(), ModificationService().getAllPatternNames())
         #xPos, yPos = self.createWidgets(widgets,200,linewidth)
-        self._widgets['charge'].setMinimum(-99)
+        #self._widgets['charge'].setMinimum(-99)
+        #self.setValueOfWidget(self._widgets['charge'],self._configHandler.get('charge'))
         #self._widgets['noiseLimit'].setMinimum(0)
         self._widgets['noiseLimit'].setMaximum(99)
         self._widgets['noiseLimit'].setDecimals(3)
@@ -66,8 +67,10 @@ class TDStartDialog(StartDialog):
 
     def getWidgets(self, args):
         sequences, fragPatterns, modPatterns = args
+        chargeWidget = QtWidgets.QSpinBox(self)
+        chargeWidget.setMinimum(-99)
         return {"sequName": (createComboBox(self,sequences), "Name of the sequence"),
-                   "charge": (QtWidgets.QSpinBox(self), "Charge of the precursor ion"),
+                   "charge": (chargeWidget, "Charge of the precursor ion"),
                     "fragmentation": (createComboBox(self,fragPatterns), "Name of the fragmentation - pattern"),
                     "modifications": (createComboBox(self,modPatterns), "Name of the modification/ligand - pattern"),
                     "nrMod": (QtWidgets.QSpinBox(self), "How often is the precursor ion modified?"),
@@ -155,8 +158,6 @@ class IntactStartDialog(StartDialog):
         index = super(IntactStartDialog, self).setupUi(SequenceService().getAllSequenceNames(), IntactIonService().getAllPatternNames())
         if self._configHandler.getAll() != None:
             self._widgets['sprayMode'].setCurrentText(self._translate(self.objectName(), self._configHandler.get('sprayMode')))
-        self._widgets['minMz'].setMaximum(9999)
-        self._widgets['maxMz'].setMaximum(9999)
         #self.backToLast()
 
         '''self._formLayout.addItem(QtWidgets.QSpacerItem(0, 1))
@@ -179,11 +180,16 @@ class IntactStartDialog(StartDialog):
                  "Name of the file with unassigned ions (txt format)"),
                  "sprayMode": (createComboBox(self, ("negative", "positive")), "Spray mode"),
                  "inputMode": (createComboBox(self, ("intensities", "abundances (int./z)")), "Spectral data will be autocalibrated if option is ticked"),
-                 "minMz": (QtWidgets.QSpinBox(self), "m/z where search starts"),
-                 "maxMz": (QtWidgets.QSpinBox(self), "m/z where search ends"),
+                 "minMz": (self.getMinMaxWidget(), "m/z where search starts"),
+                 "maxMz": (self.getMinMaxWidget(), "m/z where search ends"),
                  "calibration": (QtWidgets.QCheckBox(self), "Spectral data will be autocalibrated if option is ticked"),
                  "output": (QtWidgets.QLineEdit(self),
                             "Name of the output txt file\ndefault: name of spectral pattern file + _out.txt")}
+
+    def getMinMaxWidget(self):
+        minMzWidget = QtWidgets.QSpinBox(self)
+        minMzWidget.setMaximum(99999)
+        return minMzWidget
 
     '''def makeButtonWidget(self, parent):
         widget = QtWidgets.QWidget(parent)
@@ -241,8 +247,8 @@ class IntactStartDialogFull(IntactStartDialog):
                     "Name of the file with peaks (txt format)"),
                  "sprayMode": (createComboBox(self, ("negative", "positive")), "Spray mode"),
                  'noiseLimit': (QtWidgets.QDoubleSpinBox(self), "Minimal noise level"),
-                 "minMz": (QtWidgets.QSpinBox(self), "m/z where search starts"),
-                 "maxMz": (QtWidgets.QSpinBox(self), "m/z where search ends"),
+                 "minMz": (self.getMinMaxWidget(), "m/z where search starts"),
+                 "maxMz": (self.getMinMaxWidget(), "m/z where search ends"),
                  "calibration": (QtWidgets.QCheckBox(self), "Spectral data will be autocalibrated if option is ticked"),
                  "calIons": (OpenFileWidget(self, 1, join(path, 'Spectral_data', 'intact'), "Open Files",
                                             "Plain Text Files (*txt);;All Files (*)"),

@@ -4,7 +4,7 @@ from PyQt5 import QtWidgets, QtGui, QtCore
 from PyQt5.QtGui import QMovie
 from PyQt5.QtWidgets import QFileDialog, QLabel, QApplication
 
-from src.gui.GUI_functions import createComboBox
+from src.gui.GUI_functions import createComboBox, translate
 
 
 class OpenFileWidget(QtWidgets.QWidget):
@@ -166,6 +166,47 @@ class LoadingWidget(QtWidgets.QWidget):
                                                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
         if choice == QtWidgets.QMessageBox.Yes:
             self.close()
+
+class CheckableComboBox(QtWidgets.QComboBox):
+    def __init__(self, parent, options, checkedIndizes):
+        super(CheckableComboBox, self).__init__(parent)
+        self._options = options
+        createComboBox(parent, options, self)
+        for i in range(len(self._options)):
+            self.setChecked(i, i in checkedIndizes)
+        self.view().pressed.connect(self.changeState)
+
+    def setChecked(self, index, checked):
+        item = self.model().item(index, self.modelColumn())
+        if checked:
+            item.setCheckState(QtCore.Qt.Checked)
+        else:
+            item.setCheckState(QtCore.Qt.Unchecked)
+
+    def changeState(self, index):
+        print(index)
+        item = self.model().itemFromIndex(index)
+        if item.checkState()==QtCore.Qt.Checked:
+            item.setCheckState(QtCore.Qt.Unchecked)
+        else:
+            item.setCheckState(QtCore.Qt.Checked)
+
+    def setCurrentText(self, textList):
+        try:
+            super(CheckableComboBox, self).setCurrentText(textList[0])
+            for i, option in enumerate(self._options):
+                if option in textList:
+                    self.setChecked(i, True)
+        except IndexError:
+            pass
+
+    def currentText(self):
+        values = []
+        for i in range(self.count()):
+            item = self.model().item(i, self.modelColumn())
+            if item.checkState() == QtCore.Qt.Checked:
+                values.append(self._options[i])
+        return values
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

@@ -199,7 +199,6 @@ class PeriodicTableService(AbstractServiceForPatterns):
         self.checkName(pattern.getName())
         self.checkFormatOfItems(pattern.getItems(), None, self._repository.getIntegers())
         self.checkIfUnique(pattern)
-        print('id', pattern.getId())
         if pattern.getId() == None:
             self._repository.createPattern(pattern)
         else:
@@ -533,16 +532,16 @@ class IntactIonService(AbstractServiceForPatterns):
     Service handling a IntactRepository and IntactPattern entities.
     '''
     def __init__(self):
-        super(IntactIonService, self).__init__(IntactRepository(),(0,4))
+        super(IntactIonService, self).__init__(IntactRepository(),(0,4,5))
 
     def makeNew(self):
         # return PatternWithItems("", [{"Name": "", "Gain": "", "Loss": "", "NrOfMod": 0, "enabled": False}], None)
-        return IntactPattern("", 10 * [["", "", "", "", False]], None)
+        return IntactPattern("", 10 * [["", "", "", "", '', False]], None)
 
     def getFormula(self, item):
         '''
         Returns the molecular formula of an intact modification (IntactModification)
-        :param (tuple[str,str,str,int,int]) item: corresponding intact modification
+        :param (tuple[str,str,str,int,int,int]) item: corresponding intact modification
         :return: (MolecularFormula) formula
         '''
         return IntactModification(item).getFormula()

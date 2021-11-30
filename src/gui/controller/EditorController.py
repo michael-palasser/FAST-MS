@@ -4,9 +4,9 @@ from functools import partial
 from PyQt5 import QtWidgets, QtCore
 
 from src.Exceptions import CanceledException
-from src.Services import *
+from src.services.DataServices import *
 from src.gui.AbstractMainWindows import SimpleMainWindow
-from src.gui.GUI_functions import createComboBox, connectTable
+from src.gui.GUI_functions import createComboBox
 from src.gui.dialogs.SimpleDialogs import OpenDialog
 
 
@@ -449,7 +449,7 @@ class FragmentEditorController(AbstractEditorControllerWithTabs):
 
     def save(self, *args):
         '''prec = self._widgets['precursor'].currentText()
-        table2 = self.readTable(self._table2, self._service.getBoolVals()[1])
+        table2 = self.getData(self._table2, self._service.getBoolVals()[1])
         if prec not in [row[0] for row in table2]:
             QtWidgets.QMessageBox.warning(self._mainWindow, "Problem occured", prec + ' not found in table',
                                           QtWidgets.QMessageBox.Ok)'''

@@ -1,6 +1,6 @@
 from re import search as reSearch
 
-from src.Services import SequenceService, MoleculeService, FragmentationService, ModificationService
+from src.services.DataServices import SequenceService, MoleculeService, FragmentationService, ModificationService
 from src.entities.GeneralEntities import BuildingBlock
 from src.entities.IonTemplates import FragItem, ModificationItem
 
@@ -103,3 +103,38 @@ class SearchSettings(object):
         :return: (dict[str:Any]) filtered dict of {fragment-type: values}
         '''
         return {key: val for key, val in fragDict.items() if key in self.getFragmentsByDir(dir)}
+
+"""class IntactSearchSettings(object):
+    '''
+    Container class for storage of search properties (sequence, molecule, fragmentation pattern, modification pattern)
+    '''
+    def __init__(self, sequName, modificationPattern):
+        '''
+        Class to store several entities (sequence, fragmentation, modification-pattern)
+        :param (str) sequName: name of the sequence
+        :param (str) fragmentation: name of the fragmentation pattern
+        :param (str) modificationPattern: name of the modification pattern
+        '''
+        self.__sequence = SequenceService().get(sequName)
+        # self.sequenceList = self.__sequence.getSequenceList()
+        self.__molecule = MoleculeService().getPatternWithObjects(self.__sequence.getMolecule(), BuildingBlock)
+        # self.__monomers = MoleculeService().getItemDict(self.__sequence.getMolecule())
+        self.__modifPattern = IntactIonService().getPatternWithObjects(modificationPattern, IntactModification)
+
+    def getSequence(self):
+        return self.__sequence
+
+    def getSequenceList(self):
+        return self.__sequence.getSequenceList()
+
+    def getModification(self):
+        return self.__modifPattern
+
+    def getModificationName(self):
+        return self.__modifPattern.getModification()
+
+    def getMolecule(self):
+        return self.__molecule
+
+    def getGPBsOfBBs(self, mode):
+        return {name:bb.getGB(mode) for name,bb in self.__molecule.getBBDict().items()}"""

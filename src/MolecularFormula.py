@@ -3,7 +3,7 @@ import copy
 from src.FormulaFunctions import stringToFormula
 from src.fastFunctions import *
 #import src.simpleFunctions as sf
-from src.Services import PeriodicTableService
+from src.services.DataServices import PeriodicTableService
 from scipy.fft import fft, ifft
 
 '''
@@ -15,7 +15,7 @@ Created on 3 Jul 2020
 periodicTableService = PeriodicTableService()
 isoTableDtype= np.dtype([('index', float), ('nr', float), ('nrIso', float),('relAb',float), ('mass',float), ('M+',float)])
 isoPatternDtype = np.dtype([('m/z',float),('calcInt', float)])
-MIN_SUM = 0.996
+#MIN_SUM = 0.996
 
 class MolecularFormula(object):
     '''
@@ -114,6 +114,10 @@ class MolecularFormula(object):
 
 
     def determineSystem(self):
+        '''
+        Determines the correct method for isotope pattern calculation and corresponding isotope table based on the formula
+        :return: (Callable) method,  (ndarray(dtype=[float,float,float,float,float,float])) isotopeTable
+        '''
         #elements = [key for key,val in self._formulaDict.items() if val>0]
         #if self.checkSystem(elements, {'C', 'H', 'N', 'O', 'P'}):
         if self._formulaDict.keys() == {'C', 'H', 'N', 'O', 'P'} or self._formulaDict.keys() == {'C', 'H', 'N', 'O'}:
@@ -129,9 +133,11 @@ class MolecularFormula(object):
         return calculate, isotopeTable
 
 
-    def calculateIsotopePattern(self, maxIso=-1):
+    def calculateIsotopePattern(self, minSum, maxIso=-1):
         '''
         Calculates isotope patterns based on molecular formulas
+        :param (float) minSum: algorithm stops when sum of abundances reaches minSum
+        :param (int) maxIso: maximum isotope peak that is calculated
         :return: (ndarray(dtype=[float,float])) isotope pattern (structured numpy array: [(mass,relative Abundance)])
         '''
         #mostAbundant=10**(-10)
@@ -140,7 +146,7 @@ class MolecularFormula(object):
         isotope_pattern = list()
         calculate, isotopeTable = self.determineSystem()
         sumInt = 0
-        while(sumInt <MIN_SUM and isoPeak!=maxIso):              #ToDo:Parameter
+        while(sumInt < minSum and isoPeak != maxIso):              #ToDo:Parameter
             setIsotopeTable(isotopeTable)
             #print(isoPeak, isotopeTable)
             ultrafineStruct = np.array(calculate(isoPeak, isotopeTable))
@@ -216,6 +222,11 @@ class MolecularFormula(object):
 
     @staticmethod
     def reorderTable(isotopeTable):
+        '''
+        Reorders isotopeTable such that first element is a M+1 element
+        :param (ndarray(dtype=[float,float,float,float,float,float])) isotopeTable: "raw" isotopeTable
+        :return: (ndarray(dtype=[float,float,float,float,float,float])) reordered isotopeTable
+        '''
         match = None
         for isotope in isotopeTable:
             if len(getByIndex(isotopeTable, isotope['index'])) == 2:
@@ -284,17 +295,20 @@ class MolecularFormula(object):
         return abundanceTable, elemNrs, np.sum(dm[:,0])/np.sum(dm[:,1])
 
 
-    def calculateIsotopePatternFFT(self, accelerate,exactPattern=None):#, minSumCorrection=0):
+    def calculateIsotopePatternFFT(self, minSum, accelerate, exactPattern=None):#, minSumCorrection=0):
         '''
         Calculates isotope patterns based on molecular formulas using a combination of the usual polynomial and the
         fast fourier transform method
+        :param (float) minSum: algorithm stops when sum of abundances reaches minSum
+        :param (int) accelerate: maximum isotope peak that is exactly calculated
+        :param (ndarray(dtype=[float,float])) exactPattern: optional, exactly calculated isotope pattern (structured numpy array: [(mass,relative Abundance)])
         :return: (ndarray(dtype=[float,float])) isotope pattern (structured numpy array: [(mass,relative Abundance)])
         '''
         #assert minSumCorrection+MIN_SUM<1
         #print('new',self.calculateIsotopePattern(accelerate)[0])
         if exactPattern is None:
-            exactPattern= self.calculateIsotopePattern(accelerate)
-        if np.sum(exactPattern['calcInt']) > MIN_SUM:#+minSumCorrection:
+            exactPattern= self.calculateIsotopePattern(minSum, accelerate)
+        if np.sum(exactPattern['calcInt']) > minSum:#+minSumCorrection:
             return np.array(exactPattern, dtype=isoPatternDtype)
         abundanceTable, elemNrs, dm = self.makeFFTTables(exactPattern['m/z'][0])
         isotope_pattern =  np.array(self.calculateAbundancesFFT(abundanceTable, elemNrs), dtype=isoPatternDtype)
@@ -302,7 +316,7 @@ class MolecularFormula(object):
         isoPeak = len(exactPattern)
         isotope_pattern['m/z'] =(isotope_pattern['m/z']-isotope_pattern['m/z'][isoPeak-1])*dm+exactPattern['m/z'][-1]
         finalPattern = [row for row in exactPattern]
-        while sumInt <MIN_SUM:#+minSumCorrection:
+        while sumInt <minSum:#+minSumCorrection:
             finalPattern.append(isotope_pattern[isoPeak])
             sumInt+=isotope_pattern[isoPeak]['calcInt']
             isoPeak+=1

@@ -38,7 +38,12 @@ class ConfigHandler(object):
         :return: (Any) value
         '''
         if self.__parameters:
-            return self.__parameters[key]
+            try:
+                return self.__parameters[key]
+            except:
+                if key == 'calIons':
+                    return ''
+                return 0
         raise Exception("Parameter",key, "does not exist")
 
     def write(self, parameters):
@@ -63,6 +68,9 @@ class ConfigHandler(object):
             raise Exception('Parameter ',parameter, ' not in configurations.')
         self.__parameters[parameter] = value
 
+    def update2(self, parameter, value):
+        self.__parameters[parameter] = value
+
 dataPath = join(path, "src", "data")
 
 class ConfigurationHandlerFactory(object):
@@ -74,16 +82,26 @@ class ConfigurationHandlerFactory(object):
         return ConfigHandler(join(dataPath,"settings_top_down.json"))
 
     @staticmethod
-    def getTD_ConfigHandler():
-        return ConfigHandler(join(dataPath,"configurations_top_down.json"))
+    def getConfigHandler():
+        return ConfigHandler(join(dataPath,"configurations.json"))
 
-    @staticmethod
-    def getIntactHandler():
-        return ConfigHandler(join(dataPath, "configurations_intact.json"))
 
     @staticmethod
     def getExportHandler():
         return ConfigHandler(join(dataPath, "export_options.json"))
+
+    @staticmethod
+    def getIntactExportHandler():
+        return ConfigHandler(join(dataPath, "export_options_intact.json"))
+
+    @staticmethod
+    def getIntactHandler():
+        return ConfigHandler(join(dataPath, "settings_intact.json"))
+
+    @staticmethod
+    def getFullIntactHandler():
+        return ConfigHandler(join(dataPath, "settings_intactFull.json"))
+
 
 conf = {'sequName' : 'ribA',
     'charge' : -6,

@@ -1,7 +1,7 @@
 from PyQt5 import QtWidgets, QtCore
 
-from src.IsotopePatternLogics import IsotopePatternLogics
-from src.Services import *
+from src.services.IsotopePatternLogics import IsotopePatternLogics
+from src.services.DataServices import *
 from src.gui.AbstractMainWindows import SimpleMainWindow
 from src.gui.GUI_functions import makeFormLayout, shoot
 from src.gui.widgets.IonTableWidgets import IsoPatternIon
@@ -139,7 +139,7 @@ class IsotopePatternView(SimpleMainWindow):
         '''
         Inserts the ion option (fragmentation, modification, ...) widgets into the QFrame
         '''
-        labelNames = ("Fragmentation:", "Fragment:", "Modif.Pattern:", "Modification:", "Nr.of Mod.:")
+        labelNames = ("Fragmentation:", "Fragment:", "Modif. Pattern:", "Modification:", "Nr. of Mod.:")
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         for i, key in enumerate(self._options.keys()):
             label = QtWidgets.QLabel(self._frame)
@@ -177,7 +177,7 @@ class IsotopePatternView(SimpleMainWindow):
         if self._modeBox.currentIndex() == 0:
             self._options['nrMod'].setValue(0)
             self._options['nrMod'].setDisabled(True)
-            for box in self._options.values()[:-1]:
+            for box in list(self._options.values())[:-1]:
                 box.setCurrentText('')
                 box.setDisabled(True)
         elif self._modeBox.currentIndex() != 0:
@@ -213,7 +213,7 @@ class IsotopePatternView(SimpleMainWindow):
         try:
             charge = int(self._charge.text())
             self._intensity = self._ionTable.getIntensity()
-            accelerate = 5
+            accelerate = 10
             if self._exact.isChecked():
                 accelerate = None
             if self._modeBox.currentIndex() == 0:

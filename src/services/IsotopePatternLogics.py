@@ -3,11 +3,11 @@ import numpy as np
 from src.Exceptions import InvalidInputException
 from src.MolecularFormula import MolecularFormula
 from src.FormulaFunctions import stringToFormula, eMass, protMass
-from src.Services import MoleculeService, FragmentationService, ModificationService, PeriodicTableService
+from src.services.DataServices import MoleculeService, FragmentationService, ModificationService, PeriodicTableService
 from src.entities.GeneralEntities import Sequence
 from src.entities.Ions import Fragment, FragmentIon
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
-from src.top_down.IntensityModeller import IntensityModeller
+from src.services.IntensityModeller import IntensityModeller
 from src.entities.SearchSettings import processTemplateName
 
 
@@ -21,10 +21,10 @@ class IsotopePatternLogics(object):
         self._modService = ModificationService()
         self._elements = PeriodicTableService().getAllPatternNames()
         self._molecules = self._moleculeService.getAllPatternNames()
-        self._intensityModeller = IntensityModeller(ConfigurationHandlerFactory.getTD_ConfigHandler().getAll())
+        self._configs = ConfigurationHandlerFactory.getConfigHandler().getAll()
+        self._intensityModeller = IntensityModeller(self._configs, 1)
         self._peakDtype = np.dtype([('m/z', np.float64), ('relAb', np.int32), ('calcInt', np.float64), ('used', np.bool_)])
         #self._peakDtype = np.dtype([('m/z', float), ('relAb', float), ('calcInt', float), ('used', np.bool_)])
-
         self._formula = None
         self._isotopePattern = None
         self._ion = None
@@ -61,6 +61,10 @@ class IsotopePatternLogics(object):
 
     def getRadicals(self, moleculeName, sequString, fragmentationName, fragTemplName, modifPatternName, modifName,
                     nrMod):
+        if moleculeName == self.getMolecules()[0]:
+            return 0
+        if fragTemplName == '':
+            fragTemplName = self.getFragItems(fragmentationName)[0][0]
         fragment = self.getFragment(moleculeName, sequString, fragmentationName, fragTemplName, modifPatternName,
                                     modifName, nrMod)
         return fragment.getRadicals()
@@ -111,20 +115,22 @@ class IsotopePatternLogics(object):
         if mode == self.getMolecules()[0]:
             fragment = Fragment('-',0,'',MolecularFormula(self.checkFormula(inputString)),[],electrons)
         else:
+            if fragTemplName=='':
+                raise InvalidInputException('', "Please choose a fragment")
             fragment = self.getFragment(mode, inputString, fragmentationName, fragTemplName, modifPatternName,
                                         modifName, nrMod)
         formula = fragment.getFormula()
         if formula != self._formula:
             self._formula = formula
             #self._fragment = fragment
-            tempFormula=self._formula.addFormula({'H':charge})
+            tempFormula=self._formula.addFormula({'H':charge+electrons})
             if tempFormula.getFormulaDict()['H']<0:
                 raise InvalidInputException('Nr of H = '+str(tempFormula.getFormulaDict()['H']), 'not enough Hs for deprotonation')
             #if tempFormula.calcIsotopePatternSlowly(1)['m/z'][0]>6000:
             if accelerate is None:
-                self._isotopePattern = tempFormula.calculateIsotopePattern()
+                self._isotopePattern = tempFormula.calculateIsotopePattern(self._configs['maxIso'])
             else:
-                self._isotopePattern = tempFormula.calculateIsotopePatternFFT(accelerate)
+                self._isotopePattern = tempFormula.calculateIsotopePatternFFT(self._configs['maxIso'], accelerate)
             '''else:
                 self._isotopePattern = tempFormula.calcIsotopePatternSlowly()'''
         #isotopePattern = copy.deepcopy(self._isotopePattern)
@@ -153,9 +159,11 @@ class IsotopePatternLogics(object):
         :return: (float) m/z
         '''
         if z != 0:
-            return abs((mass+electrons*(protMass+eMass)-z*eMass) / z)
+            #return abs((mass+electrons*(protMass+eMass)-z*eMass) / z)
+            return abs((mass-z*eMass) / z)
         else:
-            return abs(mass+electrons*(protMass+eMass))
+            #return abs(mass+electrons*(protMass+eMass))
+            return abs(mass)
 
     def checkFormula(self,formulaString):
         '''
@@ -203,7 +211,9 @@ class IsotopePatternLogics(object):
             fragTempl = [precTempl for precTempl in fragmentation.getItems2() if precTempl.getName()==fragTemplName][0]
             number = 0
         else:
-            fragTempl = [fragTempl for fragTempl in fragmentation.getItems() if fragTempl.getName()==fragTemplName][0]
+            #for fragTemp in fragmentation.getItems():
+            #    print(fragTemp.getName(), fragTemplName)
+            fragTempl = [fragTemp for fragTemp in fragmentation.getItems() if fragTemp.getName()==fragTemplName][0]
             number = len(sequenceList)
         species, rest = processTemplateName(fragTempl.getName())
         formula = formula.addFormula(fragTempl.getFormula())

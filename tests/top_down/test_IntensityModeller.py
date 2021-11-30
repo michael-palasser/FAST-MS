@@ -4,19 +4,21 @@ import numpy as np
 
 from src.MolecularFormula import MolecularFormula
 from src.entities.Ions import FragmentIon, Fragment
+from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
+from tests.test_Calibrator import getCalibratedSpectrum
 from tests.top_down.test_SpectrumHandler import initTestLibraryBuilder
-from src.top_down.SpectrumHandler import SpectrumHandler
-from src.top_down.IntensityModeller import IntensityModeller
+from src.services.assign_services.TD_SpectrumHandler import SpectrumHandler
+from src.services.IntensityModeller import IntensityModeller
 
 def initTestSpectrumHandler():
     configs, settings, props, builder = initTestLibraryBuilder()
-    spectrumHandler = SpectrumHandler(props,builder.getPrecursor(),settings)
+    spectrumHandler = SpectrumHandler(props,builder.getPrecursor(),settings, configs)
     return configs, settings, props, builder, spectrumHandler
 
 class TestIntensityModeller(TestCase):
     def setUp(self):
         self.configs, settings, props, self.builder, self.spectrumHandler = initTestSpectrumHandler()
-        self.intensityModeller = IntensityModeller(self.configs)
+        self.intensityModeller = IntensityModeller(self.configs, self.spectrumHandler.getNoiseLevel())
 
     '''def test_get_observed_ions(self):
         self.fail()
@@ -111,7 +113,29 @@ class TestIntensityModeller(TestCase):
 
 
     '''def test_process_ions(self):
-        self.fail()'''
+        configs = deepcopy(self.configs)
+        configs['SNR']=2
+        intensityModeller = IntensityModeller(configs)
+        peaksArrType = np.dtype([('m/z', np.float64), ('relAb', np.float64),
+                                 ('calcInt', np.float64), ('error', np.float32), ('used', np.bool_)])
+        for fragment in self.builder.getFragmentLibrary():
+            # isotopePattern = fragment.getIsotopePattern() *10**7
+            isotopePattern = deepcopy(fragment.getIsotopePattern())
+            intensities = isotopePattern['calcInt'] * 10 ** 7
+            # mzs = isotopePattern['m/z']
+            length = len(isotopePattern)
+            if not length % 2:
+                length -= 1
+            for i in range(length):
+                intensities[i] += 2 * 10 ** 3 * (-1) ** i
+
+            finIsoPattern = []
+            for i, peak in enumerate(isotopePattern):
+                finIsoPattern.append((peak['m/z'], intensities[i], peak['calcInt'], np.random.rand(), True))
+            finIsoPattern = np.array(finIsoPattern, dtype=peaksArrType)
+        
+        
+        intensityModeller.processIons()'''
 
     '''def test_process_noise_ions(self):
         self.fail()'''
@@ -156,7 +180,7 @@ class TestIntensityModeller(TestCase):
                                     ['a', 'b', 'c', 'd']):
             formula = MolecularFormula(formulaStr)
             theoIsotopePattern = []
-            for peak in formula.calculateIsotopePattern():
+            for peak in formula.calculateIsotopePattern(0.996):
                 mz, intensity = round(peak['m/z'],0) / 2, peak['calcInt'] * 10 ** 7 * i
                 theoIsotopePattern.append((mz, intensity, peak['calcInt'], 0., True))
                 if mz in allPeaks.keys():
@@ -182,7 +206,7 @@ class TestIntensityModeller(TestCase):
             #observedIons[key] = ion
         formula = MolecularFormula('C155H290N30O10')
         isotopePattern = []
-        for peak in formula.calculateIsotopePattern():
+        for peak in formula.calculateIsotopePattern(0.996):
             mz, intensity = round(peak['m/z'] / 2, 2), peak['calcInt'] * 10 ** 7
             isotopePattern.append((mz, intensity, peak['calcInt'], 0., True))
         isotopePattern = np.array(isotopePattern, dtype=dtype)
@@ -249,6 +273,18 @@ class TestIntensityModeller(TestCase):
         self.assertEqual(simplePattern[1], self.intensityModeller.checkForOverlaps(
                 self.intensityModeller.getObservedIons()[simplePattern[0]]))
 
+    def test_for_intact(self):
+        d = getCalibratedSpectrum()
+        d['spectrumHandler'].findIons(d['libraryBuilder'].getNeutralLibrary())
+        self._intensityModeller = IntensityModeller(ConfigurationHandlerFactory.getConfigHandler().getAll(), d['spectrumHandler'].getNoiseLevel())
+        for ion in d['spectrumHandler'].getFoundIons():
+            self._intensityModeller.processIons(ion)
+        for ion in d['spectrumHandler']._ionsInNoise:
+            self._intensityModeller.processNoiseIons(ion)
+        sameMonoisotopics = self._intensityModeller.findSameMonoisotopics()
+        if len(sameMonoisotopics) == 0:
+            complexPatterns = self._intensityModeller.remodelOverlaps()
+            self._intensityModeller.remodelComplexPatterns(complexPatterns, [])
 
     '''def test_remodel_complex_patterns(self):
         self.fail()'''

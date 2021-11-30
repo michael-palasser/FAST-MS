@@ -3,12 +3,11 @@ import subprocess
 import numpy as np
 import os
 from re import findall
-from datetime import datetime
 
-from src.Services import SequenceService
+from src.services.DataServices import SequenceService
 from src.entities.Ions import Fragment,FragmentIon
-from src.top_down.Analyser import Analyser
-from src.top_down.ExcelWriter import BasicExcelWriter
+from src.services.analyser_services.Analyser import Analyser
+from src.services.export_services.ExcelWriter import BasicExcelWriter
 from src import path
 
 
@@ -30,9 +29,9 @@ def run(mainWindow):
     :param (PyQt5.QtWidgets.QMainWindow | Any) mainWindow: Qt parent
     '''
     service = SequenceService()
-    sequenceName = 'neoRibo'
+    sequenceName = 'CR_1_2'
     sequence = service.get(sequenceName).getSequenceList()
-    modification = 'CMCT'
+    modification = '+DEPC'
     '''dlg = OccupancyRecalcStartDialog(mainWindow, service.getAllSequenceNames())
     dlg.exec_()
     if dlg and dlg.sequence != None:
@@ -57,7 +56,7 @@ def run(mainWindow):
     for ion in arr:
         baseLoss = False
         for b in ['-G','-A','-C']:
-            if b in ion['name']:
+            if b in ion['name'][-2:]:
                 #print('not', ion['name'])
                 baseLoss = True
         if not baseLoss:
@@ -75,12 +74,15 @@ def run(mainWindow):
             ionList.append(newIon)
 
     """Analysis and Output"""
-    analyser = Analyser(ionList, sequence, 1, modification)
+    analyser = Analyser(ionList, sequence, 1, modification, configs['useAb'])
     excelWriter = BasicExcelWriter(os.path.join(path, "Spectral_data","Occupancies_out.xlsx"))
     excelWriter.writeDate()
     row = excelWriter.writeAbundancesOfSpecies(2, analyser.calculateRelAbundanceOfSpecies()[0])
+    unimportant = []
+    if modification == '+2DEPC+H2O-CO':
+        unimportant = ['+DEPC','+DEPC+H2O-CO', '+72','+62']
     excelWriter.addOccupOrCharges(0,row, sequence,
-                                  analyser.calculateOccupancies(speciesList)[0],1) #ToDo
+                                  analyser.calculateOccupancies(speciesList, unImportantMods=unimportant)[0],1) #ToDo
     excelWriter.closeWorkbook()
     try:
         subprocess.call(['open', os.path.join(path, "Spectral_data","Occupancies_out.xlsx")])

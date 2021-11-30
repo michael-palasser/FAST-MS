@@ -1,7 +1,7 @@
 from unittest import TestCase
 
-from src.Services import SequenceService
-from src.intact.IntactLibraryBuilder import IntactLibraryBuilder
+from src.services.DataServices import SequenceService
+from src.services.library_services.IntactLibraryBuilder import IntactLibraryBuilder
 from tests.top_down.test_LibraryBuilder import initTestSequences
 
 def initSequences():
@@ -16,9 +16,9 @@ class TestIntactLibraryBuilder(TestCase):
             self.initLibrary()
 
     def initLibrary(self):
-        self.builderRNA = IntactLibraryBuilder('dummyRNA', '-')
-        self.builderRNA_CMCT = IntactLibraryBuilder('dummyRNA', 'CMCT')
-        self.builderProt = IntactLibraryBuilder('dummyProt', '-')
+        self.builderRNA = IntactLibraryBuilder(SequenceService().get('dummyRNA'), '-')
+        self.builderRNA_CMCT = IntactLibraryBuilder(SequenceService().get('dummyRNA'), 'CMCT')
+        self.builderProt = IntactLibraryBuilder(SequenceService().get('dummyProt'), '-')
 
 
     """def test_create_library(self):

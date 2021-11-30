@@ -10,16 +10,17 @@ from src.MolecularFormula import MolecularFormula
 from src.entities.Ions import Fragment
 from src.entities.SearchSettings import SearchSettings
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
-from src.top_down.LibraryBuilder import FragmentLibraryBuilder
-from src.top_down.SpectrumHandler import SpectrumHandler, getErrorLimit, getMz, calculateError
+from src.services.library_services.FragmentLibraryBuilder import FragmentLibraryBuilder
+from src.services.assign_services.TD_SpectrumHandler import SpectrumHandler
+from src.services.assign_services.AbstractSpectrumHandler import getErrorLimit, calculateError, getMz
 from tests.test_MolecularFormula import averaginine, averagine
 from tests.top_down.test_LibraryBuilder import initTestSequences
 
 
 def initTestLibraryBuilder(charge=-3, modif='CMCT'):
     initTestSequences()
-    configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
-    filePath = os.path.join(path, 'tests', 'top_down', 'dummySpectrum.txt')
+    configs = ConfigurationHandlerFactory.getConfigHandler().getAll()
+    filePath = os.path.join(path, 'tests', 'test_files', 'dummySpectrum.txt')
     settings = {'sequName': 'dummyRNA', 'charge': charge, 'fragmentation': 'RNA_CAD', 'modifications': modif,
                 'nrMod': 1, 'spectralData': filePath, 'noiseLimit': 10 ** 6, 'fragLib': ''}
     props = SearchSettings(settings['sequName'], settings['fragmentation'], settings['modifications'])
@@ -32,7 +33,7 @@ def initTestLibraryBuilder(charge=-3, modif='CMCT'):
 class TestSpectrumHandler(TestCase):
     def setUp(self):
         '''filePath = os.path.join(path, 'tests', 'dummySpectrum.txt')
-        self._configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
+        self._configs = ConfigurationHandlerFactory.getConfigHandler().getAll()
 
         self.settings = {'sequName': 'dummyRNA', 'charge': -3, 'fragmentation': 'RNA_CAD', 'modifications': 'CMCT',
                     'nrMod': 1, 'spectralData': filePath, 'noiseLimit': 10**5, 'fragLib': ''}
@@ -41,17 +42,18 @@ class TestSpectrumHandler(TestCase):
         self.builder.createFragmentLibrary()
         self.builder.addNewIsotopePattern()'''
         self.configs, self.settings, self.props, self.builder = initTestLibraryBuilder()
-        self.spectrumHandler = SpectrumHandler(self.props, self.builder.getPrecursor(), self.settings)
+        self.spectrumHandler = SpectrumHandler(self.props, self.builder.getPrecursor(), self.settings, self.configs)
 
         self.settingsProt = {'sequName': 'dummyProt', 'charge': 4, 'fragmentation': 'Protein_CAD', 'modifications': '-',
-                             'nrMod': 0, 'spectralData': os.path.join(path, 'tests', 'top_down', 'dummySpectrum.txt'),
+                             'nrMod': 0, 'spectralData': os.path.join(path, 'tests', 'test_files', 'dummySpectrum.txt'),
                              'noiseLimit': 10 ** 5, 'fragLib': ''}
         self.propsProt = SearchSettings(self.settingsProt['sequName'], self.settingsProt['fragmentation'],
                                         self.settingsProt['modifications'])
         self.builderProt = FragmentLibraryBuilder(self.propsProt, 0)
         self.builderProt.createFragmentLibrary()
-        self.spectrumHandlerProt = SpectrumHandler(self.propsProt, self.builderProt.getPrecursor(), self.settingsProt)
-        self.spectrumHandler.setNormalizationFactor(self.spectrumHandler.getNormalizationFactor())
+        self.spectrumHandlerProt = SpectrumHandler(self.propsProt, self.builderProt.getPrecursor(), self.settingsProt,
+                                                   self.configs)
+        self.spectrumHandler.setNormalisationFactor(self.spectrumHandler.getNormalisationFactor())
         '''builder2 = FragmentLibraryBuilder(self.props,2)
         builder2.createFragmentLibrary()
         settings2 = self.settings
@@ -63,7 +65,7 @@ class TestSpectrumHandler(TestCase):
         self.assertEqual(5, self.spectrumHandler.calcPrecCharge(-6, 1))
 
     def test_add_spectrum_from_csv_and_txt(self):
-        with open(os.path.join(path, 'tests', 'top_down', 'dummySpectrum.csv'), 'r') as f:
+        with open(os.path.join(path, 'tests', 'test_files', 'dummySpectrum.csv'), 'r') as f:
             fromCsv = self.spectrumHandler.addSpectrumFromCsv(f)
         with open(self.settings['spectralData'], 'r') as f:
             fromTxt = self.spectrumHandler.addSpectrumFromTxt(f)
@@ -77,9 +79,11 @@ class TestSpectrumHandler(TestCase):
         self.assertAlmostEqual(1800 + self.configs['upperBoundTolerance'], self.spectrumHandler.findUpperBound())
 
     def test_calculate_noise(self):
+        window = 40
         for i in range(10):
-            self.assertAlmostEqual(0.95, self.spectrumHandler.calculateNoise(400 + i * 100, 40) / (
-                        10 ** 6 + 100 * 400 + i * 100), delta=0.1)
+            point = 400 + i * 100
+            self.assertAlmostEqual(1.05, self.spectrumHandler.calculateNoise(point, window) / (
+                        10 ** 6 + 100 * point), delta=0.12)
 
     def test_get_peaks_in_window(self):
         allPeaks = np.column_stack((np.arange(100., 300.), np.ones(200)))
@@ -97,50 +101,47 @@ class TestSpectrumHandler(TestCase):
         self.assertAlmostEqual(2 * zEffect, self.spectrumHandler.getModCharge(fragment2))
 
     def test_get_normalization_factor(self):
-        normalizationFactor = abs(self.settings['charge']) / (len(self.props.getSequenceList()) - 1)
-        self.assertAlmostEqual(normalizationFactor, self.spectrumHandler.getNormalizationFactor())
+        normalisationFactor = abs(self.settings['charge']) / (len(self.props.getSequenceList()) - 1)
+        self.assertAlmostEqual(normalisationFactor, self.spectrumHandler.getNormalisationFactor())
 
     def test_get_charge_range(self):
         nrP = len(self.props.getSequenceList()) - 1
         precModCharge = self.spectrumHandler.getModCharge(Fragment('c', 3, '+CMCT', '', [], 0))
-        self.spectrumHandler.setNormalizationFactor(self.spectrumHandler.getNormalizationFactor())
+        #self.spectrumHandler.setNormalisationFactor(self.spectrumHandler.getNormalisationFactor())
         tolerance = self.configs['zTolerance']
         precCharge = abs(self.settings['charge'])
-        self.spectrumHandlerProt.setNormalizationFactor(self.spectrumHandlerProt.getNormalizationFactor())
-
-        rangeCalc = self.spectrumHandler.getChargeRange(Fragment('y', 1, '', MolecularFormula({'P': 0}), [], 0),
-                                                        precModCharge)
+        #self.spectrumHandlerProt.setNormalisationFactor(self.spectrumHandlerProt.getNormalisationFactor())
+        self.spectrumHandler.setPrecModCharge(precModCharge)
+        rangeCalc = self.spectrumHandler.getChargeRange(Fragment('y', 1, '', MolecularFormula({'P': 0}), [], 0))
         self.assertEqual(0, rangeCalc.stop)
 
         rangeTheo = self.getRange(precCharge / nrP + precModCharge, tolerance, precCharge)
-        rangeCalc = self.spectrumHandler.getChargeRange(Fragment('c', 3, '', MolecularFormula({'P': 1}), [], 0),
-                                                        precModCharge)
+        rangeCalc = self.spectrumHandler.getChargeRange(Fragment('c', 3, '', MolecularFormula({'P': 1}), [], 0))
         self.assertEqual(rangeTheo.start, rangeCalc.start)
         self.assertEqual(rangeTheo.stop, rangeCalc.stop)
 
         rangeTheo = self.getRange(2 * precCharge / nrP + precModCharge, tolerance, precCharge)
-        rangeCalc = self.spectrumHandler.getChargeRange(Fragment('c', 3, '', MolecularFormula({'P': 2}), [], 0),
-                                                        precModCharge)
+        rangeCalc = self.spectrumHandler.getChargeRange(Fragment('c', 3, '', MolecularFormula({'P': 2}), [], 0))
         self.assertEqual(rangeTheo.start, rangeCalc.start)
         self.assertEqual(rangeTheo.stop, rangeCalc.stop)
 
         rangeTheo = self.getRange(2 * precCharge / nrP, tolerance, precCharge)
-        rangeCalc = self.spectrumHandler.getChargeRange(Fragment('c', 3, '+CMCT', MolecularFormula({'P': 2}), [], 0),
-                                                        precModCharge)
+        rangeCalc = self.spectrumHandler.getChargeRange(Fragment('c', 3, '+CMCT', MolecularFormula({'P': 2}), [], 0))
         self.assertEqual(rangeTheo.start, rangeCalc.start)
         self.assertEqual(rangeTheo.stop, rangeCalc.stop)
 
         rangeTheo = self.getRange(abs(self.settingsProt['charge'] * 3) / len(self.propsProt.getSequenceList()),
                                   tolerance, self.settingsProt['charge'])
+        self.spectrumHandlerProt.setPrecModCharge(0)
         rangeCalc = self.spectrumHandlerProt.getChargeRange(
-            Fragment('c', 3, '', MolecularFormula({'P': 1}), ['G', 'A', 'P'], 0), 0)
+            Fragment('c', 3, '', MolecularFormula({'P': 1}), ['G', 'A', 'P'], 0))
         self.assertEqual(rangeTheo.start, rangeCalc.start)
         self.assertEqual(rangeTheo.stop, rangeCalc.stop)
 
         rangeTheo = self.getRange(abs(self.settingsProt['charge'] * 3) / len(self.propsProt.getSequenceList()) - 1,
                                   tolerance, self.settingsProt['charge'])
         rangeCalc = self.spectrumHandlerProt.getChargeRange(
-            Fragment('c', 3, '', MolecularFormula({'P': 1}), ['G', 'A', 'P'], 1), 0)
+            Fragment('c', 3, '', MolecularFormula({'P': 1}), ['G', 'A', 'P'], 1))
         self.assertEqual(rangeTheo.start, rangeCalc.start)
         self.assertEqual(rangeTheo.stop, rangeCalc.stop)
 
@@ -182,10 +183,13 @@ class TestSpectrumHandler(TestCase):
             theoPeak['m/z'] += 100
 
     def getDummyPeak(self, theoPeak, outside=False):
+        configs = ConfigurationHandlerFactory.getConfigHandler().getAll()
         if outside == False:
-            randomError = np.random.rand(1) * (-1) ** (np.random.randint(2)) * getErrorLimit(theoPeak['m/z'])
+            randomError = np.random.rand(1) * (-1) ** (np.random.randint(2)) * getErrorLimit(theoPeak['m/z'],
+                                                                            configs['k'], configs['d'])
         else:
-            randomError = (np.random.rand(1) + 1) * (-1) ** (np.random.randint(2)) * getErrorLimit(theoPeak['m/z'])
+            randomError = (np.random.rand(1) + 1) * (-1) ** (np.random.randint(2)) * getErrorLimit(theoPeak['m/z'],
+                                                                            configs['k'], configs['d'])
         mz = theoPeak['m/z'] * (1 + randomError / 10 ** 6)
         return np.array([(mz[0], (theoPeak['calcInt'] + np.random.rand(1) / 10 * (-1) ** (np.random.randint(2)))[0])]), \
                randomError[0]
@@ -218,7 +222,7 @@ class TestSpectrumHandler(TestCase):
         upperBound = self.spectrumHandler.getUpperBound()
         for i, fragment in enumerate(self.builder.getFragmentLibrary()):
             isotopePattern = fragment.getIsotopePattern()
-            for z in self.spectrumHandler.getChargeRange(fragment, precModCharge):
+            for z in self.spectrumHandler.getChargeRange(fragment):
                 theoreticalPeaks = deepcopy(isotopePattern)
                 # if self.__settings['dissociation'] in ['ECD', 'EDD', 'ETD'] and fragment.number == 0:
                 #    theoreticalPeaks['mass'] += ((self.protonMass-self.eMass) * (self.__charge - z))
@@ -259,7 +263,7 @@ class TestSpectrumHandler(TestCase):
         for i in range(2):
             fragment = library[np.random.randint(low=0, high=len(library))]
             isotopePattern = fragment.getIsotopePattern()
-            for z in self.spectrumHandler.getChargeRange(fragment, precModCharge):
+            for z in self.spectrumHandler.getChargeRange(fragment):
                 theoreticalPeaks = deepcopy(isotopePattern)
                 theoreticalPeaks['m/z'] = getMz(theoreticalPeaks['m/z'], z * -1,
                                                 fragment.getRadicals())
@@ -295,9 +299,9 @@ class TestSpectrumHandler(TestCase):
 
     def test_get_charged_isotope_pattern(self):
         configs, settings, props, builder = initTestLibraryBuilder(30)
-        spectrumHandlerPos = SpectrumHandler(props, builder.getPrecursor(), settings)
+        spectrumHandlerPos = SpectrumHandler(props, builder.getPrecursor(), settings, configs)
         configs, settings, props, builder = initTestLibraryBuilder(-30)
-        spectrumHandlerNeg = SpectrumHandler(props, builder.getPrecursor(), settings)
+        spectrumHandlerNeg = SpectrumHandler(props, builder.getPrecursor(), settings, configs)
         spectrumHandlerPos.getProtonIsotopePatterns()
         spectrumHandlerNeg.getProtonIsotopePatterns()
         for i in range(10):
@@ -305,7 +309,7 @@ class TestSpectrumHandler(TestCase):
             molFormulaDummy_RNA = MolecularFormula({key:int(round(val*randNr)) for key,val in averaginine.items()})
             molFormulaDummy_prot = MolecularFormula({key:int(round(val*randNr)) for key,val in averagine.items()})
             for molFormulaDummy_i in [molFormulaDummy_RNA,molFormulaDummy_prot]:
-                exactIsotopePattern = molFormulaDummy_i.calculateIsotopePattern()
+                exactIsotopePattern = molFormulaDummy_i.calculateIsotopePattern(0.996)
                 #neutralIsotopePatternFFT = molFormulaDummy_i.calculateIsotopePatternFFT(1,exactIsotopePattern)
                 exactIsotopePattern['calcInt'] /= np.sum(exactIsotopePattern['calcInt'])
                 #print('exact:',exactIsotopePattern[0])
@@ -313,8 +317,8 @@ class TestSpectrumHandler(TestCase):
                 z = randint(1,maxZ)
                 molForm_i_pos = molFormulaDummy_i.subtractFormula({'H': z})
                 molForm_i_neg = molFormulaDummy_i.addFormula({'H': z})
-                correctedPos = spectrumHandlerPos.getChargedIsotopePattern2(molForm_i_pos, molForm_i_pos.calculateIsotopePattern(),
-                                                                            z)#,neutralIsotopePatternFFT)
+                correctedPos = spectrumHandlerPos.getChargedIsotopePattern2(molForm_i_pos,
+                                                molForm_i_pos.calculateIsotopePattern(0.996),z)#,neutralIsotopePatternFFT)
                 correctedPos['m/z'] =getMz(correctedPos['m/z'], z, 0)
                 exactIsotopePattern_pos = deepcopy(exactIsotopePattern)
                 exactIsotopePattern_pos['m/z']=exactIsotopePattern_pos['m/z']/z-eMass
@@ -322,8 +326,8 @@ class TestSpectrumHandler(TestCase):
                 exactIsotopePattern_neg['m/z']=exactIsotopePattern_neg['m/z']/z+eMass
                 #print(correctedPos['m/z'], exactIsotopePattern['m/z'])
 
-                correctedNeg = spectrumHandlerNeg.getChargedIsotopePattern2(molForm_i_neg, molForm_i_neg.calculateIsotopePattern(),
-                                                                            z)#,neutralIsotopePatternFFT)
+                correctedNeg = spectrumHandlerNeg.getChargedIsotopePattern2(molForm_i_neg,
+                                                                        molForm_i_neg.calculateIsotopePattern(0.996),z)#,neutralIsotopePatternFFT)
                 correctedNeg['m/z'] =getMz(correctedNeg['m/z'], -z, 0)
                 print(self.testIsotopePattern(exactIsotopePattern_pos,correctedPos,deltaCalcInt=1*10e-4))
                 print(self.testIsotopePattern(exactIsotopePattern_neg,correctedNeg,deltaCalcInt=1*10e-4))

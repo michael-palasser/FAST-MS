@@ -3,11 +3,11 @@ from unittest import TestCase
 import numpy as np
 
 from src.Exceptions import InvalidInputException
-from src.IsotopePatternLogics import IsotopePatternLogics
+from src.services.IsotopePatternLogics import IsotopePatternLogics
 from src.MolecularFormula import MolecularFormula
 from src.entities.SearchSettings import SearchSettings, processTemplateName
-from src.top_down.LibraryBuilder import FragmentLibraryBuilder
-from src.top_down.SpectrumHandler import getMz
+from src.services.library_services.FragmentLibraryBuilder import FragmentLibraryBuilder
+from src.services.assign_services.AbstractSpectrumHandler import getMz
 from tests.test_MolecularFormula import RNA_formulaDummy, RNA_pattern
 from tests.top_down.test_LibraryBuilder import initTestSequences
 #from tests.test_MolecularFormula

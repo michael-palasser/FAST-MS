@@ -1,10 +1,9 @@
 from PyQt5 import QtWidgets, QtCore
 
 
-
 class SimpleMainWindow(QtWidgets.QMainWindow):
     '''
-    Used as by TD_searchController, EditorControllers; parent class of StartWindow, IsotopePatternView
+    Used by TD_searchController, EditorControllers; parent class of StartWindow, IsotopePatternView
     '''
     def __init__(self, parent, title):
         super(SimpleMainWindow, self).__init__(parent)
@@ -22,12 +21,10 @@ class SimpleMainWindow(QtWidgets.QMainWindow):
         for i, option in enumerate(newOptions):
             comboBox.setItemText(i, self._translate(self.objectName(), option))
 
-
     def createMenuBar(self):
         self._menubar = QtWidgets.QMenuBar(self)
         self.setMenuBar(self._menubar)
         self._menubar.setGeometry(QtCore.QRect(0, 0, 340, 22))
-
 
     def createMenu(self, name, options, separatorPosition):
         '''

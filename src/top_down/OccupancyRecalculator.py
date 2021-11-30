@@ -6,11 +6,12 @@ import os
 from re import findall
 from PyQt5 import QtWidgets
 
-from src.Services import SequenceService
+from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
+from src.services.DataServices import SequenceService
 from src.entities.Ions import Fragment,FragmentIon
 from src.gui.dialogs.StartDialogs import OccupancyRecalcStartDialog
-from src.top_down.Analyser import Analyser
-from src.top_down.ExcelWriter import BasicExcelWriter
+from src.services.analyser_services.Analyser import Analyser
+from src.services.export_services.ExcelWriter import BasicExcelWriter
 from src import path
 
 
@@ -32,6 +33,7 @@ def run(mainWindow):
     :param (PyQt5.QtWidgets.QMainWindow | Any) mainWindow: Qt parent
     '''
     service = SequenceService()
+    configs = ConfigurationHandlerFactory().getConfigHandler().getAll()
     dlg = OccupancyRecalcStartDialog(mainWindow, service.getAllSequenceNames())
     dlg.exec_()
     if dlg and dlg.getSequence() != None:
@@ -65,7 +67,7 @@ def run(mainWindow):
                 ionList.append(newIon)
 
             """Analysis and Output"""
-            analyser = Analyser(ionList, sequence, 1, modification)
+            analyser = Analyser(ionList, sequence, 1, modification, configs['useAb'])
             excelWriter = BasicExcelWriter(os.path.join(path, "Spectral_data","Occupancies_out.xlsx"))
             excelWriter.writeDate()
             row = excelWriter.writeAbundancesOfSpecies(2, analyser.calculateRelAbundanceOfSpecies()[0])

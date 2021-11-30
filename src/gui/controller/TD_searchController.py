@@ -10,50 +10,42 @@ import os
 
 import numpy as np
 import time
-import pandas as pd
-from PyQt5 import QtWidgets, QtCore
+from PyQt5 import QtWidgets
 
 from src import path
 from src.Exceptions import InvalidIsotopePatternException, InvalidInputException
 from src.entities.Info import Info
-from src.gui.AbstractMainWindows import SimpleMainWindow
-from src.gui.GUI_functions import connectTable, shoot, createComboBox
-from src.gui.IsotopePatternView import AddIonView
-from src.gui.dialogs.AbstractDialogs import AbstractDialog
+from src.gui.controller.AbstractController import AbstractMainController
 from src.gui.tableviews.FragmentationTable import FragmentationTable
+from src.gui.dialogs.CalibrationView import CalibrationView
 from src.gui.widgets.OccupancyWidget import OccupancyWidget
 from src.gui.widgets.SequCovWidget import SequCovWidget
-from src.gui.widgets.InfoView import InfoView
-from src.gui.widgets.Widgets import LoadingWidget
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.repositories.IsotopePatternRepository import IsotopePatternRepository
-from src.top_down.Analyser import Analyser
+from src.services.analyser_services.Analyser import Analyser
 from src.entities.SearchSettings import SearchSettings
-from src.top_down.LibraryBuilder import FragmentLibraryBuilder
-from src.top_down.SearchService import SearchService
-from src.top_down.SpectrumHandler import SpectrumHandler
-from src.top_down.IntensityModeller import IntensityModeller
-from src.top_down.ExcelWriter import ExcelWriter
+from src.services.assign_services.Calibrator import Calibrator
+from src.services.library_services.FragmentLibraryBuilder import FragmentLibraryBuilder
+from src.services.SearchService import SearchService
+from src.services.assign_services.TD_SpectrumHandler import SpectrumHandler
+from src.services.IntensityModeller import IntensityModeller
+from src.services.export_services.ExcelWriter import ExcelWriter
 from src.gui.dialogs.CheckIonView import CheckMonoisotopicOverlapView, CheckOverlapsView
-from src.gui.tableviews.TableModels import IonTableModel
 from src.gui.tableviews.PlotTables import PlotTableView
-from src.gui.tableviews.ShowPeaksViews import PeakView, SimplePeakView
 from src.gui.widgets.SequencePlots import PlotFactory, plotBars
 from src.gui.dialogs.SimpleDialogs import ExportDialog, SelectSearchDlg, OpenSpectralDataDlg, SaveSearchDialog
 #from src.gui.ParameterDialogs import TDStartDialog
 from src.gui.dialogs.StartDialogs import TDStartDialog
-from src.gui.widgets.SpectrumView import SpectrumView
 
-
-def sortIonsByName(ionList):
+"""def sortIonsByName(ionList):
     #return sorted(ionList,key=lambda obj:(obj.type ,obj.number))
-    return sorted(ionList, key=lambda obj: (obj.getName(), obj.getCharge()))
+    return sorted(ionList, key=lambda obj: (obj.getName(), obj.getCharge()))"""
 
 FOTO_SESSION=True
 
 
 #if __name__ == '__main__':
-class TD_MainController(object):
+class TD_MainController(AbstractMainController):
     '''
     Controller class for starting, saving, exporting and loading a top-down search/analysis
     '''
@@ -63,14 +55,14 @@ class TD_MainController(object):
         :param parent:
         :param (bool) new: True if new search, False if old search is loaded
         '''
-        self._mainWindow= window
+        super(TD_MainController, self).__init__(window)
         if new:
             dialog = TDStartDialog(None)
             dialog.exec_()
             if dialog.canceled():
                 return
             self._settings = dialog.newSettings()
-            self._configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
+            self._configs = ConfigurationHandlerFactory.getConfigHandler().getAll()
             self._propStorage = SearchSettings(self._settings['sequName'], self._settings['fragmentation'],
                                                self._settings['modifications'])
             self._info = Info(self._settings, self._configs, self._propStorage)
@@ -90,9 +82,9 @@ class TD_MainController(object):
             #self._search =
             dialog = SelectSearchDlg(parent, searchService.getAllSearchNames(),self.deleteSearch, searchService)
             if dialog.exec_() and not dialog.canceled():
-                self._configs = ConfigurationHandlerFactory.getTD_ConfigHandler().getAll()
+                self._configs = ConfigurationHandlerFactory.getConfigHandler().getAll()
                 start=time.time()
-                self._settings, observedIons, delIons, remIons, searchedZStates, logFile = \
+                self._settings, noiseLevel, observedIons, delIons, remIons, searchedZStates, logFile = \
                     searchService.getSearch(dialog.getName())
                 print('time:', time.time()-start)
                 self._info = Info(logFile)
@@ -112,16 +104,17 @@ class TD_MainController(object):
                         peaks = searchService.getAllAssignedPeaks(observedIons+delIons)
                 self._propStorage = SearchSettings(self._settings['sequName'], self._settings['fragmentation'],
                                                    self._settings['modifications'])
-                self._libraryBuilder = FragmentLibraryBuilder(self._propStorage, self._settings['nrMod'])
+                self._libraryBuilder = FragmentLibraryBuilder(self._propStorage, self._settings['nrMod'],
+                                                              self._configs['maxIso'], self._configs['approxIso'])
                 self._libraryBuilder.createFragmentLibrary()
 
                 self._spectrumHandler = SpectrumHandler(self._propStorage, self._libraryBuilder.getPrecursor(),
-                                                        self._settings, peaks)
+                                                        self._settings, self._configs, peaks)
                 self._spectrumHandler.setSearchedChargeStates(searchedZStates)
-                self._intensityModeller = IntensityModeller(self._configs)
+                self._intensityModeller = IntensityModeller(self._configs, noiseLevel)
                 self._intensityModeller.setIonLists(observedIons, delIons, remIons)
                 self._analyser = Analyser(None, self._propStorage.getSequenceList(), self._settings['charge'],
-                                          self._propStorage.getModificationName())
+                                          self._propStorage.getModificationName(), self._configs['useAb'])
                 self._saved = True
                 self.setUpUi()
 
@@ -136,7 +129,8 @@ class TD_MainController(object):
         models intensities, fixes problems by overlapping ions (2 user inputs possible for deleting ions)
         '''
         print("\n********** Creating fragment library **********")
-        self._libraryBuilder = FragmentLibraryBuilder(self._propStorage, self._settings['nrMod'])
+        self._libraryBuilder = FragmentLibraryBuilder(self._propStorage, self._settings['nrMod'],
+                                                      self._configs['maxIso'], self._configs['approxIso'])
         self._libraryBuilder.createFragmentLibrary()
 
         """read existing ion-list file or create new one"""
@@ -173,14 +167,36 @@ class TD_MainController(object):
             return 1
         #spectralFile = os.path.join(path, 'Spectral_data','top-down', self._settings['spectralData'])
         print("\n********** Importing spectral pattern from:", self._settings['spectralData'], "**********")
-        self._spectrumHandler = SpectrumHandler(self._propStorage, self._libraryBuilder.getPrecursor(), self._settings)
+        self._spectrumHandler = SpectrumHandler(self._propStorage, self._libraryBuilder.getPrecursor(), self._settings,
+                                                self._configs)
+        self._info.spectrumProcessed(self._spectrumHandler.getUpperBound(), self._spectrumHandler.getNoiseLevel())
+        #try:
+        if self._settings['calibration']:
+            allSettings = dict(self._settings)
+            allSettings.update(self._configs)
+            self._calibrator = Calibrator(self._libraryBuilder.getFragmentLibrary(),allSettings,
+                                          self._spectrumHandler.getChargeRange)
+            '''allSettings = dict(self._settings)
+            allSettings.update(self._configs)
+            self._calibrator = Calibrator(self._libraryBuilder.getFragmentLibrary(),allSettings,
+                                          self._spectrumHandler.getChargeRange)
+            dlg = CalibrationView(self._mainWindow, self._calibrator)
+            dlg.exec_()
+            if dlg and not dlg.canceled():
+                self._calibrator.calibratePeaks(self._spectrumHandler.getSpectrum())
+                vals = self._calibrator.getCalibrationValues()
+                self._info.calibrate(vals[0], vals[1], self._calibrator.getQuality(), self._calibrator.getUsedIons())'''
+            if not self.calibrate():
+                return 1
+        #except KeyError:
+        #    pass
         """Finding fragments"""
         print("\n********** Search for ions **********")
         start = time.time()
         self._spectrumHandler.findIons(self._libraryBuilder.getFragmentLibrary())
         print("\ndone\nexecution time: ", round((time.time() - start) / 60, 3), "min\n")
 
-        self._intensityModeller = IntensityModeller(self._configs)
+        self._intensityModeller = IntensityModeller(self._configs, self._spectrumHandler.getNoiseLevel())
         start = time.time()
         print("\n********** Calculating relative abundances **********")
         for ion in self._spectrumHandler.getFoundIons():
@@ -219,12 +235,12 @@ class TD_MainController(object):
             else:
                 return 1
         self._analyser = Analyser(None, self._propStorage.getSequenceList(),
-                                  self._settings['charge'], self._propStorage.getModificationName())
+                                  self._settings['charge'], self._propStorage.getModificationName(), self._configs['useAb'])
         self._info.searchFinished(self._spectrumHandler.getUpperBound())
         print("done")
         return 0
 
-    def setUpUi(self):
+    """def setUpUi(self):
         '''
         Opens a SimpleMainWindow with the ion lists and a InfoView with the protocol
         '''
@@ -247,7 +263,7 @@ class TD_MainController(object):
             self.makeTabWidget(data, name)
         self.verticalLayout.addWidget(self._tabWidget)'''
         self._mainWindow.resize(1000, 900)
-        self._mainWindow.show()
+        self._mainWindow.show()"""
 
 
     def createMenuBar(self):
@@ -258,7 +274,8 @@ class TD_MainController(object):
         self._mainWindow.createMenuBar()
         self._actions = dict()
         _,actions = self._mainWindow.createMenu("File", {'Save': (self.saveAnalysis, None, "Ctrl+S"),
-                                'Export': (self.export,None,None), 'Close': (self.close,None,"Ctrl+Q")}, None)
+                                                         'Export': (self.export,'Exports the results to Excel',None),
+                                                         'Close': (self.close,None,"Ctrl+Q")}, None)
         self._actions.update(actions)
         _,actions = self._mainWindow.createMenu("Edit", {'Repeat ovl. modelling':
                             (self.repeatModellingOverlaps,'Repeat overlap modelling involving user inputs',None),
@@ -280,21 +297,13 @@ class TD_MainController(object):
         self._actions.update(actions)
         '''if self._settings['modifications'] == '-':
             self._actions['Occupancy-Plot'].setDisabled(True)'''
-        if len(self._configs['interestingIons'])<1:
+        '''if len(ConfigurationHandlerFactory.getConfigHandler())<1:
             for action in ['Occupancy-Plot','Charge-Plot','Reduced Charge-Plot']:
                 self._actions[action].setDisabled(True)
-                self._actions[action].setToolTip('Choose ions of interest within "Edit Parameters" menu to use this function')
+                self._actions[action].setToolTip('Choose ions of interest within "Edit Parameters" menu to use this function')'''
 
-    def shootPic(self):
-        widgets = {w.windowTitle():w for w in self._openWindows}
-        item, ok = QtWidgets.QInputDialog.getItem(self._mainWindow, "Shoot",
-                                        "Select the window", list(widgets.keys()), 0, False)
-        if ok and item:
-            p=widgets[item].grab()
-            p.save(os.path.join(path,'pics',item+'.png'), 'png')
-            print('Shoot taken')
 
-    def fillMainWindow(self):
+    """def fillMainWindow(self):
         '''
         Makes a QTabWidget with the ion tables
         :return:
@@ -340,17 +349,19 @@ class TD_MainController(object):
         table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         scrollArea.setWidget(table)
-        return scrollArea, table
+        return scrollArea, table"""
 
     def makeTable(self, parent, data,fun):
         '''
         Makes an ion table
         '''
-        tableModel = IonTableModel(data,
+        return super(TD_MainController, self).makeTable(parent, data,fun,
+                    self._intensityModeller.getPrecRegion(self._settings['sequName'], abs(self._settings['charge'])))
+        """tableModel = IonTableModel(data,
                                    self._intensityModeller.getPrecRegion(self._settings['sequName'], abs(self._settings['charge'])),
                                    self._configs['shapeMarked'], self._configs['scoreMarked'])
-        """self.proxyModel = QSortFilterProxyModel()
-        self.proxyModel.setSourceModel(model)"""
+        '''self.proxyModel = QSortFilterProxyModel()
+        self.proxyModel.setSourceModel(model)'''
         table = QtWidgets.QTableView(parent)
         table.setModel(tableModel)
         table.setSortingEnabled(True)
@@ -361,11 +372,11 @@ class TD_MainController(object):
         #table.setSelectionBehavior(QAbstractItemView.SelectRows)
         table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        return table
+        return table"""
 
 
 
-    def showOptions(self, table, pos):
+    """def showOptions(self, table, pos):
         '''
         Right-click options of an ion table
         '''
@@ -502,7 +513,7 @@ class TD_MainController(object):
         self._tabWidget.hide()
         del self._tabWidget
         self._tabWidget = QtWidgets.QTabWidget(self._centralwidget)
-        self.fillMainWindow()
+        self.fillMainWindow()"""
 
     '''def dumb(self):
         print('not yet implemented')
@@ -517,18 +528,19 @@ class TD_MainController(object):
         '''
         exportConfigHandler = ConfigurationHandlerFactory.getExportHandler()
         lastOptions= exportConfigHandler.getAll()
-        dlg = ExportDialog(self._mainWindow, lastOptions)
+        dlg = ExportDialog(self._mainWindow, ('occupancies','charges','reduced charges', 'sequence coverage'), lastOptions)
         dlg.exec_()
         if dlg and not dlg.canceled():
             self._info.export()
             newOptions = dlg.getOptions()
             exportConfigHandler.write(newOptions)
-            outputPath, filename = dlg.getDir(), dlg.getFilename()
+            filename = dlg.getFilename()
             if filename == '':
                 inputFileName = os.path.split(self._settings['spectralData'])[-1]
                 filename = inputFileName[0:-4] + '_out' + '.xlsx'
             elif filename[-5:] != '.xlsx':
                 filename += '.xlsx'
+            outputPath = newOptions['dir']
             if outputPath == '':
                 outputPath = os.path.join(path, 'Spectral_data', 'top-down')
             output = os.path.join(outputPath, filename)
@@ -555,7 +567,7 @@ class TD_MainController(object):
                     return
 
 
-    def close(self):
+    """def close(self):
         '''
         Closes the search
         '''
@@ -626,13 +638,13 @@ class TD_MainController(object):
             df.to_clipboard(index=False,header=True)
         elif action == copyTableAction:
             df=pd.DataFrame(data=table.model().getData(), columns=table.model().getHeaders())
-            df.to_clipboard(index=False,header=True)
+            df.to_clipboard(index=False,header=True)"""
 
     '''def showLogFile(self):
         self._infoView.show()'''
 
-    def getIonList(self):
-        return list(self._intensityModeller.getObservedIons().values())
+    """def getIonList(self):
+        return list(self._intensityModeller.getObservedIons().values())"""
 
     def showFragmentation(self):
         '''
@@ -657,11 +669,14 @@ class TD_MainController(object):
         Makes a widget with 2 tables showing the relative occupancies and the absolute ones and plots both data sets
         '''
         #dlg = QtWidgets.QInputDialog()
+        interestingIons = self.getInterestingIons()
+        if interestingIons is None:
+            return
         modification,ok = QtWidgets.QInputDialog.getText(self._mainWindow,'Occupancy Plot', 'Enter the modification: ',
                                                          text=self._propStorage.getModificationName())
         if ok and modification!='':
             self._analyser.setIons(self.getIonList())
-            percentageDict, absDict = self._analyser.calculateOccupancies(self._configs.get('interestingIons'), modification,
+            percentageDict, absDict = self._analyser.calculateOccupancies(interestingIons, modification,
                                                                  self._propStorage.getUnimportantModifs())
             '''if percentageDict == None:
                 dlg = QtWidgets.QMessageBox(self._mainWindow, title='Unvalid Request',
@@ -673,8 +688,8 @@ class TD_MainController(object):
             forwardVals = self._propStorage.filterByDir(percentageDict,1)
             backwardVals = self._propStorage.filterByDir(percentageDict,-1)
             sequence = self._propStorage.getSequenceList()
-            plotFactory.showOccupancyPlot(sequence, forwardVals, backwardVals,
-                                          self._settings['nrMod'], modification)
+            self._openWindows.append(plotFactory.showOccupancyPlot(sequence, forwardVals, backwardVals,
+                                                                   self._settings['nrMod'], modification))
 
             #absTable = np.zeros((len(sequence),len(absDict.keys())))
             forwardAbsVals = self._propStorage.filterByDir(absDict,1)
@@ -695,6 +710,13 @@ class TD_MainController(object):
             self._openWindows.append(occupView)
             plotBars(sequence, np.array(absTable)[:,2:-2].astype(float), headers, 'Abs. Occupancies: '+modification, True)
 
+    def getInterestingIons(self):
+        interestingIons = ConfigurationHandlerFactory.getConfigHandler().get('interestingIons')
+        if len(interestingIons) < 1:
+            raise InvalidInputException('No interesting ions found',
+                'Choose ions of interest within "Edit Parameters" menu to use this function')
+        return interestingIons
+
     def processAbsValues(self, arrays):
         #rows, columns = len(arrays[0]), len(arrays)
         #finArray = np.zeros((rows, 2*columns))
@@ -711,15 +733,18 @@ class TD_MainController(object):
         :param (bool) reduced: True if the ion intensities should be divided by their charge
         '''
         self._analyser.setIons(self.getIonList())
-        chargeDict, minMaxCharges = self._analyser.analyseCharges(self._configs.get('interestingIons'), reduced)
+        interestingIons = self.getInterestingIons()
+        if interestingIons is None:
+            return
+        chargeDict, minMaxCharges = self._analyser.analyseCharges(interestingIons, reduced)
         plotFactory1 = PlotFactory(self._mainWindow)
         #plotFactory2 = PlotFactory(self._mainWindow)
         forwardVals = self._propStorage.filterByDir(chargeDict,1)
         backwardVals = self._propStorage.filterByDir(chargeDict,-1)
         forwardLimits = self._propStorage.filterByDir(minMaxCharges,1)
         backwardLimits = self._propStorage.filterByDir(minMaxCharges,-1)
-        plotFactory1.showChargePlot(self._propStorage.getSequenceList(), forwardVals, backwardVals,
-                                    self._settings['charge'], forwardLimits, backwardLimits)
+        self._openWindows.append(plotFactory1.showChargePlot(self._propStorage.getSequenceList(), forwardVals,
+                                                backwardVals,self._settings['charge'], forwardLimits, backwardLimits))
         chargeView = PlotTableView(self._analyser.toTable(forwardVals.values(), backwardVals.values()),
                                        list(chargeDict.keys()), 'Av. Charge per Fragment', 1)
         self._openWindows.append(chargeView)
@@ -766,11 +791,11 @@ class TD_MainController(object):
         print('Saving analysis', self._savedName)
         self._info.save()
         start=time.time()
-        searchService.saveSearch(self._savedName, self._settings, self._intensityModeller.getObservedIons().values(),
+        searchService.saveSearch(self._savedName, self._spectrumHandler.getNoiseLevel(), self._settings,
+                                 self._intensityModeller.getObservedIons().values(),
                                  self._intensityModeller.getDeletedIons().values(),
                                  self._intensityModeller.getRemodelledIons(),
                                  self._spectrumHandler.getSearchedChargeStates(), self._info.toString())
         self._saved = True
-        print('time:',time.time()-start)
         print('done')
         self._infoView.update()

@@ -21,6 +21,7 @@ class BasicExcelWriter(object):
         self._worksheet1 = self._workbook.add_worksheet('analysis')
         self._percentFormat = self._workbook.add_format({'num_format': '0.0%'})
         self._format2digit = self._workbook.add_format({'num_format': '0.00'})
+        self._intact = False
 
     def writeDate(self):
         date = datetime.now().strftime("%d/%m/%Y %H:%M")
@@ -141,7 +142,8 @@ class BasicExcelWriter(object):
         :return:
         '''
         chart = self._workbook.add_chart({'type': 'line'})
-        lastRow = row + len(sequence)
+        sequLength= len(sequence)
+        lastRow = row + sequLength
         col = 2
         '''if args and args[0]:
             backwardFrags = args[0]
@@ -166,12 +168,13 @@ class BasicExcelWriter(object):
                     'line': {'width': 2.5},
                 })
             col+=1
-        chart.set_size({'width': len(sequence) * 20 + 100, 'height': 400})
+        chart.set_size({'width': sequLength * 20 + 100, 'height': 400})
         chart.set_title({'name': title})
         chart.set_x_axis({'name': 'cleavage site',
                            'name_font': {'size': 13},
-                           'position_axis': 'on_tick',
-                           'num_font': {'size': 10}, })
+                          'min':0, 'max':sequLength-1,
+                           'position_axis': 'between',
+                           'num_font': {'size': 10},})
         chart.set_y_axis({'name': '5\'-O /%',
                            'name_font': {'size': 13},
                            'min': 0, 'max': maxVal,
@@ -430,7 +433,7 @@ class ExcelWriter(BasicExcelWriter):
         worksheet.write_row(row,col,('m/z','z','intensity','fragment','error','used'))
         row += 1
         for ion in ionList:
-            if ion.getType() in self._configs['interestingIons']:
+            if self._intact or ion.getType() in self._configs['interestingIons']:
                 for peak in ion.getIsotopePattern():
                     worksheet.write(row, col, peak['m/z'], self._format5digit)
                     worksheet.write(row,col+1,ion.getCharge())
@@ -451,7 +454,7 @@ class ExcelWriter(BasicExcelWriter):
         self._worksheet6.write_row(0, 0, ('name', 'formula', 'searched charge st.'))
         row =1
         for fragment in listOfFragments:
-            if fragment.getType() in self._configs['interestingIons']:
+            if self._intact or fragment.getType() in self._configs['interestingIons']:
                 self._worksheet6.write(row, 0, fragment.getName())
                 self._worksheet6.write(row, 1, fragment.getFormula().toString())
                 #self._worksheet6.write(row, 2, self.listToString(chargeStates[fragment.getName()]))

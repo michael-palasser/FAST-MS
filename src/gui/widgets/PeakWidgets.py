@@ -4,7 +4,7 @@ import pandas as pd
 from PyQt5 import QtWidgets, QtCore
 
 from src.Exceptions import InvalidInputException
-from src.gui.GUI_functions import connectTable
+from src.gui.GUI_functions import connectTable, showOptions
 
 
 class GeneralPeakWidget(QtWidgets.QTableWidget):
@@ -128,7 +128,6 @@ class IsoPatternPeakWidget(GeneralPeakWidget):
         super(IsoPatternPeakWidget, self).__init__(parent, ('m/z','int. (spectrum)','int. (calc.)', 'used'),
                                          ('{:10.5f}','{:11d}', '{:11d}', ''), peaks)
 
-
     def readTable(self):
         itemList = []
         for row in range(self.rowCount()):
@@ -146,9 +145,14 @@ class IsoPatternPeakWidget(GeneralPeakWidget):
         '''
         Returns a dataframe with the peak data
         '''
-        df = pd.DataFrame(data=self._peaks, columns=self._headers)
+        '''df = pd.DataFrame(data=self._peaks, columns=self._headers)
+        df['int. (spectrum)'] = self._peaks['relAb']
+        df['int. (calc.)'] = self._peaks['calcInt']'''
+        df = pd.DataFrame()#data=self._peaks), columns=self._headers)
+        df['m/z'] = self._peaks['m/z']
         df['int. (spectrum)'] = self._peaks['relAb']
         df['int. (calc.)'] = self._peaks['calcInt']
+        df['used'] = self._peaks['used']
         return df
 
 

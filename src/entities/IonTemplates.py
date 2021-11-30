@@ -71,7 +71,6 @@ class PrecursorItem(AbstractItem3):
         :param (tuple[str,str,str,str,int|str,int]) item: name, atomic gain, atomic loss, corresponding residue,
             number of radicals, enabled
         '''
-        print(item)
         super(PrecursorItem, self).__init__(name=item[0], gain=item[1], loss=item[2],
                                             residue=item[3], radicals=item[4], enabled=item[5])
 
@@ -178,27 +177,36 @@ class IntactPattern(PatternWithItems):
     def __init__(self,  name, items, id):
         '''
         :param (str) name: name of the pattern
-        :type items: list[IntactModification] | list[tuple[str,str,str,int,int]] | list[list[str,str,str,int,int]]
+        :type items: list[IntactModification] | list[tuple[str,str,str,int,int,int]] | list[list[str,str,str,int,int,int]]
         :param items: list of modification templates
         :param (int | None) id:
         '''
         super(IntactPattern, self).__init__(name, items, id)
 
 
+    def toString(self):
+        string = '\nName\tGain\tLoss\tNr.Mod.\tRad.\tEnabled'
+        for item in self._items:
+            string += '\n\t' + '\t'.join(item.toString())
+        return string
+
 class IntactModification(AbstractItem2):
     '''
-
+    Template for intact modifications
     '''
     def __init__(self, item):
         '''
-        :param (tuple[str,str,str,int,int] | list[str,str,str,int,int]) item: name, atomic gain, atomic loss,
-            nr. of modifications on object, enabled
+        :param (tuple[str,str,str,int,int, int] | list[str,str,str,int,int, int]) item: name, atomic gain, atomic loss,
+            no. of modifications on object, radicals, enabled
         '''
         item = self.processItem(item)
-        super(IntactModification, self).__init__(name=item[0], enabled=item[4], gain=item[1], loss=item[2])
+        super(IntactModification, self).__init__(name=item[0], gain=item[1], loss=item[2], radicals=item[4], enabled=item[5])
         self._nrMod = item[3]
 
     def getNrMod(self):
         return self._nrMod
 
+    def toString(self):
+        parentVals = super(IntactModification, self).toString()
+        return parentVals[0:-2]+[str(self._nrMod)]+ parentVals[-2:-1]
 

@@ -9,12 +9,12 @@ import subprocess
 import traceback
 from datetime import datetime
 
-from src.Exceptions import InvalidInputException
-from src.intact.IntactLibraryBuilder import IntactLibraryBuilder
-from src.intact.IntactFinder import Finder
+from src.services.DataServices import SequenceService
+from src.services.library_services.IntactLibraryBuilder import IntactLibraryBuilder
+from src.services.assign_services.Finders import IntactFinder
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
-from src.intact.IntactAnalyser import IntactAnalyser
-from src.intact.IntactExcelWriter import IntactExcelWriter
+from src.services.analyser_services.IntactAnalyser import IntactAnalyser
+from src.services.export_services.IntactExcelWriter import IntactExcelWriter
 from src import path
 #from src.gui.ParameterDialogs import IntactStartDialog
 
@@ -30,47 +30,55 @@ def run():
     6.  Output in xlsx file
     '''
     #dialog = IntactStartDialog()
-    configHandler = ConfigurationHandlerFactory.getIntactHandler()
-    #files = [os.path.join(path, 'Spectral_data','intact', file) for file in configHandler.get('spectralData')]
+    settings = ConfigurationHandlerFactory.getIntactHandler().getAll()
+    #files = [os.path.join(path, 'Spectral_data','intact', file) for file in settings['spectralData']]
     #print(files)
-    #spectralFile = os.path.join(path, 'Spectral_data','intact', configHandler.get('spectralData'))
+    #spectralFile = os.path.join(path, 'Spectral_data','intact', settings['spectralData'])
 
     """theoretical values"""
     print("\n********** calculating theoretical values **********")
-    libraryBuilder = IntactLibraryBuilder(configHandler.get('sequName'), configHandler.get('modification'))
-    finder = Finder(libraryBuilder.createLibrary(),configHandler)
+    libraryBuilder = IntactLibraryBuilder(SequenceService().get(settings['sequName']), settings['modifications'])
+    configs = ConfigurationHandlerFactory.getConfigHandler().getAll()
+    for key in ('errorLimitCalib','maxStd', 'k', 'd'):
+        settings[key] = configs[key]
+    finder = IntactFinder(libraryBuilder.createLibrary(), settings)
 
     """calibrate spectra"""
     print("\n********** calibrating spectralFile **********")
     #with open(spectralFile) as f:
     #    finder.readData(f)
-    finder.readData(configHandler.get('spectralData'))
-    listOfCalibrationVals = finder.calibrate()
+    finder.readData(settings['spectralData'])
+    listOfCalibrationVals = None
+    if settings['calibration']:
+        listOfCalibrationVals = finder.calibrateAll()
 
     """find ions"""
     print("\n********** finding ions **********")
-    analyser = IntactAnalyser(finder.findIons(configHandler.get('k'), configHandler.get('d'), True))
+    analyser = IntactAnalyser(finder.findIons(settings['k'], settings['d'], True), configs['useAb'])
 
     """output"""
     print("\n********** output **********")
-    output = configHandler.get('output')
+    output = settings['output']
     if output == '':
         output =  datetime.now().strftime("%d.%m.%Y") + '.xlsx'
     else:
         output = os.path.join(path, 'Spectral_data','intact', output + '.xlsx')
     listOfParameters = []
-    for file in configHandler.get('spectralData'):
-        parameters = {'data:':file,'date:':datetime.now().strftime("%d/%m/%Y %H:%M")}
-        parameters.update(configHandler.getAll())
+    for file in settings['spectralData']:
+        parameters = {'date:':datetime.now().strftime("%d/%m/%Y %H:%M"), 'data:':file}
+        parameters.update(settings)
         del parameters['spectralData']
         listOfParameters.append(parameters)
     excelWriter = IntactExcelWriter(output)
+    #abundanceInput = False
+    #if settings['inputMode'] != 'intensities':
+    #    abundanceInput = True
     avCharges, avErrors, stddevs = analyser.calculateAvChargeAndError()
     try:
-        excelWriter.writeAnalysis(listOfParameters, analyser.getSortedIonList(),
-                                  avCharges, avErrors, stddevs, listOfCalibrationVals,
-                                  analyser.calculateAverageModification(),
-                                  analyser.calculateModifications())
+        excelWriter.writeIntactAnalysis(listOfParameters, analyser.getSortedIonList(),
+                                        avCharges, avErrors, stddevs, listOfCalibrationVals,
+                                        analyser.calculateAverageModification(),
+                                        analyser.calculateModifications())
         print("saved in:", output)
     except:
         traceback.print_exc()

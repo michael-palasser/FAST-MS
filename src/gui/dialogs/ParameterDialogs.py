@@ -2,28 +2,32 @@ from PyQt5 import QtCore, QtWidgets
 from os.path import join
 
 from src import path
+#from src.gui.GUI_functions import shoot
+from src.gui.GUI_functions import shoot
 from src.gui.dialogs.AbstractDialogs import DialogWithTabs
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 
 dataPath = join(path, 'src', 'data')
 
 
-class TD_configurationDialog(DialogWithTabs):
+class ConfigurationDialog(DialogWithTabs):
     '''
     Dialog for editing top-down search parameters/configurations
     '''
     def __init__(self, parent):
         super().__init__(parent, "Configurations")
-        self._configHandler = ConfigurationHandlerFactory.getTD_ConfigHandler()
+        self._configHandler = ConfigurationHandlerFactory.getConfigHandler()
         self._interestingIons = list()
         self._addIons = list()
         self._tabs = dict()
         self._boxSizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         self.setupUi(self)
         self._verticalLayout.addWidget(self._buttonBox, 0, QtCore.Qt.AlignRight)
+        shoot(self)
+
 
     def createTab(self,name):
-        tab = super(TD_configurationDialog, self).createTab(name)
+        tab = super(ConfigurationDialog, self).createTab(name)
         verticalLayout = QtWidgets.QVBoxLayout(tab)
         tab.setLayout(verticalLayout)
         return tab
@@ -106,54 +110,72 @@ class TD_configurationDialog(DialogWithTabs):
     def setupUi(self, configDialog):
         configDialog.move(200,100)
         self._spectrumTab = self.createTab("spectrum")
-        self._threshold1Tab = self.createTab("thresholds 1")
-        self._threshold2Tab = self.createTab("thresholds 2")
+        self._findingTab = self.createTab("finding")
+        self._modellingTab = self.createTab("modelling")
+        #self._threshold2Tab = self.createTab("thresholds 2")
         self._outputTab = self.createTab("analysis/output")
         self._mzBox = self.fillBox(self._spectrumTab, "m/z area containing peaks", ("min. m/z", "min. max. m/z", "tolerance", "window size"),
-                                   {"lowerBound": (QtWidgets.QSpinBox(),
-                                         "lower m/z bound (just peaks with higher m/z are examined)"),
-                          "minUpperBound":(QtWidgets.QSpinBox(), "minimal upper m/z bound"),
-                          "upperBoundTolerance": (QtWidgets.QSpinBox(),
+                        {"lowerBound": (QtWidgets.QSpinBox(),"lower m/z bound (just peaks with higher m/z are examined)"),
+                         "minUpperBound":(QtWidgets.QSpinBox(), "minimal upper m/z bound"),
+                         "upperBoundTolerance": (QtWidgets.QSpinBox(),
                                                 "value is added to calculated upper m/z-bound for final value"),
-                          "upperBoundWindowSize": (QtWidgets.QDoubleSpinBox(),
+                         "upperBoundWindowSize": (QtWidgets.QDoubleSpinBox(),
                                                    "window size for noise calculation to find upper m/z bound")})
+        self._calibrationBox = self.fillBox(self._spectrumTab, "Autocalibration",
+                            ("uncal. error threshold", "max. std. dev.",'overwrite peak list'),
+                            {"errorLimitCalib": (QtWidgets.QSpinBox(), "max. ppm error in uncalbratied spectrum"),
+                             "maxStd": (QtWidgets.QDoubleSpinBox(), "max. allowed standard deviation of the ion errors "
+                                                                    "for the calibration"),
+                             "overwrite": (QtWidgets.QCheckBox(), "the peak list will be overwritten if checked "
+                                              '(otherwise the calibrated list will be written to a file with the old filename "+_cal")')})
         self._widgets['lowerBound'].setMaximum(9999)
         self._widgets['minUpperBound'].setMaximum(9999)
         self._widgets['upperBoundTolerance'].setMaximum(999)
 
-        self._errorBox=self.fillBox(self._threshold1Tab, "error threshold: threshold [ppm] = k/1000 * (m/z) +d",
-                                    ("k", "d", "tolerance for isotope peaks"),
-                                    {"k": (QtWidgets.QDoubleSpinBox(), "slope of ppm error threshold function"),
-                           "d": (QtWidgets.QDoubleSpinBox(), "intercept of ppm error threshold function"),
-                           "errorTolerance": (QtWidgets.QDoubleSpinBox(),
-                                              "tolerance for isotope peak search in ppm")})
+        self._errorBox=self.fillBox(self._findingTab, "error threshold: threshold [ppm] = k/1000 * (m/z) +d",
+                            ("charge tolerance", "error threshold k", "error threshold d", "tolerance for isotope peaks"),
+                            {"zTolerance": (QtWidgets.QDoubleSpinBox(),"ions with charge states between the calculated "
+                                                                       "charge +/- tolerance will be searched for"),
+                             "k": (QtWidgets.QDoubleSpinBox(), "slope of ppm error threshold function"),
+                             "d": (QtWidgets.QDoubleSpinBox(), "intercept of ppm error threshold function"),
+                             "errorTolerance": (QtWidgets.QDoubleSpinBox(),"tolerance for isotope peak search in ppm")})
         self._widgets["d"].setMinimum(-9.99)
-        #self._qualityBox = QtWidgets.QGroupBox(self._threshold1Tab)
-        self._qualityBox = self.fillBox(self._threshold1Tab, "Quality thresholds",
-                                        ("quality (deletion)","quality (highlighting)","score (highlightening)"),
-                                        {"shapeDel": (QtWidgets.QDoubleSpinBox(),
-                       "ions which have a higher value are deleted"),
-                      "shapeMarked": (QtWidgets.QDoubleSpinBox(),
-                       "ions which have a higher value are highlighted"),
-                      "scoreMarked": (QtWidgets.QDoubleSpinBox(),
-                       "ions which have a higher value are highlighted")})
-        self._noiseBox = self.fillBox(self._threshold2Tab, "noise calculation", ("window size", "noise threshold tolerance"),
-                                      {"noiseWindowSize": (QtWidgets.QDoubleSpinBox(),
-                                                 "window size for noise calculation"),
-                             "thresholdFactor": (QtWidgets.QDoubleSpinBox(),
-                                                 "set it lower to search for more isotope peaks")})
-        self._searchIntensityBox = self.fillBox(self._threshold2Tab, "ion search and modelling",
-                                                ("charge tolerance", "outlier peak threshold"),
-                                                {"zTolerance": (QtWidgets.QDoubleSpinBox(),
-                              "program searches for ions with charge states between the calculated charge +/- tolerance"),
-                             "outlierLimit": (QtWidgets.QDoubleSpinBox(),
-                              "isotope peaks with higher values are not used for intensity modelling")})
-        self._remodellingBox = self.fillBox(self._threshold2Tab, "modelling overlaps",
-                                            ("max. nr. of overlapping ions","threshold"),
-                                            {"manualDeletion": (QtWidgets.QSpinBox(),
-                              "if more ions are overlapping in one pattern, the program will ask the user to manually delete ions"),
+        #self._qualityBox = QtWidgets.QGroupBox(self._modellingTab)
+
+        self._noiseBox = self.fillBox(self._findingTab, "noise calculation", ("window size", "noise threshold tolerance"),
+                                      {"noiseWindowSize": (QtWidgets.QDoubleSpinBox(),"window size for noise calculation"),
+                                       "thresholdFactor": (QtWidgets.QDoubleSpinBox(),
+                                                           "set it lower to search for more isotope peaks")})
+        self._isoPatternBox = self.fillBox(self._modellingTab, "isotope pattern calculation",
+                                          ("min. proportion", "approximation"),
+                                          {"maxIso": (QtWidgets.QDoubleSpinBox(),
+                                                      "the calculation of the isotope peaks will be stopped when "
+                                                      "their summed abundances are higher than the stated proportion"),
+                                           "approxIso": (QtWidgets.QSpinBox(),"enter the number of the last isotope "
+                                                                              "peak that should be exactly calculated")
+                                           })
+        self._widgets["maxIso"].setDecimals(3)
+        self._widgets["maxIso"].setMaximum(0.999)
+        self._modellingBox = self.fillBox(self._modellingTab, "modelling",
+                            ("outlier peak threshold","max. nr. of overlapping ions","overlap threshold"),
+                            {"outlierLimit": (QtWidgets.QDoubleSpinBox(),
+                             "isotope peaks with higher values are not used for intensity modelling"),
+                             "manualDeletion": (QtWidgets.QSpinBox(),"if more ions are overlapping in one pattern, the "
+                                                                     "program will ask the user to manually delete ions"),
                              "overlapThreshold": (QtWidgets.QDoubleSpinBox(),
-                              "ions which have a lower proportion in overlap pattern are deleted")})
+                                                  "ions which have a lower proportion in overlap pattern are deleted")})
+
+        self._widgets["manualDeletion"].setMinimum(1)
+        self._qualityBox = self.fillBox(self._outputTab, "Quality thresholds",
+                                        ("quality (deletion)","quality (highlighting)","score (highlighting)", 'SNR (deletion)'),
+                        {"shapeDel": (QtWidgets.QDoubleSpinBox(),"ions which have a higher value will be deleted"),
+                         "shapeMarked": (QtWidgets.QDoubleSpinBox(), "ions which have a higher value will be highlighted"),
+                         "scoreMarked": (QtWidgets.QDoubleSpinBox(),"ions which have a higher value will be highlighted"),
+                         "SNR": (QtWidgets.QDoubleSpinBox(),"ions which have a lower signal to noise ratio will be deleted")})
+        self._analysisBox = self.fillBox(self._outputTab, "Analysis", ("Use Abundances (int./z)",),
+                                        {"useAb": (QtWidgets.QCheckBox(),
+                                                   "Ticked if the abundaces (int./z) of the ions should be used for the "
+                                                   "quantitative analysis. Otherwise, the intensities (int.) are used.")})
         self._interestingIonsBox = self.fillInterestingIonsBox(self._outputTab)
         self._verticalLayout.addWidget(self._buttonBox, 0, QtCore.Qt.AlignHCenter)
         self.backToLast()
@@ -175,6 +197,6 @@ class TD_configurationDialog(DialogWithTabs):
                     interestingIons.append(text)
         newConfigurations['interestingIons'] = interestingIons
         self._configHandler.write(newConfigurations)
-        super(TD_configurationDialog, self).accept()
+        super(ConfigurationDialog, self).accept()
 
 

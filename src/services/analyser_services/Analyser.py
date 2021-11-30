@@ -11,7 +11,7 @@ class Analyser(object):
     '''
     Class for analysing the ion list
     '''
-    def __init__(self, ions, sequence, precCharge, modification):
+    def __init__(self, ions, sequence, precCharge, modification, useAbundances=True):
         '''
         :param (list of FragmentIon) ions: observed ion (from intensityModeller)
         :param (list of str) sequence: list of building blocks in sequence of precursor
@@ -22,10 +22,16 @@ class Analyser(object):
         self._sequence = sequence
         self._precCharge = abs(precCharge)
         self._modification = modification
+        self._useAbundances = useAbundances
         #self._percentageDict = dict()
 
     def setIons(self, ions):
         self._ions = ions
+
+    def getCorrectValue(self, ion):
+        if self._useAbundances:
+            return ion.getRelAbundance()
+        return ion.getIntensity()
 
     def calculateRelAbundanceOfSpecies(self):
         '''
@@ -41,7 +47,7 @@ class Analyser(object):
             relAbundanceOfSpecies[type] = 0"""
         for ion in self._ions:
             #if (ion.getScore() < 5) or (ion.getQuality()<0.3) or (ion.getNumber() == 0):
-            relAb = ion.getRelAbundance()
+            relAb = self.getCorrectValue(ion)
             if ion.getNumber() == 0:
                 precInt+=relAb
                 precName = ion.getType()
@@ -67,8 +73,8 @@ class Analyser(object):
         for ion in self._ions:
             if (ion.getNumber()==0): #(ion._charge == self._precCharge) and
                 if self._modification in ion.getModification():
-                    modifiedSum += ion.getRelAbundance()
-                totalSum += ion.getRelAbundance()
+                    modifiedSum += self.getCorrectValue(ion)
+                totalSum += self.getCorrectValue(ion)
         return 1 - modifiedSum / totalSum
 
 
@@ -98,19 +104,20 @@ class Analyser(object):
                 if ion.getType() not in absValues.keys():
                     absValues[ion.getType()] = np.zeros((len(self._sequence), 3))
                 #if self._modification in ion.getModification():
-                if ('+' in modification) or ('-' in modification):
-                    modifications = ion.getModification()
-                else:
+                '''if ('+' in modification[1:]) or ('-' in modification[1:]):
                     modifications = ion.getModificationList()
+                else:'''
+                modifications = ion.getModification()
+                print(ion.getName(),modifications, modification, modification in modifications)
                 if modification in modifications:
                     absValues[ion.getType()][ion.getNumber() - 1] += \
-                        np.array([ion.getRelAbundance(),
-                                  ion.getRelAbundance() * self.getNrOfModifications(ion.getModification(), modification), 0])
-                    #print('\t', ion.getName(), ion.getRelAbundance()*int(self.getNrOfModifications(ion.getModification())), 'mod')
+                        np.array([self.getCorrectValue(ion),
+                                  self.getCorrectValue(ion) * self.getNrOfModifications(ion.getModification(), modification), 0])
+                    #print('\t', ion.getName(), self.getCorrectValue(ion)*int(self.getNrOfModifications(ion.getModification())), 'mod')
                 else:
                     absValues[ion.getType()][ion.getNumber() - 1] += \
-                        np.array([ion.getRelAbundance(),0,0])
-                    #print('\t', ion.getName(), ion.getRelAbundance())
+                        np.array([self.getCorrectValue(ion),0,0])
+                    #print('\t', ion.getName(), self.getCorrectValue(ion))
         for key,vals in absValues.items():
             print('sequ.\t',key+'_free\t', key+'+'+modification)
             [print(str(i+1), '\t',val[0]-val[1], '\t', val[1]) for i,val in enumerate(vals)]
@@ -138,7 +145,7 @@ class Analyser(object):
         Calculates the proportion of the interesting value (col 2)
         :param (dict[str,ndarray(dtype=[float,float,float])]) tempDict: dict {fragment type: array} with array columns:
             summed values, interesting values, 0
-        :return: (dict[str,ndarray(dtype=[float,float,float])]) dict {fragment type: array} with array columns:
+        :return: (dict[str,ndarray(dtype=[float])]) dict {fragment type: array} with array columns:
             summed values, interesting values, interesting proportion
         '''
         proportions = dict()

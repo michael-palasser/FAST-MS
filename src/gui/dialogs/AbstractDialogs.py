@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import QMessageBox
 
 from src import path
 from src.Exceptions import InvalidInputException
-from src.Services import SequenceService
+from src.services.DataServices import SequenceService
 from src.gui.GUI_functions import makeFormLayout
 from src.gui.widgets.Widgets import OpenFileWidget
 
@@ -22,11 +22,8 @@ class AbstractDialog(QtWidgets.QDialog):
         #self.lineSpacing = lineSpacing
         self._widgets = dict()
         #self.sizePolicy = self.makeSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-
         self._translate = QtCore.QCoreApplication.translate
         self.setWindowTitle(self._translate(self.objectName(), title))
-
-
         self._widgetSizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         self._widgetSizePolicy.setHorizontalStretch(0)
         self._widgetSizePolicy.setVerticalStretch(0)
@@ -110,6 +107,8 @@ class AbstractDialog(QtWidgets.QDialog):
             return widget.text()
         elif isinstance(widget, QtWidgets.QComboBox):
             return widget.currentText()
+        elif isinstance(widget, QtWidgets.QCheckBox):
+            return widget.isChecked()
         else:
             raise Exception('Unknown type of widget')
 
@@ -121,6 +120,8 @@ class AbstractDialog(QtWidgets.QDialog):
             widget.setText(value)
         elif isinstance(widget, QtWidgets.QComboBox):
             widget.setCurrentText(value)
+        elif isinstance(widget, QtWidgets.QCheckBox):
+            widget.setChecked(value)
         else:
             raise Exception('Unknown type of widget')
 
@@ -150,8 +151,8 @@ class AbstractDialog(QtWidgets.QDialog):
 
 
     def checkSpectralDataFile(self, mode, fileName):
-        print('hey',fileName)
-        print(os.path.isfile(fileName))
+        if fileName == '':
+            raise InvalidInputException('Empty Filename', "Name must not be empty")
         if not os.path.isfile(fileName):
             spectralDataPath = os.path.join(path, 'Spectral_data', mode, fileName)
             if os.path.isfile(spectralDataPath):
@@ -168,6 +169,19 @@ class StartDialog(AbstractDialog):
     '''
     def __init__(self, parent, title):
         super(StartDialog, self).__init__(parent, title)
+        self._formLayout = self.makeFormLayout(self)
+
+    def setupUi(self, *args):
+        widgets = self.getWidgets(args)
+        # (QtWidgets.QLineEdit(startDialog), "output",
+        # "Name of the output Excel file\ndefault: name of spectral pattern file + _out.xlsx"))
+        index = self.fill(self, self._formLayout, self.getLabels(), widgets)
+        self._formLayout.addItem(QtWidgets.QSpacerItem(0, 1))
+        self._defaultButton = self.makeDefaultButton(self)
+        self._formLayout.setWidget(index + 1, QtWidgets.QFormLayout.FieldRole, self._buttonBox)
+        self._formLayout.setWidget(index + 1, QtWidgets.QFormLayout.LabelRole, self._defaultButton)
+        self.backToLast()
+        #return index
 
     def makeDefaultButton(self, parent):
         self._defaultButton = QtWidgets.QPushButton(parent)
@@ -198,6 +212,13 @@ class StartDialog(AbstractDialog):
         if configs['sequName'] not in SequenceService().getAllSequenceNames():
             raise InvalidInputException(configs['sequName'], "not found")
         return configs
+
+
+    def updateCal(self, cal):
+        if cal:
+            self._widgets['calIons'].setEnabled(True)
+        else:
+            self._widgets['calIons'].setEnabled(False)
 
 
 class DialogWithTabs(AbstractDialog):

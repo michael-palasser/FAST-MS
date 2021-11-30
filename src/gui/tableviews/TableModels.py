@@ -42,6 +42,8 @@ class AbstractTableModel(QtCore.QAbstractTableModel):
 
     def columnCount(self, index):
         #return self._data.columns.size
+        #if len(len(self._data))==0:
+        #    print('hey', self._data, len(self._data))
         return len(self._data[0])
 
     def headerData(self, section, orientation, role):
@@ -69,6 +71,9 @@ class IonTableModel(AbstractTableModel):
     TableModel for QTableView presenting ion values (in top-down search)
     '''
     def __init__(self, data, precRegion, maxQual, maxScore):
+        headers = ('m/z','z','intensity','fragment','error /ppm', 'S/N','quality', 'score', 'comment')
+        if len(data)==0:
+            data=[['' for _ in headers]]
         super(IonTableModel, self).__init__(data, ('{:10.5f}','{:2d}', '{:12d}', '','{:4.2f}', '{:6.1f}', '{:4.2f}',
                '{:4.1f}', ''), ('m/z','z','intensity','fragment','error /ppm', 'S/N','quality', 'score', 'comment'))
         self._precRegion = precRegion
@@ -84,6 +89,8 @@ class IonTableModel(AbstractTableModel):
         '''
         if index.isValid():
             if role == Qt.DisplayRole:
+                if self._data[0][0] == '':
+                    return ''
                 col = index.column()
                 item = self._data[index.row()][col]
                 formatString = self._format[col]
@@ -108,7 +115,9 @@ class IonTableModel(AbstractTableModel):
         if role == Qt.ForegroundRole:
             col = index.column()
             item = self._data[index.row()][col]
-            if col == 0:
+            if item == '':
+                return QtGui.QColor('k')
+            if (col == 0) and (self._precRegion is not None):
                 if self._precRegion[0]<item<self._precRegion[1]:
                     return QtGui.QColor('red')
             if col == 6:
@@ -125,11 +134,14 @@ class IonTableModel(AbstractTableModel):
         return self._data[rowIndex]
 
     def addData(self, newRow):
+        if self._data[0][0] == '':
+            del self._data[0]
         self._data.append(newRow)
 
     def removeData(self, indexToRemove):
-        #self.removeRow(indexToRemove)
         del self._data[indexToRemove]
+        if len(self._data)==0:
+            self._data.append(['' for _ in self._headers])
 
     def updateData(self, newRow):
         for i, row in enumerate(self._data):
@@ -176,6 +188,7 @@ class PeakTableModel(AbstractTableModel):
         if role == Qt.TextAlignmentRole:
             return Qt.AlignRight
 
+
     """def rowCount(self, index):
         return len(self._data.values)
 
@@ -188,4 +201,46 @@ class PeakTableModel(AbstractTableModel):
                 return ('m/z','z','intensity','fragment','error /ppm', 'used')[section]"""
 
 
+
+class CalibrationInfoTable1(AbstractTableModel):
+    '''
+    TableModel for QTableView that shows the values of average error and standard dev. of errors in CalibrationView
+    '''
+    def __init__(self, data, precision):
+        super(CalibrationInfoTable1, self).__init__(data, ['',precision],
+                         ['variable','value'])
+        #print('data',data)
+        #self._format = ['{:10.5f}', '{:11d}', '{:11d}','{:4.2f}', '']
+
+    def flags(self, index):
+        return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
+
+
+    def data(self, index, role):
+        '''
+        Overwrites the data method of AbstractTableModel to correctly format each value
+        '''
+        if index.isValid():
+            if role == Qt.DisplayRole:
+                col = index.column()
+                item = self._data[index.row()][col]
+                if col == 0:
+                    return item
+                #print(item)
+                formatString = self._format[col]
+                return formatString.format(item)
+        if role == Qt.TextAlignmentRole:
+            col = index.column()
+            if col == 0:
+                return Qt.AlignCenter
+            return Qt.AlignRight
+
+class CalibrationInfoTable2(CalibrationInfoTable1):
+    '''
+    TableModel for QTableView that shows the values of calibration function in CalibrationView
+    '''
+    def __init__(self, data, precision):
+        super(CalibrationInfoTable2, self).__init__(data, precision)
+        self._format.append(precision)
+        self._headers.append('error')
 

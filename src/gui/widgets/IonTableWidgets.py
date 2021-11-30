@@ -5,6 +5,7 @@ from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QTableWidget
 
 from src.Exceptions import InvalidInputException
+from src.gui.GUI_functions import connectTable, showOptions
 
 
 class IonTableWidget(QTableWidget):
@@ -31,11 +32,17 @@ class IonTableWidget(QTableWidget):
         self.resizeColumnsToContents()
         #self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.setSortingEnabled(True)
-        #self.customContextMenuRequested['QPoint'].connect(partial(self.showOptions, self))
+        #connectTable(self, self.showOptions)
         # self.customContextMenuRequested['QPoint'].connect(partial(self.editRow, self, bools))
 
-    def getIonValues(self):
-        return self._ionValues
+    '''def getIonValues(self):
+        return self._ionValues'''
+    def getData(self):
+        data = []
+        for i in range(self.rowCount()):
+            data.append([self.item(i,j).text() for j in range(5)] + [self.item(i, 5).checkState()==2])
+            #itemList.append([self.item(row, col).text() for col in range(len(self.getHeaders()))])
+        return data
 
     def getFormat(self):
         return ['{:10.5f}','{:2d}', '{:12d}', '','{:4.2f}', '{:6.1f}', '{:4.2f}', '']
@@ -87,25 +94,33 @@ class IonTableWidget(QTableWidget):
         copyAllAction = menu.addAction("Copy Table")
         copyAction = menu.addAction("Copy Cell")
         action = menu.exec_(table.viewport().mapToGlobal(pos))
-        #ToDo
+        vals = self.getData()
         if action == copyAction:
             it = table.indexAt(pos)
             if it is None:
                 return
             selectedRow = it.row()
             selectedCol = it.column()
-            df = pd.DataFrame([self._ionValues[selectedRow][selectedCol]])
+            df = pd.DataFrame([vals[selectedRow][selectedCol]])
             df.to_clipboard(index=False, header=False)
         if action == copyAllAction:
-            df = pd.DataFrame(data=self._ionValues, columns=self.getHeaders())
+            df = pd.DataFrame(data=vals, columns=self.getHeaders())
             df.to_clipboard(index=False, header=True)'''
 
-
+    def getData(self):
+        itemList = []
+        for row in range(self.rowCount()):
+            itemList.append([self.item(row, col).text() for col in range(len(self.getHeaders()))])
+        return itemList
 
 class IsoPatternIon(IonTableWidget):
     '''
     Interactive ion table table for isotope pattern tool.
     '''
+    def __init__(self, parent, ions, yPos):
+        super(IsoPatternIon, self).__init__(parent, ions, yPos)
+        connectTable(self, showOptions)
+
     def getFormat(self):
         return ['{:10.5f}','{:2d}', '{:12d}', '','{:4.2f}', '', '{:10.4f}','{:10.4f}']
 
@@ -151,6 +166,24 @@ class IsoPatternIon(IonTableWidget):
 
     def getIon(self, row):
         return self._ions[row]
+
+    '''def showOptions(self, table, pos):
+        menu = QtWidgets.QMenu()
+        copyAllAction = menu.addAction("Copy Table")
+        copyAction = menu.addAction("Copy Cell")
+        action = menu.exec_(table.viewport().mapToGlobal(pos))
+        vals = self.getData()
+        if action == copyAction:
+            it = table.indexAt(pos)
+            if it is None:
+                return
+            selectedRow = it.row()
+            selectedCol = it.column()
+            df = pd.DataFrame([vals[selectedRow][selectedCol]])
+            df.to_clipboard(index=False, header=False)
+        if action == copyAllAction:
+            df = pd.DataFrame(data=vals, columns=self.getHeaders())
+            df.to_clipboard(index=False, header=True)'''
 
     '''def showOptions(self, table, pos):
         menu = QtWidgets.QMenu()
@@ -210,6 +243,116 @@ class TickIonTableWidget(IonTableWidget):
                 dumpList.append(row[1])
         return dumpList
 
+
+
+class CalibrationIonTableWidget(QTableWidget):
+    '''
+    Interactive ion table table for choosing ions for calibration in CalibrationView
+    '''
+    def __init__(self, parent, ions):
+        super(CalibrationIonTableWidget, self).__init__(parent)
+        #self._headers = ['m/z', 'z', 'I', 'fragment', 'error /ppm', 'S/N', 'qual.']
+        self._ions = ions
+        self.setColumnCount(len(self.getHeaders()))
+        #self.move(20, yPos)  # 70
+        self.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        self.setRowCount(len(ions))
+        self._ionValues = []
+        for i, ion in enumerate(ions):
+            self.fill(i, ion)
+        self.setHorizontalHeaderLabels(self.getHeaders())
+        self.resizeColumnsToContents()
+        #self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.setSortingEnabled(True)
+        connectTable(self, showOptions)
+        #connectTable(self, self.showOptions)
+        # self.customContextMenuRequested['QPoint'].connect(partial(self.editRow, self, bools))
+
+    '''def getIonValues(self):
+        return self._ionValues'''
+
+    def getFormat(self):
+        return ['{:10.5f}','{:2d}', '{:12d}', '', '{:4.2f}', '']
+
+    def getHeaders(self):
+        return ['m/z','z','intensity','name','error /ppm', 'use']
+
+    '''def getValue(self,ion):
+        return ion.getValues()'''
+
+    def fill(self, row, ionVals):
+        '''
+        Fills a row with data of an ion
+        :param (int) row: index of the row
+        :param (FragmentIon) ion:
+        '''
+        formats=self.getFormat()
+        #ionVal = []
+        for j, item in enumerate(ionVals):
+            #ionVal.append(item)
+            if j == 3:
+                newItem = QtWidgets.QTableWidgetItem(str(item))
+                newItem.setTextAlignment(QtCore.Qt.AlignLeft)
+            else:
+                newItem = QtWidgets.QTableWidgetItem()
+                newItem.setTextAlignment(QtCore.Qt.AlignRight)
+                if j == 2:
+                    formatString = formats[2]
+                    if item >= 10 ** 13:
+                        lg10 = str(int(log10(item) + 1))
+                        formatString = '{:' + lg10 + 'd}'
+                    newItem.setData(QtCore.Qt.DisplayRole, formatString.format(item))
+                elif j == 5:
+                    continue
+                elif j == 6:
+                    checkItem = QtWidgets.QTableWidgetItem()
+                    if item:
+                        checkItem.setCheckState(QtCore.Qt.Checked)  # QtCore.Qt.Unchecked
+                    else:
+                        checkItem.setCheckState(QtCore.Qt.Unchecked)  # QtCore.Qt.Unchecked
+                    self.setItem(row, 5, checkItem)
+                else:
+                    newItem.setData(QtCore.Qt.DisplayRole, formats[j].format(item))
+            newItem.setFlags(QtCore.Qt.ItemIsEnabled)
+            self.setItem(row, j, newItem)
+        #self.resizeRowsToContents()
+
+    '''def getIon(self, row):
+        for ion in self._ions:
+            if ion.getName() == self.item(row, 3).text() and ion.getCharge() == int(self.item(row, 1).text()):
+                return ion'''
+
+    '''def showOptions(self, table, pos):
+        menu = QtWidgets.QMenu()
+        copyAllAction = menu.addAction("Copy Table")
+        copyAction = menu.addAction("Copy Cell")
+        action = menu.exec_(table.viewport().mapToGlobal(pos))
+        vals = self.checkStatus()
+        if action == copyAction:
+            it = table.indexAt(pos)
+            if it is None:
+                return
+            selectedRow = it.row()
+            selectedCol = it.column()
+            df = pd.DataFrame([vals[selectedRow][selectedCol]])
+            df.to_clipboard(index=False, header=False)
+        if action == copyAllAction:
+            df = pd.DataFrame(data=vals, columns=self.getHeaders())
+            df.to_clipboard(index=False, header=True)'''
+
+    def checkStatus(self):
+        itemList = []
+        for row in range(self.rowCount()):
+            itemList.append((self.item(row, 3).text(),int(self.item(row, 1).text()),self.item(row, 5).checkState()))
+        return itemList
+
+    def getData(self):
+        data = []
+        for i in range(self.rowCount()):
+            data.append([self.item(i,j).text() for j in range(5)] + [self.item(i, 5).checkState()==2])
+            #itemList.append([self.item(row, col).text() for col in range(len(self.getHeaders()))])
+        return data
 
 
 """class FinalIonTable(TickIonTableWidget):

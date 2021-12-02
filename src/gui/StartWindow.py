@@ -47,8 +47,8 @@ class Window(SimpleMainWindow):
         self.createMenu('Intact Ions',
                         {'Analyse Spectrum': (
                         lambda: self.startIntact(True), 'Starts analysis of intact ion spectrum', None),
-                         'Analyse Intact Ions': (lambda: self.editData(self.startIntactIonSearch),
-                                                 'Starts analysis of spectra with unfragmented ions', None),
+                         'Assign Intact Ions': (lambda: self.editData(self.startIntactIonSearch),
+                                                 'Starts assignment and analysis of lists with unfragmented ions', None),
                          'Edit Intact Ions': (
                          lambda: self.editData(IntactIonEditorController), 'Edit Intact Ions', None)}, None)
         self.createMenu('Other Tools',
@@ -72,7 +72,7 @@ class Window(SimpleMainWindow):
     def showButtons(self):
         xPos = self.makeButton('Analyse top-down\nspectrum', 'Starts analysis of top-down spectrum', 40,
                                lambda:self.startTopDown(True))
-        xPos = self.makeButton('Analyse spectra\nof intact ions', 'Starts analysis of spectra with unfragmented ions',
+        xPos = self.makeButton('Assign\nIntact Ions', 'Starts assignment and analysis of lists with unfragmented ions',
                                xPos, self.startIntactIonSearch)
         self.setGeometry(50, 50, xPos+40, 230)
         self.show()

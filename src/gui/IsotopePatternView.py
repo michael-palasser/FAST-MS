@@ -15,7 +15,7 @@ class IsotopePatternView(SimpleMainWindow):
     Main window for Isotope Pattern Tool
     '''
     def __init__(self, parent):
-        super(IsotopePatternView, self).__init__(parent, 'Isotope Pattern Tool')
+        super(IsotopePatternView, self).__init__(parent, 'Model Ion')
         self._ion= None
         self._logics = IsotopePatternLogics()
         self._fragmentationOpts = self._logics.getFragmentationNames()
@@ -80,11 +80,13 @@ class IsotopePatternView(SimpleMainWindow):
         self._peakLabel.setText(self._translate(self.objectName(), "Peaks:"))
         self._vertLayout.addWidget(self._peakLabel)
         self.makePeakTable(((),))
+        #self._peakTable.model().rowsRemoved.connect(lambda: self.renderView(self._ion, self._logics.getNeutralMass(), self._logics.getAvMass()))
 
         self._modeBox.currentIndexChanged.connect(self.renderFrame)
         self._centralwidget.setLayout(self._vertLayout)
         self.createMenuBar()
-        self.createMenu('Options', {'Load Sequence': (self.loadSequence, None, "Ctrl+O"),
+        self._menubar, self._menuActions = \
+            self.createMenu('Options', {'Load Sequence': (self.loadSequence, None, "Ctrl+O"),
                                     'Pause Calculation': (self.pauseCalculation, None, None),
                                     'Shoot': (lambda: shoot(self), None, None),
                                     'Close': (self.close, 'Closes Window', 'Ctrl+Q')}, None)
@@ -125,6 +127,7 @@ class IsotopePatternView(SimpleMainWindow):
         self._options['modif'].currentIndexChanged.connect(self.changeRadicals)
         self._options['nrMod'] = QtWidgets.QSpinBox(self._frame)
         self._options['nrMod'].setValue(0)
+        self._options['nrMod'].valueChanged.connect(self.calculateByChange)
         self.fillFrame(formlayout, ("", "", "", "", ''))
         self._vertLayoutLeft.addWidget(self._frame)
 
@@ -156,6 +159,7 @@ class IsotopePatternView(SimpleMainWindow):
                                  self._options['fragment'].currentText(), self._options['modPattern'].currentText(),
                                  self._options['modif'].currentText(), self._options['nrMod'].value())
         self._radicals.setValue(radicals)
+        self.calculateByChange()
 
 
     def loadSequence(self):
@@ -170,8 +174,10 @@ class IsotopePatternView(SimpleMainWindow):
     def pauseCalculation(self):
         if self._pause:
             self._pause = False
+            self._menuActions['Pause Calculation'].setText('Pause Calculation')
         else:
             self._pause = True
+            self._menuActions['Pause Calculation'].setText('Resume Calculation')
 
     def renderFrame(self):
         if self._modeBox.currentIndex() == 0:
@@ -195,10 +201,20 @@ class IsotopePatternView(SimpleMainWindow):
             [self._options['fragment'].model().item(i).setEnabled(True) for i in range(self._options['fragment'].count())]
             self.updateComboBox(self._options['fragment'], fragItems + [''] + precItems)
             self._options['fragment'].model().item(len(fragItems)).setEnabled(False)
+            self.calculateByChange()
 
     def getModValues(self):
-        if (self._options['modPattern'].currentText() != "") and (self._options['modPattern'].currentText() != "-"):
+        if self._options['modPattern'].currentText() not in  ('',"-"):
             self.updateComboBox(self._options['modif'], self._logics.getModifItems(self._options['modPattern'].currentText()))
+            self._options['modif'].setEnabled(True)
+            self._options['nrMod'].setEnabled(True)
+        else:
+            self.updateComboBox(self._options['modif'], ('',))
+            self._options['modif'].setDisabled(True)
+            self._options['nrMod'].setValue(0)
+            self._options['nrMod'].setDisabled(True)
+
+        self.calculateByChange()
 
     def calculateByChange(self):
         '''
@@ -273,10 +289,11 @@ class IsotopePatternView(SimpleMainWindow):
 
     def modelInt(self):
         try:
-            inputVals = sorted(self._peakTable.readTable(), key=lambda tup: tup[2])
+            #inputVals = sorted(self._peakTable.readTable(), key=lambda tup: tup[2])
+            inputVals = sorted(self._peakTable.getData(), key=lambda tup: tup[0])
             peaks = []
             for i, peak in enumerate(self._peakTable.getPeaks()):
-                peaks.append((peak[0], inputVals[i][0], peak[2], inputVals[i][1]))
+                peaks.append((peak[0], inputVals[i][1], peak[2], inputVals[i][3]))
             self._ion = self._logics.model(peaks)
             self._intensity = round(self._ion.getIntensity())
         except InvalidInputException as e:
@@ -290,15 +307,24 @@ class AddIonView(IsotopePatternView):
     '''
     QMainWindow which is used to add new ions to ion list in top-down search
     '''
-    def __init__(self, parent, mode, sequence, fragmentation, modification, fun):
+    def __init__(self, parent, mode, sequence, charge, fragmentation, modification, fun):
         super(AddIonView, self).__init__(parent)
         self.setWindowTitle(self._translate(self.objectName(),'New Ion'))
         self.setBox(self._modeBox,mode)
         self._inputForm.setText(sequence)
+        self.setChargeRange(charge)
         self.setBox(self._options['fragmentation'],fragmentation)
         self.setBox(self._options['modPattern'],modification)
         self._signal = fun
         self._saveBtn = self.makeBtn(self._widget1,self._horizLayout1, 'Save', self.accept)
+
+    def setChargeRange(self, charge):
+        if charge<0:
+            self._charge.setMinimum(charge)
+            self._charge.setMaximum(-1)
+        else:
+            self._charge.setMaximum(charge)
+            self._charge.setMinimum(1)
 
     def setBox(self, box, value):
         box.setCurrentText(value)
@@ -322,3 +348,4 @@ class AddIonView(IsotopePatternView):
             dlg.show()
         else:
             self._signal(self)
+

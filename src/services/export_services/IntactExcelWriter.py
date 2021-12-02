@@ -210,6 +210,7 @@ class FullIntactExcelWriter(ExcelWriter, IntactExcelWriter):
         if settings['sprayMode'] == 'negative':
             self._spraymode = -1
         try:
+            self.writeInfos(infoString)
             self._row = self.writeGeneralParameters(0, {"spectral file:": settings['spectralData'], 'max. m/z:': spectrumHandler.getUpperBound()})
             self._row += 1
             self._worksheet1.write(self._row, 0, ("analysis:"))
@@ -229,7 +230,6 @@ class FullIntactExcelWriter(ExcelWriter, IntactExcelWriter):
             self.writePeaks(self._worksheet4, row + 3, 0, deletedIons)
             self.writeIons(self._worksheet5, self.sortByName(intensityModeller.getRemodelledIons()), precursorRegion)
             self.writeSumFormulas(neutralLibrary, spectrumHandler.getSearchedChargeStates())
-            self.writeInfos(infoString)
         finally:
             self.closeWorkbook()
 

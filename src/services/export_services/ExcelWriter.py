@@ -236,6 +236,7 @@ class ExcelWriter(BasicExcelWriter):
         self._spraymode = sign(settings['charge'])
         try:
             #percentages = list()
+            self.writeInfos(infoString)
             self.writeAnalysis({"spectral file:": settings['spectralData'], 'max. m/z:':spectrumHandler.getUpperBound()},
                                analyser.getModificationLoss(),
                                analyser.calculateRelAbundanceOfSpecies()[0],
@@ -256,7 +257,6 @@ class ExcelWriter(BasicExcelWriter):
             self.writePeaks(self._worksheet4, row + 3, 0, deletedIons)
             self.writeIons(self._worksheet5, self.sortByName(intensityModeller.getRemodelledIons()), precursorRegion)
             self.writeSumFormulas(fragmentLibrary, spectrumHandler.getSearchedChargeStates())
-            self.writeInfos(infoString)
         finally:
             self.closeWorkbook()
 

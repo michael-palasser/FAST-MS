@@ -15,6 +15,7 @@ from PyQt5 import QtWidgets
 from src import path
 from src.Exceptions import InvalidIsotopePatternException, InvalidInputException
 from src.entities.Info import Info
+from src.gui.AbstractMainWindows import SimpleMainWindow
 from src.gui.controller.AbstractController import AbstractMainController
 from src.gui.tableviews.FragmentationTable import FragmentationTable
 from src.gui.dialogs.CalibrationView import CalibrationView
@@ -114,7 +115,7 @@ class TD_MainController(AbstractMainController):
                 self._intensityModeller = IntensityModeller(self._configs, noiseLevel)
                 self._intensityModeller.setIonLists(observedIons, delIons, remIons)
                 self._analyser = Analyser(None, self._propStorage.getSequenceList(), self._settings['charge'],
-                                          self._propStorage.getModificationName(), self._configs['useAb'])
+                                          self._libraryBuilder.getPrecursor().getModification(), self._configs['useAb'])
                 self._saved = True
                 self.setUpUi()
 
@@ -234,8 +235,9 @@ class TD_MainController(AbstractMainController):
                 self._intensityModeller.remodelComplexPatterns(complexPatterns, dumpList)
             else:
                 return 1
-        self._analyser = Analyser(None, self._propStorage.getSequenceList(),
-                                  self._settings['charge'], self._propStorage.getModificationName(), self._configs['useAb'])
+
+        self._analyser = Analyser(None, self._propStorage.getSequenceList(), self._settings['charge'],
+                                  self._libraryBuilder.getPrecursor().getModification(), self._configs['useAb'])
         self._info.searchFinished(self._spectrumHandler.getUpperBound())
         print("done")
         return 0
@@ -737,20 +739,38 @@ class TD_MainController(AbstractMainController):
         if interestingIons is None:
             return
         chargeDict, minMaxCharges = self._analyser.analyseCharges(interestingIons, reduced)
-        plotFactory1 = PlotFactory(self._mainWindow)
+        if reduced:
+            mainWindow, centralWidget, layout = self.getMainWindow('Charges State Analysis (I/z)')
+        else:
+            mainWindow, centralWidget, layout = self.getMainWindow('Charges State Analysis')
+        plotFactory1 = PlotFactory(centralWidget)
         #plotFactory2 = PlotFactory(self._mainWindow)
         forwardVals = self._propStorage.filterByDir(chargeDict,1)
         backwardVals = self._propStorage.filterByDir(chargeDict,-1)
         forwardLimits = self._propStorage.filterByDir(minMaxCharges,1)
         backwardLimits = self._propStorage.filterByDir(minMaxCharges,-1)
-        self._openWindows.append(plotFactory1.showChargePlot(self._propStorage.getSequenceList(), forwardVals,
-                                                backwardVals,self._settings['charge'], forwardLimits, backwardLimits))
-        chargeView = PlotTableView(self._analyser.toTable(forwardVals.values(), backwardVals.values()),
+        '''self._openWindows.append(plotFactory1.showChargePlot(self._propStorage.getSequenceList(), forwardVals,
+                                                backwardVals,self._settings['charge'], forwardLimits, backwardLimits))'''
+        chargeView = PlotTableView(centralWidget, self._analyser.toTable(forwardVals.values(), backwardVals.values()),
                                        list(chargeDict.keys()), 'Av. Charge per Fragment', 1)
-        self._openWindows.append(chargeView)
+        chargeView.sortBy(1)
+        layout.addWidget(chargeView)
+
+        layout.addWidget(plotFactory1.showChargePlot(self._propStorage.getSequenceList(), forwardVals,
+                                    backwardVals, self._settings['charge'], forwardLimits, backwardLimits))
+        mainWindow.show()
+        #self._openWindows.append(chargeView)
         '''plotFactory2.showChargePlot(self._libraryBuilder.getSequenceList(),
                                       self._libraryBuilder.filterByDir(redChargeDict,1),
                                       self._libraryBuilder.filterByDir(redChargeDict,-1),self._settings['charge'])'''
+
+    def getMainWindow(self, title):
+        mainWindow = SimpleMainWindow(self._mainWindow, title)
+        centralWidget = QtWidgets.QWidget(mainWindow)
+        mainWindow.setCentralWidget(centralWidget)
+        layout = QtWidgets.QHBoxLayout(centralWidget)
+        self._openWindows.append(mainWindow)
+        return mainWindow, centralWidget, layout
 
 
     def showSequenceCoverage(self):

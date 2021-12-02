@@ -29,9 +29,9 @@ def run(mainWindow):
     :param (PyQt5.QtWidgets.QMainWindow | Any) mainWindow: Qt parent
     '''
     service = SequenceService()
-    sequenceName = 'CR_1_2'
+    sequenceName = 'CR_1_14'
     sequence = service.get(sequenceName).getSequenceList()
-    modification = '+DEPC'
+    modification = '+CMCT'
     '''dlg = OccupancyRecalcStartDialog(mainWindow, service.getAllSequenceNames())
     dlg.exec_()
     if dlg and dlg.sequence != None:
@@ -74,7 +74,7 @@ def run(mainWindow):
             ionList.append(newIon)
 
     """Analysis and Output"""
-    analyser = Analyser(ionList, sequence, 1, modification, configs['useAb'])
+    analyser = Analyser(ionList, sequence, 1, modification)
     excelWriter = BasicExcelWriter(os.path.join(path, "Spectral_data","Occupancies_out.xlsx"))
     excelWriter.writeDate()
     row = excelWriter.writeAbundancesOfSpecies(2, analyser.calculateRelAbundanceOfSpecies()[0])

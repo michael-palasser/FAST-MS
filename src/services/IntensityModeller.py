@@ -10,7 +10,7 @@ import numpy as np
 from copy import deepcopy
 from scipy.optimize import minimize, minimize_scalar
 
-from src.services.assign_services.AbstractSpectrumHandler import getErrorLimit, calculateError
+from src.services.assign_services.AbstractSpectrumHandler import getErrorLimit, calculateError, peaksArrType
 
 logging.basicConfig(level=logging.INFO)
 logging.basicConfig(filename='logfile_IntensityModeller.log',level=logging.INFO)
@@ -63,6 +63,12 @@ class IntensityModeller(object):
 
     def addNewIon(self,ion):
         ion.addComment('new')
+        ion.setScore(calcScore(ion.getIntensity(),ion.getQuality(),self._noiseLevel))
+        newPattern = []
+        for peak in ion.getIsotopePattern():
+            row = [val for val in peak]
+            newPattern.append(tuple(row[0:3]+[0.]+row[3:]))
+        ion.setIsotopePattern(np.array(newPattern, dtype=peaksArrType))
         self._correctedIons[ion.getHash()] = ion
 
     def setMonoisotopicList(self, monoisotopicList):
@@ -234,7 +240,6 @@ class IntensityModeller(object):
         :return: (list of list[FragmentIon]) list of list of ions with same charge and monoistopic m/z
         '''
         sameMonoisotopics = list()
-        print(np.array(self._monoisotopicList))
         self._monoisotopicList = np.array(self._monoisotopicList,
                                           dtype=[('name','U32'),('charge', np.uint8),('mono',float)])
         for elem in self._monoisotopicList:
@@ -315,7 +320,6 @@ class IntensityModeller(object):
                         if pattern[index] in self.usedPeaks[peak2]:
                             [pattern.append(ion) for ion in self.usedPeaks[peak2] if ion not in pattern]
                     index += 1
-                print(pattern)
                 if len(pattern) > maxOverlaps:
                     self.commentIonsInPatterns((pattern,))
                     complexPatterns.append(sorted([self._correctedIons[ionTup] for ionTup in pattern],
@@ -426,7 +430,6 @@ class IntensityModeller(object):
         :param (list of tuple[str,int]]) manDel: ions (as ion hash) which were deleted by the user
         '''
         for pattern in overlapPatterns:
-            print(pattern)
             del_ions = []
             spectr_peaks = list()
             for ion in pattern:
@@ -613,11 +616,9 @@ class IntensityModeller(object):
         for ion in self._correctedIons.values():
             if (ion.getType() == precName) and (ion.getCharge() == precCharge):
                 precursorList.append(ion.getMonoisotopic())
-        print('precursorList', precursorList)
         if len(precursorList)<2:
             return (0,0)
         precursorList.sort()
-        print('precursor',(precursorList[0],precursorList[-1]+70/precCharge))
         return (precursorList[0],precursorList[-1]+70/precCharge)
 
     def remodelSingleIon(self, ion, values):
@@ -629,7 +630,6 @@ class IntensityModeller(object):
         :return: (float) modelled intensity of the ion
         '''
         values = np.array(values)
-        print(ion.getIntensity(), values)
         ion.setIsotopePatternPart('relAb', values[:,0])
         ion.setIsotopePatternPart('used', values[:,1])
         return self.modelIon(ion)[0]

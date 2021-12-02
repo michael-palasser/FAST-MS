@@ -25,7 +25,7 @@ class GeneralPeakWidget(QtWidgets.QTableWidget):
         self.fill()
         self.setHorizontalHeaderLabels(self._headers)
         self.setSortingEnabled(True)
-        connectTable(self, self.showOptions)
+        #connectTable(self, self.showOptions)
 
         print(self._peaks, self._headers, len(self._peaks), len(self._headers))
         '''self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
@@ -65,7 +65,8 @@ class GeneralPeakWidget(QtWidgets.QTableWidget):
         self.resizeColumnsToContents()
 
 
-    def showOptions(self, table, pos):
+
+    """def showOptions(self, table, pos):
         '''
         Right click options of the table
         '''
@@ -95,7 +96,7 @@ class GeneralPeakWidget(QtWidgets.QTableWidget):
         df['int. (calc.)'] = self._peaks['calcInt']
         df['error /ppm'] = self._peaks['error']
         df['used'] = self._peaks['used']
-        return df
+        return df"""
 
     def readTable(self):
         itemList = []
@@ -118,6 +119,21 @@ class PeakWidget(GeneralPeakWidget):
     def __init__(self, parent, peaks):
         super(PeakWidget, self).__init__(parent, ('m/z','int. (spectrum)','int. (calc.)','error /ppm', 'used'),
                                          ('{:10.5f}','{:11d}', '{:11d}', '{:4.2f}', ''), peaks)
+        connectTable(self, showOptions)
+
+
+    def getData(self):
+        data = []
+        for row in range(self.rowCount()):
+            try:
+                intensity = 0
+                if self.item(row, 1).text() != '':
+                    intensity = int(self.item(row, 1).text())
+                data.append((self.item(row, 0).text(), intensity, self.item(row, 2).text(), self.item(row, 3).text(),
+                             int(self.item(row, 4).checkState()/2)==1))
+            except ValueError:
+                raise InvalidInputException('Intensities must be numbers', 'Incorrect entry: '+self.item(row, 1).text())
+        return data
 
 
 class IsoPatternPeakWidget(GeneralPeakWidget):
@@ -127,21 +143,36 @@ class IsoPatternPeakWidget(GeneralPeakWidget):
     def __init__(self, parent, peaks):
         super(IsoPatternPeakWidget, self).__init__(parent, ('m/z','int. (spectrum)','int. (calc.)', 'used'),
                                          ('{:10.5f}','{:11d}', '{:11d}', ''), peaks)
+        connectTable(self, self.showOptions)
 
-    def readTable(self):
+
+    '''def readTable(self):
         itemList = []
         for row in range(self.rowCount()):
             try:
                 intensity = 0
                 if self.item(row, 1).text() != '':
                     intensity = int(self.item(row, 1).text())
-                itemList.append((intensity, int(self.item(row, 3).checkState()/2)==1, float(self.item(row, 0).text())))
+                itemList.append((intensity, int(self.item(row, 3).checkState()/2)==1, float(self.item(row, 0).text()),
+                                 ))
             except ValueError:
                 raise InvalidInputException('Intensities must be numbers', 'Incorrect entry: '+self.item(row, 1).text())
-        return itemList
+        return itemList'''
 
+    def getData(self):
+        data = []
+        for row in range(self.rowCount()):
+            try:
+                intensity = 0
+                if self.item(row, 1).text() != '':
+                    intensity = int(self.item(row, 1).text())
+                data.append((self.item(row, 0).text(), intensity, self.item(row, 2).text(),
+                             int(self.item(row, 3).checkState()/2)==1))
+            except ValueError:
+                raise InvalidInputException('Intensities must be numbers', 'Incorrect entry: '+self.item(row, 1).text())
+        return data
 
-    def getDataframe(self):
+    """def getDataframe(self):
         '''
         Returns a dataframe with the peak data
         '''
@@ -153,7 +184,7 @@ class IsoPatternPeakWidget(GeneralPeakWidget):
         df['int. (spectrum)'] = self._peaks['relAb']
         df['int. (calc.)'] = self._peaks['calcInt']
         df['used'] = self._peaks['used']
-        return df
+        return df"""
 
 
     def updateTable(self, newPeaks):
@@ -165,3 +196,29 @@ class IsoPatternPeakWidget(GeneralPeakWidget):
         elif nrRows<0:
             [self.removeRow(rowCount-i-1) for i in range(abs(nrRows))]
         self.fill()
+
+    def showOptions(self, table, pos):
+        '''
+        Right click options of the table
+        '''
+        menu = QtWidgets.QMenu()
+        copyAllAction = menu.addAction("Copy Table")
+        copyAction = menu.addAction("Copy Cell")
+        deleteAction = menu.addAction("Delete last Peak")
+        action = menu.exec_(table.viewport().mapToGlobal(pos))
+        if action == copyAllAction:
+            #df = self.getDataframe()
+            df = pd.DataFrame(self.getData(), columns=self._headers)
+            df.to_clipboard(index=False, header=True)
+        if action == copyAction:
+            it = table.indexAt(pos)
+            if it is None:
+                return
+            selectedRow = it.row()
+            selectedCol = it.column()
+            #df = pd.DataFrame([self._peaks[selectedRow][selectedCol]])
+            df = pd.DataFrame([self.getData()[selectedRow][selectedCol]])
+            df.to_clipboard(index=False, header=False)
+        if action == deleteAction:
+            print(self._peaks[-1])
+            self.updateTable(self._peaks[:-1])

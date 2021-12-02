@@ -72,6 +72,7 @@ class Analyser(object):
         totalSum = 0
         for ion in self._ions:
             if (ion.getNumber()==0): #(ion._charge == self._precCharge) and
+                print('sdkfj', self._modification,ion.getModification())
                 if self._modification in ion.getModification():
                     modifiedSum += self.getCorrectValue(ion)
                 totalSum += self.getCorrectValue(ion)
@@ -94,6 +95,13 @@ class Analyser(object):
             return None
         elif modification is None:
             modification=self._modification
+
+        if modification[0] in('+','-'):
+            sign = modification[0]
+        else:
+            modification = '+'+modification
+            sign = '+'
+        print('modification', modification, modification[1:])
         absValues = dict()
         for ion in self._ions:
             if ion.getType() in interestingIons:
@@ -107,16 +115,20 @@ class Analyser(object):
                 '''if ('+' in modification[1:]) or ('-' in modification[1:]):
                     modifications = ion.getModificationList()
                 else:'''
-                modifications = ion.getModification()
-                print(ion.getName(),modifications, modification, modification in modifications)
-                if modification in modifications:
+                #modifications = ion.getModification()
+                #print(ion.getName(),modifications, modification, modification in modifications)
+                currentMod = ion.getModification()
+                if modification[1:] in currentMod:
                     absValues[ion.getType()][ion.getNumber() - 1] += \
                         np.array([self.getCorrectValue(ion),
-                                  self.getCorrectValue(ion) * self.getNrOfModifications(ion.getModification(), modification), 0])
+                                  self.getCorrectValue(ion) * self.getNrOfModifications(currentMod, modification), 0])
                     #print('\t', ion.getName(), self.getCorrectValue(ion)*int(self.getNrOfModifications(ion.getModification())), 'mod')
+
+                    print(currentMod, self.getNrOfModifications(currentMod, modification))
                 else:
+                    print(currentMod, 0,'a')
                     absValues[ion.getType()][ion.getNumber() - 1] += \
-                        np.array([self.getCorrectValue(ion),0,0])
+                        np.array([self.getCorrectValue(ion), 0, 0])
                     #print('\t', ion.getName(), self.getCorrectValue(ion))
         for key,vals in absValues.items():
             print('sequ.\t',key+'_free\t', key+'+'+modification)
@@ -137,7 +149,6 @@ class Analyser(object):
             nrOfModif = modificationString[modificationString.find(modification) - 1]
             if modificationString[modificationString.find(modification) - 2].isdigit():
                 nrOfModif += (10 * modificationString[modificationString.find(modification) - 2])
-        print(modificationString, nrOfModif)
         return int(nrOfModif)
 
     def calculateProportions(self, tempDict):
@@ -156,7 +167,6 @@ class Analyser(object):
                 else:
                     row[2] = None
             proportions[key] = arr[:, 2]
-        print('calculateProportions',proportions)
         return proportions
 
     def analyseCharges(self, interestingIons, reduced):

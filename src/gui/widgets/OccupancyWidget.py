@@ -19,8 +19,9 @@ class OccupancyWidget(QtWidgets.QWidget):
         # _scrollArea.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         # _scrollArea.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
-        table1 = PlotTableView(percData, percHeaders, 'Occupancies: ' + modification, 3,
+        table1 = PlotTableView(None, percData, percHeaders, 'Occupancies: ' + modification, 3,
                                modificationLoss)
+        table1.sortBy(1)
         verticalLayout.addWidget(table1)
         '''self._table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self._table.customContextMenuRequested['QPoint'].connect(partial(self.showOptions, self._table))'''
@@ -28,7 +29,8 @@ class OccupancyWidget(QtWidgets.QWidget):
         #self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         #self._table.move(0,0)
 
-        table2 = PlotTableView(absData, absHeaders, 'Abs. Occupancies: ' + modification, 1)
+        table2 = PlotTableView(None, absData, absHeaders, 'Abs. Occupancies: ' + modification, 1)
+        table2.sortBy(1)
         verticalLayout.addWidget(table2)
         self.show()
         #self.setObjectName('Occupancioes')

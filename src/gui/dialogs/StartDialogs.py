@@ -142,7 +142,7 @@ class IntactStartDialog(StartDialog):
     '''
     Dialog which pops up when intact ion search is started. Values are stored in settings_intact.json.
     '''
-    def __init__(self, parent=None, title="Intact Ion Search Settings", full= False):
+    def __init__(self, parent=None, title="Assign Intact Ions", full= False):
         super().__init__(parent,title)
         if full:
             self._configHandler = ConfigurationHandlerFactory.getFullIntactHandler()

@@ -150,10 +150,9 @@ class AbstractFinder(ABC):
         '''
         limit = errorLimit
         solution = [0, 1, 0]
-        count=0
-        while limit >= 10 or count==0:
+        length = len(ionList)
+        while length > 4:
             usedIons = []
-            count=1
             y = list()
             x = list()
             errorList = list()
@@ -168,7 +167,7 @@ class AbstractFinder(ABC):
                     usedIons.append(ion)
             try:
                 solution, pcov = curve_fit(self.fun_parabola, np.array(x), np.array(y))
-                limit -= 10
+                limit *= 0.67
             except ValueError:
                 if limit < 100:
                     limit += 5
@@ -177,8 +176,9 @@ class AbstractFinder(ABC):
                                                 'Nr of found ions is too low to calibrate (' + str(len(ionList)) +
                                                 ').    Are you sure you picked the correct settings?')
             errorList = np.array(errorList)
-            #if np.average(np.abs(errorList)) < 1.0 and np.std(errorList) < 2.0:  # ToDo: to parameters
-            if np.std(errorList) < maxStd:  # ToDo: to parameters
+            #if np.average(np.abs(errorList)) < 1.0 and np.std(errorList) < 2.0:
+            length = len(usedIons)
+            if np.std(errorList) < maxStd:
                 break
         return solution, np.sqrt(np.diag(pcov)), (np.average(np.abs(errorList)), np.std(errorList)), usedIons
 

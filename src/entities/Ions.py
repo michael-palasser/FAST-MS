@@ -66,6 +66,8 @@ class Ion(ABC):
 
     def getNoise(self):
         return self._noise
+    def setNoise(self,noise):
+        self._noise = noise
     def getComment(self):
         return self._comment
     def setComment(self, comment):

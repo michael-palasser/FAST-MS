@@ -72,7 +72,6 @@ class Analyser(object):
         totalSum = 0
         for ion in self._ions:
             if (ion.getNumber()==0): #(ion._charge == self._precCharge) and
-                print('sdkfj', self._modification,ion.getModification())
                 if self._modification in ion.getModification():
                     modifiedSum += self.getCorrectValue(ion)
                 totalSum += self.getCorrectValue(ion)
@@ -133,7 +132,12 @@ class Analyser(object):
         for key,vals in absValues.items():
             print('sequ.\t',key+'_free\t', key+'+'+modification)
             [print(str(i+1), '\t',val[0]-val[1], '\t', val[1]) for i,val in enumerate(vals)]
-        return self.calculateProportions(absValues),absValues#dict()
+        proportions = self.calculateProportions(absValues)
+        newAbsValues = {}
+        for key,vals in absValues.items():
+            vals[:,0] = vals[:,0]-vals[:,1]
+            newAbsValues[key] = vals
+        return proportions, newAbsValues#dict()
 
 
     @staticmethod

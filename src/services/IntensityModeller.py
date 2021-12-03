@@ -430,6 +430,7 @@ class IntensityModeller(object):
         :param (list of tuple[str,int]]) manDel: ions (as ion hash) which were deleted by the user
         '''
         for pattern in overlapPatterns:
+            print(pattern)
             del_ions = []
             spectr_peaks = list()
             for ion in pattern:

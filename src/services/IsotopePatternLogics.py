@@ -9,6 +9,7 @@ from src.entities.Ions import Fragment, FragmentIon
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.services.IntensityModeller import IntensityModeller
 from src.entities.SearchSettings import processTemplateName
+#from src.services.assign_services.AbstractSpectrumHandler import peaksArrType
 
 
 class IsotopePatternLogics(object):
@@ -23,8 +24,7 @@ class IsotopePatternLogics(object):
         self._molecules = self._moleculeService.getAllPatternNames()
         self._configs = ConfigurationHandlerFactory.getConfigHandler().getAll()
         self._intensityModeller = IntensityModeller(self._configs, 1)
-        self._peakDtype = np.dtype([('m/z', np.float64), ('relAb', np.int32), ('calcInt', np.float64), ('used', np.bool_)])
-        #self._peakDtype = np.dtype([('m/z', float), ('relAb', float), ('calcInt', float), ('used', np.bool_)])
+        self._peakDtype = np.dtype([('m/z', float), ('relAb', float), ('calcInt', float), ('used', np.bool_)])
         self._formula = None
         self._isotopePattern = None
         self._ion = None
@@ -233,6 +233,10 @@ class IsotopePatternLogics(object):
         :param (ndarray(dtype=[float,int,float,bool])) peaks: peaks (unfitted)
         :return: (FragmentIon) ion with modelled intensity and isotope pattern
         '''
+        '''peakList = []
+        for peak in peaks:
+            row = [val for val in peak]
+            peakList.append(row[0:3]+[0.]+row[3:])'''
         peakArr = np.array(peaks, dtype=self._peakDtype)
         if np.all(peakArr['relAb']==0):
             raise InvalidInputException('All Intensities = 0', '')

@@ -49,5 +49,17 @@
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
       <jdbc-url>jdbc:sqlite:C:\Users\Michael\Documents\Diss\SAUSAGE\src\data\top_down.db</jdbc-url>
     </data-source>
+    <data-source source="LOCAL" name="intact" uuid="286bac07-abec-4462-a435-dbdb5648d721">
+      <driver-ref>sqlite.xerial</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
+      <jdbc-url>jdbc:sqlite:$PROJECT_DIR$/Other/intact.db</jdbc-url>
+    </data-source>
+    <data-source source="LOCAL" name="intact [2]" uuid="0a6f307b-be0e-423d-9d02-33b5aab49891">
+      <driver-ref>sqlite.xerial</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
+      <jdbc-url>jdbc:sqlite:$PROJECT_DIR$/src/data/intact.db</jdbc-url>
+    </data-source>
   </component>
 </project>

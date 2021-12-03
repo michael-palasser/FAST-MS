@@ -41,8 +41,8 @@ class PlotTableView(QtWidgets.QWidget):
     '''
     Widget with QTableView showing occupancies, av. charges, ... of each fragment
     '''
-    def __init__(self, data, keys, title, precision, firstLine = None):
-        super().__init__(parent=None)
+    def __init__(self, parent, data, keys, title, precision, firstLine = None):
+        super().__init__(parent)
         verticalLayout = QtWidgets.QVBoxLayout(self)
         self._translate = QtCore.QCoreApplication.translate
         if firstLine is not None:
@@ -82,6 +82,9 @@ class PlotTableView(QtWidgets.QWidget):
         verticalLayout.addWidget(scrollArea)
         #self.resize(len(data[0])*50+200, len(data)*22+25)
         self.show()
+
+    def sortBy(self, columnIndex):
+        self._table.sortByColumn(columnIndex, Qt.AscendingOrder)
 
     '''def showOptions(self, table, pos):
         menu = QtWidgets.QMenu()

@@ -136,11 +136,11 @@ class SearchRepository(AbstractRepository):
         """
         #try:
         searchId = self.create(search.getVals())
+        self.createItem('logs', (search.getInfo(), searchId))
         self.insertItems(searchId, search.getIons(), 0)
         self.insertItems(searchId, search.getDeletedIons(), 1)
         self.insertItems(searchId, search.getRemIons(), 2)
         print(search.getInfo())
-        self.createItem('logs', (search.getInfo(), searchId))
         [self.createItem('chargeStates', [frag,zList, searchId]) for frag,zList in search.getSearchedZStates().items()]
 
     """def create(self, vals):
@@ -197,10 +197,10 @@ class SearchRepository(AbstractRepository):
         searchId = self.get('name', search.getName())[0]
         self.update(search.getVals() + [searchId])
         self.deleteDependentTables(searchId)
+        self.createItem('logs', (search.getInfo(), searchId))
         self.insertItems(searchId, search.getIons(), 0)
         self.insertItems(searchId, search.getDeletedIons(), 1)
         self.insertItems(searchId, search.getIons(), 2)
-        self.createItem('logs', (search.getInfo(), searchId))
 
     '''def update(self, vals): #ToDo
         """

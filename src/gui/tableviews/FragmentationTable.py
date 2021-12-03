@@ -66,7 +66,7 @@ class FragmentationTable(QtWidgets.QWidget):
         self._table.resizeRowsToContents()
         verticalLayout.addWidget(scrollArea)
         #self.resize(len(typeData[0])*50+200, len(typeData)*22+25)
-        table2 = PlotTableView(siteData, siteHeaders,'Fragmentation Efficiencies: ',0)
+        table2 = PlotTableView(None, siteData, siteHeaders,'Fragmentation Efficiencies: ',0)
         verticalLayout.addWidget(table2)
         self.show()
 

@@ -39,7 +39,7 @@ def run():
     print("\n********** calculating theoretical values **********")
     libraryBuilder = IntactLibraryBuilder(SequenceService().get(settings['sequName']), settings['modifications'])
     configs = ConfigurationHandlerFactory.getConfigHandler().getAll()
-    for key in ('errorLimitCalib','maxStd', 'k', 'd'):
+    for key in ('errorLimitCalib','maxStd', 'k', 'd', 'useAb'):
         settings[key] = configs[key]
     finder = IntactFinder(libraryBuilder.createLibrary(), settings)
 

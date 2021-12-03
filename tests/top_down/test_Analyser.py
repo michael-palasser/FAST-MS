@@ -112,6 +112,18 @@ class TestAnalyser(TestCase):
             for i, val in enumerate(occupDict[currentType]):
                 if arr[i, 1] != 0:
                     self.assertAlmostEqual(0, val)
+        ions = [FragmentIon(Fragment('c',5,'+2CMCT','',[],0), 1., 2, [], 10e5),
+                FragmentIon(Fragment('c',4,'+1CMCT','',[],0), 1., 2, [], 10e5),
+                FragmentIon(Fragment('c',4,'+2CMCT','',[],0), 1., 2, [], 10e5),
+                FragmentIon(Fragment('c',3,'+1CMCT','',[],0), 1., 2, [], 10e5),
+                FragmentIon(Fragment('c',2,'+1CMCT','',[],0), 1., 2, [], 10e5),
+                FragmentIon(Fragment('c',2,'+','',[],0), 1., 2, [], 10e5),
+                FragmentIon(Fragment('c',1,'+','',[],0), 1., 2, [], 10e5)]
+        [ion.setIntensity(5*10**6) for ion in ions]
+        analyser = Analyser(ions, 7*['G'],4,'+CMCT')
+        percentages = analyser.calculateOccupancies(['c','y'],'+CMCT')[0]
+        for i in range(5):
+            self.assertAlmostEqual(i/2,percentages['c'][i])
 
     def test_get_nr_of_modifications(self):
         self.assertEqual(1, self.analyser.getNrOfModifications('+CMCT', '+CMCT'))
@@ -121,6 +133,8 @@ class TestAnalyser(TestCase):
             randNr = np.random.randint(10)
             self.assertEqual(randNr, self.analyser.getNrOfModifications('+' + str(randNr) + 'CMCT', '+CMCT'))
             self.assertEqual(randNr, self.analyser.getNrOfModifications('+' + str(randNr) + 'CMCT-A', '+CMCT'))
+        self.assertEqual(1, self.analyser.getNrOfModifications('+PARO', '+PARO'))
+        self.assertEqual(2, self.analyser.getNrOfModifications('+2PARO', '+PARO'))
 
     '''def test_calculate_proportions(self):
         self.fail()'''

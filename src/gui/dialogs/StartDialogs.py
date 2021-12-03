@@ -83,7 +83,7 @@ class TDStartDialog(StartDialog):
                             "If no file is stated, the program will search for the file with the standard name or create"
                                                            " a new one with that name"),
                  "calibration": (QtWidgets.QCheckBox(), "Spectral data will be autocalibrated if option is ticked"),
-                 "calIons": (OpenFileWidget(self, 1, join(path, 'Spectral_data', 'intact'), "Open Files",
+                 "calIons": (OpenFileWidget(self, 1, join(path, 'Spectral_data', 'top-down'), "Open Files",
                                             "Plain Text Files (*txt);;All Files (*)"),
                              "Name of the file with ions for calibration (txt format)")}
 
@@ -142,7 +142,7 @@ class IntactStartDialog(StartDialog):
     '''
     Dialog which pops up when intact ion search is started. Values are stored in settings_intact.json.
     '''
-    def __init__(self, parent=None, title="Intact Ion Search Settings", full= False):
+    def __init__(self, parent=None, title="Assign Intact Ions", full= False):
         super().__init__(parent,title)
         if full:
             self._configHandler = ConfigurationHandlerFactory.getFullIntactHandler()

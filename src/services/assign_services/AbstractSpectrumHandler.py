@@ -31,6 +31,8 @@ def getMz(mass, z, radicals):
     else:
         return abs(mass) + radicals*(eMass + protMass)
 
+peaksArrType = np.dtype([('m/z', float), ('relAb', float),
+                                       ('calcInt', float), ('error', np.float32), ('used', bool)])
 
 class AbstractSpectrumHandler(ABC):
     '''
@@ -57,10 +59,6 @@ class AbstractSpectrumHandler(ABC):
         self._ionsInNoise = list()
         self._searchedChargeStates = dict()
         # self.expectedChargeStates = dict()
-        self._peaksArrType = np.dtype([('m/z', float), ('relAb', float),
-                                       ('calcInt', float), ('error', np.float32), ('used', bool)])
-        self._peaksArrType = np.dtype([('m/z', float), ('relAb', float),
-                                       ('calcInt', float), ('error', np.float32), ('used', bool)])
 
     def getNoiseLevel(self):
         return self._noiseLevel
@@ -330,7 +328,7 @@ class AbstractSpectrumHandler(ABC):
                         logging.debug('* All Peaks:')
                         foundPeaks = [self.findPeak(theoPeak, self._configs['errorTolerance']) for theoPeak in theoreticalPeaks[notInNoise]]
                         #find other isotope Peaks
-                        foundPeaksArr = np.sort(np.array(foundPeaks, dtype=self._peaksArrType), order=['m/z'])
+                        foundPeaksArr = np.sort(np.array(foundPeaks, dtype=peaksArrType), order=['m/z'])
                         if not np.all(foundPeaksArr['relAb']==0):
                             self._foundIons.append(self._IonClass(neutral, np.min(theoreticalPeaks['m/z']), z, foundPeaksArr, noise))
                             [print("\t",np.around(peak['m/z'],4),"\t",peak['relAb']) for peak in foundPeaksArr if peak['relAb']>0]
@@ -338,7 +336,7 @@ class AbstractSpectrumHandler(ABC):
                         else:
                             self.addToDeletedIons(neutral, foundMainPeaks, noise, np.min(theoreticalPeaks['m/z']), z)
                     elif theoreticalPeaks[notInNoise].size > 0:
-                        foundMainPeaksArr = np.sort(np.array(foundMainPeaks, dtype=self._peaksArrType), order=['m/z'])
+                        foundMainPeaksArr = np.sort(np.array(foundMainPeaks, dtype=peaksArrType), order=['m/z'])
                         self._foundIons.append(self._IonClass(neutral, np.min(theoreticalPeaks['m/z']), z,
                                                            foundMainPeaksArr, noise))
                         [print("\t",np.around(peak['m/z'],4),"\t",peak['relAb']) for peak in foundMainPeaksArr if peak['relAb']>0]
@@ -422,7 +420,7 @@ class AbstractSpectrumHandler(ABC):
         :param (float) monoisotopic: theoretical m/z of monoisotopic peak
         :param (int) z: charge of ion
         '''
-        foundMainPeaksArr = np.sort(np.array(foundMainPeaks, dtype=self._peaksArrType), order=['m/z'])
+        foundMainPeaksArr = np.sort(np.array(foundMainPeaks, dtype=peaksArrType), order=['m/z'])
         noiseIon = self._IonClass(fragment, monoisotopic, z, foundMainPeaksArr, noise)
         noiseIon.addComment('noise')
         self._ionsInNoise.append(noiseIon)

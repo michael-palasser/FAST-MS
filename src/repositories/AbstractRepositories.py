@@ -185,7 +185,7 @@ class AbstractRepositoryWithItems(AbstractRepository, ABC):
         :return: (int) id of the created entry
         '''
         cur = self._conn.cursor()
-        sql = 'INSERT INTO ' + table + '(' + ', '.join(self._itemDict[table]) + ''') 
+        sql = 'INSERT INTO ' + table + ' (' + ', '.join(self._itemDict[table]) + ''') 
                                       VALUES(''' + (len(self._itemDict[table]) * '?,')[:-1] + ')'
         print(sql, attributes)
         cur.execute(sql, attributes)

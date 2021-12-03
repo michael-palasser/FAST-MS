@@ -283,8 +283,8 @@ class AbstractMainController(ABC):
         Starts an AddIonView to create a new ion (which was not found by the main search)
         '''
         addIonView = AddIonView(self._mainWindow, self._propStorage.getMolecule().getName(),
-                                ''.join(self._propStorage.getSequenceList()), self._settings['fragmentation'],
-                                self._settings['modifications'], self.addNewIon)
+                                ''.join(self._propStorage.getSequenceList()), self._settings['charge'],
+                                self._settings['fragmentation'], self._settings['modifications'], self.addNewIon)
         self._openWindows.append(addIonView)
 
     def addNewIon(self, addIonView):
@@ -293,6 +293,16 @@ class AbstractMainController(ABC):
         '''
         newIon = addIonView.getIon()
         newIon.setCharge(abs(newIon.getCharge()))
+        if newIon.getHash() in self._intensityModeller.getObservedIons().keys():
+            warning = newIon.getName() + ', ' + str(newIon.getCharge()) + ' is already in the list.'
+            QtWidgets.QMessageBox.warning(self._mainWindow, warning, QtWidgets.QMessageBox.Ok)
+            return
+        mz = newIon.getMonoisotopic()
+        spectrum = self._spectrumHandler.getSpectrum()[:,0]
+        if int(mz) not in range(int(np.min(spectrum)), int(np.max(spectrum))+1):
+            newIon.setNoise(self._spectrumHandler.getNoiseLevel())
+        else:
+            newIon.setNoise(self._spectrumHandler.calculateNoise(mz, self._configs['noiseWindowSize']))
         self._intensityModeller.addNewIon(newIon)
         self._info.addNewIon(newIon)
         self._infoView.update()

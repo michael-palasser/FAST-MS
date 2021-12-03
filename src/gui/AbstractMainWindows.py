@@ -1,4 +1,7 @@
+from os.path import join
+
 from PyQt5 import QtWidgets, QtCore
+from PyQt5.QtGui import QIcon
 
 
 class SimpleMainWindow(QtWidgets.QMainWindow):
@@ -11,6 +14,7 @@ class SimpleMainWindow(QtWidgets.QMainWindow):
         self.setWindowTitle(self._translate(self.objectName(), title))
         self._centralwidget = QtWidgets.QWidget(self)
         self.setCentralWidget(self._centralwidget)
+        self.setWindowIcon(QIcon('icon.png'))
 
     def updateComboBox(self, comboBox, newOptions):
         toAdjust = comboBox.count() - len(newOptions)

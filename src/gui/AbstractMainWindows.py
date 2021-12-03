@@ -14,7 +14,7 @@ class SimpleMainWindow(QtWidgets.QMainWindow):
         self.setWindowTitle(self._translate(self.objectName(), title))
         self._centralwidget = QtWidgets.QWidget(self)
         self.setCentralWidget(self._centralwidget)
-        self.setWindowIcon(QIcon('Rocket_Icon.png'))
+        self.setWindowIcon(QIcon('icon.png'))
 
     def updateComboBox(self, comboBox, newOptions):
         toAdjust = comboBox.count() - len(newOptions)

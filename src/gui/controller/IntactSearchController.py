@@ -510,7 +510,7 @@ class IntactMainController(AbstractMainController):
             filename = dlg.getFilename()
             if filename == '':
                 inputFileName = os.path.split(self._settings['spectralData'])[-1]
-                filename = inputFileName[0:-4] + '_out' + '.xlsx'
+                filename = inputFileName[0:-4] + '.xlsx'
             elif filename[-5:] != '.xlsx':
                 filename += '.xlsx'
             outputPath = newOptions['dir']

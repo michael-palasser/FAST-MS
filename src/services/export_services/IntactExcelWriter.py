@@ -174,7 +174,10 @@ class IntactExcelWriter(object):
                                           calibrationVals)
                 self.writeAverageMod(worksheet, avModifPerCharges[0][i][j], avModifPerCharges[1][i][j])
                 self.writeModifications(worksheet, modificationsInSpectra[0][i][j], modificationsInSpectra[1][i][j])
-                self._row = self._lastRow + 2
+                if self._lastRow -self._row < 9:
+                    self._row += 11
+                else:
+                    self._row = self._lastRow + 2
 
 
     def closeWorkbook(self):

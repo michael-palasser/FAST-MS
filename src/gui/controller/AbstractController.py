@@ -294,8 +294,9 @@ class AbstractMainController(ABC):
         newIon = addIonView.getIon()
         newIon.setCharge(abs(newIon.getCharge()))
         if newIon.getHash() in self._intensityModeller.getObservedIons().keys():
-            warning = newIon.getName() + ', ' + str(newIon.getCharge()) + ' is already in the list.'
-            QtWidgets.QMessageBox.warning(self._mainWindow, warning, QtWidgets.QMessageBox.Ok)
+            warning = newIon.getName() + ', ' + str(newIon.getCharge()) + ' is already in the list. \n' \
+                                                                          'Should the old ion be overwritten?'
+            QtWidgets.QMessageBox.question(self._mainWindow, warning, QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
             return
         mz = newIon.getMonoisotopic()
         spectrum = self._spectrumHandler.getSpectrum()[:,0]

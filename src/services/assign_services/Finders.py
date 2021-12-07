@@ -151,7 +151,7 @@ class AbstractFinder(ABC):
         limit = errorLimit
         solution = [0, 1, 0]
         length = len(ionList)
-        while length > 4:
+        while length > 3:
             usedIons = []
             y = list()
             x = list()
@@ -165,6 +165,9 @@ class AbstractFinder(ABC):
                     #errorList.append(abs(getError(calibratedX, theoMz)))
                     errorList.append(calculateError(calibratedX, theoMz))
                     usedIons.append(ion)
+            length = len(usedIons)
+            if length<3:
+                break
             try:
                 solution, pcov = curve_fit(self.fun_parabola, np.array(x), np.array(y))
                 limit *= 0.67
@@ -177,7 +180,6 @@ class AbstractFinder(ABC):
                                                 ').    Are you sure you picked the correct settings?')
             errorList = np.array(errorList)
             #if np.average(np.abs(errorList)) < 1.0 and np.std(errorList) < 2.0:
-            length = len(usedIons)
             if np.std(errorList) < maxStd:
                 break
         return solution, np.sqrt(np.diag(pcov)), (np.average(np.abs(errorList)), np.std(errorList)), usedIons

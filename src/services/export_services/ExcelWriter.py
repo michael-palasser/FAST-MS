@@ -84,19 +84,16 @@ class BasicExcelWriter(object):
         if mode == 0:
             title = 'Occupancies: /%'
             plotTitle = 'Occupancies'
-            format = '0%'
             write = self.writePercentage
         elif mode == 1:
             title = 'Av. Charge per Fragment:'
             plotTitle = 'Av. Charge'
-            format = '0.0'
         else:
             title = 'Av. Charge per Fragment (reduced):'
             plotTitle = 'Av. Charge (red.)'
-            format = '0.0'
         self._worksheet1.write(row, 0, title)
         row+=1
-        self._worksheet1.write(row, 0, "building block'")
+        self._worksheet1.write(row, 0, "building block")
         self._worksheet1.write_column(row + 1, 0, sequence)
         self._worksheet1.write(row, 1, "#5'/N-term.")
         self._worksheet1.write_column(row + 1, 1, list(range(1, len(sequence) + 1)))
@@ -124,11 +121,11 @@ class BasicExcelWriter(object):
             col+=1
         self._worksheet1.write(row, col, "#3'/C-term.")
         self._worksheet1.write_column(row + 1, col, reversed(list(range(1, len(sequence)))))
-        self.addChart(plotTitle, row, valueDict, sequence, backFrags, format, maxVal)
+        self.addChart(plotTitle, row, valueDict, sequence, backFrags, maxVal, mode == 0)
         return row+len(sequence)
 
 
-    def addChart(self, title, row, valueDict, sequence, backwardFrags, format, maxVal):
+    def addChart(self, title, row, valueDict, sequence, backwardFrags, maxVal, occupancy=True):
         '''
         Makes a plot in the xlsx file (occupancy or charge plot)
         :param (str) title: title of the chart
@@ -141,6 +138,14 @@ class BasicExcelWriter(object):
         :param (int) maxVal: maximum value of y-axis
         :return:
         '''
+        if occupancy:
+            format = '0%'
+            yAxis1 = "5'-O /%"
+            yAxis2 = "3'-O /%"
+        else:
+            format = '0.0'
+            yAxis1 = "av. charge (5'-/N-term.)"
+            yAxis2 = "av. charge (3'-/C-term.)"
         chart = self._workbook.add_chart({'type': 'line'})
         sequLength= len(sequence)
         lastRow = row + sequLength
@@ -175,13 +180,13 @@ class BasicExcelWriter(object):
                           'min':0, 'max':sequLength-1,
                            'position_axis': 'between',
                            'num_font': {'size': 10},})
-        chart.set_y_axis({'name': '5\'-O /%',
+        chart.set_y_axis({'name': yAxis1,
                            'name_font': {'size': 13},
                            'min': 0, 'max': maxVal,
                            'num_font': {'size': 10},
                            'num_format': format,
                           })
-        chart.set_y2_axis({'name': '3\'-O /%',
+        chart.set_y2_axis({'name': yAxis2,
                             'name_font': {'size': 13},
                            'min': 0, 'max': maxVal,
                             'num_font': {'size': 10},

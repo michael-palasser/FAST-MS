@@ -95,13 +95,14 @@ class Analyser(object):
         elif modification is None:
             modification=self._modification
 
-        if modification[0] in('+','-'):
-            sign = modification[0]
-        else:
+        if modification[0] not in ('+','-'):
+            #sign = modification[0]
+            #else:
             modification = '+'+modification
-            sign = '+'
-        print('modification', modification, modification[1:])
+            #sign = '+'
+        sequLength = len(self._sequence)
         absValues = dict()
+        absIntensities = {}
         for ion in self._ions:
             if ion.getType() in interestingIons:
                 if unImportantMods is not None:
@@ -109,29 +110,33 @@ class Analyser(object):
                         #print('not', ion.getName())
                         continue
                 if ion.getType() not in absValues.keys():
-                    absValues[ion.getType()] = np.zeros((len(self._sequence), 3))
-                #if self._modification in ion.getModification():
-                '''if ('+' in modification[1:]) or ('-' in modification[1:]):
-                    modifications = ion.getModificationList()
-                else:'''
-                #modifications = ion.getModification()
-                #print(ion.getName(),modifications, modification, modification in modifications)
+                    absValues[ion.getType()] = np.zeros((sequLength, 3))
+                    absIntensities[ion.getType()] = np.zeros(sequLength)
                 currentMod = ion.getModification()
+                absIntensities[ion.getType()][ion.getNumber() - 1] += ion.getIntensity()
                 if modification[1:] in currentMod:
                     absValues[ion.getType()][ion.getNumber() - 1] += \
                         np.array([self.getCorrectValue(ion),
                                   self.getCorrectValue(ion) * self.getNrOfModifications(currentMod, modification), 0])
-                    #print('\t', ion.getName(), self.getCorrectValue(ion)*int(self.getNrOfModifications(ion.getModification())), 'mod')
-
-                    print(currentMod, self.getNrOfModifications(currentMod, modification))
                 else:
-                    print(currentMod, 0,'a')
                     absValues[ion.getType()][ion.getNumber() - 1] += \
                         np.array([self.getCorrectValue(ion), 0, 0])
-                    #print('\t', ion.getName(), self.getCorrectValue(ion))
+        print('\n\n***** intensities:')
+        for key,vals in absIntensities.items():
+            if key in ('a','b','c','d'):
+                print("\nbuilding block\t#5'/N-term.\t",key)
+                [print(self._sequence[i],'\t', str(i+1), '\t',val) for i,val in enumerate(vals)]
+            else:
+                print("\n",key,"\t#3'/C-term.",)
+                [print(val, '\t', str(sequLength-i-1)) for i,val in enumerate(reversed(vals[:-1]))]
+        print('\n\n***** abundances:')
         for key,vals in absValues.items():
-            print('sequ.\t',key+'_free\t', key+'+'+modification)
-            [print(str(i+1), '\t',val[0]-val[1], '\t', val[1]) for i,val in enumerate(vals)]
+            if key in ('a','b','c','d'):
+                print("\nbuilding block\t#5'/N-term.\t",key+'\t', key+modification)
+                [print(self._sequence[i],'\t', str(i+1), '\t',val[0]-val[1], '\t', val[1]) for i,val in enumerate(vals)]
+            else:
+                print('\n',key+'\t', key+modification,"\t#3'/C-term.")
+                [print(val[0]-val[1], '\t', val[1], '\t',str(sequLength-i-1)) for i,val in enumerate(reversed(vals[:-1]))]
         proportions = self.calculateProportions(absValues)
         newAbsValues = {}
         for key,vals in absValues.items():

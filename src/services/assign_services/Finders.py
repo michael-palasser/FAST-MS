@@ -41,26 +41,44 @@ class AbstractFinder(ABC):
         :param path:
         :return:
         '''
-        data = []
-        spectrum = list()
         dtype=np.dtype([('m/z', float), ('z', np.uint8), ('relAb', float)])
         with open(path) as file:
-            for line in file:
-                line = line.rstrip()
-                if line.startswith('m/z'):  # ToDo
-                    if len(spectrum) != 0:
-                        data.append(np.array(spectrum, dtype=dtype))
-                        spectrum = list()
-                else:
-                    try:
-                        lineList = line.split()
-                        charge = lineList[1].replace('+', '').replace('-', '')
-                        spectrum.append((lineList[0], charge, lineList[2]))
-                    except:
-                        print("problem in spectral pattern file: \nline", line)
-                        continue
+            if path[-4:] == '.csv':
+                data = self.openCsvFile(file, dtype)
+            else:
+                data = self.openTxtFile(file, dtype)
+        return data
+    
+    def openTxtFile(self, file, dtype):
+        data = []
+        spectrum = list()
+        for line in file:
+            line = line.rstrip()
+            if line.startswith('m/z'):  # ToDo
+                if len(spectrum) != 0:
+                    data.append(np.array(spectrum, dtype=dtype))
+                    spectrum = list()
+            else:
+                try:
+                    lineList = line.split()
+                    charge = lineList[1].replace('+', '').replace('-', '')
+                    spectrum.append((lineList[0], charge, lineList[2]))
+                except:
+                    print("problem in spectral pattern file: \nline", line)
+                    continue
         data.append(np.array(spectrum, dtype=dtype))
         return data
+
+    def openCsvFile(self, file, dtype):
+        try:
+            #print(np.loadtxt(lines[1:], delimiter=',', skiprows=1, usecols=[0, 1]))
+            #return np.loadtxt(lines, delimiter=',', skiprows=skip, usecols=[0, 2])
+            return [np.loadtxt(file, delimiter=',', usecols=[0, 1, 2],dtype=dtype)]
+        except IndexError:
+            #return np.loadtxt(lines, delimiter=';', skiprows=skip, usecols=[0, 2])
+            return [np.loadtxt(file, delimiter=';', usecols=[0, 1, 2],dtype=dtype)]
+        except ValueError:
+            raise InvalidInputException('Incorrect Format of spectral data', '\nThe format must be "m/z,z,int" or "m/z;z;int"')
 
     def findIonsInSpectrum(self, k, d, spectrum, flag=False):
         '''

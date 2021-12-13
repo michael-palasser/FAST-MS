@@ -128,10 +128,11 @@ class AbstractSpectrumHandler(ABC):
         try:
             #print(np.loadtxt(lines[1:], delimiter=',', skiprows=1, usecols=[0, 1]))
             #return np.loadtxt(lines, delimiter=',', skiprows=skip, usecols=[0, 2])
-            return np.loadtxt(file, delimiter=',', skiprows=1, usecols=[0, 1])
+            #return np.loadtxt(file, delimiter=',', skiprows=1, usecols=[0, 1])
+            return np.loadtxt(file, delimiter=',', usecols=[0, 1])
         except IndexError:
             #return np.loadtxt(lines, delimiter=';', skiprows=skip, usecols=[0, 2])
-            return np.loadtxt(file, delimiter=';', skiprows=1, usecols=[0, 1])
+            return np.loadtxt(file, delimiter=';', usecols=[0, 1])
         except ValueError:
             raise InvalidInputException('Incorrect Format of spectral data', '\nThe format must be "m/z,int" or "m/z;int"')
 

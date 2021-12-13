@@ -147,13 +147,14 @@ class PlotFactory(object):
             name = key + '-ions'
             if parent!=self._plot1:
                 vals = [self._maxY-val for val in vals]
-            scatter = pg.ScatterPlotItem(x=xVals, y=vals, symbol=markers[i],
+            newXVals, newVals = self.removeNANVals(xVals,vals)
+            curve = pg.PlotCurveItem(x=newXVals,y=newVals,pen=pg.mkPen(color=colours[i], width=2), name = name)
+            scatter = pg.ScatterPlotItem(x=newXVals, y=newVals, symbol=markers[i],
                                          pen =pg.mkPen(color=colours[i], width=2),
                                          brush=(0,0,0,0), size=10, pxMode=True, name = name)
-            newXVals, newVals = self.removeNANVals(xVals,vals)
-            curve = pg.PlotCurveItem(x=newXVals,y=newVals,pen=pg.mkPen(color=colours[i], width=2))
-            self._plot1.addItem(scatter)
+            #newXVals, newVals = self.removeNANVals(xVals,vals)
             self._plot1.addItem(curve)
+            self._plot1.addItem(scatter)
             i+=1
 
     def removeNANVals(self, xVals, vals):

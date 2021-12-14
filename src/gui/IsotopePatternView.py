@@ -26,6 +26,7 @@ class IsotopePatternView(SimpleMainWindow):
 
         self._inputForm = QtWidgets.QLineEdit(self._widget1)
         self._inputForm.returnPressed.connect(self.calculateIsotopePattern)
+        self._inputForm.textChanged.connect(self.calculateIsotopePattern)
         self._horizLayout1.addWidget(self._inputForm)
         modeLabel = QtWidgets.QLabel(self._widget1)
         modeLabel.setText(self._translate(self.objectName(), "Mode:"))
@@ -168,8 +169,8 @@ class IsotopePatternView(SimpleMainWindow):
         openDialog.show()
         if openDialog.exec_() and openDialog.accepted:
             sequence = service.get(openDialog.getName())
-            self._inputForm.setText(''.join(sequence.getSequenceString()))
             self._modeBox.setCurrentText(sequence.getMolecule())
+            self._inputForm.setText(''.join(sequence.getSequenceString()))
 
     def pauseCalculation(self):
         if self._pause:

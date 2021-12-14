@@ -73,20 +73,41 @@ class Info(object):
         self._infoString += '\n* changed ' + self.ionToString(origIon) + \
                 ';   old Int.: ' + str(round(origIon.getIntensity())) + ', new: ' + str(round(newIon.getIntensity()))
         #count = 1
-        self._infoString += '\n\tisotope peaks (columns: m/z,  int.(spectrum),  int. (calc.),  used)\n' \
-                            '\n\t\tnew   -->   old\n'
+        self._infoString += '\n\t\tm/z,  z,  intensity,  fragment,  error /ppm,  S/N,  quality,  score,  comment'
+        self._infoString += '\n\tOld:\t'+ self.formatIon(origIon.getMoreValues())
+        self._infoString += '\n\tNew:\t'+ self.formatIon(newIon.getMoreValues())
+        self._infoString += '\n\tisotope peaks (columns: m/z,  int.(spectrum),  int. (calc.),  used):' \
+                            '\n\t\t\tnew\t   -->   \t\t\told'
         for oldPeak, newPeak in zip(origIon.getIsotopePattern(), newIon.getIsotopePattern()):
-            self._infoString += '\n\t'+ self.formatPeak(oldPeak) + '\t' + self.formatPeak(newPeak)
+            self._infoString += '\n\t  ' + self.formatPeak(oldPeak) + '\t-->\t' + self.formatPeak(newPeak)
             #self._infoString += '\n\t' + str(count) + '   old: ' + ',  '.join([str(val) for val in oldPeak]) + \
             #                   '\tnew: ' + ', '.join([str(val) for val in newPeak])
             #count += 1
 
     @staticmethod
-    def formatPeak(peak):
-        return ',  '.join([str(val) for val in [round(peak[0],5) + int(peak[1]) + int(peak[2]) + round(peak[3],2) + peak[4]]])
+    def formatIon(ionVals):
+        return ',  '.join([str(val) for val in [round(ionVals[0],5), int(ionVals[1]), int(ionVals[2]), ionVals[3],
+                                                round(ionVals[4],2), round(ionVals[5],1), round(ionVals[6],2),
+                                                round(ionVals[7],1), ionVals[8]]])
 
-    def addNewIon(self, ion):
+    @staticmethod
+    def formatPeak(peak):
+        return ',  '.join([str(val) for val in [round(peak[0],5), int(peak[1]), int(peak[2]), round(peak[3],2), peak[4]]])
+
+    def addNewIon(self, ion, oldIon=None):
         self._infoString += '\n* manually added ' + self.ionToString(ion)
+        if oldIon is not None:
+            self._infoString += '\n\tOverwritten: ' + oldIon.getFormula().toString()
+            self._infoString += '\n\t  m/z,  z,  intensity,  fragment,  error /ppm,  S/N,  quality,  score,  comment'
+            self._infoString += '\n\t  ' + self.formatIon(oldIon.getMoreValues())
+            self._infoString += '\n\t  isotope peaks (columns: m/z,  int.(spectrum),  int. (calc.),  used):'
+            for oldPeak in oldIon.getIsotopePattern():
+                self._infoString += '\n\t    '+ self.formatPeak(oldPeak)
+            self._infoString += '\n\tNew: ' + ion.getFormula().toString() + \
+                                '\n\t  isotope peaks (columns: m/z,  int.(spectrum),  int. (calc.),  used):'
+            for newPeak in ion.getIsotopePattern():
+                self._infoString += '\n\t    '+ self.formatPeak(newPeak)
+
 
     def repeatModelling(self):
         self._infoString += '\n* Repeated modelling overlaps'

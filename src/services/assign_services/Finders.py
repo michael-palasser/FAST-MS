@@ -15,6 +15,8 @@ from src.services.assign_services.AbstractSpectrumHandler import calculateError,
 #protonMass = 1.00727647
 
 
+dtype = np.dtype([('m/z', float), ('z', np.uint8), ('relAb', float)])
+
 class AbstractFinder(ABC):
     '''
     Abstract superclass for all finders
@@ -37,19 +39,23 @@ class AbstractFinder(ABC):
 
     def readFile(self, path):
         '''
-
-        :param path:
-        :return:
+        Reads a file with unassigned ion data
+        :param (str) path: path of the file
+        :return: (list[ndarray]) list of spectra: dtype = [('m/z', float), ('z', np.uint8), ('relAb', float)]
         '''
-        dtype=np.dtype([('m/z', float), ('z', np.uint8), ('relAb', float)])
         with open(path) as file:
             if path[-4:] == '.csv':
-                data = self.openCsvFile(file, dtype)
+                data = self.openCsvFile(file)
             else:
-                data = self.openTxtFile(file, dtype)
+                data = self.openTxtFile(file)
         return data
     
-    def openTxtFile(self, file, dtype):
+    def openTxtFile(self, file):
+        '''
+        Reads a text file with unassigned ion data
+        :param file: text file
+        :return: (list[ndarray]) list of spectra: dtype = [('m/z', float), ('z', np.uint8), ('relAb', float)]
+        '''
         data = []
         spectrum = list()
         for line in file:
@@ -69,13 +75,15 @@ class AbstractFinder(ABC):
         data.append(np.array(spectrum, dtype=dtype))
         return data
 
-    def openCsvFile(self, file, dtype):
+    def openCsvFile(self, file):
+        '''
+        Reads a csv file with unassigned ion data
+        :param file: csv file
+        :return: (list[ndarray]) list of spectra: dtype = [('m/z', float), ('z', np.uint8), ('relAb', float)]
+        '''
         try:
-            #print(np.loadtxt(lines[1:], delimiter=',', skiprows=1, usecols=[0, 1]))
-            #return np.loadtxt(lines, delimiter=',', skiprows=skip, usecols=[0, 2])
             return [np.loadtxt(file, delimiter=',', usecols=[0, 1, 2],dtype=dtype)]
         except IndexError:
-            #return np.loadtxt(lines, delimiter=';', skiprows=skip, usecols=[0, 2])
             return [np.loadtxt(file, delimiter=';', usecols=[0, 1, 2],dtype=dtype)]
         except ValueError:
             raise InvalidInputException('Incorrect Format of spectral data', '\nThe format must be "m/z,z,int" or "m/z;z;int"')
@@ -101,8 +109,6 @@ class AbstractFinder(ABC):
         ions = list()
         for neutral in self._theoValues:
             mass = neutral.getMonoisotopicMass()
-            #modif = neutral.getModification()
-            #nrMod = neutral.getNrOfModifications()
             radicals = neutral.getRadicals()
             for z in self.getZRange(neutral):
                 mz = getMz(mass, z * self._sprayMode, radicals)

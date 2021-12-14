@@ -16,7 +16,6 @@ class SimplePeakView(QtWidgets.QWidget):
     '''
     def __init__(self, parent, ion):
         super().__init__(parent)
-        print(ion.getIsotopePattern())
         self._peaks = ion.getIsotopePattern()
         # self.proxyModel = QSortFilterProxyModel()
         # self.proxyModel.setSourceModel(_model)

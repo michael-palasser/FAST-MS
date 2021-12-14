@@ -94,16 +94,15 @@ class ExportDialog(AbstractDialog):
     '''
     Dialog to export the results of a top-down or intact analysis
     '''
-    def __init__(self, parent, analysisOptions, storedOptions):
+    def __init__(self, parent, analysisOptions, storedOptions, default = 'top-down'):
         super(ExportDialog, self).__init__(parent, 'Export Results')
         if storedOptions is None:
             storedOptions = {'columns':[], 'analysis':[], 'dir':[]}
         formLayout = self.makeFormLayout(self)
-        #try:
         if isdir(storedOptions['dir']):
             startPath = storedOptions['dir']
         else:
-            startPath = join(path, 'Spectral_data', 'top-down')
+            startPath = join(path, 'Spectral_data', default)
         #except KeyError:
         #    startPath = join(path, 'Spectral_data', 'top-down')
         index=self.fill(self, formLayout,('Directory:','Filename:'),

@@ -27,7 +27,6 @@ class GeneralPeakWidget(QtWidgets.QTableWidget):
         self.setSortingEnabled(True)
         #connectTable(self, self.showOptions)
 
-        print(self._peaks, self._headers, len(self._peaks), len(self._headers))
         '''self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.customContextMenuRequested['QPoint'].connect(partial(self.showOptions, self))'''
 

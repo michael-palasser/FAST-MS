@@ -147,7 +147,7 @@ class IntactStartDialog(StartDialog):
         if full:
             self._configHandler = ConfigurationHandlerFactory.getFullIntactHandler()
         else:
-            self._configHandler = ConfigurationHandlerFactory.getIntactHandler()
+            self._configHandler = ConfigurationHandlerFactory.getIntactAssignHandler()
         self.setupUi()
         shoot(self)
 

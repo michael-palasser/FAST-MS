@@ -21,4 +21,4 @@ os.chdir(directory)
 os.system("python -m src.gui.StartWindow")
 
 
-#!/Users/eva-maria/.conda/envs/SAUSAGE_beta1/bin/python
+#!/Users/eva-maria/.conda/envs/FAST MS/bin/python

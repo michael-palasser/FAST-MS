@@ -147,7 +147,6 @@ class IntensityModeller(object):
                 if np.all(ion.getIsotopePattern()['relAb'][noOutliers] == 0):
                     print("deleted:", ion.getName(), ion.getCharge(), ion.getIntensity(), round(ion.getQuality(), 2))
                     if ion.getComment() != "noise,":
-                        print(ion.getIsotopePattern(), ion.getQuality())
                         ion.addComment("qual.")
                     if ion.getHash() not in self._deletedIons.keys():
                         self._deletedIons[ion.getHash()] = ion

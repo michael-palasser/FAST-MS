@@ -48,7 +48,6 @@ def run(mainWindow):
             if fileName[:-4] != '.txt':
                 fileName += '.txt'
             spectralFiles.append(fileName)"""
-    print(path)
     dlg = SpectrumComparatorStartDialog(mainWindow)
     dlg.exec_()
     if dlg and len(dlg.getFiles()) >0:
@@ -59,9 +58,11 @@ def run(mainWindow):
             spectrum = list()
             with open(spectralFile) as f:
                 for i,line in enumerate(f):
-                    if line.startswith('m/z'):
-                        continue
+                    '''if line.startswith('m/z'):
+                        continue'''
                     items = tuple(removeEmptyElements(line.rstrip().split()))
+                    if i==0 and not items[0].isnumeric():
+                        continue
                     if len(items) !=4:
                         raise InvalidInputException('Incorrect Format in: '+spectralFile+'(line:'+str(i+1)+': '+line+') ',
                                                     'Number of columns must 4 but is '+str(len(items)))
@@ -89,7 +90,6 @@ def run(mainWindow):
         #outputName = input('Name of output file: ')
         if outputName == '':
             date = datetime.now().strftime("%d.%m.%Y")
-            print(date)
             output = os.path.join(path, 'Spectral_data','comparison', date + '_out' + '.xlsx')
         else:
             output = os.path.join(path, 'Spectral_data','comparison', outputName + '.xlsx')

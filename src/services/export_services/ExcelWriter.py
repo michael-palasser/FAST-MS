@@ -285,7 +285,6 @@ class ExcelWriter(BasicExcelWriter):
         date = datetime.now().strftime("%d/%m/%Y %H:%M")
         self._worksheet1.write_row(row, 0, ("Time:", date))
         row=1
-        print(generalParam)
         for key,val in generalParam.items():
             self._worksheet1.write_row(row, 0, (key, val))
             row +=1
@@ -344,7 +343,7 @@ class ExcelWriter(BasicExcelWriter):
          '''
         return {'m/z':(ion.getMonoisotopic(),self._format5digit), 'z':(ion.getCharge(),None),
                 'intensity':(round(ion.getIntensity()),None), 'int./z':(round(ion.getIntensity()/ion.getCharge()),None),
-                'fragment':(ion.getName(),None),
+                'name':(ion.getName(),None),
                 'error /ppm':(round(ion.getError(),3), self._format2digit),
                 'S/N':(round(ion.getSignalToNoise(),3), self._format2digit),
                 'quality':(round(ion.getQuality(),3), self._format2digit),
@@ -437,7 +436,7 @@ class ExcelWriter(BasicExcelWriter):
         :param (list[FragmentIon]) ionList: list of ions
         :return: (int) next row
         '''
-        worksheet.write_row(row,col,('m/z','z','intensity','fragment','error','used'))
+        worksheet.write_row(row,col,('m/z','z','intensity','name','error','used'))
         row += 1
         for ion in ionList:
             if self._intact or ion.getType() in self._configs['interestingIons']:

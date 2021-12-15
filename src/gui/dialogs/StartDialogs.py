@@ -300,6 +300,7 @@ class SpectrumComparatorStartDialog(AbstractDialog):
             self.createInputWidget()
         self._verticalLayout.addWidget(self._buttonBox)
         self.show()
+        shoot(self)
 
     def getFiles(self):
         return self._files

@@ -48,7 +48,7 @@ class IonTableWidget(QTableWidget):
         return ['{:10.5f}','{:2d}', '{:12d}', '','{:4.2f}', '{:6.1f}', '{:4.2f}', '']
 
     def getHeaders(self):
-        return ['m/z','z','intensity','fragment','error /ppm', 'S/N','quality']
+        return ['m/z','z','intensity','name','error /ppm', 'S/N','quality']
 
     def getValue(self,ion):
         return ion.getValues()

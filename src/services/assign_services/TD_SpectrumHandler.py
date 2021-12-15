@@ -329,7 +329,6 @@ class SpectrumHandler(AbstractSpectrumHandler):
         :return: (float) normalisation factor
         '''
         if self._moleculeName in ['RNA', 'DNA'] and self._sprayMode == -1:
-            print(self._moleculeName, self._charge,len(self._sequList), self._precursor.getFormula().getFormulaDict()['P'])
             return self._charge / self._precursor.getFormula().getFormulaDict()['P']
             #return self._charge / len(self._sequList)
         #elif self._moleculeName == 'Protein' and self._sprayMode == 1:
@@ -337,7 +336,6 @@ class SpectrumHandler(AbstractSpectrumHandler):
         #elif self._moleculeName in ['RNA', 'DNA'] and self._sprayMode == 1:
         #    return self._charge / len(self._sequList)
         else:
-            print(self._moleculeName, self._charge,len(self._sequList))
             return self._charge  / len(self._sequList)#self.getChargeScore(self._sequList)
 
     def getChargeScore(self, fragment): #ToDo: For proteins, currently not use

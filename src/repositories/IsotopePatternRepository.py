@@ -102,7 +102,7 @@ class IsotopePatternRepository(object):
                                                 str(len(savedPattern)) + "(old) != " + str(len(newPattern)))'''
         highestTested = 3
         if len(savedPattern)<3:
-            highestTested = len(savedPattern)
+            highestTested = min(len(savedPattern), len(newPattern))
         for i in range(highestTested):
             if abs(newPattern[i]['m/z'] - savedPattern[i]['m/z']) > 10 ** (-6):
                 raise InvalidIsotopePatternException(fragment.getName(), "mass incorrect " +

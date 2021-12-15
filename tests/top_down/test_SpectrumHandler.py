@@ -65,10 +65,10 @@ class TestSpectrumHandler(TestCase):
         self.assertEqual(5, self.spectrumHandler.calcPrecCharge(-6, 1))
 
     def test_add_spectrum_from_csv_and_txt(self):
-        with open(os.path.join(path, 'tests', 'test_files', 'dummySpectrum.csv'), 'r') as f:
-            fromCsv = self.spectrumHandler.addSpectrumFromCsv(f)
-        with open(self.settings['spectralData'], 'r') as f:
-            fromTxt = self.spectrumHandler.addSpectrumFromTxt(f)
+        #with open(os.path.join(path, 'tests', 'test_files', 'dummySpectrum.csv'), 'r') as f:
+        fromCsv = self.spectrumHandler.addSpectrumFromCsv(os.path.join(path, 'tests', 'test_files', 'dummySpectrum.csv'))
+        #with open(self.settings['spectralData'], 'r') as f:
+        fromTxt = self.spectrumHandler.addSpectrumFromTxt(self.settings['spectralData'])
         N = len(fromCsv)
         self.assertEqual(N, len(fromTxt))
         for row in range(N):
@@ -92,7 +92,7 @@ class TestSpectrumHandler(TestCase):
             self.assertAlmostEqual(theo, peak[0])
 
     def test_get_mod_charge(self):
-        zEffect = self.props.getModification().getItems()[0].getZEffect()
+        zEffect = self.props.getModifPattern().getItems()[0].getZEffect()
         fragment0 = Fragment('c', 5, '', '', [], 0)
         self.assertAlmostEqual(0, self.spectrumHandler.getModCharge(fragment0))
         fragment1 = Fragment('c', 5, '+CMCT', '', [], 0)

@@ -218,8 +218,8 @@ class FullIntactExcelWriter(ExcelWriter, IntactExcelWriter):
             self._worksheet1.write(self._row, 0, ("analysis:"))
             self._row += 1
             avCharges, avErrors, stddevs = analyser.calculateAvChargeAndError()
-            avModifPerCharges, avModifications = analyser.calculateAverageModification() #Todo
-            modificationsInSpectraPerZ, modificationsInSpectra = analyser.calculateModifications() #Todo
+            avModifPerCharges, avModifications = analyser.calculateAverageModification()
+            modificationsInSpectraPerZ, modificationsInSpectra = analyser.calculateModifications()
             self.writeGeneralAnalysis(self._worksheet1, avCharges[0][0], avErrors[0][0], stddevs[0][0], None)
             self.writeAverageMod(self._worksheet1, avModifPerCharges[0][0], avModifications[0][0])
             self.writeModifications(self._worksheet1, modificationsInSpectraPerZ[0][0], modificationsInSpectra[0][0])

@@ -43,50 +43,57 @@ class AbstractFinder(ABC):
         :param (str) path: path of the file
         :return: (list[ndarray]) list of spectra: dtype = [('m/z', float), ('z', np.uint8), ('relAb', float)]
         '''
-        with open(path) as file:
-            if path[-4:] == '.csv':
-                data = self.openCsvFile(file)
-            else:
-                data = self.openTxtFile(file)
-        return data
+        if path[-4:] == '.csv':
+            return self.openCsvFile(path)
+        else:
+            return self.openTxtFile(path)
     
-    def openTxtFile(self, file):
+    def openTxtFile(self, path, csv=False):
         '''
         Reads a text file with unassigned ion data
-        :param file: text file
+        :param (str) path: path of the file
         :return: (list[ndarray]) list of spectra: dtype = [('m/z', float), ('z', np.uint8), ('relAb', float)]
         '''
         data = []
         spectrum = list()
-        for line in file:
-            line = line.rstrip()
-            if line.startswith('m/z'):  # ToDo
-                if len(spectrum) != 0:
-                    data.append(np.array(spectrum, dtype=dtype))
-                    spectrum = list()
-            else:
-                try:
-                    lineList = line.split()
-                    charge = lineList[1].replace('+', '').replace('-', '')
-                    spectrum.append((lineList[0], charge, lineList[2]))
-                except:
-                    print("problem in spectral pattern file: \nline", line)
-                    continue
-        data.append(np.array(spectrum, dtype=dtype))
+        delimiter = ','
+        with open(path) as file:
+            for i,line in enumerate(file):
+                line = line.rstrip()
+                if (i == 0) and (';' in line):
+                    delimiter = ';'
+                if line.startswith('m/z'):  # ToDo
+                    if len(spectrum) != 0:
+                        data.append(np.array(spectrum, dtype=dtype))
+                        spectrum = list()
+                else:
+                    try:
+                        if not csv:
+                            lineList = line.split()
+                        else:
+                            lineList = line.split(delimiter)
+                        charge = lineList[1].replace('+', '').replace('-', '')
+                        spectrum.append((lineList[0], charge, lineList[2]))
+                    except:
+                        print("problem in spectral pattern file: \nline "+str(i), line)
+                        continue
+            data.append(np.array(spectrum, dtype=dtype))
         return data
 
-    def openCsvFile(self, file):
+    def openCsvFile(self, path):
         '''
         Reads a csv file with unassigned ion data
-        :param file: csv file
+        :param path: path of csv file
         :return: (list[ndarray]) list of spectra: dtype = [('m/z', float), ('z', np.uint8), ('relAb', float)]
         '''
-        try:
-            return [np.loadtxt(file, delimiter=',', usecols=[0, 1, 2],dtype=dtype)]
-        except IndexError:
-            return [np.loadtxt(file, delimiter=';', usecols=[0, 1, 2],dtype=dtype)]
-        except ValueError:
-            raise InvalidInputException('Incorrect Format of spectral data', '\nThe format must be "m/z,z,int" or "m/z;z;int"')
+        with open(path) as file:
+            try:
+                return [np.loadtxt(path, delimiter=',', usecols=[0, 1, 2],dtype=dtype)]
+            except IndexError:
+                return [np.loadtxt(path, delimiter=';', usecols=[0, 1, 2],dtype=dtype)]
+            except ValueError:
+                return self.openTxtFile(path, True)
+                #raise InvalidInputException('Incorrect Format of spectral data', '\nThe format must be "m/z,z,int" or "m/z;z;int"')
 
     def findIonsInSpectrum(self, k, d, spectrum, flag=False):
         '''

@@ -27,7 +27,7 @@ class Info(object):
         self._infoString += ''.join(['\t%s:\t%s\n' % (key, val) for (key, val) in configurations.items()])
         self._infoString += '* Sequence:\n\t' + ', '.join(searchProperties.getSequenceList())
         self._infoString += '\n* Fragmentation:' + searchProperties.getFragmentation().toString()
-        self._infoString += '\n* Modification: ' + searchProperties.getModification().toString()
+        self._infoString += '\n* Modification: ' + searchProperties.getModifPattern().toString()
 
     def startIntact(self, settings, configurations, sequenceList, modification):
         self._infoString += '\n* Settings:\n'

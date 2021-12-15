@@ -100,62 +100,64 @@ class AbstractSpectrumHandler(ABC):
         Add spectrum from file
         :param (str) filePath: path of txt or csv file
         '''
-        with open(filePath, mode='r', encoding='utf_8_sig') as f:
-            if filePath[-4:] == '.csv':
-                self._spectrum = self.addSpectrumFromCsv(f)
-            else:
-                self._spectrum = self.addSpectrumFromTxt(f)
+        if filePath[-4:] == '.csv':
+            self._spectrum = self.addSpectrumFromCsv(filePath)
+        else:
+            self._spectrum = self.addSpectrumFromTxt(filePath)
         self.resizeSpectrum()
 
-    def addSpectrumFromCsv(self, file):
+    def addSpectrumFromCsv(self, filePath):
         '''
-        :param file: opended csv-file
+        :param (str) filePath: path of csv-file
         :return: (ndarray(dtype=float, ndim=2)) [(m/z, int)]
         '''
-        #skip = 0
-        #lines = file.readlines()
-        '''print(lines)
-        if 'm/z' in lines[0]:
-            skip = 1
-        else:
-            print(lines[0])
-            raw = lines[0].split(',')
-            print(raw)
-            toAdd = np.empty(2,dtype=float)
-            toAdd[0] = float(raw[0].encode('utf-8-sig').decode('utf-8-sig'))
-            toAdd[1] = float(raw[1][:-2])
-            print('dsf',toAdd)'''
-        try:
-            #print(np.loadtxt(lines[1:], delimiter=',', skiprows=1, usecols=[0, 1]))
-            #return np.loadtxt(lines, delimiter=',', skiprows=skip, usecols=[0, 2])
-            #return np.loadtxt(file, delimiter=',', skiprows=1, usecols=[0, 1])
-            return np.loadtxt(file, delimiter=',', usecols=[0, 1])
-        except IndexError:
-            #return np.loadtxt(lines, delimiter=';', skiprows=skip, usecols=[0, 2])
-            return np.loadtxt(file, delimiter=';', usecols=[0, 1])
-        except ValueError:
-            raise InvalidInputException('Incorrect Format of spectral data', '\nThe format must be "m/z,int" or "m/z;int"')
+        with open(filePath, mode='r', encoding='utf_8_sig') as f:
+            try:
+                #print(np.loadtxt(lines[1:], delimiter=',', skiprows=1, usecols=[0, 1]))
+                #return np.loadtxt(lines, delimiter=',', skiprows=skip, usecols=[0, 2])
+                #return np.loadtxt(file, delimiter=',', skiprows=1, usecols=[0, 1])
+                return np.loadtxt(f, delimiter=',', usecols=[0, 1]) #ToDo
+            except IndexError:
+                #return np.loadtxt(lines, delimiter=';', skiprows=skip, usecols=[0, 2])
+                return np.loadtxt(f, delimiter=';', usecols=[0, 1])
+            except ValueError:
+                return self.addSpectrumFromTxt(filePath,True)
+                '''except ValueError:
+                    print([line for line in file])
+                    raise InvalidInputException('Incorrect Format of spectral data', '\nThe format must be "m/z,int" or "m/z;int"')'''
 
-    def addSpectrumFromTxt(self, file):
+    def addSpectrumFromTxt(self, filePath, csv=False):
         '''
-        :param file: opended txt-file
+        :param (str) filePath: path of text-file
         :return: (ndarray(dtype=float, ndim=2)) [(m/z, int)]
         '''
         spectralList = list()
-        for i,line in enumerate(file):
-            if line.startswith("m/z"):
-                continue
-            line = line.rstrip().split()
-            if len(line)>1:
-                try:
-                    spectralList.append((float(line[0]),float(line[1])))
-                except ValueError:
+        delimiter = ','
+        with open(filePath, mode='r', encoding='utf_8_sig') as f:
+            for i,line in enumerate(f):
+                '''if line.startswith("m/z"):
+                    continue'''
+                if i == 0 and ';' in line:
+                    delimiter = ';'
+                if not csv:
+                    items = line.rstrip().split()
+                else:
+                    items = line.rstrip().split(delimiter)
+                if len(items)>1:
                     try:
-                        call(['open', self._settings['spectralData']])
-                    except:
-                        pass
-                    raise InvalidInputException('Problem with format in spectral data', '  '.join(line) + ' (line ' + str(i) +
-                                                ') Format must be  "m/z    Int." !')
+                        print((float(items[0]),float(items[1])))
+                        spectralList.append((float(items[0]),float(items[1])))
+                    except ValueError:
+                        if i==0:
+                            continue
+                        try:
+                            call(['open', self._settings['spectralData']])
+                        except:
+                            pass
+                        if not csv:
+                            delimiter = '    '
+                        raise InvalidInputException('Problem with format in spectral data', '  '.join(items) + ' (line ' + str(i) +
+                                                ') Format must be  "m/z' + delimiter + 'Int." !')
         return np.array(spectralList)
 
     def resizeSpectrum(self):

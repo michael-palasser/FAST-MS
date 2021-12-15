@@ -68,7 +68,7 @@ def run(mainWindow):
 
             """Analysis and Output"""
             analyser = Analyser(ionList, sequence, 1, modification, configs['useAb'])
-            excelWriter = BasicExcelWriter(os.path.join(path, "Spectral_data","Occupancies_out.xlsx"))
+            excelWriter = BasicExcelWriter(os.path.join(path, "Spectral_data","Occupancies_out.xlsx"), modification)
             excelWriter.writeDate()
             row = excelWriter.writeAbundancesOfSpecies(2, analyser.calculateRelAbundanceOfSpecies()[0])
             excelWriter.addOccupOrCharges(0,row, sequence,

@@ -37,6 +37,8 @@ class Window(SimpleMainWindow):
                              (self.reopen, 'Re-opens the last analysis', None),
                          #'Calc. Abundances':
                          #    (lambda: modellingTool(self), 'Calculates relative abundances of an ion list', None),
+                         'Calculate Occupancies':
+                             (lambda: occupancyRecalculator(self), 'Calculates occupancies of a given (fragment) ion list', None),
                          'Edit Fragments': (
                          lambda: self.editData(FragmentEditorController), 'Edit fragment patterns', None),
                          'Edit Modifications':
@@ -54,8 +56,6 @@ class Window(SimpleMainWindow):
         self.createMenu('Other Tools',
                         {'Model Ion':
                              (lambda: IsotopePatternView(self), 'Calculates the isotope pattern of an ion', None),
-                         'Calculate Occupancies':
-                             (lambda: occupancyRecalculator(self), 'Calculates occupancies of a given (fragment) ion list', None),
                          'Compare ion lists':
                              (self.compareSpectra, 'Compares the ion lists of multiple spectra', None)},None)
         self.createMenu('Edit',

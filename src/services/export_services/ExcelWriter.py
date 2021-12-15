@@ -13,7 +13,7 @@ class BasicExcelWriter(object):
     '''
     Used by OccupancyRecalculator to write xlsx output file
     '''
-    def __init__(self, file):
+    def __init__(self, file, modification):
         '''
         :param (str) file: path of the output file
         '''
@@ -21,6 +21,7 @@ class BasicExcelWriter(object):
         self._worksheet1 = self._workbook.add_worksheet('analysis')
         self._percentFormat = self._workbook.add_format({'num_format': '0.0%'})
         self._format2digit = self._workbook.add_format({'num_format': '0.00'})
+        self._modification = modification
         self._intact = False
 
     def writeDate(self):
@@ -82,15 +83,15 @@ class BasicExcelWriter(object):
         '''
         write = self.writeVal
         if mode == 0:
-            title = 'Occupancies: /%'
-            plotTitle = 'Occupancies'
+            title = 'Occupancies: '+ self._modification +' /%'
+            plotTitle = 'Occupancies: '+ self._modification
             write = self.writePercentage
         elif mode == 1:
-            title = 'Av. Charge per Fragment:'
-            plotTitle = 'Av. Charge'
+            title = 'Av. Charge per Fragment (intensities):'
+            plotTitle = 'Av. Charge (int.)'
         else:
-            title = 'Av. Charge per Fragment (reduced):'
-            plotTitle = 'Av. Charge (red.)'
+            title = 'Av. Charge per Fragment (abundances):'
+            plotTitle = 'Av. Charge (ab.)'
         self._worksheet1.write(row, 0, title)
         row+=1
         self._worksheet1.write(row, 0, "building block")
@@ -140,8 +141,8 @@ class BasicExcelWriter(object):
         '''
         if occupancy:
             format = '0%'
-            yAxis1 = "5'-O /%"
-            yAxis2 = "3'-O /%"
+            yAxis1 = "O (5'/N-term.) /%"
+            yAxis2 = "O (3'/C-term.) /%"
         else:
             format = '0.0'
             yAxis1 = "av. charge (5'-/N-term.)"
@@ -215,7 +216,7 @@ class ExcelWriter(BasicExcelWriter):
         :param (dict[str:Any]) configurations: configurations
         :param (dict[str:str]) options: export options
         '''
-        super().__init__(file)
+        super().__init__(file, '')
         self._configs = configurations
         self._options = options
         self._worksheet2 = self._workbook.add_worksheet('ions')
@@ -223,7 +224,7 @@ class ExcelWriter(BasicExcelWriter):
         self._worksheet4 = self._workbook.add_worksheet('deleted ions')
         self._worksheet5 = self._workbook.add_worksheet('ions before remodelling')
         self._worksheet6 = self._workbook.add_worksheet('molecular formulas')
-        self._worksheet7 = self._workbook.add_worksheet('info')
+        self._worksheet7 = self._workbook.add_worksheet('protocol')
         self._format5digit = self._workbook.add_format({'num_format': '0.00000'})
 
 
@@ -239,6 +240,7 @@ class ExcelWriter(BasicExcelWriter):
         :param (str) infoString: infoString
         '''
         self._spraymode = sign(settings['charge'])
+        self._modification = properties.getModifPattern().getModification()
         try:
             #percentages = list()
             self.writeInfos(infoString)

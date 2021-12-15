@@ -45,7 +45,7 @@ class SearchSettings(object):
     def getFragmentation(self):
         return self.__fragmentation
 
-    def getModification(self):
+    def getModifPattern(self):
         return self.__modifPattern
 
     def getModificationName(self):

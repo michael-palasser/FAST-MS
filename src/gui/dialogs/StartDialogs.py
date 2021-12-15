@@ -84,7 +84,7 @@ class TDStartDialog(StartDialog):
                                                            " a new one with that name"),
                  "calibration": (QtWidgets.QCheckBox(), "Spectral data will be autocalibrated if option is ticked"),
                  "calIons": (OpenFileWidget(self, 1, join(path, 'Spectral_data', 'top-down'), "Open Files",
-                                            "Plain Text Files (*txt);;All Files (*)"),
+                                            "Plain Text Files (*txt);;Comma Separated Values (*csv);;All Files (*)"),
                              "Name of the file with ions for calibration (txt format)")}
 
 
@@ -147,7 +147,7 @@ class IntactStartDialog(StartDialog):
         if full:
             self._configHandler = ConfigurationHandlerFactory.getFullIntactHandler()
         else:
-            self._configHandler = ConfigurationHandlerFactory.getIntactHandler()
+            self._configHandler = ConfigurationHandlerFactory.getIntactAssignHandler()
         self.setupUi()
         shoot(self)
 
@@ -176,7 +176,7 @@ class IntactStartDialog(StartDialog):
                  "modifications": (createComboBox(self, modPatterns), "Name of the modification pattern"),
                  "spectralData": (
                  OpenFileWidget(self, 2, join(path, 'Spectral_data', 'intact'), "Open Files",  # changed here
-                                "Plain Text Files (*txt);;All Files (*)"),
+                                "Plain Text Files (*txt);;Comma Separated Values (*csv);;All Files (*)"),
                  "Name of the file with unassigned ions (txt format)"),
                  "sprayMode": (createComboBox(self, ("negative", "positive")), "Spray mode"),
                  "inputMode": (createComboBox(self, ("intensities", "abundances (int./z)")), "Spectral data will be autocalibrated if option is ticked"),
@@ -243,7 +243,7 @@ class IntactStartDialogFull(IntactStartDialog):
                  "modifications": (createComboBox(self, modPatterns), "Name of the modification pattern"),
                  "spectralData": (
                     OpenFileWidget(self, 1, join(path, 'Spectral_data', 'intact'), "Open Files",
-                                   "Plain Text Files (*txt);;All Files (*)"),
+                                   "Plain Text Files (*txt);;Comma Separated Values (*csv);;All Files (*)"),
                     "Name of the file with peaks (txt format)"),
                  "sprayMode": (createComboBox(self, ("negative", "positive")), "Spray mode"),
                  'noiseLimit': (QtWidgets.QDoubleSpinBox(self), "Minimal noise level"),
@@ -251,7 +251,7 @@ class IntactStartDialogFull(IntactStartDialog):
                  "maxMz": (self.getMinMaxWidget(), "m/z where search ends"),
                  "calibration": (QtWidgets.QCheckBox(self), "Spectral data will be autocalibrated if option is ticked"),
                  "calIons": (OpenFileWidget(self, 1, join(path, 'Spectral_data', 'intact'), "Open Files",
-                                            "Plain Text Files (*txt);;All Files (*)"),
+                                            "Plain Text Files (*txt);;Comma Separated Values (*csv);;All Files (*)"),
                              "Name of the file with ions for calibration (txt format)")}
 
     def backToLast(self):

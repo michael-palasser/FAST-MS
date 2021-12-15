@@ -33,7 +33,7 @@ class Ion(ABC):
 
     def getQuality(self):
         return self._quality
-    def setQuality(self, quality, score=0):
+    def setQuality(self, quality):
         self._quality = quality
 
     def getScore(self):

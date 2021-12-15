@@ -234,7 +234,7 @@ class AbstractMainController(ABC):
                     self._info.restoreIon(selectedIon)
                 self._saved = False
                 ovHash = self._intensityModeller.switchIon(selectedIon)
-                table.model().removeData(selectedRow)
+                table.model().removeByIndex(selectedRow)
                 self._tables[other].model().addData(selectedIon.getMoreValues())
                 if ovHash is not None:
                     choice = QtWidgets.QMessageBox.question(self._mainWindow, "Attention",
@@ -293,21 +293,40 @@ class AbstractMainController(ABC):
         '''
         newIon = addIonView.getIon()
         newIon.setCharge(abs(newIon.getCharge()))
-        if newIon.getHash() in self._intensityModeller.getObservedIons().keys():
-            warning = newIon.getName() + ', ' + str(newIon.getCharge()) + ' is already in the list.'
-            QtWidgets.QMessageBox.warning(self._mainWindow, warning, QtWidgets.QMessageBox.Ok)
-            return
         mz = newIon.getMonoisotopic()
         spectrum = self._spectrumHandler.getSpectrum()[:,0]
         if int(mz) not in range(int(np.min(spectrum)), int(np.max(spectrum))+1):
             newIon.setNoise(self._spectrumHandler.getNoiseLevel())
         else:
             newIon.setNoise(self._spectrumHandler.calculateNoise(mz, self._configs['noiseWindowSize']))
+
+        oldIon = None
+        index = -1
+        hash = newIon.getHash()
+        if hash in list(self._intensityModeller.getObservedIons().keys()) + list(self._intensityModeller.getDeletedIons().keys()):
+            warning = newIon.getName() + ', ' + str(newIon.getCharge()) + ' is already in the list. \n' \
+                                                                          'Should the old ion be overwritten?'
+            choice = QtWidgets.QMessageBox.question(self._mainWindow, 'Warning',warning, QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+            if choice == QtWidgets.QMessageBox.No:
+                return
+            if hash in self._intensityModeller.getObservedIons().keys():
+                oldIon = self._intensityModeller.getObservedIons()[hash]
+                index = 0
+            else:
+                oldIon = self._intensityModeller.getDeletedIons()[hash]
+                index = 1
         self._intensityModeller.addNewIon(newIon)
-        self._info.addNewIon(newIon)
+        if oldIon is None:
+            self._tables[0].model().addData(newIon.getMoreValues())
+        else:
+            if index ==0:
+                self._tables[0].model().updateData(newIon.getMoreValues())
+            else:
+                self._tables[1].model().removeData(newIon.getName(), newIon.getCharge())
+                self._tables[0].model().addData(newIon.getMoreValues())
+        self._info.addNewIon(newIon, oldIon)
         self._infoView.update()
         self._saved = False
-        self._tables[0].model().addData(newIon.getMoreValues())
         addIonView.close()
 
     def repeatModellingOverlaps(self):

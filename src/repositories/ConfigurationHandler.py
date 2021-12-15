@@ -8,12 +8,28 @@ import json
 from os.path import isfile, join
 from src import path
 
+top_down_search = {'sequName': '', 'charge': -1, 'fragmentation': '', 'modifications': '', 'nrMod': 0,
+                   'spectralData': '', 'noiseLimit': 0.0, 'fragLib': '', 'calibration': False, 'calIons': ''}
+intact_search = {'sequName': '', 'modifications': '', 'spectralData': '', 'sprayMode': 'negative', 'noiseLimit': 0.0,
+                 'minMz': 300, 'maxMz': 1600, 'calibration': True, 'calIons': ''}
+intact_assign = {'sequName': '', 'modifications': '', 'spectralData': [''], 'sprayMode': 'negative',
+                 'inputMode': 'abundances (int./z)', 'minMz': 300, 'maxMz': 1600, 'calibration': True, 'output': ''}
+configurations = {'lowerBound': 300, 'minUpperBound': 1200, 'upperBoundTolerance': 100, 'upperBoundWindowSize': 20.0,
+                  'errorLimitCalib': 50, 'maxStd': 1.0, 'overwrite': False, 'zTolerance': 0.8, 'k': 4.5, 'd': 0.5,
+                  'errorTolerance': 2.5, 'noiseWindowSize': 4.0, 'thresholdFactor': 0.45, 'maxIso': 0.996,
+                  'approxIso': 20, 'outlierLimit': 1.6, 'manualDeletion': 3, 'overlapThreshold': 0.8, 'shapeDel': 0.6,
+                  'shapeMarked': 0.25, 'scoreMarked': 2.5, 'SNR': 2.0, 'useAb': True, 'interestingIons': ['c', 'y']}
+top_down_export = {'columns': ['m/z', 'z', 'intensity', 'fragment', 'error /ppm', 'S/N', 'quality', 'formula', 'score', 'comment'],
+                   'analysis': ['occupancies', 'reduced charges'], 'dir': join(path,'Spectral_data','top-down')}
+intact_export = {'columns': ['m/z', 'z', 'intensity', 'fragment', 'error /ppm', 'S/N', 'quality', 'formula', 'score', 'comment'],
+                 'analysis': [], 'dir': join(path,'Spectral_data','intact')}
+
 
 class ConfigHandler(object):
     '''
     Class that reads and writes configuration-_files (json-format) and stores it as dictionary
     '''
-    def __init__(self, configFile):
+    def __init__(self, configFile, default):
         '''
         :param (str) configFile: path of json file where configuration values are stored
         '''
@@ -29,7 +45,7 @@ class ConfigHandler(object):
         else:
             print('not found')
             print(configFile)
-            self.__parameters = dict()
+            self.__parameters = default
 
     def get(self,key):
         '''
@@ -79,73 +95,30 @@ class ConfigurationHandlerFactory(object):
     '''
     @staticmethod
     def getTD_SettingHandler():
-        return ConfigHandler(join(dataPath,"settings_top_down.json"))
+        return ConfigHandler(join(dataPath,"settings_top_down.json"), top_down_search)
 
     @staticmethod
     def getConfigHandler():
-        return ConfigHandler(join(dataPath,"configurations.json"))
+        return ConfigHandler(join(dataPath,"configurations.json"), configurations)
 
 
     @staticmethod
     def getExportHandler():
-        return ConfigHandler(join(dataPath, "export_options.json"))
+        return ConfigHandler(join(dataPath, "export_options.json"), top_down_export)
 
     @staticmethod
     def getIntactExportHandler():
-        return ConfigHandler(join(dataPath, "export_options_intact.json"))
+        return ConfigHandler(join(dataPath, "export_options_intact.json"), intact_export)
 
     @staticmethod
-    def getIntactHandler():
-        return ConfigHandler(join(dataPath, "settings_intact.json"))
+    def getIntactAssignHandler():
+        return ConfigHandler(join(dataPath, "settings_intact.json"), intact_assign)
 
     @staticmethod
     def getFullIntactHandler():
-        return ConfigHandler(join(dataPath, "settings_intactFull.json"))
+        return ConfigHandler(join(dataPath, "settings_intactFull.json"), intact_search)
 
 
-conf = {'sequName' : 'ribA',
-    'charge' : -6,
-    'fragmentation': 'RNA_CAD',
-    'modifications' : 'CMCT',
-    'nrMod': 1,
-    'spectralData' : '080819_ribA_PAR_6.txt',
-    'noiseLimit' : 1550000.0,
-    'fragLib' : '',
-    'output' : ''}
-"""
-more = {'lowerBound' : 300,
-'minUpperBound' : 1200,
-'upperBoundTolerance' : 50,
-'upperBoundWindowSize' : 20,
-
-'k' : 0.0045,
-'d' : 0.5,
-'errorTolerance' : 2.5,
-
-'shapeDel' : 0.6,
-'shapeMarked' : 0.25,
-'scoreMarked' : 2.5,
-
-'noiseWindowSize' : 4,
-'thresholdFactor' : 0.6,
-
-'zTolerance' : 1.5,
-'outlierLimit' : 0.65,
-
-'manualDeletion' : 4,
-'overlapThreshold' : 0.8,
-
-'interestingIons' : ['c','y']}
-
-
-conf =  {"CR_1_2":	('RNA',	'GAAGGGCAACCUUCG'),
-        "CR_1_3":	('RNA',	'GAAGGUUCGCCUUCG'),
-        "neoRibo":	('RNA',	'GGCUGCUUGUCCUUUAAUGGUCCAGUC'),
-        "ribA":	('RNA',	'GGCGUCACACCUUCGGGUGAAGUCGCC'),
-        "rre1":	('RNA',	'GGGUUCUUGGGAGCAGCAGGAUUCGUCCUGGCUGUGGAAAGAUACCC'),
-        "rre2":	('RNA',	'GCACUAUGGGCGCAGCGUCAAUGACGCUGACGGUACAGGCCAGACAAUUAUUGUCUGGUAUAGUGC'),
-        "rre2b":	('RNA',	'GGUCUGGGCGCAGCGUCAAUGACGCUGACGGUACAGGCC'),
-        "encFtn":	('P',	'AQSSNSTHEPLEVLKEETVNRHRAIVSVMEELEAVDWYDQRVDASTDPELTAILAHNRDEEKEHAAMTLEWLRRNDAKWAEHLRTYLFTEGPITAANSSSVDKLAAALEHHHHHH')}
 """
 from src import path
 if __name__ == '__main__':
@@ -154,7 +127,7 @@ if __name__ == '__main__':
 
     with open(absPath, "w") as f:
         json.dump(json.dumps(conf, indent=3), f)
-"""
+
 with open(absPath) as json_data_file:
     pattern = json.load(json_data_file)
 print(pattern)

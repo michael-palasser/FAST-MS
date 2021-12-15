@@ -27,7 +27,7 @@ def getTestIntactSettings():
                          'spectralData': spectralFile, "calIons": calFile, 'noiseLimit': 520000, 'sprayMode':'negative',
                          'minMz': 400, 'maxMz': 1600, 'errorLimitCalib':50, 'k':2, 'd':6, 'maxStd':2})
     except:
-        settings = ConfigurationHandlerFactory.getIntactHandler().getAll()
+        settings = ConfigurationHandlerFactory.getIntactAssignHandler().getAll()
         settings.update({'sequName': 'neoRibo', 'modifications': 'CMCT', 'calibration': True,
                          'spectralData': spectralFile, "calIons": calFile, 'noiseLimit': 520000, 'sprayMode':'negative',
                          'minMz': 400, 'maxMz': 1600})

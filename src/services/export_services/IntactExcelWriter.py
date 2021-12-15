@@ -92,7 +92,6 @@ class IntactExcelWriter(object):
         worksheet.write_row(self._row + 2, self._col, ['z', 'value'])
         row = self._row + 2
         firstCell = xl_rowcol_to_cell(row + 1, self._col + 1)
-        print(avModifPerCharge)
         for z,val in avModifPerCharge.items():
             row += 1
             worksheet.write(row, self._col, int(z))
@@ -174,7 +173,10 @@ class IntactExcelWriter(object):
                                           calibrationVals)
                 self.writeAverageMod(worksheet, avModifPerCharges[0][i][j], avModifPerCharges[1][i][j])
                 self.writeModifications(worksheet, modificationsInSpectra[0][i][j], modificationsInSpectra[1][i][j])
-                self._row = self._lastRow + 2
+                if self._lastRow -self._row < 9:
+                    self._row += 11
+                else:
+                    self._row = self._lastRow + 2
 
 
     def closeWorkbook(self):
@@ -216,8 +218,8 @@ class FullIntactExcelWriter(ExcelWriter, IntactExcelWriter):
             self._worksheet1.write(self._row, 0, ("analysis:"))
             self._row += 1
             avCharges, avErrors, stddevs = analyser.calculateAvChargeAndError()
-            avModifPerCharges, avModifications = analyser.calculateAverageModification(True) #Todo
-            modificationsInSpectraPerZ, modificationsInSpectra = analyser.calculateModifications(True) #Todo
+            avModifPerCharges, avModifications = analyser.calculateAverageModification()
+            modificationsInSpectraPerZ, modificationsInSpectra = analyser.calculateModifications()
             self.writeGeneralAnalysis(self._worksheet1, avCharges[0][0], avErrors[0][0], stddevs[0][0], None)
             self.writeAverageMod(self._worksheet1, avModifPerCharges[0][0], avModifications[0][0])
             self.writeModifications(self._worksheet1, modificationsInSpectraPerZ[0][0], modificationsInSpectra[0][0])

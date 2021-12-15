@@ -190,7 +190,7 @@ class TestIsotopePatternLogics(TestCase):
                 continue
             self.assertIn(name, newFragDict.keys())
             self.assertEqual(fragment.getFormula().getFormulaDict(), newFragDict[name].getFormula().getFormulaDict())
-            for modTemp in searchSettings.getModification().getItems():
+            for modTemp in searchSettings.getModifPattern().getItems():
                 if not modTemp.isEnabled():
                     continue
                 for nrMod in range(1, 3):
@@ -208,7 +208,7 @@ class TestIsotopePatternLogics(TestCase):
         print('hey',searchSettings.getModificationName())
         return {'sequString': ''.join(searchSettings.getSequenceList()),
                 'fragmentationName': searchSettings.getFragmentation().getName(),
-                'modifPatternName': searchSettings.getModification().getName()}
+                'modifPatternName': searchSettings.getModifPattern().getName()}
 
     '''def test_model(self):
         self.fail()

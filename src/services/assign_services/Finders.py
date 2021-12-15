@@ -15,6 +15,8 @@ from src.services.assign_services.AbstractSpectrumHandler import calculateError,
 #protonMass = 1.00727647
 
 
+dtype = np.dtype([('m/z', float), ('z', np.uint8), ('relAb', float)])
+
 class AbstractFinder(ABC):
     '''
     Abstract superclass for all finders
@@ -37,30 +39,61 @@ class AbstractFinder(ABC):
 
     def readFile(self, path):
         '''
-
-        :param path:
-        :return:
+        Reads a file with unassigned ion data
+        :param (str) path: path of the file
+        :return: (list[ndarray]) list of spectra: dtype = [('m/z', float), ('z', np.uint8), ('relAb', float)]
+        '''
+        if path[-4:] == '.csv':
+            return self.openCsvFile(path)
+        else:
+            return self.openTxtFile(path)
+    
+    def openTxtFile(self, path, csv=False):
+        '''
+        Reads a text file with unassigned ion data
+        :param (str) path: path of the file
+        :return: (list[ndarray]) list of spectra: dtype = [('m/z', float), ('z', np.uint8), ('relAb', float)]
         '''
         data = []
         spectrum = list()
-        dtype=np.dtype([('m/z', float), ('z', np.uint8), ('relAb', float)])
+        delimiter = ','
         with open(path) as file:
-            for line in file:
+            for i,line in enumerate(file):
                 line = line.rstrip()
+                if (i == 0) and (';' in line):
+                    delimiter = ';'
                 if line.startswith('m/z'):  # ToDo
                     if len(spectrum) != 0:
                         data.append(np.array(spectrum, dtype=dtype))
                         spectrum = list()
                 else:
                     try:
-                        lineList = line.split()
+                        if not csv:
+                            lineList = line.split()
+                        else:
+                            lineList = line.split(delimiter)
                         charge = lineList[1].replace('+', '').replace('-', '')
                         spectrum.append((lineList[0], charge, lineList[2]))
                     except:
-                        print("problem in spectral pattern file: \nline", line)
+                        print("problem in spectral pattern file: \nline "+str(i), line)
                         continue
-        data.append(np.array(spectrum, dtype=dtype))
+            data.append(np.array(spectrum, dtype=dtype))
         return data
+
+    def openCsvFile(self, path):
+        '''
+        Reads a csv file with unassigned ion data
+        :param path: path of csv file
+        :return: (list[ndarray]) list of spectra: dtype = [('m/z', float), ('z', np.uint8), ('relAb', float)]
+        '''
+        with open(path) as file:
+            try:
+                return [np.loadtxt(path, delimiter=',', usecols=[0, 1, 2],dtype=dtype)]
+            except IndexError:
+                return [np.loadtxt(path, delimiter=';', usecols=[0, 1, 2],dtype=dtype)]
+            except ValueError:
+                return self.openTxtFile(path, True)
+                #raise InvalidInputException('Incorrect Format of spectral data', '\nThe format must be "m/z,z,int" or "m/z;z;int"')
 
     def findIonsInSpectrum(self, k, d, spectrum, flag=False):
         '''
@@ -83,8 +116,6 @@ class AbstractFinder(ABC):
         ions = list()
         for neutral in self._theoValues:
             mass = neutral.getMonoisotopicMass()
-            #modif = neutral.getModification()
-            #nrMod = neutral.getNrOfModifications()
             radicals = neutral.getRadicals()
             for z in self.getZRange(neutral):
                 mz = getMz(mass, z * self._sprayMode, radicals)
@@ -151,7 +182,7 @@ class AbstractFinder(ABC):
         limit = errorLimit
         solution = [0, 1, 0]
         length = len(ionList)
-        while length > 4:
+        while length > 3:
             usedIons = []
             y = list()
             x = list()
@@ -165,6 +196,9 @@ class AbstractFinder(ABC):
                     #errorList.append(abs(getError(calibratedX, theoMz)))
                     errorList.append(calculateError(calibratedX, theoMz))
                     usedIons.append(ion)
+            length = len(usedIons)
+            if length<3:
+                break
             try:
                 solution, pcov = curve_fit(self.fun_parabola, np.array(x), np.array(y))
                 limit *= 0.67
@@ -177,7 +211,6 @@ class AbstractFinder(ABC):
                                                 ').    Are you sure you picked the correct settings?')
             errorList = np.array(errorList)
             #if np.average(np.abs(errorList)) < 1.0 and np.std(errorList) < 2.0:
-            length = len(usedIons)
             if np.std(errorList) < maxStd:
                 break
         return solution, np.sqrt(np.diag(pcov)), (np.average(np.abs(errorList)), np.std(errorList)), usedIons

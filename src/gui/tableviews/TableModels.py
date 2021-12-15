@@ -138,10 +138,16 @@ class IonTableModel(AbstractTableModel):
             del self._data[0]
         self._data.append(newRow)
 
-    def removeData(self, indexToRemove):
+    def removeData(self, name, charge):
+        for i, row in enumerate(self._data):
+            if row[1]==charge and row[3]==name:
+                self.removeByIndex(i)
+
+    def removeByIndex(self, indexToRemove):
         del self._data[indexToRemove]
         if len(self._data)==0:
             self._data.append(['' for _ in self._headers])
+
 
     def updateData(self, newRow):
         for i, row in enumerate(self._data):

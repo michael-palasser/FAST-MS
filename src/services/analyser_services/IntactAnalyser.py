@@ -28,7 +28,6 @@ class IntactAnalyser(object):
         #value changed if reduced intensities are used
         listOfAverageCharges, listOfAverageErrors, listOfStddevOfErrors = [], [], []
         for ionlists in self._listOfIonLists:
-            print(ionlists)
             averageCharges, averageErrors, stddevOfErrors = [], [], []
             for ionList in ionlists:
                 #exclude SNAP misassignments

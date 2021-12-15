@@ -37,7 +37,7 @@ class FragmentLibraryBuilder(object):
         self.__sequence = properties.getSequence()
         self.__molecule = properties.getMolecule()
         self.__fragmentation = properties.getFragmentation()
-        self.__modifPattern = properties.getModification()
+        self.__modifPattern = properties.getModifPattern()
         self.__maxMod = maxMod
         self._maxIso = maxIso
         self._accelerate = accelerate

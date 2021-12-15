@@ -21,7 +21,7 @@ def initFinders():
     return finderRNA, configHandlerRNA, finderProt, configHandlerProt
 
 def initConfigurations():
-    configHandler = ConfigurationHandlerFactory.getIntactHandler()
+    configHandler = ConfigurationHandlerFactory.getIntactAssignHandler()
     configHandler.update('minMz',700)
     configHandler.update('maxMz',1600)
     configHandler.update2('errorLimitCalib',50)

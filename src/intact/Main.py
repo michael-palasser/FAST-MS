@@ -30,7 +30,7 @@ def run():
     6.  Output in xlsx file
     '''
     #dialog = IntactStartDialog()
-    settings = ConfigurationHandlerFactory.getIntactHandler().getAll()
+    settings = ConfigurationHandlerFactory.getIntactAssignHandler().getAll()
     #files = [os.path.join(path, 'Spectral_data','intact', file) for file in settings['spectralData']]
     #print(files)
     #spectralFile = os.path.join(path, 'Spectral_data','intact', settings['spectralData'])

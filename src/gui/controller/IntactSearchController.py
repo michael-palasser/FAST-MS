@@ -408,7 +408,7 @@ class IntactMainController(AbstractMainController):
                     self._info.restoreIon(selectedIon)
                 self._saved = False
                 ovHash = self._intensityModeller.switchIon(selectedIon)
-                table.model().removeData(selectedRow)
+                table.model().removeByIndex(selectedRow)
                 self._tables[other].model().addData(selectedIon.getMoreValues())
                 print(actionStrings[mode]+"d",selectedRow, selectedHash)
                 if ovHash is not None:
@@ -510,7 +510,7 @@ class IntactMainController(AbstractMainController):
             filename = dlg.getFilename()
             if filename == '':
                 inputFileName = os.path.split(self._settings['spectralData'])[-1]
-                filename = inputFileName[0:-4] + '_out' + '.xlsx'
+                filename = inputFileName[0:-4] + '.xlsx'
             elif filename[-5:] != '.xlsx':
                 filename += '.xlsx'
             outputPath = newOptions['dir']

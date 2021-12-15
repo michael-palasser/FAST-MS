@@ -19,7 +19,7 @@ class TestAnalyser(TestCase):
                 ion = FragmentIon(fragment, 1., z, fragment.getIsotopePattern(), 10e5)
                 self.ions[ion.getHash()] = ion
         self.analyser = Analyser([], self.props.getSequenceList(), settings['charge'],
-                                 self.props.getModification().getModification())
+                                 self.props.getModifPattern().getModification())
 
     def test_calculate_rel_abundance_of_species(self):
         typeDict = {'a': 4, 'b': 1}  # , 'dummyRNA':6}
@@ -62,7 +62,7 @@ class TestAnalyser(TestCase):
                 self.assertAlmostEqual(0.25, val)
 
     def test_get_modification_loss(self):
-        mod = self.props.getModification().getModification()
+        mod = self.props.getModifPattern().getModification()
         precSum = 0
         unModSum = 0
         ions = []
@@ -82,7 +82,7 @@ class TestAnalyser(TestCase):
         self.assertAlmostEqual(unModSum / precSum, self.analyser.getModificationLoss())
 
     def test_calculate_occupancies(self):
-        mod = self.props.getModification().getModification()
+        mod = self.props.getModifPattern().getModification()
         types = np.unique([ion.getType() for ion in self.ions.values()])
         ions = []
         for currentType in types:

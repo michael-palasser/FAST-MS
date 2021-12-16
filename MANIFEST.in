@@ -1,0 +1,6 @@
+include Start.py
+recursive-include src/data *
+recursive-include Fragment_lists *
+recursive-include Spectral_data/comparison *
+recursive-include Spectral_data/intact *
+recursive-include Spectral_data/top-down *

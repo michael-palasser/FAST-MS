@@ -290,9 +290,9 @@ class TD_MainController(AbstractMainController):
                  'Protocol':(self._infoView.show,'Show Protocol',None)}, None)
         _,actions = self._mainWindow.createMenu("Analysis",
                 {'Fragmentation': (self.showFragmentation, 'Show fragmentation efficiencies (% of each fragment type)', None),
-                 'Occupancy-Plot': (self.showOccupancyPlot,'Show occupancies as a function of sequence pos.',None),
-                 'Charge-Plot': (lambda: self.showChargeDistrPlot(False),'Show av. charge as a function of sequence pos. (Calculated with Int. values)',None),
-                 'Reduced Charge-Plot':(lambda: self.showChargeDistrPlot(True),'Show av. charge as a function of sequence pos. (Calculated with Int./z values)',None),
+                 'Occupancies': (self.showOccupancyPlot,'Show occupancies as a function of sequence pos.',None),
+                 'Charge States (int.)': (lambda: self.showChargeDistrPlot(False),'Show av. charge as a function of cleavage site (Calculated with int. values)',None),
+                 'Charge States (int./z)':(lambda: self.showChargeDistrPlot(True),'Show av. charge as a function of cleavage site (Calculated with int./z values)',None),
                  'Sequence Coverage': (self.showSequenceCoverage,'Show sequence coverage',None)}, None)
 
         self._actions.update(actions)
@@ -529,7 +529,8 @@ class TD_MainController(AbstractMainController):
         '''
         exportConfigHandler = ConfigurationHandlerFactory.getExportHandler()
         lastOptions= exportConfigHandler.getAll()
-        dlg = ExportDialog(self._mainWindow, ('occupancies','charges','reduced charges', 'sequence coverage'), lastOptions)
+        dlg = ExportDialog(self._mainWindow, ('occupancies','charge states (int.)','charge states (int./z)'), lastOptions)
+                                              #'sequence coverage'), lastOptions)
         dlg.exec_()
         if dlg and not dlg.canceled():
             self._info.export()

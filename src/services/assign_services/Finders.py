@@ -6,10 +6,10 @@ Created on 1 Oct 2020
 from abc import ABC, abstractmethod
 
 import numpy as np
-from scipy.optimize import curve_fit
+from scipy.optimize import curve_fit, least_squares
 
 from src.Exceptions import InvalidInputException
-from src.entities.Ions import SimpleIntactIon, FragmentIon, SimpleIon
+from src.entities.Ions import SimpleIntactIon, SimpleIon
 from src.services.assign_services.AbstractSpectrumHandler import calculateError, getMz, getErrorLimit
 
 #protonMass = 1.00727647
@@ -200,7 +200,14 @@ class AbstractFinder(ABC):
             if length<3:
                 break
             try:
-                solution, pcov = curve_fit(self.fun_parabola, np.array(x), np.array(y))
+                #solution, pcov = curve_fit(self.fun_parabola, np.array(x), np.array(y))
+                x0 = np.array((0,1,0))
+                res_robust = least_squares(self.getLoss, x0, loss='soft_l1', f_scale=0.1, args=(np.array(x), np.array(y)))
+                solution = res_robust.x
+                J = res_robust.jac
+                pcov = np.linalg.inv(J.T.dot(J))
+                #print(solution,solution2, np.std(errorList), np.sqrt(res_robust.cost))
+                #print(pcov,pcov2)
                 limit *= 0.67
             except ValueError:
                 if limit < 100:
@@ -216,6 +223,7 @@ class AbstractFinder(ABC):
         return solution, np.sqrt(np.diag(pcov)), (np.average(np.abs(errorList)), np.std(errorList)), usedIons
 
 
+
     @staticmethod
     def fun_parabola(x,a,b,c):
         '''
@@ -228,6 +236,17 @@ class AbstractFinder(ABC):
         '''
         return a * x**2 + b * x + c
 
+    @staticmethod
+    def getLoss(solution, x, y):
+        '''
+        Quadratic calibration function: a * x^2 + b * x + c
+        :param (float) x: m/z
+        :param (float) a:
+        :param (float) b:
+        :param (float) c:
+        :return: (float) value of the calibration function
+        '''
+        return solution[0] * x ** 2 + solution[1] * x + solution[2] -y
 
     def calibrate(self, uncalibrated, solution):
         return self.fun_parabola(uncalibrated, solution[0],solution[1],solution[2])

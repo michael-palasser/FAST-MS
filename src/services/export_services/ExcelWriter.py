@@ -325,10 +325,10 @@ class ExcelWriter(BasicExcelWriter):
             row = self.addOccupOrCharges(0, row, sequence, occupPercentages, nrMod,
                                          forwFrags, backFrags) +8
             #self.writeOccupancies(row, sequence, percentages, forwFrags, backFrags)
-        if 'charges' in self._options['analysis']:
+        if 'charge states (int.)' in self._options['analysis']:
             row = self.addOccupOrCharges(1, row, sequence, charges, maxCharge,
                                          forwFrags, backFrags) +8
-        if ('reduced charges' in self._options['analysis']):
+        if ('charge states (int./z)' in self._options['analysis']):
             self.addOccupOrCharges(2, row, sequence,
                                          reducedCharges, maxCharge, forwFrags, backFrags)
 

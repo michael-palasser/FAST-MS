@@ -6,7 +6,8 @@ Created on 29 Dec 2020
 from abc import ABC, abstractmethod
 import sqlite3
 from src import path
-from os.path import join
+import os
+import sys
 
 
 class AbstractRepository(ABC):
@@ -22,14 +23,25 @@ class AbstractRepository(ABC):
         :param (tuple[int]]) integerVals: indices of the columns which contain numerical values
         :param (tuple[int]]) boolVals: indices of the columns which contain boolean values
         '''
-        if isolationLevel is not None:
-            self._conn = sqlite3.connect(join(path,"src","data",database),isolation_level=isolationLevel)
-        else:
-            self._conn = sqlite3.connect(join(path,"src","data",database))
+        #print('hey',path)
+        try:
+            self.openDatabase(os.path.join(path,"src","data",database), isolationLevel)
+        except sqlite3.OperationalError:
+            #print('not found', path,os.path.dirname(sys.executable))
+            if not os.path.isdir(path):
+                os.mkdir(path)
+            self.openDatabase(os.path.join(path,database), isolationLevel)
         self._mainTable = tableName
         self._columns = columns
         self._integerVals = integerVals
         self._boolVals = boolVals
+
+    def openDatabase(self, path, isolationLevel):
+        if isolationLevel is not None:
+            self._conn = sqlite3.connect(path,isolation_level=isolationLevel)
+        else:
+            self._conn = sqlite3.connect(path)
+
 
     def getIntegers(self):
         return self._integerVals

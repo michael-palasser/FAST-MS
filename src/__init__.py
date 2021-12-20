@@ -7,19 +7,19 @@ if getattr(sys, 'frozen', False):
     path = os.path.dirname(sys.executable)
     if pos != -1:
         path = path[:pos+len('FAST MS')] #+ '/'
-    print('yes', path)
-    path=os.path.dirname(sys.executable)
-    print('yes', path)
+    #print('yes', path)
 else:
-    path = os.getcwd()
-    #print("path:",path)
+    #path = os.getcwd()
+    #print("path:",path, os.path.dirname(__file__))
+    path = os.path.dirname(__file__)
     pos = path.find('src')
     if pos != -1:
         path = path[:pos] #+ '/'
     elif 'tests' in path:
         path = path[:os.getcwd().find('tests')]
     else:
-        path = path #+ '/'
+        path = os.path.join(path,'FAST MS')  #+ '/'
+    #print('no', path)
 
 '''path2 = os.path.dirname(sys.executable)
 pos = path2.find('FAST MS')

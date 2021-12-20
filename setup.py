@@ -3,7 +3,7 @@ from setuptools import setup#, find_packages
 
 setup(
     name='FAST MS',
-    version='1.0dev',
+    version='1.0',
     packages=['src', 'src.gui', 'src.gui.dialogs', 'src.gui.widgets', 'src.gui.controller', 'src.gui.tableviews',
               'src.intact', 'src.entities', 'src.services', 'src.services.assign_services',
               'src.services.export_services', 'src.services.library_services', 'src.services.analyser_services',

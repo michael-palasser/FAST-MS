@@ -2,6 +2,7 @@ import pyqtgraph as pg
 from PyQt5 import QtWidgets, QtCore
 import numpy as np
 
+import src.resources
 
 '''class BarGraphItem(pg.BarGraphItem):
 
@@ -70,10 +71,10 @@ class AbstractSpectrumView(QtWidgets.QWidget):
 
     def mouseClicked(self,evt):  # action if start button clicked
         # mousePoint = self._vb.mapSceneToView(pos)
-        position = self._vb.mapSceneToView(evt.pos())
+        position = self._vb.mapSceneToView(src.resources.pos())
         index = int(position.x())
         #print(self._vb.mapSceneToView(position).x())
-        print(evt.pos().x())
+        print(src.resources.pos().x())
         if index in self._mzRange:
             print(index, position.y())
         '''else:

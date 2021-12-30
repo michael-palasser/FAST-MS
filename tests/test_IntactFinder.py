@@ -2,7 +2,7 @@ import os
 from unittest import TestCase
 import numpy as np
 
-from src import path
+from src.resources import path
 from src.services.DataServices import SequenceService
 from src.services.assign_services.Finders import IntactFinder
 from src.services.library_services.IntactLibraryBuilder import IntactLibraryBuilder

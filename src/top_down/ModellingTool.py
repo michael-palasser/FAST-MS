@@ -7,7 +7,7 @@ import os
 
 from PyQt5 import QtWidgets
 
-from src import path
+from src.resources import path
 
 
 def main(mainWindow):

@@ -4,7 +4,7 @@ import pip
 def checkInstallation(package):
     try:
         __import__(package)
-    except ImportError:
+    except (ImportError, ModuleNotFoundError):
         pip.main(['install', package])
 
 if __name__ == '__main__':

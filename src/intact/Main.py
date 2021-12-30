@@ -15,7 +15,9 @@ from src.services.assign_services.Finders import IntactFinder
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.services.analyser_services.IntactAnalyser import IntactAnalyser
 from src.services.export_services.IntactExcelWriter import IntactExcelWriter
-from src import path
+from src.resources import path
+
+
 #from src.gui.ParameterDialogs import IntactStartDialog
 
 

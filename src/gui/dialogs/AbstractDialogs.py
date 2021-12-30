@@ -4,7 +4,7 @@ import os
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QMessageBox
 
-from src import path
+from src.resources import path
 from src.Exceptions import InvalidInputException
 from src.services.DataServices import SequenceService
 from src.gui.GUI_functions import makeFormLayout

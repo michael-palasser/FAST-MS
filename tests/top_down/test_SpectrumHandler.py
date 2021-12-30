@@ -4,7 +4,7 @@ from unittest import TestCase
 import numpy as np
 from numpy.random import randint
 
-from src import path
+from src.resources import path
 from src.FormulaFunctions import eMass
 from src.MolecularFormula import MolecularFormula
 from src.entities.Ions import Fragment

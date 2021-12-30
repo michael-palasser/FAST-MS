@@ -11,7 +11,7 @@ from datetime import datetime
 import time
 from PyQt5 import QtWidgets
 
-from src import path
+from src.resources import path
 from src.Exceptions import InvalidInputException
 from src.services.DataServices import IntactIonService, SequenceService
 from src.entities.Info import Info

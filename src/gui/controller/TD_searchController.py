@@ -12,7 +12,7 @@ import numpy as np
 import time
 from PyQt5 import QtWidgets
 
-from src import path
+from src.resources import path
 from src.Exceptions import InvalidIsotopePatternException, InvalidInputException
 from src.entities.Info import Info
 from src.gui.AbstractMainWindows import SimpleMainWindow
@@ -278,9 +278,9 @@ class TD_MainController(AbstractMainController):
                                                          'Export': (self.export,'Exports the results to Excel',None),
                                                          'Close': (self.close,None,"Ctrl+Q")}, None)
         self._actions.update(actions)
-        _,actions = self._mainWindow.createMenu("Edit", {'Repeat ovl. modelling':
+        _,actions = self._mainWindow.createMenu("Edit", {'Repeat Ovl. Modelling':
                             (self.repeatModellingOverlaps,'Repeat overlap modelling involving user inputs',None),
-                                                         'Add new ion':(self.addNewIonView, 'Add an ion manually', None),
+                                                         'Add New Ion':(self.addNewIonView, 'Add an ion manually', None),
                                                          'Take Shot':(self.shootPic,'', None),
                                                          }, None)
         self._actions.update(actions)

@@ -8,7 +8,7 @@ from src.services.DataServices import SequenceService
 from src.entities.Ions import Fragment,FragmentIon
 from src.services.analyser_services.Analyser import Analyser
 from src.services.export_services.ExcelWriter import BasicExcelWriter
-from src import path
+from src.resources import path
 
 
 def readCsv(file):

@@ -6,7 +6,7 @@ Created on 1 Oct 2020
 from abc import ABC, abstractmethod
 
 import numpy as np
-from scipy.optimize import curve_fit, least_squares
+from scipy.optimize import least_squares
 
 from src.Exceptions import InvalidInputException
 from src.entities.Ions import SimpleIntactIon, SimpleIon
@@ -220,6 +220,10 @@ class AbstractFinder(ABC):
             #if np.average(np.abs(errorList)) < 1.0 and np.std(errorList) < 2.0:
             if np.std(errorList) < maxStd:
                 break
+        if solution[0] == 0:
+            raise InvalidInputException('Calibration not possible',
+                                        'Nr of found ions is too low to calibrate (' + str(len(ionList)) +
+                                        ').    Are you sure you picked the correct settings?')
         return solution, np.sqrt(np.diag(pcov)), (np.average(np.abs(errorList)), np.std(errorList)), usedIons
 
 

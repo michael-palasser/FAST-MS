@@ -14,7 +14,7 @@ from datetime import datetime
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QInputDialog
 
-from src import path
+from src.resources import path
 from src.Exceptions import InvalidInputException
 from src.gui.dialogs.StartDialogs import SpectrumComparatorStartDialog
 

@@ -3,7 +3,7 @@ from copy import deepcopy
 from unittest import TestCase
 import numpy as np
 
-from src import path
+from src.resources import path
 from src.entities.SearchSettings import SearchSettings
 from src.services.DataServices import SequenceService
 from src.services.assign_services.AbstractSpectrumHandler import calculateError

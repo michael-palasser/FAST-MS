@@ -4,7 +4,7 @@ import pandas as pd
 
 from PyQt5 import QtWidgets, QtCore
 
-from src import path
+from src.resources import path
 
 translate = QtCore.QCoreApplication.translate
 

@@ -1,7 +1,7 @@
 from PyQt5 import QtCore, QtWidgets
 from os.path import join
 
-from src import path
+from src.resources import path
 #from src.gui.GUI_functions import shoot
 from src.gui.GUI_functions import shoot
 from src.gui.dialogs.AbstractDialogs import DialogWithTabs

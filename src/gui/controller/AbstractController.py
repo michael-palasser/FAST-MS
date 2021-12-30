@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 from PyQt5 import QtWidgets, QtCore
 
-from src import path
+from src.resources import path
 from src.gui.IsotopePatternView import AddIonView
 from src.gui.dialogs.CalibrationView import CalibrationView
 from src.gui.tableviews.TableViews import TableView

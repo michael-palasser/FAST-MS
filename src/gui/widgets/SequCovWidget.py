@@ -10,9 +10,7 @@ import matplotlib.path as mpath
 
 from PyQt5 import QtWidgets, QtGui
 from PyQt5.QtCore import Qt, QVariant, QCoreApplication
-from PyQt5.QtWidgets import QApplication
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
-from matplotlib.patches import Rectangle
 
 from src.gui.GUI_functions import connectTable, showOptions, makeLabelInputWidget, createComboBox
 from src.gui.tableviews.TableModels import AbstractTableModel

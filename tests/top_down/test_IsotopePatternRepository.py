@@ -3,7 +3,7 @@ from unittest import TestCase
 from random import randint
 import os
 
-from src import path
+from src.resources import path
 from src.Exceptions import InvalidIsotopePatternException
 from src.MolecularFormula import MolecularFormula
 from src.services.DataServices import SequenceService

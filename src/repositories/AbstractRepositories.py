@@ -27,7 +27,6 @@ class AbstractRepository(ABC):
         '''
         #print('hey',path)
         #try:
-
         if isolationLevel is not None:
             self._conn = sqlite3.connect(getRelativePath(database),isolation_level=isolationLevel)
         else:

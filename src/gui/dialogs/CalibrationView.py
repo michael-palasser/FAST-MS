@@ -27,9 +27,9 @@ class CalibrationView(QtWidgets.QDialog):
         upperWidget = QtWidgets.QWidget(self)
         upperWidgetLayout = QtWidgets.QHBoxLayout(upperWidget)
         calVals, qualityVals = self.getData()
-        self._table1a = self.makeCalTable(calVals, upperWidget, 'Values of calibration function: m/z_cal = a * (m/z)^2 * b * m/z + c')
+        self._table1a = self.makeCalTable(calVals, upperWidget, 'Values of Calibration Function: m/z_cal = a * (m/z)^2 * b * m/z + c')
         upperWidgetLayout.addWidget(self._table1a)
-        self._table1b = self.makeCalTable(qualityVals, upperWidget, 'quality of the calibration')
+        self._table1b = self.makeCalTable(qualityVals, upperWidget, 'Quality of the Calibration')
         upperWidgetLayout.addWidget(self._table1b)
         self.addWidget(upperWidget)
         self.plot()
@@ -56,7 +56,7 @@ class CalibrationView(QtWidgets.QDialog):
         for i, key in enumerate(['a', 'b', 'c']):
             calVals.append((key, self._solution[i], errors[i]))
         qualityVals = []
-        for i, key in enumerate(['av.error', 'std.dev.']):
+        for i, key in enumerate(['Av. Error', 'Std. Dev.']):
             qualityVals.append((key, quality[i]))
         return calVals, qualityVals
 

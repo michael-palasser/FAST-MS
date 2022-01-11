@@ -31,7 +31,7 @@ class AbstractSpectrumView(QtWidgets.QWidget):
         width = 0.02
         styles = {"black": "#f00", "font-size": lblSize}
         self._graphWidget = pg.PlotWidget(self)
-        self._graphWidget.setLabel('left', 'Rel.Ab.in au', **styles)
+        self._graphWidget.setLabel('left', 'Rel. Ab.in au', **styles)
         self._graphWidget.setLabel("bottom", "m/z", **styles)
         self._graphWidget.setBackground('w')
         self._graphWidget.setXRange(minRange, maxRange, padding=0)
@@ -86,7 +86,10 @@ class AbstractSpectrumView(QtWidgets.QWidget):
         self._spinBox.setValue(width)
         self._spinBox.setGeometry(QtCore.QRect(85, 10, 65, 26))
         self._spinBox.setToolTip("Change Width of Peaks (in Da)")
-        self._spinBox.setStepType(QtWidgets.QAbstractSpinBox.AdaptiveDecimalStepType)
+        try:
+            self._spinBox.setStepType(QtWidgets.QAbstractSpinBox.AdaptiveDecimalStepType)
+        except AttributeError as e:
+            print(e)
         #self._cursorLabel = QtWidgets.QLabel(self)
         #self._cursorLabel.setGeometry(QtCore.QRect(70, 40, 200, 26))
 

@@ -40,7 +40,7 @@ def run(mainWindow):
         modification = dlg.modification'''
 
     """import ion-list"""
-    spectralFile = path + 'Spectral_data/Occupancies_in.csv'
+    spectralFile = os.path.join(path, 'Spectral_data','Occupancies_in.csv')
     with open(spectralFile, 'w') as f:
         f.write("m/z,z,int,name")
     subprocess.call(['open',spectralFile])

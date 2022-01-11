@@ -109,11 +109,11 @@ class ConfigurationDialog(DialogWithTabs):
 
     def setupUi(self, configDialog):
         configDialog.move(200,100)
-        self._spectrumTab = self.createTab("spectrum")
-        self._findingTab = self.createTab("finding")
-        self._modellingTab = self.createTab("modelling")
+        self._spectrumTab = self.createTab("Spectrum")
+        self._findingTab = self.createTab("Finding")
+        self._modellingTab = self.createTab("Modelling")
         #self._threshold2Tab = self.createTab("thresholds 2")
-        self._outputTab = self.createTab("analysis/output")
+        self._outputTab = self.createTab("Analysis/Output")
         self._mzBox = self.fillBox(self._spectrumTab, "m/z area containing peaks", ("min. m/z", "min. max. m/z", "tolerance", "window size"),
                         {"lowerBound": (QtWidgets.QSpinBox(),"lower m/z bound (just peaks with higher m/z are examined)"),
                          "minUpperBound":(QtWidgets.QSpinBox(), "minimal upper m/z bound"),

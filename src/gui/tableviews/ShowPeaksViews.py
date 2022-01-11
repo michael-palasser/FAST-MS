@@ -1,6 +1,5 @@
 import copy
 
-import pandas as pd
 from PyQt5 import QtCore, QtWidgets
 
 from src.gui.GUI_functions import connectTable, showOptions

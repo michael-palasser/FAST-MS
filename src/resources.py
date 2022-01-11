@@ -18,6 +18,6 @@ def getRelativePath(relativePath, data=True):
     else:
         relPath = pathlib.Path(relativePath)
     basePath = getattr(sys, '_MEIPASS', parent)
-    print(basePath / relPath)
+    #print(basePath / relPath)
     return basePath / relPath
 

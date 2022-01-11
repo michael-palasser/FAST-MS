@@ -13,7 +13,7 @@ class FragmentationTableModel(AbstractTableModel):
     '''
     def __init__(self, data):
         super(FragmentationTableModel, self).__init__(data, ('','{:1.3f}'),
-                         ('type', 'rel.proportion'))
+                         ('Type', 'Rel. Proportion'))
         self._data = data
 
     def data(self, index, role):

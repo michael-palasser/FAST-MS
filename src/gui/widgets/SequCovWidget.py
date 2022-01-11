@@ -47,7 +47,7 @@ class SequCovTableModel(AbstractTableModel):
     TableModel for a QTableView in SequCovWidget which shows the sequence coverage for each fragment type
     '''
     def __init__(self, data):
-        super(SequCovTableModel, self).__init__(data, (), ('fragm. type', 'sequ.cov. /%'))
+        super(SequCovTableModel, self).__init__(data, (), ('Fragm. Type', 'Sequ. Cov. /%'))
 
     def data(self, index, role):
         '''
@@ -92,7 +92,7 @@ class SequCovWidget(QtWidgets.QWidget):
         all = deepcopy(coveragesForw)
         all.update(coveragesBackw)
         coverageData = self.addCleavageSites([[key] + list(val) for key,val in all.items()])
-        verticalLayout.addWidget(self.makeCoverageTable(coverageData, ['fragm.'] + sequence))
+        verticalLayout.addWidget(self.makeCoverageTable(coverageData, ['Fragm.'] + sequence))
         #verticalLayout.addWidget(self.makeCoverageTable(globalData, ['direction'] + sequence))
         width = 10
         if self._sequLength>200:

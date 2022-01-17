@@ -1,3 +1,3 @@
-from os import system
+from src.gui.StartWindow import run
 
-system("python -m src.gui.StartWindow")
+run()

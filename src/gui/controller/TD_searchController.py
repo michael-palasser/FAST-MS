@@ -4,7 +4,6 @@ Created on 21 Jul 2020
 @author: michael
 '''
 
-import subprocess
 import traceback
 import os
 
@@ -12,13 +11,12 @@ import numpy as np
 import time
 from PyQt5 import QtWidgets
 
-from src.resources import path
+from src.resources import path, autoStart
 from src.Exceptions import InvalidIsotopePatternException, InvalidInputException
 from src.entities.Info import Info
 from src.gui.AbstractMainWindows import SimpleMainWindow
 from src.gui.controller.AbstractController import AbstractMainController
 from src.gui.tableviews.FragmentationTable import FragmentationTable
-from src.gui.dialogs.CalibrationView import CalibrationView
 from src.gui.widgets.OccupancyWidget import OccupancyWidget
 from src.gui.widgets.SequCovWidget import SequCovWidget
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
@@ -554,7 +552,7 @@ class TD_MainController(AbstractMainController):
                                     self._info.toString())
                 print("********** saved in:", output, "**********\n")
                 try:
-                    subprocess.call(['open', output])
+                    autoStart(output)
                 except:
                     pass
             except KeyError as e:

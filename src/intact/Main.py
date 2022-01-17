@@ -5,7 +5,6 @@ Created on 17 Jul 2020
 '''
 
 import os
-import subprocess
 import traceback
 from datetime import datetime
 
@@ -15,7 +14,7 @@ from src.services.assign_services.Finders import IntactFinder
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.services.analyser_services.IntactAnalyser import IntactAnalyser
 from src.services.export_services.IntactExcelWriter import IntactExcelWriter
-from src.resources import path
+from src.resources import path, autoStart
 
 
 #from src.gui.ParameterDialogs import IntactStartDialog
@@ -62,9 +61,8 @@ def run():
     print("\n********** output **********")
     output = settings['output']
     if output == '':
-        output =  datetime.now().strftime("%d.%m.%Y") + '.xlsx'
-    else:
-        output = os.path.join(path, 'Spectral_data','intact', output + '.xlsx')
+        output =  datetime.now().strftime("%d.%m.%Y")
+    output = os.path.join(path, 'Spectral_data','intact', output + '.xlsx')
     listOfParameters = []
     for file in settings['spectralData']:
         parameters = {'date:':datetime.now().strftime("%d/%m/%Y %H:%M"), 'data:':file}
@@ -88,7 +86,7 @@ def run():
         excelWriter.closeWorkbook()
 
     try:
-        subprocess.call(['open',output])
+        autoStart(output)
     except:
         pass
     return 0

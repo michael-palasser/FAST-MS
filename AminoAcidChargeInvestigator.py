@@ -1,9 +1,8 @@
-import subprocess
-
 import numpy as np
 import os
 
-from src import path
+from src.resources import path
+
 
 def processVal(text):
     val = float(text)

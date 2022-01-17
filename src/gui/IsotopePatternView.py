@@ -1,5 +1,6 @@
 from PyQt5 import QtWidgets, QtCore
 
+from src.resources import DEVELOP
 from src.services.IsotopePatternLogics import IsotopePatternLogics
 from src.services.DataServices import *
 from src.gui.AbstractMainWindows import SimpleMainWindow
@@ -86,11 +87,15 @@ class IsotopePatternView(SimpleMainWindow):
         self._modeBox.currentIndexChanged.connect(self.renderFrame)
         self._centralwidget.setLayout(self._vertLayout)
         self.createMenuBar()
-        self._menubar, self._menuActions = \
-            self.createMenu('Options', {'Load Sequence': (self.loadSequence, None, "Ctrl+O"),
+        actions = {'Load Sequence': (self.loadSequence, None, "Ctrl+O"),
                                     'Pause Calculation': (self.pauseCalculation, None, None),
-                                    'Shoot': (lambda: shoot(self), None, None),
-                                    'Close': (self.close, 'Closes Window', 'Ctrl+Q')}, None)
+                                    #'Shoot': (lambda: shoot(self), None, None),
+                                    'Close': (self.close, 'Closes Window', 'Ctrl+Q')}
+
+        if DEVELOP:
+            actions['Shoot']=(lambda: shoot(self), None, None),
+        self._menubar, self._menuActions = \
+            self.createMenu('Options', actions, None)
         self._pause = False
         self.show()
 

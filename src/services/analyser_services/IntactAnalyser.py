@@ -34,7 +34,7 @@ class IntactAnalyser(object):
                 errors = np.array([ion.getError() for ion in ionList if abs(ion.getError()) < 30])
                 averageErrors.append(np.average(errors))
                 stddevOfErrors.append(np.std(errors))
-                arr = np.array([(ion.getIntensity(),ion.getCharge()) for ion in ionList])
+                arr = np.array([(ion.getIntensity(),ion.getCharge()) for ion in ionList], dtype=np.int64)
                 #if abundanceMode:
                 #    arr[:,0] *= arr[:,1]
                 averageCharges.append((np.sum(arr[:,0]*arr[:,1])/np.sum(arr[:,0]),

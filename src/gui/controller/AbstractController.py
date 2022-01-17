@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 from PyQt5 import QtWidgets, QtCore
 
-from src.resources import path
+from src.resources import path, DEVELOP
 from src.gui.IsotopePatternView import AddIonView
 from src.gui.dialogs.CalibrationView import CalibrationView
 from src.gui.tableviews.TableViews import TableView
@@ -88,11 +88,13 @@ class AbstractMainController(ABC):
                                 'Export and Analysis': (self.export,'Analyses and exports the results to Excel',None),
                                 'Close': (self.close,None,"Ctrl+Q")}, None)
         self._actions.update(actions)
-        _,actions = self._mainWindow.createMenu("Edit", {'Repeat ovl. modelling':
-                            (self.repeatModellingOverlaps,'Repeat overlap modelling involving user inputs',None),
+        editActions = {'Repeat ovl. modelling':
+                            (self.repeatModellingOverlaps,'Repeat overlap modelling involving user inputs',None),}
                                                          #'Add new ion':(self.addNewIonView, 'Add an ion manually', None),
-                                                         'Take Shot':(self.shootPic,'', None),
-                                                         }, None)
+                                                         #'Take Shot':(self.shootPic,'', None),}
+        if DEVELOP:
+            editActions['Take Shot']=(self.shootPic,'', None)
+        _,actions = self._mainWindow.createMenu("Edit", editActions, None)
         self._actions.update(actions)
         _,actions = self._mainWindow.createMenu("Show",
                 {'Results': (self._mainWindow.show, 'Show lists of observed and deleted ions', None),

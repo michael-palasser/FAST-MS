@@ -1,4 +1,3 @@
-import subprocess
 import sys
 
 import numpy as np
@@ -12,7 +11,7 @@ from src.entities.Ions import Fragment,FragmentIon
 from src.gui.dialogs.StartDialogs import OccupancyRecalcStartDialog
 from src.services.analyser_services.Analyser import Analyser
 from src.services.export_services.ExcelWriter import BasicExcelWriter
-from src.resources import path
+from src.resources import path, autoStart
 
 
 def readCsv(file):
@@ -45,7 +44,8 @@ def run(mainWindow):
         spectralFile = os.path.join(path, 'Spectral_data','Occupancies_in.csv')
         with open(spectralFile, 'w') as f:
             f.write("m/z,z,int,name")
-        subprocess.call(['open',spectralFile])
+        autoStart(spectralFile)
+
         start = QtWidgets.QMessageBox.question(mainWindow, 'Calculating Occupancies ',
             'Paste the ions (format: m/z, z, Int., fragment-name) in the csv-file and press "Ok"',
                                                         QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
@@ -75,7 +75,8 @@ def run(mainWindow):
                                   analyser.calculateOccupancies(speciesList)[0],1) #ToDo
             excelWriter.closeWorkbook()
             try:
-                subprocess.call(['open', os.path.join(path, "Spectral_data","Occupancies_out.xlsx")])
+                autoStart(os.path.join(path, "Spectral_data","Occupancies_out.xlsx"))
+                #subprocess.call(['open', os.path.join(path, "Spectral_data","Occupancies_out.xlsx")])
             except:
                 pass
         else:

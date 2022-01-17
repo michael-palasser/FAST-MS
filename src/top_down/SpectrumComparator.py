@@ -4,7 +4,6 @@ Created on 15 Oct 2020
 @author: michael
 '''
 import os
-import subprocess
 import sys
 
 import numpy as np
@@ -14,7 +13,7 @@ from datetime import datetime
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QInputDialog
 
-from src.resources import path
+from src.resources import path, autoStart
 from src.Exceptions import InvalidInputException
 from src.gui.dialogs.StartDialogs import SpectrumComparatorStartDialog
 
@@ -121,7 +120,7 @@ def run(mainWindow):
                 worksheet.write_row(row, 0, deHash(ionHash))
             row+=1
         workbook.close()
-        subprocess.call(['open', output])
+        autoStart(output)
         print("********** saved in:", output, "**********\n")
 
     else:

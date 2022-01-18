@@ -6,7 +6,7 @@ Created on 31 Aug 2020
 
 import json
 from os.path import isfile, join
-from src import path
+from src.resources import getRelativePath, path
 
 top_down_search = {'sequName': '', 'charge': -1, 'fragmentation': '', 'modifications': '', 'nrMod': 0,
                    'spectralData': '', 'noiseLimit': 0.0, 'fragLib': '', 'calibration': False, 'calIons': ''}
@@ -87,7 +87,7 @@ class ConfigHandler(object):
     def update2(self, parameter, value):
         self.__parameters[parameter] = value
 
-dataPath = join(path, "src", "data")
+#dataPath = join("src", "data")
 
 class ConfigurationHandlerFactory(object):
     '''
@@ -95,28 +95,28 @@ class ConfigurationHandlerFactory(object):
     '''
     @staticmethod
     def getTD_SettingHandler():
-        return ConfigHandler(join(dataPath,"settings_top_down.json"), top_down_search)
+        return ConfigHandler(getRelativePath("settings_top_down.json"), top_down_search)
 
     @staticmethod
     def getConfigHandler():
-        return ConfigHandler(join(dataPath,"configurations.json"), configurations)
+        return ConfigHandler(getRelativePath("configurations.json"), configurations)
 
 
     @staticmethod
     def getExportHandler():
-        return ConfigHandler(join(dataPath, "export_options.json"), top_down_export)
+        return ConfigHandler(getRelativePath("export_options.json"), top_down_export)
 
     @staticmethod
     def getIntactExportHandler():
-        return ConfigHandler(join(dataPath, "export_options_intact.json"), intact_export)
+        return ConfigHandler(getRelativePath("export_options_intact.json"), intact_export)
 
     @staticmethod
     def getIntactAssignHandler():
-        return ConfigHandler(join(dataPath, "settings_intact.json"), intact_assign)
+        return ConfigHandler(getRelativePath("settings_intact.json"), intact_assign)
 
     @staticmethod
     def getFullIntactHandler():
-        return ConfigHandler(join(dataPath, "settings_intactFull.json"), intact_search)
+        return ConfigHandler(getRelativePath("settings_intactFull.json"), intact_search)
 
 
 """

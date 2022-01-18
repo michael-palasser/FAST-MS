@@ -7,7 +7,7 @@ import time
 
 import numpy as np
 
-from src import path
+from src.resources import path
 from src.Exceptions import InvalidIsotopePatternException
 
 

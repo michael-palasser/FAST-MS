@@ -116,7 +116,7 @@ class PeakWidget(GeneralPeakWidget):
     QTableWidget which shows peak values. Used by PeakView (in top-down search)
     '''
     def __init__(self, parent, peaks):
-        super(PeakWidget, self).__init__(parent, ('m/z','int. (spectrum)','int. (calc.)','error /ppm', 'used'),
+        super(PeakWidget, self).__init__(parent, ('m/z','Int. (Spectrum)','Int. (Calc.)','Error /ppm', 'Used'),
                                          ('{:10.5f}','{:11d}', '{:11d}', '{:4.2f}', ''), peaks)
         connectTable(self, showOptions)
 
@@ -140,7 +140,7 @@ class IsoPatternPeakWidget(GeneralPeakWidget):
     QTableWidget which shows peak values. Used by IsotopePatternView (for isotope pattern tool)
     '''
     def __init__(self, parent, peaks):
-        super(IsoPatternPeakWidget, self).__init__(parent, ('m/z','int. (spectrum)','int. (calc.)', 'used'),
+        super(IsoPatternPeakWidget, self).__init__(parent, ('m/z','Int. (Spectrum)','Int. (Calc.)', 'Used'),
                                          ('{:10.5f}','{:11d}', '{:11d}', ''), peaks)
         connectTable(self, self.showOptions)
 
@@ -203,7 +203,7 @@ class IsoPatternPeakWidget(GeneralPeakWidget):
         menu = QtWidgets.QMenu()
         copyAllAction = menu.addAction("Copy Table")
         copyAction = menu.addAction("Copy Cell")
-        deleteAction = menu.addAction("Delete last Peak")
+        deleteAction = menu.addAction("Delete Last Peak")
         action = menu.exec_(table.viewport().mapToGlobal(pos))
         if action == copyAllAction:
             #df = self.getDataframe()

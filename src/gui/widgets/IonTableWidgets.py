@@ -48,7 +48,7 @@ class IonTableWidget(QTableWidget):
         return ['{:10.5f}','{:2d}', '{:12d}', '','{:4.2f}', '{:6.1f}', '{:4.2f}', '']
 
     def getHeaders(self):
-        return ['m/z','z','intensity','fragment','error /ppm', 'S/N','quality']
+        return ['m/z','z','Intensity','Name','Error /ppm', 'S/N','Quality-Error']
 
     def getValue(self,ion):
         return ion.getValues()
@@ -125,7 +125,7 @@ class IsoPatternIon(IonTableWidget):
         return ['{:10.5f}','{:2d}', '{:12d}', '','{:4.2f}', '', '{:10.4f}','{:10.4f}']
 
     def getHeaders(self):
-        return ['m/z','z','intensity','name','quality', 'formula', 'neutral mass', 'av.mass']
+        return ['m/z','z','Intensity','Name','Quality-Error', 'Formula', 'Neutral Mass', 'Av. Mass']
 
     def fill(self, row, ion):
         '''
@@ -217,7 +217,7 @@ class TickIonTableWidget(IonTableWidget):
         super(TickIonTableWidget, self).__init__(parent, data, yPos)
 
     def getHeaders(self):
-        return super(TickIonTableWidget, self).getHeaders() + ['del.?']
+        return super(TickIonTableWidget, self).getHeaders() + ['Del.?']
 
     def fill(self, row, ion):
         '''
@@ -276,7 +276,7 @@ class CalibrationIonTableWidget(QTableWidget):
         return ['{:10.5f}','{:2d}', '{:12d}', '', '{:4.2f}', '']
 
     def getHeaders(self):
-        return ['m/z','z','intensity','name','error /ppm', 'use']
+        return ['m/z','z','Intensity','Name','Error /ppm', 'Use']
 
     '''def getValue(self,ion):
         return ion.getValues()'''

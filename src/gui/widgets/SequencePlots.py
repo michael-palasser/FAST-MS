@@ -52,7 +52,7 @@ class PlotFactory(object):
         self._plot2.setXLink(self._plot1)
         self._plot2.setYLink(self._plot1)
         styles = {"black": "#f00", "font-size": "20px"}
-        self._plot1.setLabel('bottom', 'cleavage site', **styles)
+        self._plot1.setLabel('bottom', 'Cleavage Site', **styles)
         yRange = [-self._maxY*0.05,self._maxY*1.05]
         self._plot1.setXRange(0.02, len(self._sequence) + 0.02)
         self._plot1.plotItem.vb.setLimits(xMin=0, xMax=len(self._sequence) + 0.01, yMin=yRange[0], yMax=yRange[1])
@@ -304,8 +304,8 @@ def plotBars(sequence, values, headers, title, occup=False):
     for i,bb in enumerate(sequence):
         plt.text(x=i+0.5, y=0, s=bb, fontsize=13, c=sequColour, ha='center')
     plt.rcParams['figure.figsize'] = nrRows/5+4, 4
-    ax.set_ylabel('Rel.abundances in a.u.')
-    ax.set_xlabel('cleavage site')
+    ax.set_ylabel('Rel. Abundances in a.u.')
+    ax.set_xlabel('Cleavage Site')
     ax.xaxis.set_major_locator(MultipleLocator(5))
     #ax.xaxis.set_major_formatter('{x:.0f}')
     ax.xaxis.set_minor_locator(MultipleLocator(1))

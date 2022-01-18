@@ -1,13 +1,13 @@
 import copy
 import logging
 from abc import ABC
-from subprocess import call
 
 import numpy as np
 
 from src.Exceptions import InvalidInputException
 from src.FormulaFunctions import protMass, eMass
 from src.MolecularFormula import MolecularFormula
+from src.resources import autoStart
 
 
 def getErrorLimit(mz, k, d):
@@ -151,7 +151,8 @@ class AbstractSpectrumHandler(ABC):
                         if i==0:
                             continue
                         try:
-                            call(['open', self._settings['spectralData']])
+                            autoStart(self._settings['spectralData'])
+                            #call(['open', self._settings['spectralData']])
                         except:
                             pass
                         if not csv:

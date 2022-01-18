@@ -4,6 +4,7 @@ from random import randint
 from src.fastFunctions import getByIndex
 
 from src.MolecularFormula import MolecularFormula
+from src.services.DataServices import PeriodicTableService
 from src.services.assign_services.AbstractSpectrumHandler import calculateError
 
 averagine ={'C': 4.9384, 'H': 7.7583, 'N': 1.3577, 'O': 1.4773, 'S': 0.0417}
@@ -250,6 +251,27 @@ class MolecularFormulaTest(TestCase):
         self.assertEqual(length,len(isotopePattern))
         self.testIsotopePattern(RNA_pattern[:length], isotopePattern, False)
 
+    def testX(self):
+        molFormulaDummy_prot = MolecularFormula('C714H1120N188O255S9') #calmodulin
+        charge = 4
+        h_formula = MolecularFormula({'H':4})
+        molFormulaDummy_prot2 = molFormulaDummy_prot.addFormula(h_formula.getFormulaDict())
+        '''abTable = []
+        for row in molFormulaDummy_prot.calculateIsotopePattern(0.99)
+            abTable.append((int(row[0],row[1])))'''
+        #abTable = molFormulaDummy_prot.calculateIsotopePattern(0.99).astype(np.dtype([('m/z', int), ('calcInt', float)]))
+        #print(abTable)
+        neutralPattern = molFormulaDummy_prot.calculateIsotopePattern(0.99)
+        print(neutralPattern)
+        maxIso = int(np.max(neutralPattern['m/z']))
+        minIso = int(np.min(neutralPattern['m/z']))
+        abTable = np.zeros((2,maxIso+5))
+        for i in range(len(neutralPattern)):
+            abTable[0][minIso+i] = neutralPattern[i]['calcInt']
+        for isotope in PeriodicTableService().get('H').getItems():
+            abTable[1][isotope[0]] = isotope[2]
+        print(molFormulaDummy_prot.calculateAbundancesFFT(abTable,np.array([1,charge])))
+        print(molFormulaDummy_prot2.calculateIsotopePattern(0.99))
     '''def test_get_poisson_table(self):
         formula = MolecularFormula('C1000H1000N550O300S10')
         print(formula.makeIsotopeTable())

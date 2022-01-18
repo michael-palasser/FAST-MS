@@ -1,7 +1,7 @@
 from PyQt5 import QtWidgets
 from os.path import join, isdir
 
-from src import path
+from src.resources import path
 from src.Exceptions import InvalidInputException
 from src.gui.dialogs.AbstractDialogs import AbstractDialog
 from src.gui.GUI_functions import createComboBox, shoot
@@ -128,7 +128,7 @@ class ExportDialog(AbstractDialog):
 
         self._widgets['dir'].setText(startPath)
 
-        options = ('m/z', 'z','intensity', 'int./z', 'fragment', 'error /ppm', 'S/N', 'quality', 'formula', 'score', 'comment',
+        options = ('m/z', 'z','intensity', 'int./z', 'name', 'error /ppm', 'S/N', 'quality', 'formula', 'score', 'comment',
                    'molecular mass', 'average mass', 'noise')
         label = QtWidgets.QLabel(self)
         label.setText(self._translate(self.objectName(), 'Ion Values:'))

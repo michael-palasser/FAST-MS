@@ -4,7 +4,6 @@ Created on 21 Jul 2020
 @author: michael
 '''
 
-import subprocess
 import traceback
 import os
 
@@ -12,13 +11,12 @@ import numpy as np
 import time
 from PyQt5 import QtWidgets
 
-from src import path
+from src.resources import path, autoStart
 from src.Exceptions import InvalidIsotopePatternException, InvalidInputException
 from src.entities.Info import Info
 from src.gui.AbstractMainWindows import SimpleMainWindow
 from src.gui.controller.AbstractController import AbstractMainController
 from src.gui.tableviews.FragmentationTable import FragmentationTable
-from src.gui.dialogs.CalibrationView import CalibrationView
 from src.gui.widgets.OccupancyWidget import OccupancyWidget
 from src.gui.widgets.SequCovWidget import SequCovWidget
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
@@ -278,9 +276,9 @@ class TD_MainController(AbstractMainController):
                                                          'Export': (self.export,'Exports the results to Excel',None),
                                                          'Close': (self.close,None,"Ctrl+Q")}, None)
         self._actions.update(actions)
-        _,actions = self._mainWindow.createMenu("Edit", {'Repeat ovl. modelling':
+        _,actions = self._mainWindow.createMenu("Edit", {'Repeat Ovl. Modelling':
                             (self.repeatModellingOverlaps,'Repeat overlap modelling involving user inputs',None),
-                                                         'Add new ion':(self.addNewIonView, 'Add an ion manually', None),
+                                                         'Add New Ion':(self.addNewIonView, 'Add an ion manually', None),
                                                          'Take Shot':(self.shootPic,'', None),
                                                          }, None)
         self._actions.update(actions)
@@ -290,9 +288,9 @@ class TD_MainController(AbstractMainController):
                  'Protocol':(self._infoView.show,'Show Protocol',None)}, None)
         _,actions = self._mainWindow.createMenu("Analysis",
                 {'Fragmentation': (self.showFragmentation, 'Show fragmentation efficiencies (% of each fragment type)', None),
-                 'Occupancy-Plot': (self.showOccupancyPlot,'Show occupancies as a function of sequence pos.',None),
-                 'Charge-Plot': (lambda: self.showChargeDistrPlot(False),'Show av. charge as a function of sequence pos. (Calculated with Int. values)',None),
-                 'Reduced Charge-Plot':(lambda: self.showChargeDistrPlot(True),'Show av. charge as a function of sequence pos. (Calculated with Int./z values)',None),
+                 'Occupancies': (self.showOccupancyPlot,'Show occupancies as a function of sequence pos.',None),
+                 'Charge States (int.)': (lambda: self.showChargeDistrPlot(False),'Show av. charge as a function of cleavage site (Calculated with int. values)',None),
+                 'Charge States (int./z)':(lambda: self.showChargeDistrPlot(True),'Show av. charge as a function of cleavage site (Calculated with int./z values)',None),
                  'Sequence Coverage': (self.showSequenceCoverage,'Show sequence coverage',None)}, None)
 
         self._actions.update(actions)
@@ -529,7 +527,8 @@ class TD_MainController(AbstractMainController):
         '''
         exportConfigHandler = ConfigurationHandlerFactory.getExportHandler()
         lastOptions= exportConfigHandler.getAll()
-        dlg = ExportDialog(self._mainWindow, ('occupancies','charges','reduced charges', 'sequence coverage'), lastOptions)
+        dlg = ExportDialog(self._mainWindow, ('occupancies','charge states (int.)','charge states (int./z)'), lastOptions)
+                                              #'sequence coverage'), lastOptions)
         dlg.exec_()
         if dlg and not dlg.canceled():
             self._info.export()
@@ -553,7 +552,7 @@ class TD_MainController(AbstractMainController):
                                     self._info.toString())
                 print("********** saved in:", output, "**********\n")
                 try:
-                    subprocess.call(['open', output])
+                    autoStart(output)
                 except:
                     pass
             except KeyError as e:

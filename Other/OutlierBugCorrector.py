@@ -1,11 +1,9 @@
-import subprocess
 import sys
-
 import numpy as np
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QApplication
 
-from src import path
+from src.resources import autoStart, path
 
 
 def readCsv(file):
@@ -25,7 +23,7 @@ def run(mainWindow):
     spectralFile = path + 'Spectral_data/debug_incorrect.csv'
     with open(spectralFile, 'w') as f:
         f.write("m/z,z,int,name,error,used")
-    subprocess.call(['open',spectralFile])
+    autoStart(spectralFile)
     start = QtWidgets.QMessageBox.question(mainWindow, 'Correcting Intensities ',
         'Paste the ions (format: m/z, z, Int., fragment-name, error, used) in the csv-file and press "Ok"',
                                                     QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
@@ -47,7 +45,7 @@ def run(mainWindow):
                 print(key[0], key[1], val)
                 f.write(key[0]+ '\t' + str(key[1]) + '\t' + str(val) + '\n')
 
-        subprocess.call(['open', output])
+        autoStart(output)
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

@@ -3,7 +3,7 @@ import traceback
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QMessageBox
 
-from src import path
+from src.resources import path
 from os.path import join
 
 from src.Exceptions import InvalidInputException
@@ -127,7 +127,8 @@ class TDStartDialog(StartDialog):
     def checkValues(self, configs, *args):
         if self._widgets['charge'].value() == 0:
             raise InvalidInputException('Invalid Input','Charge must not be 0')
-        configs['calIons'] = self.checkSpectralDataFile('top-down', configs['calIons'])
+        if configs['calibration']:
+            configs['calIons'] = self.checkSpectralDataFile('top-down', configs['calIons'])
         return super(TDStartDialog, self).checkValues(configs, 'top-down')
 
     """def checkSpectralDataFile(self, mode, fileName):
@@ -300,6 +301,7 @@ class SpectrumComparatorStartDialog(AbstractDialog):
             self.createInputWidget()
         self._verticalLayout.addWidget(self._buttonBox)
         self.show()
+        shoot(self)
 
     def getFiles(self):
         return self._files

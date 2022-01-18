@@ -1,0 +1,9 @@
+include Start.py
+include FAST-MS.py
+include install.py
+include FAST MS manual (17.12.).pdf
+recursive-include src/data *
+recursive-include Fragment_lists *
+recursive-include Spectral_data/comparison *
+recursive-include Spectral_data/intact *
+recursive-include Spectral_data/top-down *

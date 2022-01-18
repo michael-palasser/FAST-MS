@@ -71,11 +71,11 @@ class IonTableModel(AbstractTableModel):
     TableModel for QTableView presenting ion values (in top-down search)
     '''
     def __init__(self, data, precRegion, maxQual, maxScore):
-        headers = ('m/z','z','intensity','fragment','error /ppm', 'S/N','quality', 'score', 'comment')
+        headers = ('m/z','z','Intensity','Name','Error /ppm', 'S/N','Quality-Error', 'Score', 'Comment')
         if len(data)==0:
             data=[['' for _ in headers]]
         super(IonTableModel, self).__init__(data, ('{:10.5f}','{:2d}', '{:12d}', '','{:4.2f}', '{:6.1f}', '{:4.2f}',
-               '{:4.1f}', ''), ('m/z','z','intensity','fragment','error /ppm', 'S/N','quality', 'score', 'comment'))
+               '{:4.1f}', ''), headers)
         self._precRegion = precRegion
         self._maxQual = maxQual
         self._maxScore = maxScore
@@ -162,7 +162,7 @@ class PeakTableModel(AbstractTableModel):
     '''
     def __init__(self, data):
         super(PeakTableModel, self).__init__(data, ('{:10.5f}', '{:11d}', '{:11d}', '{:4.2f}', ''),
-                         ('m/z', 'int. (spectrum)', 'int. (calc.)', 'error /ppm', 'used'))
+                         ('m/z', 'Int. (Spectrum)', 'Int. (Calc.)', 'Error /ppm', 'Used'))
         self._data = data
         #print('data',data)
         #self._format = ['{:10.5f}', '{:11d}', '{:11d}','{:4.2f}', '']
@@ -214,7 +214,7 @@ class CalibrationInfoTable1(AbstractTableModel):
     '''
     def __init__(self, data, precision):
         super(CalibrationInfoTable1, self).__init__(data, ['',precision],
-                         ['variable','value'])
+                         ['Variable','Value'])
         #print('data',data)
         #self._format = ['{:10.5f}', '{:11d}', '{:11d}','{:4.2f}', '']
 
@@ -248,5 +248,5 @@ class CalibrationInfoTable2(CalibrationInfoTable1):
     def __init__(self, data, precision):
         super(CalibrationInfoTable2, self).__init__(data, precision)
         self._format.append(precision)
-        self._headers.append('error')
+        self._headers.append('Error')
 

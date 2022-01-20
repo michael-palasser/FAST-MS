@@ -15,7 +15,7 @@ intact_search = {'sequName': '', 'modifications': '', 'spectralData': '', 'spray
 intact_assign = {'sequName': '', 'modifications': '', 'spectralData': [''], 'sprayMode': 'negative',
                  'inputMode': 'abundances (int./z)', 'minMz': 300, 'maxMz': 1600, 'calibration': True, 'output': ''}
 configurations = {'lowerBound': 300, 'minUpperBound': 1200, 'upperBoundTolerance': 100, 'upperBoundWindowSize': 20.0,
-                  'errorLimitCalib': 50, 'maxStd': 1.0, 'overwrite': False, 'zTolerance': 0.8, 'k': 4.5, 'd': 0.5,
+                  'errorLimitCalib': 50, 'maxStd': 1.5, 'overwrite': False, 'zTolerance': 0.8, 'k': 4.5, 'd': 0.5,
                   'errorTolerance': 2.5, 'noiseWindowSize': 4.0, 'thresholdFactor': 0.45, 'maxIso': 0.996,
                   'approxIso': 20, 'outlierLimit': 1.6, 'manualDeletion': 3, 'overlapThreshold': 0.8, 'shapeDel': 0.6,
                   'shapeMarked': 0.25, 'scoreMarked': 2.5, 'SNR': 2.0, 'useAb': True, 'interestingIons': ['c', 'y']}

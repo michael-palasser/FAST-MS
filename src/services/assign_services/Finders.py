@@ -182,7 +182,7 @@ class AbstractFinder(ABC):
         limit = errorLimit
         solution = [0, 1, 0]
         length = len(ionList)
-        while length > 3:
+        while length > 4:
             usedIons = []
             y = list()
             x = list()
@@ -197,7 +197,7 @@ class AbstractFinder(ABC):
                     errorList.append(calculateError(calibratedX, theoMz))
                     usedIons.append(ion)
             length = len(usedIons)
-            if length<3:
+            if length<6 and limit != errorLimit:
                 break
             try:
                 #solution, pcov = curve_fit(self.fun_parabola, np.array(x), np.array(y))

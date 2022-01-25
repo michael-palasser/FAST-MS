@@ -27,7 +27,7 @@ def run(mainWindow):
     :param (PyQt5.QtWidgets.QMainWindow | Any) mainWindow: Qt parent
     '''
     service = SequenceService()
-    sequenceName = 'CR_1_3'
+    sequenceName = 'CR_1_14'
     sequence = service.get(sequenceName).getSequenceList()
     modification = '+CMCT'
     '''dlg = OccupancyRecalcStartDialog(mainWindow, service.getAllSequenceNames())

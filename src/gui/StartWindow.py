@@ -64,6 +64,7 @@ class Window(SimpleMainWindow):
                          'Molecules': (lambda: self.editData(MoleculeEditorController), 'Edit Molecular Properties', None),
                          'Sequences': (lambda: self.editData(SequenceEditorController), 'Edit stored sequences', None)},
                         None)
+        self.makeHelpMenu()
         self.move(200,200)
         # self.setWindowIcon(QIcon('pic.png'))
         self._lastSearch = None

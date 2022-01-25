@@ -20,6 +20,7 @@ class AbstractSimpleEditorController(ABC):
         self.setUpUi(title)
         self._mainWindow.createMenuBar()
         self._fileMenu, self._fileMenuActions = self._mainWindow.createMenu("File", options, 3)
+        self._mainWindow.makeHelpMenu()
 
     def setUpUi(self, title):
         self._mainWindow = SimpleMainWindow(None, title)

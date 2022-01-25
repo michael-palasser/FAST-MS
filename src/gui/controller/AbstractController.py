@@ -67,6 +67,7 @@ class AbstractMainController(ABC):
         self._infoView = InfoView(None, self._info)
         self._openWindows.append(self._infoView)
         self.createMenuBar()
+        self._mainWindow.makeHelpMenu()
         self.fillMainWindow()
         '''self._tables = []
         for data, name in zip((self._intensityModeller.getObservedIons(), self._intensityModeller.getDeletedIons()),

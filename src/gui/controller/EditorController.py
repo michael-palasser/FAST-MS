@@ -157,7 +157,7 @@ class AbstractSimpleEditorController(ABC):
                 if not table.item(selectedRowIndex, j) is None:
                     table.setItem(emptyRow, j, QtWidgets.QTableWidgetItem(table.item(selectedRowIndex, j).text()))
                     if j in bools:
-                        print('bool',emptyRow, j)
+                        #print('bool',emptyRow, j)
                         table.item(emptyRow, j).setCheckState(table.item(selectedRowIndex, j).checkState())
             table.resizeRowsToContents()
         if action == deleteRowAction:

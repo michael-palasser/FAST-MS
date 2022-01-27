@@ -177,7 +177,6 @@ class SequCovWidget(QtWidgets.QWidget):
         for i in range(self._sequLength):
             forward2.append([arr[i] for arr in forward])
             backward2.append([arr[i] for arr in backward])
-        print(self._coveragesForw.keys())
         self._sequPlot.makePlot(forward2, backward2,self._lineWidth.value(), forwardC,backwardC)
         self._sequPlot.draw()
         self.show()

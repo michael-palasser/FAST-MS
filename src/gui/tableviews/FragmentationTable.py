@@ -12,8 +12,7 @@ class FragmentationTableModel(AbstractTableModel):
     TableModel for QTableView in FragmentationTable which shows the relative percentages of each fragment
     '''
     def __init__(self, data):
-        super(FragmentationTableModel, self).__init__(data, ('','{:1.3f}'),
-                         ('Type', 'Rel. Proportion'))
+        super(FragmentationTableModel, self).__init__(data, ('','{:1.3f}'), ('Type', 'Rel. Proportion'))
         self._data = data
 
     def data(self, index, role):

@@ -16,7 +16,7 @@ class SimpleMainWindow(QtWidgets.QMainWindow):
         self.setWindowTitle(self._translate(self.objectName(), title))
         self._centralwidget = QtWidgets.QWidget(self)
         self.setCentralWidget(self._centralwidget)
-        self.setWindowIcon(QIcon(os.path.join(path, 'src', 'gui','icon.png')))
+        self.setWindowIcon(QIcon(os.path.join(path, 'icon.ico')))
 
     def updateComboBox(self, comboBox, newOptions):
         toAdjust = comboBox.count() - len(newOptions)
@@ -62,6 +62,6 @@ class SimpleMainWindow(QtWidgets.QMainWindow):
         return menu, menuActions
 
     def makeHelpMenu(self):
-        manual = path / 'FAST MS Manual.pdf'
+        manual = os.path.join(path, 'FAST MS Manual.pdf')
         self.createMenu('Help',{'Manual':(lambda: autoStart(manual),'Open the Manual',None)},None)
 

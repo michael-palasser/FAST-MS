@@ -527,8 +527,11 @@ class TD_MainController(AbstractMainController):
         '''
         exportConfigHandler = ConfigurationHandlerFactory.getExportHandler()
         lastOptions= exportConfigHandler.getAll()
-        dlg = ExportDialog(self._mainWindow, ('occupancies','charge states (int.)','charge states (int./z)'), lastOptions)
-                                              #'sequence coverage'), lastOptions)
+        if len(self._propStorage.getModifPattern().getItems()) != 0:
+            options = ('occupancies','charge states (int.)','charge states (int./z)')
+        else:
+            options = ('charge states (int.)','charge states (int./z)')
+        dlg = ExportDialog(self._mainWindow, options, lastOptions) #'sequence coverage'), lastOptions)
         dlg.exec_()
         if dlg and not dlg.canceled():
             self._info.export()

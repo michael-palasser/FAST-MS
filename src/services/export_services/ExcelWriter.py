@@ -245,15 +245,7 @@ class ExcelWriter(BasicExcelWriter):
             #percentages = list()
             self.writeInfos(infoString)
             self.writeAnalysis({"spectral file:": settings['spectralData'], 'max. m/z:':spectrumHandler.getUpperBound()},
-                               analyser.getModificationLoss(),
-                               analyser.calculateRelAbundanceOfSpecies()[0],
-                               properties.getSequenceList(),
-                               analyser.calculateOccupancies(self._configs['interestingIons'],
-                                                             unImportantMods=properties.getUnimportantModifs())[0],
-                               analyser.analyseCharges(self._configs['interestingIons'], False)[0],
-                               analyser.analyseCharges(self._configs['interestingIons'], True)[0],
-                               properties.getFragmentsByDir(1), properties.getFragmentsByDir(-1),
-                               settings['nrMod'], abs(settings['charge']))
+                               analyser, properties, settings['nrMod'], abs(settings['charge']))
             #self.analyser.createPlot(__maxMod)
             observedIons = self.sortByName(intensityModeller.getObservedIons().values())
             deletedIons = self.sortByName(intensityModeller.getDeletedIons().values())
@@ -291,23 +283,13 @@ class ExcelWriter(BasicExcelWriter):
         return row+2
 
 
-    def writeAnalysis(self, generalParam, modLoss, relAbundanceOfSpecies, sequence, occupPercentages, charges,
-                      reducedCharges, forwFrags, backFrags, nrMod, maxCharge):
+    def writeAnalysis(self, generalParam, analyser, properties, nrMod, maxCharge):
         '''
-        Writes summary of analysis to _worksheet1
+        Writes summary of analysis to worksheet1
         :param (dict[str,Any]) generalParam: input file name, max. m/z in spectrum containing non-noise peaks
             (see SpectrumHandler)
-        :param (float) modLoss: proportion of modification loss of precursor
-        :param (dict[str,float]) relAbundanceOfSpecies: relative fragment type abundances {type:abundance}
-        :param (list[str]) sequence: list of building blocks
-        :param (dict[str,ndarray(dtype=float)]) occupPercentages: dict {fragment-type : occupancies},
-            occupancies are ordered by number of corresponding building blocks
-        :param (list[str]) forwFrags: list of forward fragment types
-        :param (dict[str,ndarray(dtype=float)]) charges: dict {fragment-type : av.charges},
-            av.charges are ordered by number of corresponding building blocks
-        :param (dict[str,ndarray(dtype=float)]) reducedCharges: dict {fragment-type : av.charges (reduced)},
-            av.charges (reduced) are ordered by number of corresponding building blocks
-        :param (list[str]) backFrags: list of backward fragment types
+        :param (Analyser) analyser: analyser
+        :param (SearchSettings) properties: properties
         :param (int) nrMod: max. nr. of modifications
         :param (int) maxCharge: abs. value of precursor charge
         '''
@@ -315,22 +297,26 @@ class ExcelWriter(BasicExcelWriter):
         row+=1
         self._worksheet1.write(row, 0, ("analysis:"))
         row+=1
+        modLoss = analyser.getModificationLoss()
         if modLoss != None:
             self._worksheet1.write(row, 0, 'modification loss:')
             self._worksheet1.write(row, 1, modLoss, self._percentFormat)
             row +=1
         row +=1
-        row = self.writeAbundancesOfSpecies(row,relAbundanceOfSpecies)
+        row = self.writeAbundancesOfSpecies(row, analyser.calculateRelAbundanceOfSpecies()[0])
+        sequence = properties.getSequenceList()
+        forwFrags, backFrags = properties.getFragmentsByDir(1), properties.getFragmentsByDir(-1)
         if (modLoss != None) and ('occupancies' in self._options['analysis']):
-            row = self.addOccupOrCharges(0, row, sequence, occupPercentages, nrMod,
-                                         forwFrags, backFrags) +8
+            occupPercentages = analyser.calculateOccupancies(self._configs['interestingIons'],
+                                          unImportantMods=properties.getUnimportantModifs())[0]
+            row = self.addOccupOrCharges(0, row, sequence, occupPercentages, nrMod, forwFrags, backFrags) +8
             #self.writeOccupancies(row, sequence, percentages, forwFrags, backFrags)
         if 'charge states (int.)' in self._options['analysis']:
-            row = self.addOccupOrCharges(1, row, sequence, charges, maxCharge,
-                                         forwFrags, backFrags) +8
+            charges = analyser.analyseCharges(self._configs['interestingIons'], False)[0]
+            row = self.addOccupOrCharges(1, row, sequence, charges, maxCharge, forwFrags, backFrags) +8
         if ('charge states (int./z)' in self._options['analysis']):
-            self.addOccupOrCharges(2, row, sequence,
-                                         reducedCharges, maxCharge, forwFrags, backFrags)
+            reducedCharges = analyser.analyseCharges(self._configs['interestingIons'], True)[0]
+            self.addOccupOrCharges(2, row, sequence, reducedCharges, maxCharge, forwFrags, backFrags)
 
 
 

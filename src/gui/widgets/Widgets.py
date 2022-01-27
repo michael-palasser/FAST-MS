@@ -59,10 +59,8 @@ class OpenFileWidget(QtWidgets.QWidget):
             self._lineEdit.setText(file)
         else:
             dir = QFileDialog.getExistingDirectory(self, self.__title, self.__startPath)
-            print(dir)
             if dir:
                 dir = QtCore.QDir.toNativeSeparators(dir)
-                print(dir)
             self._lineEdit.setText(dir)
         #self.__files = _files
 
@@ -184,7 +182,6 @@ class CheckableComboBox(QtWidgets.QComboBox):
             item.setCheckState(QtCore.Qt.Unchecked)
 
     def changeState(self, index):
-        print(index)
         item = self.model().itemFromIndex(index)
         if item.checkState()==QtCore.Qt.Checked:
             item.setCheckState(QtCore.Qt.Unchecked)

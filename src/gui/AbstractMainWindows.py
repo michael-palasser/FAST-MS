@@ -1,7 +1,9 @@
-from os.path import join
+import os
 
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtGui import QIcon
+
+from src.resources import autoStart, path
 
 
 class SimpleMainWindow(QtWidgets.QMainWindow):
@@ -14,7 +16,7 @@ class SimpleMainWindow(QtWidgets.QMainWindow):
         self.setWindowTitle(self._translate(self.objectName(), title))
         self._centralwidget = QtWidgets.QWidget(self)
         self.setCentralWidget(self._centralwidget)
-        self.setWindowIcon(QIcon('icon.png'))
+        self.setWindowIcon(QIcon(os.path.join(path, 'icon.ico')))
 
     def updateComboBox(self, comboBox, newOptions):
         toAdjust = comboBox.count() - len(newOptions)
@@ -58,4 +60,8 @@ class SimpleMainWindow(QtWidgets.QMainWindow):
             pos -= 1
         self._menubar.addAction(menu.menuAction())
         return menu, menuActions
+
+    def makeHelpMenu(self):
+        manual = os.path.join(path, 'FAST MS Manual.pdf')
+        self.createMenu('Help',{'Manual':(lambda: autoStart(manual),'Open the Manual',None)},None)
 

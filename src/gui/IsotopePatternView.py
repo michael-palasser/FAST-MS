@@ -96,6 +96,7 @@ class IsotopePatternView(SimpleMainWindow):
             actions['Shoot']=(lambda: shoot(self), None, None),
         self._menubar, self._menuActions = \
             self.createMenu('Options', actions, None)
+        self.makeHelpMenu()
         self._pause = False
         self.show()
 

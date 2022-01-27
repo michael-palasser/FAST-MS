@@ -145,7 +145,6 @@ class AbstractSpectrumHandler(ABC):
                     items = line.rstrip().split(delimiter)
                 if len(items)>1:
                     try:
-                        print((float(items[0]),float(items[1])))
                         spectralList.append((float(items[0]),float(items[1])))
                     except ValueError:
                         if i==0:
@@ -282,7 +281,8 @@ class AbstractSpectrumHandler(ABC):
         3. If found noise is calculated and the isotope peaks which could theoretically be above the noise are calculated:
             Programm searches for these peaks in spectrum
             If all isotope peaks are calculated to be below noise threshold, ion is added to deleted ion (comment = noise)
-        :param (list) fragmentLibrary: list of Fragment-objects
+        :param (Fragment | Neutral) neutral: neutral species
+        :param (Generator) zRange: range of possible charge states of neutral species
         '''
         '''np.set_printoptions(suppress=True)
         precModCharge = self.getModCharge(self._precursor)
@@ -301,6 +301,7 @@ class AbstractSpectrumHandler(ABC):
         radicals = neutral.getRadicals()
         for z in zRange:
             logging.debug('* z'+str(z))
+            print(neutral.getName(), z)
             theoreticalPeaks = copy.deepcopy(sortedPattern)
             theoreticalPeaks['m/z'] = getMz(theoreticalPeaks['m/z'], z * self._sprayMode, radicals)
             theoreticalPeaks = self.getChargedIsotopePattern(sortedPattern, z, radicals)

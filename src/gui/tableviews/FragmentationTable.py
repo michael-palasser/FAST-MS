@@ -1,7 +1,7 @@
 
 from PyQt5 import QtCore, QtWidgets
 
-
+from src.gui.GUI_functions import setIcon
 from src.gui.tableviews.PlotTables import PlotTableView
 from src.gui.tableviews.TableModels import AbstractTableModel
 from src.gui.tableviews.TableViews import TableView
@@ -67,5 +67,6 @@ class FragmentationTable(QtWidgets.QWidget):
         #self.resize(len(typeData[0])*50+200, len(typeData)*22+25)
         table2 = PlotTableView(None, siteData, siteHeaders,'Fragmentation Efficiencies: ',0)
         verticalLayout.addWidget(table2)
+        setIcon(self)
         self.show()
 

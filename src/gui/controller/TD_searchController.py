@@ -56,7 +56,7 @@ class TD_MainController(AbstractMainController):
         '''
         super(TD_MainController, self).__init__(window)
         if new:
-            dialog = TDStartDialog(None)
+            dialog = TDStartDialog(parent)
             dialog.exec_()
             if dialog.canceled():
                 return
@@ -276,16 +276,7 @@ class TD_MainController(AbstractMainController):
                                                          'Export': (self.export,'Exports the results to Excel',None),
                                                          'Close': (self.close,None,"Ctrl+Q")}, None)
         self._actions.update(actions)
-        _,actions = self._mainWindow.createMenu("Edit", {'Repeat Ovl. Modelling':
-                            (self.repeatModellingOverlaps,'Repeat overlap modelling involving user inputs',None),
-                                                         'Add New Ion':(self.addNewIonView, 'Add an ion manually', None),
-                                                         'Take Shot':(self.shootPic,'', None),
-                                                         }, None)
-        self._actions.update(actions)
-        _,actions = self._mainWindow.createMenu("Show",
-                {'Results': (self._mainWindow.show, 'Show lists of observed and deleted ions', None),
-                 'Original Values':(self.showRemodelledIons,'Show original values of overlapping ions',None),
-                 'Protocol':(self._infoView.show,'Show Protocol',None)}, None)
+        self._actions.update(self.makeGeneralOptions())
         _,actions = self._mainWindow.createMenu("Analysis",
                 {'Fragmentation': (self.showFragmentation, 'Show fragmentation efficiencies (% of each fragment type)', None),
                  'Occupancies': (self.showOccupancyPlot,'Show occupancies as a function of sequence pos.',None),
@@ -294,61 +285,7 @@ class TD_MainController(AbstractMainController):
                  'Sequence Coverage': (self.showSequenceCoverage,'Show sequence coverage',None)}, None)
 
         self._actions.update(actions)
-        '''if self._settings['modifications'] == '-':
-            self._actions['Occupancy-Plot'].setDisabled(True)'''
-        '''if len(ConfigurationHandlerFactory.getConfigHandler())<1:
-            for action in ['Occupancy-Plot','Charge-Plot','Reduced Charge-Plot']:
-                self._actions[action].setDisabled(True)
-                self._actions[action].setToolTip('Choose ions of interest within "Edit Parameters" menu to use this function')'''
 
-
-    """def fillMainWindow(self):
-        '''
-        Makes a QTabWidget with the ion tables
-        :return:
-        '''
-        self._tables = []
-        for table, name in zip((self._intensityModeller.getObservedIons(), self._intensityModeller.getDeletedIons()),
-                               ('Observed Ions', 'Deleted Ions')):
-            self.makeTabWidget(table, name)
-        self.verticalLayout.addWidget(self._tabWidget)
-
-    def makeTabWidget(self, data, name):
-        '''
-        Makes a tab in the tabwidget
-        :param data:
-        :param name:
-        :return:
-        '''
-        tab = QtWidgets.QWidget()
-        verticalLayout = QtWidgets.QVBoxLayout(tab)
-        #tab.setLayout(_verticalLayout)
-        self._tabWidget.addTab(tab, "")
-        self._tabWidget.setTabText(self._tabWidget.indexOf(tab), self._translate(self._mainWindow.objectName(), name))
-        scrollArea,table = self.makeScrollArea(tab,[ion.getMoreValues() for ion in data.values()], self.showOptions)
-        verticalLayout.addWidget(scrollArea)
-        self._tables.append(table)
-        self._tabWidget.setEnabled(True)
-        #self._tabWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-        #tab.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-
-        # _scrollArea.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-
-    def makeScrollArea(self, parent, data, fun):
-        '''
-        Makes QScrollArea for ion tables
-        '''
-        scrollArea = QtWidgets.QScrollArea(parent)
-        #_scrollArea.setGeometry(QtCore.QRect(10, 10, 1150, 800))
-        scrollArea.setWidgetResizable(True)
-        # _scrollArea.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
-        # _scrollArea.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-        table = self.makeTable(scrollArea, data, fun)
-
-        table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
-        table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        scrollArea.setWidget(table)
-        return scrollArea, table"""
 
     def makeTable(self, parent, data,fun):
         '''
@@ -356,170 +293,7 @@ class TD_MainController(AbstractMainController):
         '''
         return super(TD_MainController, self).makeTable(parent, data,fun,
                     self._intensityModeller.getPrecRegion(self._settings['sequName'], abs(self._settings['charge'])))
-        """tableModel = IonTableModel(data,
-                                   self._intensityModeller.getPrecRegion(self._settings['sequName'], abs(self._settings['charge'])),
-                                   self._configs['shapeMarked'], self._configs['scoreMarked'])
-        '''self.proxyModel = QSortFilterProxyModel()
-        self.proxyModel.setSourceModel(model)'''
-        table = QtWidgets.QTableView(parent)
-        table.setModel(tableModel)
-        table.setSortingEnabled(True)
-        #table.setModel(self.proxyModel)
-        '''table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        table.customContextMenuRequested['QPoint'].connect(partial(fun, table))'''
-        connectTable(table, fun)
-        #table.setSelectionBehavior(QAbstractItemView.SelectRows)
-        table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
-        table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        return table"""
 
-
-
-    """def showOptions(self, table, pos):
-        '''
-        Right-click options of an ion table
-        '''
-        menu = QtWidgets.QMenu()
-        showAction = menu.addAction("Show in Spectrum")
-        peakAction = menu.addAction("Show Peaks")
-        formulaAction = menu.addAction("Get Formula")
-        copyRowAction = menu.addAction("Copy Row")
-        copyTableAction = menu.addAction("Copy Table")
-        actionStrings = ["Delete", "Restore"]
-        mode = 0
-        other = 1
-        if table != self._tables[0]:
-            mode = 1
-            other = 0
-        delAction = menu.addAction(actionStrings[mode])
-        action = menu.exec_(table.viewport().mapToGlobal(pos))
-        it = table.indexAt(pos)
-        if it is None:
-            return
-        selectedRow = it.row()
-        selectedHash = table.model().getHashOfRow(selectedRow)
-        selectedIon = self._intensityModeller.getIon(selectedHash)
-        if action == showAction:
-            global spectrumView
-            ajacentIons, minLimit, maxLimit  = self._intensityModeller.getAdjacentIons(selectedHash)
-            #minWindow, maxWindow, maxY = self._intensityModeller.getLimits(ajacentIons)
-            peaks = self._spectrumHandler.getSpectrum(minLimit - 1, maxLimit + 1)
-            spectrumView = SpectrumView(None, peaks, ajacentIons, np.min(selectedIon.getIsotopePattern()['m/z']),
-                                np.max(selectedIon.getIsotopePattern()['m/z']),
-                                        np.max(selectedIon.getIsotopePattern()['relAb']))
-            self._openWindows.append(spectrumView)
-        elif action == peakAction:
-            #global peakview
-            peakView = PeakView(self._mainWindow, selectedIon, self._intensityModeller.remodelSingleIon, self.saveSingleIon)
-            self._openWindows.append(peakView)
-        elif action == formulaAction:
-            text = 'Ion:\t' + selectedIon.getName()+\
-                   '\n\nFormula:\t'+selectedIon.getFormula().toString()
-            QtWidgets.QMessageBox.information(self._mainWindow, selectedIon.getName(), text, QtWidgets.QMessageBox.Ok)
-        elif action == copyRowAction:
-            df=pd.DataFrame(data=[table.model().getRow(selectedRow)], columns=table.model().getHeaders())
-            df.to_clipboard(index=False,header=True)
-        elif action == copyTableAction:
-            df=pd.DataFrame(data=table.model().getData(), columns=table.model().getHeaders())
-            df.to_clipboard(index=False,header=True)
-        elif action == delAction:
-            choice = QtWidgets.QMessageBox.question(self._mainWindow, "",
-                                        actionStrings[mode][:-1] +'ing ' + selectedIon.getName() +"?",
-                                                    QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-            if choice == QtWidgets.QMessageBox.Yes:
-                if mode ==0:
-                    self._info.deleteIon(selectedIon)
-                else:
-                    self._info.restoreIon(selectedIon)
-                self._saved = False
-                ovHash = self._intensityModeller.switchIon(selectedIon)
-                table.model().removeByIndex(selectedRow)
-                self._tables[other].model().addData(selectedIon.getMoreValues())
-                print(actionStrings[mode]+"d",selectedRow, selectedHash)
-                if ovHash is not None:
-                    choice = QtWidgets.QMessageBox.question(self._mainWindow, "Attention",
-                                                            'Deleted Ion overlapped with '+ovHash[0]+', '+str(ovHash[1])+'\n'+
-                                                            'Should this ion be updated?',
-                                                            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-                    if choice == QtWidgets.QMessageBox.Yes:
-                        ion = self._intensityModeller.resetIon(ovHash)
-                        self._info.resetIon(ion)
-                        self._tables[mode].model().updateData(ion.getMoreValues())
-                self._infoView.update()
-
-
-    def saveSingleIon(self, newIon):
-        '''
-        To save an ion which was changed in PeakView
-        '''
-        newIonHash = newIon.getHash()
-        if newIonHash in self._intensityModeller.getObservedIons():
-            ionDict = self._intensityModeller.getObservedIons()
-            index = 0
-        else:
-            ionDict = self._intensityModeller.getDeletedIons()
-            index = 1
-        oldIon = ionDict[newIonHash]
-        if newIon.getIntensity() == 0:
-            dlg = QtWidgets.QMessageBox(QtWidgets.QMessageBox.Information, 'Invalid Request',
-                                        'New intensity must not be 0', QtWidgets.QMessageBox.Ok, self._mainWindow)
-            dlg.show()
-        elif oldIon.getIntensity() != newIon.getIntensity():
-            choice = QtWidgets.QMessageBox.question(self._mainWindow, 'Saving Ion',
-                                                    "Please confirm to change the values of ion: " + oldIon.getId(),
-                                                    QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
-            if choice == QtWidgets.QMessageBox.Ok:
-                self._info.changeIon(oldIon, newIon)
-                self._infoView.update()
-                self._saved = False
-                #self._intensityModeller.addRemodelledIon(oldIon)
-                #newIon.addComment('man.mod.')
-                #ionDict[newIonHash] = newIon
-                self._tables[index].model().updateData(self._intensityModeller.addRemodelledIon(newIon, index).getMoreValues())
-                print('Saved', newIon.getId())
-
-
-    def addNewIonView(self):
-        '''
-        Starts an AddIonView to create a new ion (which was not found by the main search)
-        '''
-        addIonView = AddIonView(self._mainWindow, self._propStorage.getMolecule().getName(),
-                                ''.join(self._propStorage.getSequenceList()), self._settings['fragmentation'],
-                                self._settings['modifications'], self.addNewIon)
-        self._openWindows.append(addIonView)
-
-    def addNewIon(self, addIonView):
-        '''
-        Adds a new ion to the table
-        '''
-        newIon = addIonView.getIon()
-        newIon.setCharge(abs(newIon.getCharge()))
-        self._intensityModeller.addNewIon(newIon)
-        self._info.addNewIon(newIon)
-        self._infoView.update()
-        self._saved = False
-        self._tables[0].model().addData(newIon.getMoreValues())
-        addIonView.close()
-
-    def repeatModellingOverlaps(self):
-        '''
-        To repeat modelling overlaps after manually deleting some ions
-        '''
-        self._info.repeatModelling()
-        self._saved = False
-        self._intensityModeller.remodelOverlaps(True)
-        self.verticalLayout.removeWidget(self._tabWidget)
-        self._tabWidget.hide()
-        del self._tabWidget
-        self._tabWidget = QtWidgets.QTabWidget(self._centralwidget)
-        self.fillMainWindow()"""
-
-    '''def dumb(self):
-        print('not yet implemented')
-        dlg = QtWidgets.QMessageBox(QtWidgets.QMessageBox.Information, 'Unvalid Request',
-                    'Sorry, not implemented yet', QtWidgets.QMessageBox.Ok, self._mainWindow, )
-        if dlg.exec_() and dlg == QtWidgets.QMessageBox.Ok:
-            return'''
 
     def export(self):
         '''
@@ -569,86 +343,6 @@ class TD_MainController(AbstractMainController):
                 if dlg.exec_() and dlg == QtWidgets.QMessageBox.Ok:
                     return
 
-
-    """def close(self):
-        '''
-        Closes the search
-        '''
-        message = ''
-        if self._saved == False:
-            message = 'Warning: Unsaved Results\n'
-        choice = QtWidgets.QMessageBox.question(self._mainWindow, 'Close Search',
-                                                message + "Do you really want to close the analysis?",
-                                                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-        if choice == QtWidgets.QMessageBox.Yes:
-            [w.close() for w in self._openWindows]
-            self._mainWindow.close()
-            self._infoView.close()
-
-    def showRemodelledIons(self):
-        '''
-        Makes a table with the original values of the remodelled ions
-        '''
-        remView = QtWidgets.QWidget()
-        #title = 'Original Values of Overlapping Ions'
-        remView._translate = QtCore.QCoreApplication.translate
-        remView.setWindowTitle(self._translate(remView.objectName(), 'Original Values of Overlapping Ions'))
-        ions = self._intensityModeller.getRemodelledIons()
-        verticalLayout = QtWidgets.QVBoxLayout(remView)
-        scrollArea, table = self.makeScrollArea(remView, [ion.getMoreValues() for ion in ions], self.showRedOptions)
-        #table.customContextMenuRequested['QPoint'].connect(partial(self.showRedOptions, table))
-        connectTable(table, self.showRedOptions)
-        verticalLayout.addWidget(scrollArea)
-        remView.resize(1000, 750)
-        self._openWindows.append(remView)
-        remView.show()
-
-    def showRedOptions(self, table, pos):
-        '''
-        Right-click options of an ion table which shows the original values of the remodelled ions
-        '''
-        menu = QtWidgets.QMenu()
-        showAction = menu.addAction("Show in Spectrum")
-        peakAction = menu.addAction("Show Peaks")
-        formulaAction = menu.addAction("Get Formula")
-        copyRowAction = menu.addAction("Copy Row")
-        copyTableAction = menu.addAction("Copy Table")
-        action = menu.exec_(table.viewport().mapToGlobal(pos))
-        it = table.indexAt(pos)
-        if it is None:
-            return
-        selectedRow = it.row()
-        selectedHash = table.model().getHashOfRow(selectedRow)
-        selectedIon = self._intensityModeller.getRemodelledIon(selectedHash)
-        if action == showAction:
-            global view
-            ajacentIons, minLimit, maxLimit  = self._intensityModeller.getAdjacentIons(selectedHash)
-            ajacentIons = [ion for ion in ajacentIons if ion.getHash()!=selectedHash]
-            peaks = self._spectrumHandler.getSpectrum(minLimit - 1, maxLimit + 1)
-            view = SpectrumView(None, peaks, [selectedIon]+ajacentIons, np.min(selectedIon.getIsotopePattern()['m/z']),
-                                np.max(selectedIon.getIsotopePattern()['m/z']), np.max(selectedIon.getIsotopePattern()['relAb']))
-            self._openWindows.append(view)
-        elif action == peakAction:
-            global peakview
-            peakview = SimplePeakView(None, selectedIon)
-            self._openWindows.append(peakview)
-        elif action == formulaAction:
-            text = 'Ion:\t' + selectedIon.getName()+\
-                   '\n\nFormula:\t'+selectedIon.getFormula().toString()
-            QtWidgets.QMessageBox.information(self._mainWindow, selectedIon.getName(), text, QtWidgets.QMessageBox.Ok)
-        elif action == copyRowAction:
-            df=pd.DataFrame(data=[table.model().getRow(selectedRow)], columns=table.model().getHeaders())
-            df.to_clipboard(index=False,header=True)
-        elif action == copyTableAction:
-            df=pd.DataFrame(data=table.model().getData(), columns=table.model().getHeaders())
-            df.to_clipboard(index=False,header=True)"""
-
-    '''def showLogFile(self):
-        self._infoView.show()'''
-
-    """def getIonList(self):
-        return list(self._intensityModeller.getObservedIons().values())"""
-
     def showFragmentation(self):
         '''
         Makes a widget with a table with the proportion of each fragment type and a table with the relative abundances
@@ -681,12 +375,7 @@ class TD_MainController(AbstractMainController):
             self._analyser.setIons(self.getIonList())
             percentageDict, absDict = self._analyser.calculateOccupancies(interestingIons, modification,
                                                                  self._propStorage.getUnimportantModifs())
-            '''if percentageDict == None:
-                dlg = QtWidgets.QMessageBox(self._mainWindow, title='Unvalid Request',
-                            text='It is not possible to calculate occupancies for an unmodified molecule.',
-                            icon=QtWidgets.QMessageBox.Information, buttons=QtWidgets.QMessageBox.Ok)
-                if dlg == QtWidgets.QMessageBox.Ok:
-                    return'''
+
             plotFactory = PlotFactory(self._mainWindow)
             forwardVals = self._propStorage.filterByDir(percentageDict,1)
             backwardVals = self._propStorage.filterByDir(percentageDict,-1)
@@ -750,8 +439,6 @@ class TD_MainController(AbstractMainController):
         backwardVals = self._propStorage.filterByDir(chargeDict,-1)
         forwardLimits = self._propStorage.filterByDir(minMaxCharges,1)
         backwardLimits = self._propStorage.filterByDir(minMaxCharges,-1)
-        '''self._openWindows.append(plotFactory1.showChargePlot(self._propStorage.getSequenceList(), forwardVals,
-                                                backwardVals,self._settings['charge'], forwardLimits, backwardLimits))'''
         chargeView = PlotTableView(centralWidget, self._analyser.toTable(forwardVals.values(), backwardVals.values()),
                                        list(chargeDict.keys()), 'Av. Charge per Fragment', 1)
         chargeView.sortBy(1)
@@ -761,9 +448,6 @@ class TD_MainController(AbstractMainController):
                                     backwardVals, self._settings['charge'], forwardLimits, backwardLimits))
         mainWindow.show()
         #self._openWindows.append(chargeView)
-        '''plotFactory2.showChargePlot(self._libraryBuilder.getSequenceList(),
-                                      self._libraryBuilder.filterByDir(redChargeDict,1),
-                                      self._libraryBuilder.filterByDir(redChargeDict,-1),self._settings['charge'])'''
 
     def getMainWindow(self, title):
         mainWindow = SimpleMainWindow(self._mainWindow, title)

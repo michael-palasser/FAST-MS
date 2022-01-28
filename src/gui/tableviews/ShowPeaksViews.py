@@ -2,7 +2,7 @@ import copy
 
 from PyQt5 import QtCore, QtWidgets
 
-from src.gui.GUI_functions import connectTable, showOptions
+from src.gui.GUI_functions import connectTable, showOptions, setIcon
 from src.gui.tableviews.TableViews import TableView
 from src.gui.widgets.IonTableWidgets import IonTableWidget
 from src.gui.widgets.PeakWidgets import PeakWidget
@@ -40,6 +40,7 @@ class SimplePeakView(QtWidgets.QWidget):
         self.setWindowTitle(self._translate(self.objectName(), self.objectName()))
         layout.addWidget(self._table)
         #self.resize(650, (len(self._peaks)) * 38 + 30)
+        setIcon(self)
         self.show()
 
     """def showOptions(self, table, pos):

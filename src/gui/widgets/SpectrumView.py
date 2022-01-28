@@ -3,6 +3,7 @@ from PyQt5 import QtWidgets, QtCore
 import numpy as np
 
 import src.resources
+from src.gui.GUI_functions import setIcon
 
 '''class BarGraphItem(pg.BarGraphItem):
 
@@ -54,7 +55,7 @@ class AbstractSpectrumView(QtWidgets.QWidget):
         self._graphWidget.scene().sigMouseMoved.connect(self.mouseMoved)
         pg.SignalProxy(self._graphWidget.scene().sigMouseMoved, rateLimit=60, slot=self.mouseClicked)
         self._graphWidget.scene().sigMouseClicked.connect(self.mouseClicked)
-
+        setIcon(self)
         self.show()
 
     def mouseMoved(self, evt):

@@ -157,7 +157,7 @@ class AbstractMainController(ABC):
         Makes an ion table
         '''
         tableModel = IonTableModel(data, precursorRegion, self._configs['shapeMarked'], self._configs['scoreMarked'])
-        table = TableView(parent, tableModel, fun)
+        table = TableView(parent, tableModel, fun, 3)
         """table = QtWidgets.QTableView(parent)
         table.setModel(tableModel)
         table.setSortingEnabled(True)

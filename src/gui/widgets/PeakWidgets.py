@@ -110,6 +110,9 @@ class GeneralPeakWidget(QtWidgets.QTableWidget):
     def getPeaks(self):
         return self._peaks
 
+    def getHeaders(self):
+        return self._headers
+
 
 class PeakWidget(GeneralPeakWidget):
     '''

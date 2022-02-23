@@ -33,7 +33,7 @@ class Window(SimpleMainWindow):
                              (lambda:self.startTopDown(True), 'Starts analysis of top-down spectrum', None),
                          'Load Analysis':
                              (lambda:self.startTopDown(False), 'Loads an old analysis', None),
-                         'Open Current Analysis':
+                         'Open current Analysis':
                              (self.reopen, 'Re-opens the last analysis', None),
                          #'Calc. Abundances':
                          #    (lambda: modellingTool(self), 'Calculates relative abundances of an ion list', None),
@@ -56,7 +56,7 @@ class Window(SimpleMainWindow):
         self.createMenu('Other Tools',
                         {'Model Ion':
                              (lambda: IsotopePatternView(self), 'Calculates the isotope pattern of an ion', None),
-                         'Compare Ion Lists':
+                         'Compare ion lists':
                              (self.compareSpectra, 'Compares the ion lists of multiple spectra', None)},None)
         self.createMenu('Edit',
                         {'Configurations':(self.editTopDownConfig, 'Edit configurations', None),
@@ -71,7 +71,7 @@ class Window(SimpleMainWindow):
         self.showButtons()
 
     def showButtons(self):
-        xPos = self.makeButton('Analyse Top-Down\nSpectrum', 'Starts analysis of top-down spectrum', 40,
+        xPos = self.makeButton('Analyse top-down\nspectrum', 'Starts analysis of top-down spectrum', 40,
                                lambda:self.startTopDown(True))
         xPos = self.makeButton('Assign\nIntact Ions', 'Starts assignment and analysis of lists with unfragmented ions',
                                xPos, self.startIntactIonSearch)
@@ -135,7 +135,7 @@ class Window(SimpleMainWindow):
 
 def run():
     app = QApplication(sys.argv)
-    app.setApplicationName('FAST MS')
+    app.setApplicationName("FAST MS")
     gui = Window()
     sys.exit(app.exec_())
 

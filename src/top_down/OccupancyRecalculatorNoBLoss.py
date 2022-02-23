@@ -27,26 +27,19 @@ def run(mainWindow):
     :param (PyQt5.QtWidgets.QMainWindow | Any) mainWindow: Qt parent
     '''
     service = SequenceService()
-    sequenceName = 'CR_1_14'
+    sequenceName = 'CR_1_2'
     sequence = service.get(sequenceName).getSequenceList()
-    modification = '+CMCT'
-    '''dlg = OccupancyRecalcStartDialog(mainWindow, service.getAllSequenceNames())
-    dlg.exec_()
-    if dlg and dlg.sequence != None:
-        sequenceName = dlg.sequence
-        sequence = service.get(dlg.sequence).getSequenceList()
-        modification = dlg.modification'''
+    modification = '+72'
+    newList = False
+    all = True
 
     """import ion-list"""
     spectralFile = os.path.join(path, 'Spectral_data','Occupancies_in.csv')
-    with open(spectralFile, 'w') as f:
-        f.write("m/z,z,int,name")
-    autoStart(spectralFile)
-    input('Press any key')
-    '''start = QtWidgets.QMessageBox.question(mainWindow, 'Calculating Occupancies ',
-        'Paste the ions (format: m/z, z, Int., fragment-name) in the csv-file and press "Ok"',
-                                                    QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
-    if start == QtWidgets.QMessageBox.Ok:'''
+    if newList:
+        with open(spectralFile, 'w') as f:
+            f.write("m/z,z,int,name")
+        autoStart(spectralFile)
+        input('Press any key')
     arr = readCsv(spectralFile)
     ionList = list()
     speciesList = list()
@@ -57,6 +50,7 @@ def run(mainWindow):
             if b in ion['name'][-2:]:
                 #print('not', ion['name'])
                 baseLoss = True
+                #print('no',ion['name'])
         if not baseLoss:
             print(ion['z'],'\t',ion['m/z'],'\t',ion['intensity']/ion['z'],'\t',ion['name'])
             species = findall(r"([a-z]+)", ion['name'])[0]
@@ -77,7 +71,7 @@ def run(mainWindow):
     excelWriter.writeDate()
     row = excelWriter.writeAbundancesOfSpecies(2, analyser.calculateRelAbundanceOfSpecies()[0])
     unimportant = []
-    if modification == '+2DEPC+H2O-CO':
+    if modification == '+2DEPC+H2O-CO' and not all:
         unimportant = ['+DEPC','+DEPC+H2O-CO', '+72','+62']
     excelWriter.addOccupOrCharges(0,row, sequence,
                                   analyser.calculateOccupancies(speciesList, unImportantMods=unimportant)[0],1) #ToDo

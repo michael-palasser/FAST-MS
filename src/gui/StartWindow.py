@@ -135,6 +135,7 @@ class Window(SimpleMainWindow):
 
 def run():
     app = QApplication(sys.argv)
+    app.setApplicationName("FAST MS")
     gui = Window()
     sys.exit(app.exec_())
 

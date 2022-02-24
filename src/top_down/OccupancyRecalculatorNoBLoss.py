@@ -29,9 +29,9 @@ def run(mainWindow):
     service = SequenceService()
     sequenceName = 'CR_1_2'
     sequence = service.get(sequenceName).getSequenceList()
-    modification = '+72'
+    modification = '+2DEPC+H2O-CO'
     newList = False
-    all = True
+    all = False
 
     """import ion-list"""
     spectralFile = os.path.join(path, 'Spectral_data','Occupancies_in.csv')

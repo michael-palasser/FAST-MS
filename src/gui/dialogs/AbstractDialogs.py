@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import QMessageBox
 from src.resources import path
 from src.Exceptions import InvalidInputException
 from src.services.DataServices import SequenceService
-from src.gui.GUI_functions import makeFormLayout
+from src.gui.GUI_functions import makeFormLayout, setIcon
 from src.gui.widgets.Widgets import OpenFileWidget
 
 
@@ -31,6 +31,8 @@ class AbstractDialog(QtWidgets.QDialog):
         self._newSettings = None
         self.move(300,100)
         self._canceled = False
+        if parent is not None:
+            setIcon(self)
 
     def canceled(self):
         return self._canceled

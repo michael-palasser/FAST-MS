@@ -152,14 +152,26 @@ class Analyser(object):
         '''
         Determines how often an ion is modified
         :param (str) modificationString: (raw) modification string of an ion
+        :param (str|None) modification: modification to find
         :return: (int) number of modifications of ion
         '''
-        modification = modification[1:]
+        if modification is not None:
+            modification = modification[1:]
+            pos = modificationString.find(modification)
+        else:
+            pos = 1
+            for i,char in enumerate(modificationString[1:]):
+                if char.isnumeric():
+                    pos+=1
+                elif i==0:
+                    return 1
+                else:
+                    break
         nrOfModif = 1
-        if modificationString[modificationString.find(modification) - 1].isdigit():
-            nrOfModif = modificationString[modificationString.find(modification) - 1]
-            if modificationString[modificationString.find(modification) - 2].isdigit():
-                nrOfModif += (10 * modificationString[modificationString.find(modification) - 2])
+        if modificationString[pos - 1].isdigit():
+            nrOfModif = modificationString[pos - 1]
+            if modificationString[pos - 2].isdigit():
+                nrOfModif += (10 * modificationString[pos - 2])
         return int(nrOfModif)
 
     def calculateProportions(self, tempDict):

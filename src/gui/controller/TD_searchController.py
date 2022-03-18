@@ -372,17 +372,21 @@ class TD_MainController(AbstractMainController):
         modification,ok = QtWidgets.QInputDialog.getText(self._mainWindow,'Occupancy Plot', 'Enter the modification: ',
                                                          text=self._propStorage.getModificationName())
         if ok and modification!='':
+            if modification[0] not in ('+','-'):
+                modification = '+'+modification
             self._analyser.setIons(self.getIonList())
             percentageDict, absDict = self._analyser.calculateOccupancies(interestingIons, modification,
                                                                  self._propStorage.getUnimportantModifs())
-
             plotFactory = PlotFactory(self._mainWindow)
             forwardVals = self._propStorage.filterByDir(percentageDict,1)
             backwardVals = self._propStorage.filterByDir(percentageDict,-1)
             sequence = self._propStorage.getSequenceList()
-            self._openWindows.append(plotFactory.showOccupancyPlot(sequence, forwardVals, backwardVals,
-                                                                   self._settings['nrMod'], modification))
-
+            maxY=self._settings['nrMod']
+            if modification!=self._propStorage.getModificationName():
+                maxY=1
+                if modification[1].isnumeric():
+                    maxY=self._analyser.getNrOfModifications(modification, None)
+            self._openWindows.append(plotFactory.showOccupancyPlot(sequence, forwardVals, backwardVals,maxY, modification))
             #absTable = np.zeros((len(sequence),len(absDict.keys())))
             forwardAbsVals = self._propStorage.filterByDir(absDict,1)
             backwardAbsVals = self._propStorage.filterByDir(absDict,-1)
@@ -443,7 +447,6 @@ class TD_MainController(AbstractMainController):
                                        list(chargeDict.keys()), 'Av. Charge per Fragment', 1)
         chargeView.sortBy(1)
         layout.addWidget(chargeView)
-
         layout.addWidget(plotFactory1.showChargePlot(self._propStorage.getSequenceList(), forwardVals,
                                     backwardVals, self._settings['charge'], forwardLimits, backwardLimits))
         mainWindow.show()

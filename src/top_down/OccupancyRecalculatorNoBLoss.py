@@ -27,11 +27,11 @@ def run(mainWindow):
     :param (PyQt5.QtWidgets.QMainWindow | Any) mainWindow: Qt parent
     '''
     service = SequenceService()
-    sequenceName = 'CR_1_2'
+    sequenceName = 'CR_1_14'
     sequence = service.get(sequenceName).getSequenceList()
-    modification = '+2DEPC+H2O-CO'
+    modification = '+72'
     newList = False
-    all = False
+    all = True
 
     """import ion-list"""
     spectralFile = os.path.join(path, 'Spectral_data','Occupancies_in.csv')

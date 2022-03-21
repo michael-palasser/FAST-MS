@@ -1,10 +1,9 @@
 import sys
 
 from PyQt5 import QtWidgets, QtGui, QtCore
-from PyQt5.QtGui import QMovie
-from PyQt5.QtWidgets import QFileDialog, QLabel, QApplication
+from PyQt5.QtWidgets import QFileDialog, QApplication
 
-from src.gui.GUI_functions import createComboBox, translate
+from src.gui.GUI_functions import createComboBox
 
 
 class OpenFileWidget(QtWidgets.QWidget):

@@ -206,5 +206,7 @@ class AbstractItem3(AbstractItem2):
         return self._residue
 
     def toString(self):
-        parentVals = super(AbstractItem3, self).toString()
-        return parentVals[0:-2]+[self._residue] + parentVals[-2:-1]
+        #parentVals = super(AbstractItem3, self).toString()
+        #return parentVals[0:-2]+[self._residue] + parentVals[-2:-1]
+        return [self._name, self._gain, self._loss, self._residue, str(self._radicals), str(self._enabled)]
+

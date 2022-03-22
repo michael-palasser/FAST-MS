@@ -338,7 +338,7 @@ class TD_MainController(AbstractMainController):
                 dlg = QtWidgets.QMessageBox(QtWidgets.QMessageBox.Information, 'Inaccurate Fragment List',
                                             e.__str__() + ' not found\n' +
                                         'The fragmentation pattern or the modification pattern was altered. '
-                                        'Please change the corresponding values to the original ones (see info file) and '
+                                        'Please change the corresponding values to the original ones (see protocol) and '
                                         'reload the analysis.', QtWidgets.QMessageBox.Ok, self._mainWindow, )
                 if dlg.exec_() and dlg == QtWidgets.QMessageBox.Ok:
                     return

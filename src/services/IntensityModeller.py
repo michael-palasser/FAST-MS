@@ -445,7 +445,7 @@ class IntensityModeller(object):
                 del_so_far = len(del_ions)
                 for ion, val in zip(undeletedIons, solution.x):
                     overlapThreshold = self._configs['overlapThreshold']
-                    if 'man.undel,.' in self._correctedIons[ion].getComment():
+                    if 'man.undel.' in self._correctedIons[ion].getComment():
                         overlapThreshold = 0
                     if val * len(undeletedIons) < overlapThreshold:
                         self._remodelledIons.append(deepcopy(self._correctedIons[ion]))

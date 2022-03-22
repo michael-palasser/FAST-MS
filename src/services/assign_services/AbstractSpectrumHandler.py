@@ -46,7 +46,7 @@ class AbstractSpectrumHandler(ABC):
         self._normalizationFactor = None
         self._foundIons = list()
         self._ionsInNoise = list()
-        self._searchedChargeStates = dict()
+        #self._searchedChargeStates = dict()
         self._noiseLevel = 0
         if peaks is None:
             self.addSpectrum(self._settings['spectralData'])

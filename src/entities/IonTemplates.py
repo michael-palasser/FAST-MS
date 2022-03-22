@@ -95,6 +95,7 @@ class FragItem(AbstractItem3):
 
     def toString(self):
         parentVals = super(FragItem, self).toString()
+        print('hey', parentVals[0:-1]+[str(self.__direct), parentVals[-1]])
         return parentVals[0:-1]+[str(self.__direct), parentVals[-1]]
 
 

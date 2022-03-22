@@ -115,12 +115,10 @@ class Analyser(object):
                 currentMod = ion.getModification()
                 absIntensities[ion.getType()][ion.getNumber() - 1] += ion.getIntensity()
                 if modification[1:] in currentMod:
-                    print('yes',currentMod)
                     absValues[ion.getType()][ion.getNumber() - 1] += \
                         np.array([self.getCorrectValue(ion),
                                   self.getCorrectValue(ion) * self.getNrOfModifications(currentMod, modification), 0])
                 else:
-                    print('no',currentMod)
                     absValues[ion.getType()][ion.getNumber() - 1] += \
                         np.array([self.getCorrectValue(ion), 0, 0])
         print('\n\n***** intensities:')

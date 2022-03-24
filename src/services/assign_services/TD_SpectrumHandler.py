@@ -109,6 +109,8 @@ class SpectrumHandler(AbstractSpectrumHandler):
     def setNormalisationFactor(self, factor):
         self._normalisationFactor = factor
 
+    def getCharge(self):
+        return self._charge
 
     def getNormalisationFactor(self):
         '''
@@ -162,7 +164,7 @@ class SpectrumHandler(AbstractSpectrumHandler):
         :param (float) precModCharge: charge effect of precursor modification
         :return: (generator) range between lowest possible z and highest possible z
         '''
-        if self._moleculeName in ['RNA' ,'DNA'] and self._sprayMode == -1:
+        if self._moleculeName in ['RNA','DNA'] and self._sprayMode == -1:
             #probableZ = (fragment.number-1) * self._normalisationFactor
             formula = fragment.getFormula().getFormulaDict()
             if ('P' not in formula.keys()) or (fragment.getFormula().getFormulaDict()['P'] == 0):
@@ -179,6 +181,8 @@ class SpectrumHandler(AbstractSpectrumHandler):
         probableZ -= fragment.getRadicals()
         tolerance = self._configs['zTolerance']
         lowZ, highZ = 1, self._charge
+        if fragment.getNumber()==0:
+            highZ = abs(self._settings['charge'])
         zEffect = (self.getModCharge(fragment)-self._precModCharge) * self._sprayMode
         #print(1,fragment.getName(),probableZ)
         probableZ += zEffect

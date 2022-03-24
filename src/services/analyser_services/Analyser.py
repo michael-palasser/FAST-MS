@@ -13,7 +13,7 @@ class Analyser(object):
     '''
     def __init__(self, ions, sequence, precCharge, modification, useAbundances=True):
         '''
-        :param (list of FragmentIon) ions: observed ion (from intensityModeller)
+        :param (list of FragmentIon | None) ions: observed ion (from intensityModeller)
         :param (list of str) sequence: list of building blocks in sequence of precursor
         :param (int) precCharge: charge of precursor
         :param (str) modification: modification of precursor
@@ -90,6 +90,7 @@ class Analyser(object):
             dictionary {fragment type: absolute values (2D array wiht columns: unmod. intensity per cleavage sit,
                 mod. intensity per cl.site)} for every (interesting) fragment type
         '''
+        print(interestingIons,modification)
         if modification == "":
             return None
         elif modification is None:
@@ -115,10 +116,12 @@ class Analyser(object):
                 currentMod = ion.getModification()
                 absIntensities[ion.getType()][ion.getNumber() - 1] += ion.getIntensity()
                 if modification[1:] in currentMod:
+                    print('yes', modification, currentMod)
                     absValues[ion.getType()][ion.getNumber() - 1] += \
                         np.array([self.getCorrectValue(ion),
                                   self.getCorrectValue(ion) * self.getNrOfModifications(currentMod, modification), 0])
                 else:
+                    print('no', modification, currentMod)
                     absValues[ion.getType()][ion.getNumber() - 1] += \
                         np.array([self.getCorrectValue(ion), 0, 0])
         print('\n\n***** intensities:')

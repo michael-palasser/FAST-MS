@@ -113,7 +113,7 @@ class TD_MainController(AbstractMainController):
                 self._intensityModeller = IntensityModeller(self._configs, noiseLevel)
                 self._intensityModeller.setIonLists(observedIons, delIons, remIons)
                 self._analyser = Analyser(None, self._propStorage.getSequenceList(), self._settings['charge'],
-                                          self._libraryBuilder.getPrecursor().getModification(), self._configs['useAb'])
+                                          self._propStorage.getModificationName(), self._configs['useAb'])
                 self._saved = True
                 self.setUpUi()
 
@@ -234,35 +234,11 @@ class TD_MainController(AbstractMainController):
                 return 1
 
         self._analyser = Analyser(None, self._propStorage.getSequenceList(), self._settings['charge'],
-                                  self._libraryBuilder.getPrecursor().getModification(), self._configs['useAb'])
+                                  self._propStorage.getModificationName(), self._configs['useAb'])
         self._info.searchFinished(self._spectrumHandler.getUpperBound())
         print("done")
         return 0
 
-    """def setUpUi(self):
-        '''
-        Opens a SimpleMainWindow with the ion lists and a InfoView with the protocol
-        '''
-        self._openWindows = []
-        #self._mainWindow = SimpleMainWindow(None, 'Results:  ' + os.path.split(self._settings['spectralData'])[-1])
-        self._translate = QtCore.QCoreApplication.translate
-        self._mainWindow.setWindowTitle(self._translate(self._mainWindow.objectName(),
-                                                        'Results:  ' + os.path.split(self._settings['spectralData'])[-1]))
-        self._openWindows.append(self._mainWindow)
-        self._centralwidget = self._mainWindow.centralWidget()
-        self.verticalLayout = QtWidgets.QVBoxLayout(self._centralwidget)
-        self._tabWidget = QtWidgets.QTabWidget(self._centralwidget)
-        self._infoView = InfoView(None, self._info)
-        self._openWindows.append(self._infoView)
-        self.createMenuBar()
-        self.fillMainWindow()
-        '''self._tables = []
-        for data, name in zip((self._intensityModeller.getObservedIons(), self._intensityModeller.getDeletedIons()),
-                               ('Observed Ions', 'Deleted Ions')):
-            self.makeTabWidget(data, name)
-        self.verticalLayout.addWidget(self._tabWidget)'''
-        self._mainWindow.resize(1000, 900)
-        self._mainWindow.show()"""
 
 
     def createMenuBar(self):
@@ -448,7 +424,7 @@ class TD_MainController(AbstractMainController):
         chargeView.sortBy(1)
         layout.addWidget(chargeView)
         layout.addWidget(plotFactory1.showChargePlot(self._propStorage.getSequenceList(), forwardVals,
-                                    backwardVals, self._settings['charge'], forwardLimits, backwardLimits))
+                                    backwardVals, self._spectrumHandler.getCharge(), forwardLimits, backwardLimits))
         mainWindow.show()
         #self._openWindows.append(chargeView)
 

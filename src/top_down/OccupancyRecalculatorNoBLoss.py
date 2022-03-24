@@ -27,7 +27,7 @@ def run(mainWindow):
     :param (PyQt5.QtWidgets.QMainWindow | Any) mainWindow: Qt parent
     '''
     service = SequenceService()
-    sequenceName = 'CR_1_2'
+    sequenceName = 'CR_1_13'
     sequence = service.get(sequenceName).getSequenceList()
     modification = '-G'
     newList = False
@@ -52,8 +52,8 @@ def run(mainWindow):
                 baseLoss = True
                 #print('no',ion['name'])
 
-        #if '-Gm' in ion['name'][-3:]:
-        #        baseLoss = True
+        '''if '-Gm' in ion['name'][-3:]:
+                baseLoss = True'''
 
         if not baseLoss:
             print(ion['z'],'\t',ion['m/z'],'\t',ion['intensity']/ion['z'],'\t',ion['name'])

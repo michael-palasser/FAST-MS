@@ -92,10 +92,10 @@ class IntactExcelWriter(object):
         worksheet.write_row(self._row + 2, self._col, ['z', 'value'])
         row = self._row + 2
         firstCell = xl_rowcol_to_cell(row + 1, self._col + 1)
-        for z,val in avModifPerCharge.items():
+        for z in sorted(avModifPerCharge.keys()):
             row += 1
             worksheet.write(row, self._col, int(z))
-            worksheet.write(row, self._col + 1, val, self._format2digit)
+            worksheet.write(row, self._col + 1, avModifPerCharge[z], self._format2digit)
         lastCell = xl_rowcol_to_cell(row, self._col + 1)
         row+=1
         worksheet.write(row, self._col, 'av.')

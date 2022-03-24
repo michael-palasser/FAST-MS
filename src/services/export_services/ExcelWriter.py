@@ -245,7 +245,7 @@ class ExcelWriter(BasicExcelWriter):
             #percentages = list()
             self.writeInfos(infoString)
             self.writeAnalysis({"spectral file:": settings['spectralData'], 'max. m/z:':spectrumHandler.getUpperBound()},
-                               analyser, properties, settings['nrMod'], abs(settings['charge']))
+                               analyser, properties, settings['nrMod'], spectrumHandler.getCharge())
             #self.analyser.createPlot(__maxMod)
             observedIons = self.sortByName(intensityModeller.getObservedIons().values())
             deletedIons = self.sortByName(intensityModeller.getDeletedIons().values())

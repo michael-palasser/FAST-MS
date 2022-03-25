@@ -3,6 +3,7 @@ from math import isnan
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import Qt
 
+from src.gui.GUI_functions import setIcon
 from src.gui.tableviews.TableModels import AbstractTableModel
 from src.gui.tableviews.TableViews import TableView
 
@@ -81,6 +82,7 @@ class PlotTableView(QtWidgets.QWidget):
         self._table.resizeRowsToContents()
         verticalLayout.addWidget(scrollArea)
         #self.resize(len(data[0])*50+200, len(data)*22+25)
+        setIcon(self)
         self.show()
 
     def sortBy(self, columnIndex):

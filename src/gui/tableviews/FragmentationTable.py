@@ -1,7 +1,8 @@
 
 from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtCore import Qt
 
-
+from src.gui.GUI_functions import setIcon
 from src.gui.tableviews.PlotTables import PlotTableView
 from src.gui.tableviews.TableModels import AbstractTableModel
 from src.gui.tableviews.TableViews import TableView
@@ -45,6 +46,7 @@ class FragmentationTable(QtWidgets.QWidget):
         # _scrollArea.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         # _scrollArea.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self._table = TableView(self, FragmentationTableModel(typeData))
+        self._table.sortByColumn(0, Qt.AscendingOrder)
         """model = FragmentationTableModel(typeData)
         self._table = QtWidgets.QTableView(self)
         self._table.setSortingEnabled(True)
@@ -67,5 +69,6 @@ class FragmentationTable(QtWidgets.QWidget):
         #self.resize(len(typeData[0])*50+200, len(typeData)*22+25)
         table2 = PlotTableView(None, siteData, siteHeaders,'Fragmentation Efficiencies: ',0)
         verticalLayout.addWidget(table2)
+        setIcon(self)
         self.show()
 

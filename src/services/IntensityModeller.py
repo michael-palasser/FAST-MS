@@ -445,14 +445,15 @@ class IntensityModeller(object):
                 del_so_far = len(del_ions)
                 for ion, val in zip(undeletedIons, solution.x):
                     overlapThreshold = self._configs['overlapThreshold']
-                    if 'man.undel,.' in self._correctedIons[ion].getComment():
+                    if 'man.undel.' in self._correctedIons[ion].getComment():
                         overlapThreshold = 0
                     if val * len(undeletedIons) < overlapThreshold:
                         self._remodelledIons.append(deepcopy(self._correctedIons[ion]))
                         self._correctedIons[ion].addComment("low:" + str(round(val, 2)))
-                        factor=0
-                        if val > 0:
-                            factor = val
+                        factor = val
+                        if val <= 0:
+                            #intensity is not directly set set to 0 because otherwise the isotope pattern would disappear
+                            factor = 1/(10*self._correctedIons[ion].getIntensity())
                         self._correctedIons[ion].setIsotopePatternPart('calcInt',
                                                        self._correctedIons[ion].getIsotopePattern()['calcInt']*factor)
                         self._correctedIons[ion].setIntensity(self._correctedIons[ion].getIntensity() * factor)

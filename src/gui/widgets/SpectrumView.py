@@ -2,7 +2,7 @@ import pyqtgraph as pg
 from PyQt5 import QtWidgets, QtCore
 import numpy as np
 
-import src.resources
+from src.gui.GUI_functions import setIcon
 
 '''class BarGraphItem(pg.BarGraphItem):
 
@@ -54,7 +54,7 @@ class AbstractSpectrumView(QtWidgets.QWidget):
         self._graphWidget.scene().sigMouseMoved.connect(self.mouseMoved)
         pg.SignalProxy(self._graphWidget.scene().sigMouseMoved, rateLimit=60, slot=self.mouseClicked)
         self._graphWidget.scene().sigMouseClicked.connect(self.mouseClicked)
-
+        setIcon(self)
         self.show()
 
     def mouseMoved(self, evt):
@@ -71,12 +71,12 @@ class AbstractSpectrumView(QtWidgets.QWidget):
 
     def mouseClicked(self,evt):  # action if start button clicked
         # mousePoint = self._vb.mapSceneToView(pos)
-        position = self._vb.mapSceneToView(src.resources.pos())
+        position = self._vb.mapSceneToView(evt.pos())
         index = int(position.x())
         #print(self._vb.mapSceneToView(position).x())
-        print(src.resources.pos().x())
+        #print(pos.x())
         if index in self._mzRange:
-            print(index, position.y())
+            print(position.x(), round(position.y()))
         '''else:
             print('not', mousePoint.x(), mousePoint.y())'''
 

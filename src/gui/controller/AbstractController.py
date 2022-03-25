@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 from PyQt5 import QtWidgets, QtCore
 
+from src.gui.GUI_functions import setIcon
 from src.resources import path, DEVELOP
 from src.gui.IsotopePatternView import AddIonView
 from src.gui.dialogs.CalibrationView import CalibrationView
@@ -69,38 +70,30 @@ class AbstractMainController(ABC):
         self.createMenuBar()
         self._mainWindow.makeHelpMenu()
         self.fillMainWindow()
-        '''self._tables = []
-        for data, name in zip((self._intensityModeller.getObservedIons(), self._intensityModeller.getDeletedIons()),
-                               ('Observed Ions', 'Deleted Ions')):
-            self.makeTabWidget(data, name)
-        self.verticalLayout.addWidget(self._tabWidget)'''
         self._mainWindow.resize(1000, 900)
         self._mainWindow.show()
 
 
-    def createMenuBar(self):
-        '''
-        Makes the QMenuBar
-        :return:
-        '''
-        self._mainWindow.createMenuBar()
-        self._actions = dict()
-        _,actions = self._mainWindow.createMenu("File", {#'Save': (self.saveAnalysis, None, "Ctrl+S"),
-                                'Export and Analysis': (self.export,'Analyses and exports the results to Excel',None),
-                                'Close': (self.close,None,"Ctrl+Q")}, None)
-        self._actions.update(actions)
+    def makeGeneralOptions(self):
+        actionDict = dict()
         editActions = {'Repeat ovl. modelling':
-                            (self.repeatModellingOverlaps,'Repeat overlap modelling involving user inputs',None),}
-                                                         #'Add new ion':(self.addNewIonView, 'Add an ion manually', None),
-                                                         #'Take Shot':(self.shootPic,'', None),}
+                           (self.repeatModellingOverlaps, 'Repeat overlap modelling involving user inputs', None), }
+        # 'Add new ion':(self.addNewIonView, 'Add an ion manually', None),
+        # 'Take Shot':(self.shootPic,'', None),}
         if DEVELOP:
-            editActions['Take Shot']=(self.shootPic,'', None)
-        _,actions = self._mainWindow.createMenu("Edit", editActions, None)
-        self._actions.update(actions)
-        _,actions = self._mainWindow.createMenu("Show",
-                {'Results': (self._mainWindow.show, 'Show lists of observed and deleted ions', None),
-                 'Original Values':(self.showRemodelledIons,'Show original values of overlapping ions',None),
-                 'Protocol':(self._infoView.show,'Show Protocol',None)}, None)
+            editActions['Take Shot'] = (self.shootPic, '', None)
+        _, actions = self._mainWindow.createMenu("Edit", editActions, None)
+        actionDict.update(actions)
+        _, actions = self._mainWindow.createMenu("Show",
+                                                 {'Results': (
+                                                 self._mainWindow.show, 'Show lists of observed and deleted ions',
+                                                 None),
+                                                  'Original Values': (
+                                                  self.showRemodelledIons, 'Show original values of overlapping ions',
+                                                  None),
+                                                  'Protocol': (self._infoView.show, 'Show Protocol', None)}, None)
+        actionDict.update(actions)
+        return actionDict
 
     def shootPic(self):
         widgets = {w.windowTitle():w for w in self._openWindows}
@@ -164,7 +157,7 @@ class AbstractMainController(ABC):
         Makes an ion table
         '''
         tableModel = IonTableModel(data, precursorRegion, self._configs['shapeMarked'], self._configs['scoreMarked'])
-        table = TableView(parent, tableModel, fun)
+        table = TableView(parent, tableModel, fun, 3)
         """table = QtWidgets.QTableView(parent)
         table.setModel(tableModel)
         table.setSortingEnabled(True)
@@ -376,7 +369,7 @@ class AbstractMainController(ABC):
         '''
         Makes a table with the original values of the remodelled ions
         '''
-        remView = QtWidgets.QWidget(self._mainWindow)
+        remView = QtWidgets.QWidget(None)
         #title = 'Original Values of Overlapping Ions'
         remView._translate = QtCore.QCoreApplication.translate
         remView.setWindowTitle(self._translate(remView.objectName(), 'Original Values of Overlapping Ions'))
@@ -387,6 +380,7 @@ class AbstractMainController(ABC):
         verticalLayout.addWidget(scrollArea)
         remView.resize(1000, 750)
         self._openWindows.append(remView)
+        setIcon(remView)
         remView.show()
 
     def showRedOptions(self, table, pos):

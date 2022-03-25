@@ -46,13 +46,13 @@ class AbstractSpectrumHandler(ABC):
         self._normalizationFactor = None
         self._foundIons = list()
         self._ionsInNoise = list()
-        self._searchedChargeStates = dict()
+        #self._searchedChargeStates = dict()
         self._noiseLevel = 0
         if peaks is None:
             self.addSpectrum(self._settings['spectralData'])
         else:
             self._spectrum = np.array(sorted(list(peaks), key=lambda tup: tup[0]))
-            self._upperBound = np.max(peaks)
+            self._upperBound = max([peak[0] for peak in peaks])
             self._noiseLevel = noiseLevel
         self._IonClass = IonClass
         self._foundIons = list()

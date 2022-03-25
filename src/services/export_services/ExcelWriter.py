@@ -245,7 +245,7 @@ class ExcelWriter(BasicExcelWriter):
             #percentages = list()
             self.writeInfos(infoString)
             self.writeAnalysis({"spectral file:": settings['spectralData'], 'max. m/z:':spectrumHandler.getUpperBound()},
-                               analyser, properties, settings['nrMod'], abs(settings['charge']))
+                               analyser, properties, settings['nrMod'], spectrumHandler.getCharge())
             #self.analyser.createPlot(__maxMod)
             observedIons = self.sortByName(intensityModeller.getObservedIons().values())
             deletedIons = self.sortByName(intensityModeller.getDeletedIons().values())
@@ -446,7 +446,7 @@ class ExcelWriter(BasicExcelWriter):
         self._worksheet6.write_row(0, 0, ('name', 'formula', 'searched charge st.'))
         row =1
         for fragment in listOfFragments:
-            if self._intact or fragment.getType() in self._configs['interestingIons']:
+            if (fragment.getName() in chargeStates.keys()) and (self._intact or fragment.getType() in self._configs['interestingIons']) :
                 self._worksheet6.write(row, 0, fragment.getName())
                 self._worksheet6.write(row, 1, fragment.getFormula().toString())
                 #self._worksheet6.write(row, 2, self.listToString(chargeStates[fragment.getName()]))

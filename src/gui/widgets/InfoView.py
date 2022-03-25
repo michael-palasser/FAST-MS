@@ -1,5 +1,7 @@
 from PyQt5 import QtWidgets, QtCore
 
+from src.gui.GUI_functions import setIcon
+
 
 class InfoView(QtWidgets.QWidget):
     '''
@@ -20,6 +22,7 @@ class InfoView(QtWidgets.QWidget):
         scrollArea.setWidgetResizable(True)
         scrollArea.setWidget(self._text)
         verticalLayout2.addWidget(self._text)
+        setIcon(self)
         self.show()
 
     def update(self):

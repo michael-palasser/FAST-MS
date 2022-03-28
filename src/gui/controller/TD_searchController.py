@@ -297,6 +297,7 @@ class TD_MainController(AbstractMainController):
             if outputPath == '':
                 outputPath = os.path.join(path, 'Spectral_data', 'top-down')
             output = os.path.join(outputPath, filename)
+            self._configs['interestingIons'] = self.getInterestingIons()
             excelWriter = ExcelWriter(output, self._configs, newOptions)
             self._analyser.setIons(self.getIonList())
             try:

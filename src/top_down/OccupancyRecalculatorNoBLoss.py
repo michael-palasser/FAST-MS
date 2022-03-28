@@ -27,9 +27,9 @@ def run(mainWindow):
     :param (PyQt5.QtWidgets.QMainWindow | Any) mainWindow: Qt parent
     '''
     service = SequenceService()
-    sequenceName = 'CR_1_13'
+    sequenceName = 'CR_1_2'
     sequence = service.get(sequenceName).getSequenceList()
-    modification = '-G'
+    modification = '+m'
     newList = False
     all = True
 
@@ -46,14 +46,14 @@ def run(mainWindow):
     print('z\tm/z\tabundance\tassignment')
     for ion in arr:
         baseLoss = False
-        for b in ['-A','-C']:#['-G','-A','-C']:
+        for b in ['-G','-A','-C']:
             if b in ion['name'][-2:]:
                 #print('not', ion['name'])
                 baseLoss = True
                 #print('no',ion['name'])
 
         '''if '-Gm' in ion['name'][-3:]:
-                baseLoss = True'''
+            baseLoss = True'''
 
         if not baseLoss:
             print(ion['z'],'\t',ion['m/z'],'\t',ion['intensity']/ion['z'],'\t',ion['name'])

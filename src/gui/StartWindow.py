@@ -71,7 +71,7 @@ class Window(SimpleMainWindow):
         self.showButtons()
 
     def showButtons(self):
-        xPos = self.makeButton('Analyse top-down\nspectrum', 'Starts analysis of top-down spectrum', 40,
+        xPos = self.makeButton('Analyse Top-Down\nSpectrum', 'Starts analysis of top-down spectrum', 40,
                                lambda:self.startTopDown(True))
         xPos = self.makeButton('Assign\nIntact Ions', 'Starts assignment and analysis of lists with unfragmented ions',
                                xPos, self.startIntactIonSearch)

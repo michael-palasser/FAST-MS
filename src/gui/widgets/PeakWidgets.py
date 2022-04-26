@@ -222,4 +222,6 @@ class IsoPatternPeakWidget(GeneralPeakWidget):
             df = pd.DataFrame([self.getData()[selectedRow][selectedCol]])
             df.to_clipboard(index=False, header=False)
         if action == deleteAction:
+            for i,oldPeak in enumerate(self.getData()[:-1]):
+                self._peaks[i][1]=oldPeak[1]
             self.updateTable(self._peaks[:-1])

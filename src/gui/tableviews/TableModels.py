@@ -136,7 +136,10 @@ class IonTableModel(AbstractTableModel):
     def addData(self, newRow):
         if self._data[0][0] == '':
             del self._data[0]
+        dataLength = len(self._data)
+        self.beginInsertRows(QtCore.QModelIndex(),dataLength, dataLength)
         self._data.append(newRow)
+        self.endInsertRows()
 
     def removeData(self, name, charge):
         for i, row in enumerate(self._data):
@@ -144,7 +147,9 @@ class IonTableModel(AbstractTableModel):
                 self.removeByIndex(i)
 
     def removeByIndex(self, indexToRemove):
+        self.beginRemoveRows(QtCore.QModelIndex(), indexToRemove, indexToRemove)
         del self._data[indexToRemove]
+        self.endRemoveRows()
         if len(self._data)==0:
             self._data.append(['' for _ in self._headers])
 

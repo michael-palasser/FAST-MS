@@ -19,6 +19,11 @@ def readCsv(file):
     return arr
 
 
+modification = '+DEPC+H2O'
+newList = False
+all = False
+sequenceName = 'neoRibo'
+
 def run(mainWindow):
     '''
     Calculates modification/ligand occupancies of a given ion list thereby neglecting base losses.
@@ -26,13 +31,8 @@ def run(mainWindow):
     Output: xlsx file
     :param (PyQt5.QtWidgets.QMainWindow | Any) mainWindow: Qt parent
     '''
-    service = SequenceService()
-    sequenceName = 'ribA'
-    sequence = service.get(sequenceName).getSequenceList()
-    modification = '+DEPC'
-    newList = False
-    all = True
-
+    #service = SequenceService()
+    sequence = SequenceService().get(sequenceName).getSequenceList()
     """import ion-list"""
     spectralFile = os.path.join(path, 'Spectral_data','Occupancies_in.csv')
     if newList:

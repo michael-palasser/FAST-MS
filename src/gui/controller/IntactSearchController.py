@@ -165,6 +165,12 @@ class IntactMainController(AbstractMainController):
             if outputPath == '':
                 outputPath = os.path.join(path, 'Spectral_data', 'top-down')
             output = os.path.join(outputPath, filename)
+            if os.path.isfile(output):
+                choice = QtWidgets.QMessageBox.question(self._mainWindow, "Overwriting",
+                                                        "There is already an file with the name: " + filename + "\nDo you want to overwrite it?",
+                                                        QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+                if choice == QtWidgets.QMessageBox.No:
+                    return
             parameters = {'data:': outputPath, 'date:': datetime.now().strftime("%d/%m/%Y %H:%M")}
             parameters.update(self._settings)
             parameters.update(self._configs)

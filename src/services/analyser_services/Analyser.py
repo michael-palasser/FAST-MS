@@ -90,7 +90,6 @@ class Analyser(object):
             dictionary {fragment type: absolute values (2D array wiht columns: unmod. intensity per cleavage sit,
                 mod. intensity per cl.site)} for every (interesting) fragment type
         '''
-        print(interestingIons,modification)
         if modification == "":
             return None
         elif modification is None:
@@ -116,12 +115,10 @@ class Analyser(object):
                 currentMod = ion.getModification()
                 absIntensities[ion.getType()][ion.getNumber() - 1] += ion.getIntensity()
                 if modification[1:] in currentMod:
-                    print('yes', modification, currentMod)
                     absValues[ion.getType()][ion.getNumber() - 1] += \
                         np.array([self.getCorrectValue(ion),
                                   self.getCorrectValue(ion) * self.getNrOfModifications(currentMod, modification), 0])
                 else:
-                    print('no', modification, currentMod)
                     absValues[ion.getType()][ion.getNumber() - 1] += \
                         np.array([self.getCorrectValue(ion), 0, 0])
         print('\n\n***** intensities:')

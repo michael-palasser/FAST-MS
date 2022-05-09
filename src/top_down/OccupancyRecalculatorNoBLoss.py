@@ -19,7 +19,7 @@ def readCsv(file):
     return arr
 
 
-modification = '+DEPC+H2O'
+modification = '+2DEPC+H2O-CO'
 newList = False
 all = False
 sequenceName = 'neoRibo'
@@ -67,6 +67,10 @@ def run(mainWindow):
                 modif = ion['name'][ion['name'].find('-'):]
             else:
                 modif = ""
+            if modif == '+DEPC':
+                modif= '+72'
+            elif modif == '+DEPC+H2O-CO':
+                modif= '+62'
             newIon = FragmentIon(Fragment(species, number, modif, dict(), [], 0), ion['m/z'], ion['z'], np.zeros(1), 0)
             newIon.setIntensity(ion['intensity'])
             ionList.append(newIon)

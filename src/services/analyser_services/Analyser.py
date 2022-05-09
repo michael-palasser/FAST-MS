@@ -114,6 +114,7 @@ class Analyser(object):
                     absIntensities[ion.getType()] = np.zeros(sequLength)
                 currentMod = ion.getModification()
                 absIntensities[ion.getType()][ion.getNumber() - 1] += ion.getIntensity()
+                #print(modification[1:] in currentMod,modification[1:], currentMod)
                 if modification[1:] in currentMod:
                     absValues[ion.getType()][ion.getNumber() - 1] += \
                         np.array([self.getCorrectValue(ion),

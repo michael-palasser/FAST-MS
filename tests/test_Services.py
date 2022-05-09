@@ -209,8 +209,8 @@ class TestFragmentationService(TestCase):
         self.service.checkFormatOfItems([('a','C5','CH5N2O','-',0,1,1),('y-G','-','CH5N2O','G',0,-1,0)],knownElements,self.numericals)
         dummies = [[('a','C5','CH5N2O','-',0,1,1),('a','C5','CH5N2O','-',0,1,1)],
                    [('a','Cx5','CH5N2O','-',0,1,1)],
-                   [('a','C5','CH5N2O',0,0,'',1)],
-                   [('a','C5','cCH5N2O',0,0,1,1)]]
+                   [('a','C5','CH5N2O','-',0,'',1)],
+                   [('a','C5','cCH5N2O','0',0,1,1)]]
         for dummy in dummies:
             with self.assertRaises(InvalidInputException):
                 self.service.checkFormatOfItems(dummy,knownElements,self.numericals)

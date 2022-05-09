@@ -24,7 +24,6 @@ class TestIsotopePatternRepository(TestCase):
                          enumerate(self.sequenceService.getSequences())]
             sequences.append(Sequence('dummyRNA', 'GACU', 'RNA', len(sequences) + 1))
             sequences.append(Sequence('dummyProt', 'GAPH', 'Protein', len(sequences) + 1))
-            print(sequences)
             self.sequenceService.save(sequences)
             self.initLibrary()
 

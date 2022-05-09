@@ -200,10 +200,15 @@ class AbstractItem3(AbstractItem2):
         :param (int) enabled:
         '''
         super(AbstractItem3, self).__init__(name, gain, loss, radicals, enabled)
-        self._residue = residue
+        self._residue = residue.replace(' ','')
 
     def getResidue(self):
         return self._residue
+
+
+    def getListOfResidues(self):
+        return self._residue.split(',')
+
 
     def toString(self):
         #parentVals = super(AbstractItem3, self).toString()

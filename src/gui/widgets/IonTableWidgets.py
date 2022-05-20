@@ -37,12 +37,13 @@ class IonTableWidget(QTableWidget):
 
     '''def getIonValues(self):
         return self._ionValues'''
-    def getData(self):
+    '''def getData(self):
         data = []
         for i in range(self.rowCount()):
             data.append([self.item(i,j).text() for j in range(5)] + [self.item(i, 5).checkState()==2])
             #itemList.append([self.item(row, col).text() for col in range(len(self.getHeaders()))])
-        return data
+        print(data)
+        return data'''
 
     def getFormat(self):
         return ['{:10.5f}','{:2d}', '{:12d}', '','{:4.2f}', '{:6.1f}', '{:4.2f}', '']
@@ -243,6 +244,14 @@ class TickIonTableWidget(IonTableWidget):
                 dumpList.append(row[1])
         return dumpList
 
+    def getData(self):
+        itemList = []
+        columns = len(self.getHeaders())
+        for row in range(self.rowCount()):
+            items = [self.item(row, col).text() for col in range(columns-1)]
+            items.append(self.item(row, columns-1).checkState() == 2)
+            itemList.append(items)
+        return itemList
 
 
 class CalibrationIonTableWidget(QTableWidget):

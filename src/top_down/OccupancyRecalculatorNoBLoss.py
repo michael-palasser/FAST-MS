@@ -19,10 +19,10 @@ def readCsv(file):
     return arr
 
 
-modification = '+2DEPC+H2O-CO'
-newList = False
+modification = '+CMCT'
+newList = True
 all = False
-sequenceName = 'neoRibo'
+sequenceName = 'rre1'
 
 def run(mainWindow):
     '''
@@ -67,10 +67,10 @@ def run(mainWindow):
                 modif = ion['name'][ion['name'].find('-'):]
             else:
                 modif = ""
-            if modif == '+DEPC':
+            '''if modif == '+DEPC':
                 modif= '+72'
             elif modif == '+DEPC+H2O-CO':
-                modif= '+62'
+                modif= '+62'''
             newIon = FragmentIon(Fragment(species, number, modif, dict(), [], 0), ion['m/z'], ion['z'], np.zeros(1), 0)
             newIon.setIntensity(ion['intensity'])
             ionList.append(newIon)
@@ -81,10 +81,13 @@ def run(mainWindow):
     excelWriter.writeDate()
     row = excelWriter.writeAbundancesOfSpecies(2, analyser.calculateRelAbundanceOfSpecies()[0])
     unimportant = []
+    nrMod = 1
+    if all and modification=='+DEPC':
+        nrMod = 2
     if modification == '+2DEPC+H2O-CO' and not all:
         unimportant = ['+DEPC','+DEPC+H2O-CO', '+72','+62']
     excelWriter.addOccupOrCharges(0,row, sequence,
-                                  analyser.calculateOccupancies(speciesList, unImportantMods=unimportant)[0],1) #ToDo
+                                  analyser.calculateOccupancies(speciesList, unImportantMods=unimportant)[0],nrMod) #ToDo
     excelWriter.closeWorkbook()
     try:
         autoStart(os.path.join(path, "Spectral_data", "Occupancies_out.xlsx"))

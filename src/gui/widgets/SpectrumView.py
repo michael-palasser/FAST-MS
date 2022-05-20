@@ -31,7 +31,7 @@ class AbstractSpectrumView(QtWidgets.QWidget):
         width = 0.02
         styles = {"black": "#f00", "font-size": lblSize}
         self._graphWidget = pg.PlotWidget(self)
-        self._graphWidget.setLabel('left', 'Rel. Ab.in au', **styles)
+        self._graphWidget.setLabel('left', 'signal', **styles)
         self._graphWidget.setLabel("bottom", "m/z", **styles)
         self._graphWidget.setBackground('w')
         self._graphWidget.setXRange(minRange, maxRange, padding=0)

@@ -292,7 +292,6 @@ class Analyser(object):
         calcCoverages['forward'] = np.sum(overall[:,0])/redSequLength
         overall[:,1] = np.any([val.astype(bool) for type,val in coverages.items() if type not in forwTypes], axis=0)
         calcCoverages['backward'] = np.sum(overall[:,1])/redSequLength
-        print(overall)
         overall[:,2] = np.any((overall[:,0],overall[:,1]), axis=0)
         calcCoverages['total'] = np.sum(overall[:,2])/redSequLength
         '''for type in coverages.keys():
@@ -300,8 +299,8 @@ class Analyser(object):
                 coverages[type][-1] = np.nan
             else:
                 coverages[type][0] = np.nan'''
-        overall[-1,0] = np.nan
-        overall[0,1] = np.nan
+        #overall[-1,0] = np.nan
+        #overall[0,1] = np.nan
         coveragesForw, coveragesBack = {},{}
         for key,val in coverages.items():
             if key in forwTypes:

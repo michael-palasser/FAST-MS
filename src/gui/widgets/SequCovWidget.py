@@ -184,14 +184,13 @@ class SequCovWidget(QtWidgets.QWidget):
             backwardC.append(colour)
             backward.append(self._globalData[:,1])
         for key, tup in self._fragments.items():
-            if key in self._coveragesForw.keys():
-                if tup[0].isChecked():
-                    forward.append(self._coveragesForw[key])
-                    forwardC.append(tup[1].currentText())
-            elif key in self._coveragesBackw.keys():
-                if tup[0].isChecked():
-                    backward.append(self._coveragesBackw[key])
-                    backwardC.append(tup[1].currentText())
+            if tup[0].isChecked():
+                if key in self._coveragesForw.keys():
+                        forward.append(self._coveragesForw[key])
+                        forwardC.append(tup[1].currentText())
+                elif key in self._coveragesBackw.keys():
+                        backward.append(self._coveragesBackw[key])
+                        backwardC.append(tup[1].currentText())
         forward2,backward2 = [],[]
         for i in range(self._sequLength):
             forward2.append([arr[i] for arr in forward])
@@ -248,10 +247,12 @@ class SequenceCoveragePlot(FigureCanvasQTAgg):
                     plt.text(x=xPos+step_x*0.491, y=yPos_j, s='L', ha='center', c=coloursF[j],rotation=180)
                     plt.text(x=xPos+step_x*0.586, y=1-line+step_y*0.15, s='I', ha='center', c=coloursF[-1])
             counter+=1
-            '''if not (i+1)%lineWidth:
-                line+=2*step_y
-                plt.text(x=-step_x*0.5, y=1-line, s=str(counter), fontsize=nrSize)
-                xPos=step_x/2'''
+            if (i+1)%lineWidth:
+                xPos+=step_x
+            else:
+                line += 2 * step_y
+                plt.text(x=-step_x * 0.5, y=1 - line, s=str(counter), fontsize=nrSize)
+                xPos = step_x / 2
             if i != (sequLength):
                 for j,coverageBackward in enumerate(coveragesBackward[i]):
                     if coverageBackward and not np.isnan(coverageBackward):
@@ -261,13 +262,6 @@ class SequenceCoveragePlot(FigureCanvasQTAgg):
                         plt.text(x=xPos-step_x*0.414, y=1-line-step_y*0.15, s='I', ha='center', c=coloursB[-1])
                         #if (not coveragesForward[i]) or (xPos==step_x/2):
                         #plt.text(x=xPos+step_x*0.62, y=1-line-step_y*0.05, s='I', ha='left', c=coloursB[-1])
-            if (i+1)%lineWidth:
-                xPos+=step_x
-            else:
-                line += 2 * step_y
-                plt.text(x=-step_x * 0.5, y=1 - line, s=str(counter), fontsize=nrSize)
-                xPos = step_x / 2
-
         #plt.savefig('foo.png')
         plt.show()
 

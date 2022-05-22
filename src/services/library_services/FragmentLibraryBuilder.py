@@ -75,14 +75,22 @@ class FragmentLibraryBuilder(object):
 
 
     @staticmethod
-    def checkForResidue(residue, sequence):
+    def checkForResidue(residues, sequence):
         '''
         Checks if sequenceList contains a corresponding residue for residue-specific fragments
-        :param (str) residue:
+        :param (list[str]) residues: li
         :param (list[str]) sequence:
         :return: (bool)
         '''
-        return (residue == '') or (residue == '-') or (residue in sequence)
+        for residue in residues:
+            if residue not in ('', '-'):
+                if residue[-1]=='!':
+                    if residue[:-1] != sequence[-1]:
+                        return False
+                elif residue not in sequence:
+                    return False
+        return True
+        #return (residue == '') or (residue == '-') or (residue in sequence)
 
 
     def checkForProlines(self, type, sequ, nextBB):
@@ -125,7 +133,7 @@ class FragmentLibraryBuilder(object):
                 if self.checkForProlines(species,linkSequ, basicLadder[len(linkSequ)][0][-1]):
                     continue
                 formula = linkFormula.addFormula(template.getFormula())
-                if self.checkForResidue(template.getResidue(), linkSequ):
+                if self.checkForResidue(template.getListOfResidues(), linkSequ):
                     if (not formula.checkForNegativeValues()) and template.isEnabled():
                         ladder.append(Fragment(species, len(linkSequ), rest, formula, linkSequ,
                                                templateRadicals))
@@ -135,7 +143,7 @@ class FragmentLibraryBuilder(object):
                                     modifName = modif.getName()
                                     formula = linkFormula.addFormula(template.getFormula(),
                                                 MolecularFormula(modif.getFormula()).multiplyFormula(nrMod).getFormulaDict())
-                                    if self.checkForResidue(modif.getResidue(), linkSequ) and not formula.checkForNegativeValues()\
+                                    if self.checkForResidue(modif.getListOfResidues(), linkSequ) and not formula.checkForNegativeValues()\
                                             and ((modifName+rest) not in self.__modifPattern.getExcluded()):
                                             #Constructor: type, number, modification, loss, formula
                                             if self.__maxMod > 1:

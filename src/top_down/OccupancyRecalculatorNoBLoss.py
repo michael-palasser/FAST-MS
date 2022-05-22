@@ -19,6 +19,11 @@ def readCsv(file):
     return arr
 
 
+modification = '+CMCT'
+newList = True
+all = False
+sequenceName = 'rre1'
+
 def run(mainWindow):
     '''
     Calculates modification/ligand occupancies of a given ion list thereby neglecting base losses.
@@ -26,13 +31,8 @@ def run(mainWindow):
     Output: xlsx file
     :param (PyQt5.QtWidgets.QMainWindow | Any) mainWindow: Qt parent
     '''
-    service = SequenceService()
-    sequenceName = 'CR_1_13'
-    sequence = service.get(sequenceName).getSequenceList()
-    modification = '-G'
-    newList = False
-    all = True
-
+    #service = SequenceService()
+    sequence = SequenceService().get(sequenceName).getSequenceList()
     """import ion-list"""
     spectralFile = os.path.join(path, 'Spectral_data','Occupancies_in.csv')
     if newList:
@@ -46,14 +46,14 @@ def run(mainWindow):
     print('z\tm/z\tabundance\tassignment')
     for ion in arr:
         baseLoss = False
-        for b in ['-A','-C']:#['-G','-A','-C']:
+        for b in ['-G','-A','-C']:#['-G','-A','-C']:
             if b in ion['name'][-2:]:
                 #print('not', ion['name'])
                 baseLoss = True
                 #print('no',ion['name'])
 
         '''if '-Gm' in ion['name'][-3:]:
-                baseLoss = True'''
+            baseLoss = True'''
 
         if not baseLoss:
             print(ion['z'],'\t',ion['m/z'],'\t',ion['intensity']/ion['z'],'\t',ion['name'])
@@ -67,6 +67,10 @@ def run(mainWindow):
                 modif = ion['name'][ion['name'].find('-'):]
             else:
                 modif = ""
+            '''if modif == '+DEPC':
+                modif= '+72'
+            elif modif == '+DEPC+H2O-CO':
+                modif= '+62'''
             newIon = FragmentIon(Fragment(species, number, modif, dict(), [], 0), ion['m/z'], ion['z'], np.zeros(1), 0)
             newIon.setIntensity(ion['intensity'])
             ionList.append(newIon)
@@ -77,10 +81,13 @@ def run(mainWindow):
     excelWriter.writeDate()
     row = excelWriter.writeAbundancesOfSpecies(2, analyser.calculateRelAbundanceOfSpecies()[0])
     unimportant = []
+    nrMod = 1
+    if all and modification=='+DEPC':
+        nrMod = 2
     if modification == '+2DEPC+H2O-CO' and not all:
         unimportant = ['+DEPC','+DEPC+H2O-CO', '+72','+62']
     excelWriter.addOccupOrCharges(0,row, sequence,
-                                  analyser.calculateOccupancies(speciesList, unImportantMods=unimportant)[0],1) #ToDo
+                                  analyser.calculateOccupancies(speciesList, unImportantMods=unimportant)[0],nrMod) #ToDo
     excelWriter.closeWorkbook()
     try:
         autoStart(os.path.join(path, "Spectral_data", "Occupancies_out.xlsx"))

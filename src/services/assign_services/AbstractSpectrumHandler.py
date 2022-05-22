@@ -329,28 +329,44 @@ class AbstractSpectrumHandler(ABC):
                     sumInt += notFound * noise * 0.5              #if one or more isotope peaks were not found noise added #parameter
                     notInNoise = np.where(theoreticalPeaks['calcInt'] >noise*
                                           self._configs['thresholdFactor'] / (sumInt/sumIntTheo))
+
+                    limit = getErrorLimit(foundMainPeaks[0][0], self._configs['k'], self._configs['d'])
                     if theoreticalPeaks[notInNoise].size > peakQuantity:
                         logging.debug('* All Peaks:')
                         foundPeaks = [self.findPeak(theoPeak, self._configs['errorTolerance']) for theoPeak in theoreticalPeaks[notInNoise]]
                         #find other isotope Peaks
                         foundPeaksArr = np.sort(np.array(foundPeaks, dtype=peaksArrType), order=['m/z'])
                         if not np.all(foundPeaksArr['relAb']==0):
-                            self._foundIons.append(self._IonClass(neutral, np.min(theoreticalPeaks['m/z']), z, foundPeaksArr, noise))
-                            [print("\t",np.around(peak['m/z'],4),"\t",peak['relAb']) for peak in foundPeaksArr if peak['relAb']>0]
-                            [logging.info(neutral.getName()+"\t"+str(z)+"\t"+str(np.around(peak['m/z'],4))+"\t"+str(peak['relAb']) )for peak in foundPeaksArr if peak['relAb']>0]
+                            if self.checkErrors(foundPeaksArr, limit):
+                                print('deleting: ' + neutral.getName() + ", " + str(z), 'Errors:',foundPeaksArr['error'])
+                                self.addToDeletedIons(neutral, foundMainPeaks, noise, np.min(theoreticalPeaks['m/z']), z,
+                                                      'error')
+                            else:
+                                self._foundIons.append(self._IonClass(neutral, np.min(theoreticalPeaks['m/z']), z, foundPeaksArr, noise))
+                                [print("\t",np.around(peak['m/z'],4),"\t",peak['relAb']) for peak in foundPeaksArr if peak['relAb']>0]
+                                [logging.info(neutral.getName()+"\t"+str(z)+"\t"+str(np.around(peak['m/z'],4))+"\t"+str(peak['relAb']) )for peak in foundPeaksArr if peak['relAb']>0]
                         else:
-                            self.addToDeletedIons(neutral, foundMainPeaks, noise, np.min(theoreticalPeaks['m/z']), z)
+                            self.addToDeletedIons(neutral, foundMainPeaks, noise, np.min(theoreticalPeaks['m/z']), z,'noise')
                     elif theoreticalPeaks[notInNoise].size > 0:
                         foundMainPeaksArr = np.sort(np.array(foundMainPeaks, dtype=peaksArrType), order=['m/z'])
-                        self._foundIons.append(self._IonClass(neutral, np.min(theoreticalPeaks['m/z']), z,
-                                                           foundMainPeaksArr, noise))
-                        [print("\t",np.around(peak['m/z'],4),"\t",peak['relAb']) for peak in foundMainPeaksArr if peak['relAb']>0]
-                        [logging.info(neutral.getName()+"\t"+str(z)+"\t"+str(np.around(peak['m/z'], 4)) + "\t" +
-                                      str(peak['relAb'])) for peak in foundMainPeaksArr if peak['relAb'] > 0]
+                        if self.checkErrors(foundMainPeaksArr,limit):
+                            print('deleting: ' + neutral.getName() + ", " + str(z),'Errors:',foundMainPeaksArr['error'])
+                            self.addToDeletedIons(neutral, foundMainPeaks, noise, np.min(theoreticalPeaks['m/z']), z,
+                                                  'error')
+                        else:
+                            self._foundIons.append(self._IonClass(neutral, np.min(theoreticalPeaks['m/z']), z,
+                                                               foundMainPeaksArr, noise))
+                            [print("\t",np.around(peak['m/z'],4),"\t",peak['relAb']) for peak in foundMainPeaksArr if peak['relAb']>0]
+                            [logging.info(neutral.getName()+"\t"+str(z)+"\t"+str(np.around(peak['m/z'], 4)) + "\t" +
+                                          str(peak['relAb'])) for peak in foundMainPeaksArr if peak['relAb'] > 0]
                     else:
                         print('deleting: '+neutral.getName()+", "+str(z))
-                        self.addToDeletedIons(neutral, foundMainPeaks, noise, np.min(theoreticalPeaks['m/z']), z)
+                        self.addToDeletedIons(neutral, foundMainPeaks, noise, np.min(theoreticalPeaks['m/z']), z,'noise')
 
+    def checkErrors(self, peaks, threshold):
+        if np.average(np.abs(peaks['error'][np.where(peaks['relAb'] != 0 & peaks['used'])]))>threshold:
+            return True
+        return False
 
     def getProtonIsotopePatterns(self):
         '''
@@ -415,7 +431,7 @@ class AbstractSpectrumHandler(ABC):
 
 
 
-    def addToDeletedIons(self, fragment, foundMainPeaks, noise, monoisotopic, z):
+    def addToDeletedIons(self, fragment, foundMainPeaks, noise, monoisotopic, z, text):
         '''
         Adds an ion to deleted ions (_ionsInNoise), (comment "noise")
         :param fragment: fragment where one charge state should be deleted
@@ -424,10 +440,11 @@ class AbstractSpectrumHandler(ABC):
         :param (int) noise: calculated noise
         :param (float) monoisotopic: theoretical m/z of monoisotopic peak
         :param (int) z: charge of ion
+        :param (str) text: reason for deletion
         '''
         foundMainPeaksArr = np.sort(np.array(foundMainPeaks, dtype=peaksArrType), order=['m/z'])
         noiseIon = self._IonClass(fragment, monoisotopic, z, foundMainPeaksArr, noise)
-        noiseIon.addComment('noise')
+        noiseIon.addComment(text)
         self._ionsInNoise.append(noiseIon)
 
     def getCorrectPeak(self, foundIsotopePeaks, theoPeak):

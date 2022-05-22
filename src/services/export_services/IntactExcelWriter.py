@@ -163,7 +163,7 @@ class IntactExcelWriter(object):
             self._col = 0
             self.writeParameters(worksheet, listOfParameters[i])
             for j in range(len(avCharges[i])):
-                worksheet.write(self._row, 0, 'spectralFile ' + str(j + 1))
+                worksheet.write(self._row, 0, 'spectrum ' + str(j + 1))
                 self._row+=1
                 self.writeIons(worksheet, listsOfIons[i][j])
                 calibrationVals = None

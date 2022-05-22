@@ -76,9 +76,9 @@ class AbstractMainController(ABC):
 
     def makeGeneralOptions(self):
         actionDict = dict()
-        editActions = {'Repeat ovl. modelling':
-                           (self.repeatModellingOverlaps, 'Repeat overlap modelling involving user inputs', None), }
-        # 'Add new ion':(self.addNewIonView, 'Add an ion manually', None),
+        editActions = {'Repeat Ovl. Modelling':
+                           (self.repeatModellingOverlaps, 'Repeat overlap modelling involving user inputs', None),
+                            'Add New Ion':(self.addNewIonView, 'Add an ion manually', None),}
         # 'Take Shot':(self.shootPic,'', None),}
         if DEVELOP:
             editActions['Take Shot'] = (self.shootPic, '', None)
@@ -221,7 +221,7 @@ class AbstractMainController(ABC):
             df.to_clipboard(index=False,header=True)
         elif action == delAction:
             choice = QtWidgets.QMessageBox.question(self._mainWindow, "",
-                                        actionStrings[mode][:-1] +'ing ' + selectedIon.getName() +"?",
+                                        actionStrings[mode] +' ' + selectedIon.getName() +"?",
                                                     QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
             if choice == QtWidgets.QMessageBox.Yes:
                 if mode ==0:

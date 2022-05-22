@@ -297,6 +297,13 @@ class TD_MainController(AbstractMainController):
             if outputPath == '':
                 outputPath = os.path.join(path, 'Spectral_data', 'top-down')
             output = os.path.join(outputPath, filename)
+            if os.path.isfile(output):
+                choice = QtWidgets.QMessageBox.question(self._mainWindow, "Overwriting",
+                                                        "There is already an file with the name: " + filename + "\nDo you want to overwrite it?",
+                                                        QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+                if choice == QtWidgets.QMessageBox.No:
+                    return
+            self._configs['interestingIons'] = self.getInterestingIons()
             excelWriter = ExcelWriter(output, self._configs, newOptions)
             self._analyser.setIons(self.getIonList())
             try:
@@ -464,7 +471,7 @@ class TD_MainController(AbstractMainController):
                 self._savedName = dlg.getText()
                 if self._savedName in names:
                     choice = QtWidgets.QMessageBox.question(self._mainWindow, "Overwriting",
-                                "There is already a saved analysis with name: " + self._savedName +"\nDo you want to overwrite it?",
+                                "There is already a saved analysis with the name: " + self._savedName +"\nDo you want to overwrite it?",
                                                             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
                     if choice == QtWidgets.QMessageBox.Yes:
                         break

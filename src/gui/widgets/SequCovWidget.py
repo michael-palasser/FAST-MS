@@ -34,7 +34,8 @@ class SequCovPlotTableModel(AbstractTableModel):
             return Qt.AlignCenter
         if role == Qt.BackgroundRole:
             row,col = index.row(), index.column()
-            if (row!=0) and (row!=len(self._data)-1) and (col!=0):
+            #if (row!=0) and (row!=len(self._data)-1) and (col!=0):
+            if (row != len(self._data) - 1) and (col != 0):
                 if self._data[row][col]==1:
                     return QVariant(QtGui.QColor(Qt.green))
                 elif self._data[row][col]==0:
@@ -48,11 +49,14 @@ class SequCovPlotTableModel(AbstractTableModel):
         #self._data = self._data.sort_values(self._headers[Ncol], ascending=order == Qt.AscendingOrder)
         if order == Qt.AscendingOrder:
             #self._data.sort(key= lambda tup:tup[Ncol])
-            data = sorted(self._data[1:-1], key= lambda tup:tup[Ncol])
+            #data = sorted(self._data[1:-1], key= lambda tup:tup[Ncol])
+            data = sorted(self._data[:-1], key= lambda tup:tup[Ncol])
         else:
             #self._data.sort(key= lambda tup:tup[Ncol], reverse=True)
-            data = sorted(self._data[1:-1],key= lambda tup:tup[Ncol], reverse=True)
-        self._data = [self._data[0]]+data+[self._data[-1]]
+            #data = sorted(self._data[1:-1],key= lambda tup:tup[Ncol], reverse=True)
+            data = sorted(self._data[:-1],key= lambda tup:tup[Ncol], reverse=True)
+        #self._data = [self._data[0]]+data+[self._data[-1]]
+        self._data = data + [self._data[-1]]
         self.layoutChanged.emit()
 
 
@@ -107,7 +111,8 @@ class SequCovWidget(QtWidgets.QWidget):
         all = deepcopy(coveragesForw)
         all.update(coveragesBackw)
         coverageData = self.addCleavageSites([[key] + list(val) for key,val in all.items()])
-        verticalLayout.addWidget(self.makeCoverageTable(coverageData, ['Fragm.'] + sequence))
+        #verticalLayout.addWidget(self.makeCoverageTable(coverageData, ['Fragm.'] + sequence))
+        verticalLayout.addWidget(self.makeCoverageTable(coverageData, ['Fragm.'] + [str(i+1) for i in range(len(sequence)-1)]))
         #verticalLayout.addWidget(self.makeCoverageTable(globalData, ['direction'] + sequence))
         width = 10
         fullSequ = self._sequLength+1
@@ -168,10 +173,9 @@ class SequCovWidget(QtWidgets.QWidget):
 
 
     def addCleavageSites(self, data):
-        newData = [[''] + [str(i + 1) for i in range(self._sequLength)]]
-        newData += data
-        newData.append([''] + [str(self._sequLength - i) for i in range(self._sequLength)])
-        return newData
+        #newData = [[''] + [str(i + 1) for i in range(self._sequLength)]]
+        data.append([''] + [str(self._sequLength - i) for i in range(self._sequLength)])
+        return data
 
 
     def updatePlot(self):

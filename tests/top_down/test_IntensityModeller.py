@@ -49,8 +49,38 @@ class TestIntensityModeller(TestCase):
             spectralIntensities = theoIntensities*10**(7+i)
             for j in range(6):
                 spectralIntensities[j] = spectralIntensities[j]*(1+0.02*(-1)**j)
-            solution, outliers = self.intensityModeller.modelDistribution(spectralIntensities,theoIntensities, np.arange(6))
+            solution, outliers = self.intensityModeller.modelDistribution(spectralIntensities,theoIntensities, np.arange(6),
+                                                                          np.zeros(6))
             self.assertAlmostEqual(1,solution.x/10**(7+i), delta=10e-2)
+            errors = np.random.rand(6)
+            errors[-1]=-6
+            solution, outliers = self.intensityModeller.modelDistribution(spectralIntensities, theoIntensities,
+                                                                          np.arange(6),
+                                                                          errors)
+            self.assertIn(5,outliers)
+        for i in range(2,4):
+            theoIntensities = np.random.rand(i)
+            spectralIntensities = theoIntensities * 10 ** (7)
+            errors = np.random.rand(i)
+            errors[-1]=2
+            for j in range(i):
+                spectralIntensities[j] = spectralIntensities[j]*(1+0.02*(-1)**j)
+            solution, outliers = self.intensityModeller.modelDistribution(spectralIntensities, theoIntensities,
+                                                                          np.arange(i),
+                                                                          errors)
+            self.assertEqual(len(outliers),0)
+
+        theoIntensities = np.random.rand(4)
+        spectralIntensities = theoIntensities * 10 ** (7)
+        errors = np.random.rand(4)
+        errors[-1]=2
+        for j in range(4):
+            spectralIntensities[j] = spectralIntensities[j]*(1+0.02*(-1)**j)
+        solution, outliers = self.intensityModeller.modelDistribution(spectralIntensities, theoIntensities,
+                                                                          np.arange(4),
+                                                                          errors)
+
+
         '''for i in range(5):
             theoIntensities = np.random.rand(6)
             spectralIntensities = theoIntensities*10**(7+i)

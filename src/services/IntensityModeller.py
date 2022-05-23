@@ -8,6 +8,8 @@ from math import exp
 from re import findall
 import numpy as np
 from copy import deepcopy
+
+from scipy import stats
 from scipy.optimize import minimize, minimize_scalar
 
 from src.services.assign_services.AbstractSpectrumHandler import getErrorLimit, calculateError, peaksArrType
@@ -99,13 +101,14 @@ class IntensityModeller(object):
         return np.sum(np.linalg.norm(spectralIntensities-theoIntensities*x)**2)
 
 
-    def modelDistribution(self, spectralIntensities, theoInt, mzArray):
+    def modelDistribution(self, spectralIntensities, theoInt, mzArray, errors):
         '''
         Models the theoretical isotope distribution to the observed one in the spectrum using least square method
         Outliers are detected using a similar approach as the Grubbs test
         :param (ndArray, dtype=float) spectralIntensities: intensities in spectrum
         :param (ndArray, dtype=float) theoInt: calculated intensities
         :param (ndArray, dtype=float) mzArray:
+        :param (ndArray, dtype=float) errors: array of ppm errors
         :return: (tuple[Any, list[float]) solution of scipy.optimize.minimize_scalar, m/z values which had an outlier intensity
         '''
         #x =np.sum(spectralIntensities)/len(spectralIntensities)
@@ -114,12 +117,35 @@ class IntensityModeller(object):
         #sumOfInt = np.sum(calcIntensities)
         #fitQuality = solution.fun**(0.5) / sumOfInt  # correct: (sum_square)^(1/2)/ion.intensity (but ion.intensity = n*I_av)
         # Grubbs('isch) test
-        gValue = np.zeros(len(spectralIntensities))
+        arr_length = len(spectralIntensities)
+        gValueInt = np.zeros(arr_length)
+        nonZeroErrors = errors[np.where(errors != 0)]
+        gValueErr = np.zeros(arr_length)
         if solution.fun ** (0.5) > 0:
-            gValue = (spectralIntensities - calcIntensities) / np.sqrt(solution.fun/len(spectralIntensities))
+            gValueInt = (spectralIntensities - calcIntensities) / np.sqrt(solution.fun/len(spectralIntensities))
+            if len(nonZeroErrors)>1:
+                print('std',np.std(nonZeroErrors))
+                gValueErr = np.abs(errors - np.mean(nonZeroErrors)) / np.sqrt(np.std(nonZeroErrors))
+                print(errors, gValueErr)
             #print(gValue, solution.fun, spectralIntensities,calcIntensities )
-        outlier_index = np.where(gValue > self._configs['outlierLimit'])
+        outlier_index = np.where(gValueInt > self._configs['outlierLimit'])
+        if len(outlier_index[0]) == 0:
+            outlier_index = np.where((gValueErr>self.calculateCriticalVal(len(nonZeroErrors),0.01)) & (errors != 0))
+            if len(outlier_index[0])>0:
+                print(outlier_index,errors, gValueErr, 'error out')
         return solution, mzArray[outlier_index].tolist()
+
+    @staticmethod
+    def calculateCriticalVal(size, alpha):
+        t_dist = stats.t.ppf(1 - alpha / (2 * size), size - 2)
+        numerator = (size-1) * np.sqrt(np.square(t_dist))
+        denominator = np.sqrt(size) * np.sqrt(size-2+np.square(t_dist))
+        if denominator > 0:
+            critical_value = numerator / denominator
+            print(critical_value)
+            if critical_value>2:
+                return critical_value
+        return 2
 
 
     def calcQuality(self, sumSquare, intensity):
@@ -156,20 +182,30 @@ class IntensityModeller(object):
                 else:
                     isoPattern = correctedIon.getIsotopePattern()
                     solution, outliers = self.modelDistribution(isoPattern['relAb'][noOutliers],
-                                                                                   isoPattern['calcInt'][noOutliers],
-                                                                                   isoPattern['m/z'][noOutliers])
+                                                                isoPattern['calcInt'][noOutliers],
+                                                                isoPattern['m/z'][noOutliers],
+                                                                isoPattern['error'][noOutliers])
                     correctedIon.setIntensity(np.sum(isoPattern['calcInt'] * solution.x))
                     #isoPattern['calcInt'] = correctedIon.getIsotopePattern()['calcInt'] * solution.x
                     correctedIon.setIsotopePatternPart('calcInt',correctedIon.getIsotopePattern()['calcInt']*solution.x)
             self.setQualityAndScore(correctedIon, solution)
             '''correctedIon.setQuality(self.calcQuality(solution.fun, correctedIon.getIntensity()))
             ion.setScore(calcScore(ion.getIntensity(), ion.getQuality(), self._noiseLevel))'''
-            correctedIon.setError(np.average(ion.getIsotopePattern()['error'][noOutliers]
+            isoPattern = ion.getIsotopePattern()
+            correctedIon.setError(np.average(isoPattern['error'][noOutliers]
                                             [np.where(ion.getIsotopePattern()['relAb'][noOutliers] != 0)]))
+            absError = np.average(np.abs(isoPattern['error'][noOutliers]
+                                            [np.where(ion.getIsotopePattern()['relAb'][noOutliers] != 0)]))
+            if absError> getErrorLimit(isoPattern['m/z'][0], self._configs['k'], self._configs['d']):
+                print('deleting: ' + correctedIon.getId(), ' Errors:', correctedIon.getIsotopePattern()['error'][noOutliers])
+                correctedIon.addComment("error")
+                if correctedIon.getHash() not in self._deletedIons.keys():
+                    self._deletedIons[correctedIon.getHash()] = correctedIon
             for peak in correctedIon.getIsotopePattern():
                 if peak['m/z'] in outlierList:
                     peak['used'] = False
         return correctedIon
+
 
     def setQualityAndScore(self, ion, solution):
         intensity = ion.getIntensity()
@@ -186,10 +222,10 @@ class IntensityModeller(object):
         print(ion.getName(),ion.getIsotopePattern())
         noOutliers = np.where(ion.getIsotopePattern()['used'])
         ion.setError(np.average(ion.getIsotopePattern()['error'][np.where(ion.getIsotopePattern()['relAb'][noOutliers] != 0)]))
-
+        isoPattern = ion.getIsotopePattern()
         solution, outliers = \
-            self.modelDistribution(ion.getIsotopePattern()['relAb'][noOutliers], ion.getIsotopePattern()['calcInt'][noOutliers],
-                                   ion.getIsotopePattern()['m/z'][noOutliers])
+            self.modelDistribution(isoPattern['relAb'][noOutliers], isoPattern['calcInt'][noOutliers],
+                                   isoPattern['m/z'][noOutliers], isoPattern['error'][noOutliers])
         ion.setIntensity(np.sum(ion.getIsotopePattern()['calcInt'] * solution.x))
         #ion.isotopePattern['calcInt'] = ion.isotopePattern['calcInt'] * solution.x
         ion.setIsotopePatternPart('calcInt',ion.getIsotopePattern()['calcInt']*solution.x)
@@ -433,10 +469,15 @@ class IntensityModeller(object):
             del_ions = []
             spectr_peaks = list()
             for ion in pattern:
+                if ion in manDel:
+                    print(ion, 'deleted by user')
+                    continue
                 for peak in self._correctedIons[ion].getIsotopePattern():  # spectral list
                     if (peak['m/z'], peak['relAb']) not in spectr_peaks:
                         spectr_peaks.append((peak['m/z'], peak['relAb']))
             spectr_peaks = np.array(sorted(spectr_peaks, key=lambda tup: tup[0]))
+            if len(spectr_peaks)==0:
+                continue
             while True:
                 equ_matrix, undeletedIons = self.setUpEquMatrix(pattern,spectr_peaks,del_ions+manDel)
                 #print(equ_matrix)
@@ -646,7 +687,7 @@ class IntensityModeller(object):
         noOutliers = np.where(peakArray['used'])
         solution, outliers = \
             self.modelDistribution(peakArray['relAb'][noOutliers], peakArray['calcInt'][noOutliers],
-                                   peakArray['m/z'][noOutliers])
+                                   peakArray['m/z'][noOutliers],np.zeros(len(peakArray[noOutliers])))
         peakArray['calcInt'] = np.around(peakArray['calcInt'] * solution.x)
         intensity = np.sum(peakArray['calcInt'])
         if intensity != 0:

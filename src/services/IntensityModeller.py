@@ -120,17 +120,18 @@ class IntensityModeller(object):
         arr_length = len(spectralIntensities)
         gValueInt = np.zeros(arr_length)
         nonZeroErrors = errors[np.where(errors != 0)]
+        nonZeroLength = len(nonZeroErrors)
         gValueErr = np.zeros(arr_length)
         if solution.fun ** (0.5) > 0:
             gValueInt = (spectralIntensities - calcIntensities) / np.sqrt(solution.fun/len(spectralIntensities))
-            if len(nonZeroErrors)>1:
+            if nonZeroLength>1:
                 print('std',np.std(nonZeroErrors))
                 gValueErr = np.abs(errors - np.mean(nonZeroErrors)) / np.sqrt(np.std(nonZeroErrors))
                 print(errors, gValueErr)
             #print(gValue, solution.fun, spectralIntensities,calcIntensities )
         outlier_index = np.where(gValueInt > self._configs['outlierLimit'])
-        if len(outlier_index[0]) == 0:
-            outlier_index = np.where((gValueErr>self.calculateCriticalVal(len(nonZeroErrors),0.01)) & (errors != 0))
+        if len(outlier_index[0]) == 0 and nonZeroLength>1:
+            outlier_index = np.where((gValueErr>self.calculateCriticalVal(nonZeroLength,0.01)) & (errors != 0))
             if len(outlier_index[0])>0:
                 print(outlier_index,errors, gValueErr, 'error out')
         return solution, mzArray[outlier_index].tolist()
@@ -393,13 +394,13 @@ class IntensityModeller(object):
         '''
         undeletedPeaks = list()
         undeletedIons = list()
-        for ion in ions:
-            if ion not in deletedIons:
-                undeletedIons.append(ion)
+        for ionHash in ions:
+            if ionHash not in deletedIons:
+                undeletedIons.append(ionHash)
         for peak in peaks:
             if peak[0] in self.usedPeaks:
-                for ion in self.usedPeaks[peak[0]]:
-                    if ion in undeletedIons:
+                for ionHash in self.usedPeaks[peak[0]]:
+                    if ionHash in undeletedIons:
                         undeletedPeaks.append(peak)
                         break
         equ_matrix = np.zeros((len(undeletedPeaks),len(undeletedIons)+1))
@@ -407,10 +408,10 @@ class IntensityModeller(object):
             peak = undeletedPeaks[i]
             equ_matrix[i,-1] = peak[1]
             for j in range(len(undeletedIons)):
-                ion = undeletedIons[j]
-                if ion in self.usedPeaks[peak[0]]:
-                    equ_matrix[i,j] = self._correctedIons[ion].getIsotopePattern()[
-                        np.where(self._correctedIons[ion].getIsotopePattern()['m/z'] == peak[0])]['calcInt']
+                ionHash = undeletedIons[j]
+                if ionHash in self.usedPeaks[peak[0]]:
+                    equ_matrix[i,j] = self._correctedIons[ionHash].getIsotopePattern()[
+                        np.where(self._correctedIons[ionHash].getIsotopePattern()['m/z'] == peak[0])]['calcInt']
         return equ_matrix, undeletedIons
 
     @staticmethod
@@ -468,11 +469,11 @@ class IntensityModeller(object):
             print(pattern)
             del_ions = []
             spectr_peaks = list()
-            for ion in pattern:
-                if ion in manDel:
-                    print(ion, 'deleted by user')
+            for ionHash in pattern:
+                if ionHash in manDel:
+                    print(ionHash, 'deleted by user')
                     continue
-                for peak in self._correctedIons[ion].getIsotopePattern():  # spectral list
+                for peak in self._correctedIons[ionHash].getIsotopePattern():  # spectral list
                     if (peak['m/z'], peak['relAb']) not in spectr_peaks:
                         spectr_peaks.append((peak['m/z'], peak['relAb']))
             spectr_peaks = np.array(sorted(spectr_peaks, key=lambda tup: tup[0]))
@@ -484,22 +485,22 @@ class IntensityModeller(object):
                 bnds = len(undeletedIons)*[(0.,None)]
                 solution = minimize(self.fun_sum_square,np.ones(len(undeletedIons)),equ_matrix, bounds=bnds)
                 del_so_far = len(del_ions)
-                for ion, val in zip(undeletedIons, solution.x):
+                for ionHash, val in zip(undeletedIons, solution.x):
                     overlapThreshold = self._configs['overlapThreshold']
-                    if 'man.undel.' in self._correctedIons[ion].getComment():
+                    if 'man.undel.' in self._correctedIons[ionHash].getComment():
                         overlapThreshold = 0
                     if val * len(undeletedIons) < overlapThreshold:
-                        self._remodelledIons.append(deepcopy(self._correctedIons[ion]))
-                        self._correctedIons[ion].addComment("low:" + str(round(val, 2)))
+                        self._remodelledIons.append(deepcopy(self._correctedIons[ionHash]))
+                        self._correctedIons[ionHash].addComment("low:" + str(round(val, 2)))
                         factor = val
                         if val <= 0:
                             #intensity is not directly set set to 0 because otherwise the isotope pattern would disappear
-                            factor = 1/(10*self._correctedIons[ion].getIntensity())
-                        self._correctedIons[ion].setIsotopePatternPart('calcInt',
-                                                       self._correctedIons[ion].getIsotopePattern()['calcInt']*factor)
-                        self._correctedIons[ion].setIntensity(self._correctedIons[ion].getIntensity() * factor)
-                        del_ions.append(ion)
-                        print("  ", ion, round(val, 2), 'deleted')
+                            factor = 1/(10*self._correctedIons[ionHash].getIntensity())
+                        self._correctedIons[ionHash].setIsotopePatternPart('calcInt',
+                                                       self._correctedIons[ionHash].getIsotopePattern()['calcInt']*factor)
+                        self._correctedIons[ionHash].setIntensity(self._correctedIons[ionHash].getIntensity() * factor)
+                        del_ions.append(ionHash)
+                        print("  ", ionHash, round(val, 2), 'deleted')
                 if len(pattern)-len(del_ions) < 2:
                     for i in range(len(undeletedIons)):
                         if undeletedIons[i] not in del_ions:
@@ -509,33 +510,33 @@ class IntensityModeller(object):
                     continue
                 else:
                     sum_int = 0
-                    for ion, val in zip(undeletedIons,solution.x):
-                        self._remodelledIons.append(deepcopy(self._correctedIons[ion]))
+                    for ionHash, val in zip(undeletedIons,solution.x):
+                        self._remodelledIons.append(deepcopy(self._correctedIons[ionHash]))
                         if val < 1.05:  # no outlier calculation during remodelling --> results can be higher than without remodelling
                             factor = val
-                        elif 'high' not in self._correctedIons[ion].getComment():
+                        elif 'high' not in self._correctedIons[ionHash].getComment():
                             factor = 1.05
-                            print("  ", ion, " not remodeled (val=", round(val,2), ")")
-                            self._correctedIons[ion].addComment("high," + str(round(val, 2)))
+                            print("  ", ionHash, " not remodeled (val=", round(val,2), ")")
+                            self._correctedIons[ionHash].addComment("high," + str(round(val, 2)))
                         else:
                             factor = 1
-                            print("  ", ion, " not remodeled (val=", round(val,2), ")")
-                        self._correctedIons[ion].setIsotopePatternPart('calcInt',
-                            self._correctedIons[ion].getIsotopePattern()['calcInt'] * factor)
-                        self._correctedIons[ion].setIntensity(self._correctedIons[ion].getIntensity() * factor)
-                        sum_int += self._correctedIons[ion].getIntensity()  #for error calc
-                    for ion in undeletedIons:
+                            print("  ", ionHash, " not remodeled (val=", round(val,2), ")")
+                        self._correctedIons[ionHash].setIsotopePatternPart('calcInt',
+                            self._correctedIons[ionHash].getIsotopePattern()['calcInt'] * factor)
+                        self._correctedIons[ionHash].setIntensity(self._correctedIons[ionHash].getIntensity() * factor)
+                        sum_int += self._correctedIons[ionHash].getIntensity()  #for error calc
+                    for ionHash in undeletedIons:
                         quality = self.calcQuality(solution.fun, sum_int)
-                        self._correctedIons[ion].setQuality(quality)
-                        self._correctedIons[ion].setScore(calcScore(sum_int, quality, self._noiseLevel))
-                        if self._correctedIons[ion].getSignalToNoise() < self._configs['SNR']:
-                            self.deleteIon(ion, 'SNR')
+                        self._correctedIons[ionHash].setQuality(quality)
+                        self._correctedIons[ionHash].setScore(calcScore(sum_int, quality, self._noiseLevel))
+                        if self._correctedIons[ionHash].getSignalToNoise() < self._configs['SNR']:
+                            self.deleteIon(ionHash, 'SNR')
                     print("\tqual:",round(solution.fun**(0.5) / sum_int,2))
                     break
-            for ion in del_ions:
-                self._deletedIons[ion] = self._correctedIons[ion]
-                print('deleting ',ion)
-                del self._correctedIons[ion]
+            for ionHash in del_ions:
+                self._deletedIons[ionHash] = self._correctedIons[ionHash]
+                print('deleting ',ionHash)
+                del self._correctedIons[ionHash]
             print('')
 
 

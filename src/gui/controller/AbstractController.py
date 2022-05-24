@@ -12,7 +12,7 @@ from PyQt5 import QtWidgets, QtCore
 
 from src.gui.GUI_functions import setIcon
 from src.resources import path, DEVELOP
-from src.gui.IsotopePatternView import AddIonView
+from src.gui.controller.IsotopePatternView import AddIonView
 from src.gui.dialogs.CalibrationView import CalibrationView
 from src.gui.tableviews.TableViews import TableView
 from src.gui.widgets.InfoView import InfoView

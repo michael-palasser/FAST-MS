@@ -1,10 +1,11 @@
 from PyQt5 import QtWidgets, QtCore
+from pandas import DataFrame
 
 from src.resources import DEVELOP
 from src.services.IsotopePatternLogics import IsotopePatternLogics
 from src.services.DataServices import *
 from src.gui.AbstractMainWindows import SimpleMainWindow
-from src.gui.GUI_functions import makeFormLayout, shoot
+from src.gui.GUI_functions import makeFormLayout, shoot, connectTable
 from src.gui.widgets.IonTableWidgets import IsoPatternIon
 from src.gui.widgets.PeakWidgets import IsoPatternPeakWidget
 from src.gui.dialogs.SimpleDialogs import OpenDialog
@@ -128,10 +129,13 @@ class IsotopePatternView(SimpleMainWindow):
         self._frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self._frame.setFrameShadow(QtWidgets.QFrame.Raised)
         self._options = {key:QtWidgets.QComboBox(self._frame) for key in ('fragmentation', 'fragment', 'modPattern', 'modif')}
-        self._options['fragmentation'].currentIndexChanged.connect(self.getFragValues)
+        for key, fun in {'fragmentation':self.getFragValues, 'fragment':self.changeRadicals,
+                         'modPattern':self.getModValues, 'modif':self.changeRadicals}.items():
+            self._options[key].currentIndexChanged.connect(fun)
+        '''self._options['fragmentation'].currentIndexChanged.connect(self.getFragValues)
         self._options['fragment'].currentIndexChanged.connect(self.changeRadicals)
         self._options['modPattern'].currentIndexChanged.connect(self.getModValues)
-        self._options['modif'].currentIndexChanged.connect(self.changeRadicals)
+        self._options['modif'].currentIndexChanged.connect(self.changeRadicals)'''
         self._options['nrMod'] = QtWidgets.QSpinBox(self._frame)
         self._options['nrMod'].setValue(0)
         self._options['nrMod'].valueChanged.connect(self.calculateByChange)
@@ -265,8 +269,8 @@ class IsotopePatternView(SimpleMainWindow):
         self._spectrumView.hide()
         self._vertLayoutRight.removeWidget(self._spectrumView)
         del self._spectrumView
-        isotopePattern = self._logics.getIsotopePattern(ion)
-        self._spectrumView = TheoSpectrumView(self._rightWidget, isotopePattern, 365)
+        #isotopePattern = self._logics.getIsotopePattern(ion)
+        self._spectrumView = TheoSpectrumView(self._rightWidget, ion.getIsotopePattern(), 365)
         self._spectrumView.setMinimumSize(365, 300)
         self._vertLayoutRight.addWidget(self._spectrumView)
 
@@ -291,6 +295,7 @@ class IsotopePatternView(SimpleMainWindow):
         scrollArea.setWidget(self._peakTable)
         verticalLayout.addWidget(self._peakTable)
         self._vertLayout.insertWidget(6, scrollArea)
+        connectTable(self._peakTable, self.showOptions)
         self._peakTable.show()
 
 
@@ -308,6 +313,34 @@ class IsotopePatternView(SimpleMainWindow):
             return
         self.renderView(self._ion, self._logics.getNeutralMass(), self._logics.getAvMass())
 
+    def showOptions(self, table, pos):
+        '''
+        Right click options of the table
+        '''
+        menu = QtWidgets.QMenu()
+        copyAllAction = menu.addAction("Copy Table")
+        copyAction = menu.addAction("Copy Cell")
+        deleteAction = menu.addAction("Delete Last Peak")
+        action = menu.exec_(table.viewport().mapToGlobal(pos))
+        if action == copyAllAction:
+            # df = self.getDataframe()
+            df = DataFrame(self.getData(), columns=self._headers)
+            df.to_clipboard(index=False, header=True)
+        if action == copyAction:
+            it = table.indexAt(pos)
+            if it is None:
+                return
+            selectedRow = it.row()
+            selectedCol = it.column()
+            # df = pd.DataFrame([self._peaks[selectedRow][selectedCol]])
+            df = DataFrame([self.getData()[selectedRow][selectedCol]])
+            df.to_clipboard(index=False, header=False)
+        if action == deleteAction:
+            self._peakTable.deleteLastPeak() #To
+            ion = self._logics.getIon()
+            ion.setIsotopePattern(ion.getIsotopePattern()[:-1])
+            self._logics.setIon(ion)
+            self.renderSpectrumView(ion)
 
 
 class AddIonView(IsotopePatternView):

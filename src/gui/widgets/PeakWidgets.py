@@ -1,5 +1,4 @@
 from math import log10
-import pandas as pd
 
 from PyQt5 import QtWidgets, QtCore
 
@@ -145,7 +144,7 @@ class IsoPatternPeakWidget(GeneralPeakWidget):
     def __init__(self, parent, peaks):
         super(IsoPatternPeakWidget, self).__init__(parent, ('m/z','Int. (Spectrum)','Int. (Calc.)', 'Used'),
                                          ('{:10.5f}','{:11d}', '{:11d}', ''), peaks)
-        connectTable(self, self.showOptions)
+        #connectTable(self, self.showOptions)
 
 
     '''def readTable(self):
@@ -199,7 +198,12 @@ class IsoPatternPeakWidget(GeneralPeakWidget):
             [self.removeRow(rowCount-i-1) for i in range(abs(nrRows))]
         self.fill()
 
-    def showOptions(self, table, pos):
+    def deleteLastPeak(self):
+        for i, oldPeak in enumerate(self.getData()[:-1]):
+            self._peaks[i][1] = oldPeak[1]
+        self.updateTable(self._peaks[:-1])
+
+    """def showOptions(self, table, pos):
         '''
         Right click options of the table
         '''
@@ -224,4 +228,4 @@ class IsoPatternPeakWidget(GeneralPeakWidget):
         if action == deleteAction:
             for i,oldPeak in enumerate(self.getData()[:-1]):
                 self._peaks[i][1]=oldPeak[1]
-            self.updateTable(self._peaks[:-1])
+            self.updateTable(self._peaks[:-1])"""

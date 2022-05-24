@@ -80,6 +80,9 @@ class IsotopePatternLogics(object):
     def getIon(self):
         return self._ion
 
+    def setIon(self, ion):
+        self._ion = ion
+
     def getNeutralMass(self):
         '''
         :return: (float) mass of the neutral molecule
@@ -253,3 +256,4 @@ class IsotopePatternLogics(object):
         '''
         isotopePattern = ion.getIsotopePattern()
         return isotopePattern[np.where(isotopePattern['used'])]
+

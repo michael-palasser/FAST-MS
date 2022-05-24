@@ -8,7 +8,7 @@ import sys
 from PyQt5.QtWidgets import QApplication, QPushButton
 
 from src.gui.controller.IntactSearchController import IntactMainController
-from src.gui.IsotopePatternView import IsotopePatternView
+from src.gui.controller.IsotopePatternView import IsotopePatternView
 from src.gui.controller.EditorController import *
 from src.gui.dialogs.ParameterDialogs import ConfigurationDialog
 from src.gui.dialogs.StartDialogs import IntactStartDialog

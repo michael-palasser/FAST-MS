@@ -387,7 +387,7 @@ class TD_MainController(AbstractMainController):
                                         list(percentageDict.keys()), self._analyser.getModificationLoss(),
                                         absTable, headers)
             self._openWindows.append(occupView)
-            plotBars(sequence, np.array(absTable)[:,2:-2].astype(float), headers, 'Abs. Occupancies: '+modification, True)
+            plotBars(sequence, np.array(absTable)[:,2:-2].astype(float), headers, 'Rel. abundances: '+modification, True)
 
     def getInterestingIons(self):
         interestingIons = ConfigurationHandlerFactory.getConfigHandler().get('interestingIons')

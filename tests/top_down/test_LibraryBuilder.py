@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from src.services.library_services.FragmentLibraryBuilder import FragmentLibraryBuilder
-from src.entities.SearchSettings import SearchSettings, processTemplateName
+from src.entities.SearchSettings import SearchSettings
 from src.services.DataServices import *
 
 

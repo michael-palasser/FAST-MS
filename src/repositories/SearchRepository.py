@@ -4,7 +4,7 @@ import numpy as np
 
 from src.entities.Ions import FragmentIon, Fragment
 from src.entities.Search import Search
-from src.entities.SearchSettings import processTemplateName
+from src.resources import processTemplateName
 from src.repositories.AbstractRepositories import AbstractRepository
 from tqdm import tqdm
 

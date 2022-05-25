@@ -1,7 +1,9 @@
+import sys
 from copy import deepcopy
 
 import numpy as np
 import matplotlib
+from PyQt5.QtWidgets import QApplication
 from matplotlib import pyplot as plt
 import matplotlib.ticker as mticker
 
@@ -271,8 +273,8 @@ class SequenceCoveragePlot(FigureCanvasQTAgg):
 
 
 if __name__ == '__main__':
-    sequ = list('GGCUGCUUGUCCUUUAAUGGUCCAGUC')
-    '''app = QApplication(sys.argv)
+    '''sequ = list('GGCUGCUUGUCCUUUAAUGGUCCAGUC')
+    app = QApplication(sys.argv)
     overall = [(key,val*100) for key,val in
                {'a': 0.7692307692307693, 'c': 0.9230769230769231, 'w': 0.7692307692307693, 'y': 0.9230769230769231, 'allForward': 0.9615384615384616, 'allBackward': 0.9230769230769231, 'all': 0.9259259259259259}.items()]
     gui = SequCovWidget( overall,

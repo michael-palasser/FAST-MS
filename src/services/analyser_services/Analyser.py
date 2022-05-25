@@ -75,6 +75,8 @@ class Analyser(object):
                 if self._modification in ion.getModification():
                     modifiedSum += self.getCorrectValue(ion)
                 totalSum += self.getCorrectValue(ion)
+        if totalSum==0:
+            return 0
         return 1 - modifiedSum / totalSum
 
 

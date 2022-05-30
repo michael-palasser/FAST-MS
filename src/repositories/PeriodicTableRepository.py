@@ -36,9 +36,9 @@ class PeriodicTableRepository(AbstractRepositoryWithItems):
         :return: (dict[str,str]) dictionary of {column name: tooltip}
         '''
         #'isoNr': 'Number of isotope (e.g.: 13C --> isoNr = 1)
-        return {'nucNr':'Number of Nucleons',
-                'mass': 'Mass of the isotope in Da',
-                'relAb': 'Relative abundance of isotope'}
+        return {'Nuc. no.':'Number of Nucleons',
+                'Mass': 'Mass in Da',
+                'Rel. ab.': 'Relative abundance'}
 
 
     def getPattern(self, name):

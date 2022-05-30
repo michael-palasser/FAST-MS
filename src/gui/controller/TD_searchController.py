@@ -40,7 +40,6 @@ from src.gui.dialogs.StartDialogs import TDStartDialog
     #return sorted(ionList,key=lambda obj:(obj.type ,obj.number))
     return sorted(ionList, key=lambda obj: (obj.getName(), obj.getCharge()))"""
 
-FOTO_SESSION=True
 
 
 #if __name__ == '__main__':

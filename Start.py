@@ -8,7 +8,7 @@ def checkInstallation(package):
         pip.main(['install', package])
 
 if __name__ == '__main__':
-    for package in ['numpy', 'scipy', 'matplotlib', 'pandas', 'PyQt5', 'pyqtgraph', 'xlsxwriter','logging','multiprocessing', 'numba', 'math',
+    for package in ['numpy', 'scipy', 'matplotlib', 'pandas', 'PyQt5', 'pyqtgraph', 'xlsxwriter','logging','multiprocessing', 'numba',
                     'sqlite3','tqdm']:
         checkInstallation(package)
     system("python -m src.gui.StartWindow")

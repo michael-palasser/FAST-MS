@@ -28,8 +28,6 @@ from src.gui.dialogs.SimpleDialogs import ExportDialog
 from src.gui.dialogs.StartDialogs import IntactStartDialogFull
 
 
-FOTO_SESSION=True
-
 
 class IntactMainController(AbstractMainController):
     '''

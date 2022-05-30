@@ -20,7 +20,6 @@ from src.gui.tableviews.TableModels import IonTableModel
 from src.gui.tableviews.ShowPeaksViews import PeakView, SimplePeakView
 from src.gui.widgets.SpectrumView import SpectrumView
 
-FOTO_SESSION=True
 
 
 class AbstractMainController(ABC):
@@ -76,22 +75,24 @@ class AbstractMainController(ABC):
 
     def makeGeneralOptions(self):
         actionDict = dict()
-        editActions = {'Repeat Ovl. Modelling':
+        editActions = {'Repeat ovl. modelling':
                            (self.repeatModellingOverlaps, 'Repeat overlap modelling involving user inputs', None),
-                            'Add New Ion':(self.addNewIonView, 'Add an ion manually', None),}
+                            'Add new ion':(self.addNewIonView, 'Add an ion manually', None),}
         # 'Take Shot':(self.shootPic,'', None),}
         if DEVELOP:
-            editActions['Take Shot'] = (self.shootPic, '', None)
+            editActions['Take shot'] = (self.shootPic, '', None)
         _, actions = self._mainWindow.createMenu("Edit", editActions, None)
         actionDict.update(actions)
         _, actions = self._mainWindow.createMenu("Show",
                                                  {'Results': (
                                                  self._mainWindow.show, 'Show lists of observed and deleted ions',
                                                  None),
-                                                  'Original Values': (
+                                                  'Original values': (
                                                   self.showRemodelledIons, 'Show original values of overlapping ions',
                                                   None),
-                                                  'Protocol': (self._infoView.show, 'Show Protocol', None)}, None)
+                                                  'Protocol': (self._infoView.show, 'Show protocol', None),
+                                                 'Spectrum': (self.showAllInSpectrum, 'Show the entire spectrum', None)},
+                                                 None)
         actionDict.update(actions)
         return actionDict
 
@@ -426,3 +427,10 @@ class AbstractMainController(ABC):
     def getIonList(self):
         return list(self._intensityModeller.getObservedIons().values())
 
+    def showAllInSpectrum(self):
+        global spectrumView
+        ions = sorted(self.getIonList(),key=lambda obj:obj.getIsotopePattern()['m/z'][0])
+        # minWindow, maxWindow, maxY = self._intensityModeller.getLimits(ajacentIons)
+        peaks = self._spectrumHandler.getSpectrum()
+        spectrumView = SpectrumView(None, peaks, ions, np.min(peaks[:,0]),np.max(peaks[:,0]),np.max(peaks[:,1]))
+        self._openWindows.append(spectrumView)

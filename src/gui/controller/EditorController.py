@@ -4,9 +4,10 @@ from functools import partial
 from PyQt5 import QtWidgets, QtCore
 
 from src.Exceptions import CanceledException
+from src.resources import DEVELOP
 from src.services.DataServices import *
 from src.gui.AbstractMainWindows import SimpleMainWindow
-from src.gui.GUI_functions import createComboBox
+from src.gui.GUI_functions import createComboBox, shoot
 from src.gui.dialogs.SimpleDialogs import OpenDialog
 
 
@@ -19,8 +20,11 @@ class AbstractSimpleEditorController(ABC):
         #self.pattern = self.service.makeNew()
         self.setUpUi(title)
         self._mainWindow.createMenuBar()
+        if DEVELOP:
+            options['Shoot'] = (lambda: shoot(self._mainWindow),None,None)
         self._fileMenu, self._fileMenuActions = self._mainWindow.createMenu("File", options, 3)
         self._mainWindow.makeHelpMenu()
+
 
     def setUpUi(self, title):
         self._mainWindow = SimpleMainWindow(None, title)
@@ -74,8 +78,8 @@ class AbstractSimpleEditorController(ABC):
                     tableWidget.setItem(i, j, newItem)
                 #tableWidget.setItem(i, j, newitem)
                 newItem.setToolTip(headers[headerKeys[j]])
-        if len(data) < 7:
-            for i in range(7-len(data)):
+        if len(data) < 3:
+            for i in range(3-len(data)):
                 self.insertRow(tableWidget, boolVals)
         tableWidget.resizeColumnsToContents()
         tableWidget.resizeRowsToContents()

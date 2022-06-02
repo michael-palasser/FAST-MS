@@ -1,8 +1,11 @@
+import sys
 from copy import deepcopy
 from unittest import TestCase
 import numpy as np
+from PyQt5.QtWidgets import QApplication
 
 from src.entities.Ions import FragmentIon, Fragment
+from src.gui.widgets.SequCovWidget import SequCovWidget
 from src.services.analyser_services.Analyser import Analyser
 from tests.top_down.test_IntensityModeller import initTestSpectrumHandler
 
@@ -181,17 +184,21 @@ class TestAnalyser(TestCase):
 
 
     def test_get_sequence_coverage(self):
+        print('ions:',[ion.getName() for ion in self.ions.values()])
         self.analyser.setIons(self.ions.values())
         coverages, calcCoverages, overall = self.analyser.getSequenceCoverage(['a','c'])
+        print('coverages:',coverages)
         self.assertTrue(np.all(coverages[0]['c'][:-1]))
         self.assertTrue(np.all(coverages[1]['w'][1:]))
         self.assertFalse(coverages[0]['a'][0])
         self.assertFalse(coverages[1]['y'][-1])
+        print('calcCoverages:',calcCoverages)
         for type in ('c','w','forward','backward','total'):
             self.assertAlmostEqual(1,calcCoverages[type])
         for type in ('a','y'):
             #print(type, coverages[type])
             self.assertAlmostEqual(2/3,calcCoverages[type])
+        print('overall',overall)
         self.assertTrue(np.all(overall[:-1,0]))
         self.assertTrue(np.all(overall[1:,1]))
         self.assertTrue(np.all(overall[:,2]))
@@ -201,10 +208,29 @@ class TestAnalyser(TestCase):
                 del ions[hash]
         self.analyser.setIons(ions.values())
         coverages, calcCoverages, overall = self.analyser.getSequenceCoverage(['a','c'])
-        print(coverages,calcCoverages,overall)
         for type in ('w','backward','total'):
             self.assertAlmostEqual(1,calcCoverages[type])
         for type in ('c','y','forward'):
             #print(type, coverages[type])
             self.assertAlmostEqual(2/3,calcCoverages[type])
         self.assertAlmostEqual(1/3,calcCoverages['a'])
+        ions = deepcopy(self.ions)
+        for hash in self.ions.keys():
+            if ('c02' in hash[0]) or ('a02' in hash[0]) or ('w03' in hash[0])  or ('y03' in hash[0]):
+                del ions[hash]
+        self.analyser.setIons(ions.values())
+        coverages, calcCoverages, overall = self.analyser.getSequenceCoverage(['a','c'])
+        for type in ('c','w','forward','backward'):
+            #print(type, coverages[type])
+            self.assertAlmostEqual(2/3,calcCoverages[type])
+        for type in ('a', 'y'):
+            # print(type, coverages[type])
+            self.assertAlmostEqual(1 / 3, calcCoverages[type])
+        self.assertAlmostEqual(3/4,calcCoverages['total'])
+
+
+        calcData =[(key,val*100) for key,val in calcCoverages.items()]
+        app = QApplication(sys.argv)
+        #gui = SequCovWidget(calcData, self.props.getSequenceList(), coverages[0], coverages[1], overall)
+        sys.exit(app.exec_())
+

@@ -146,10 +146,11 @@ class MolecularFormula(object):
         isotope_pattern = list()
         calculate, isotopeTable = self.determineSystem()
         sumInt = 0
-        while(sumInt < minSum and isoPeak != maxIso):              #ToDo:Parameter
+        while(sumInt < minSum and isoPeak != maxIso):
             setIsotopeTable(isotopeTable)
             #print(isoPeak, isotopeTable)
             ultrafineStruct = np.array(calculate(isoPeak, isotopeTable))
+            print(isoPeak,len(ultrafineStruct))
             prop = np.sum(ultrafineStruct[:,1])
             M_iso = np.sum(ultrafineStruct[:,0]*ultrafineStruct[:,1])/prop
             isotope_pattern.append((M_iso,prop))

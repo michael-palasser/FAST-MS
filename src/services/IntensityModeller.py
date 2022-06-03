@@ -125,11 +125,12 @@ class IntensityModeller(object):
         if solution.fun ** (0.5) > 0:
             gValueInt = (spectralIntensities - calcIntensities) / np.sqrt(solution.fun/len(spectralIntensities))
             if nonZeroLength>1:
-                print('std',np.std(nonZeroErrors))
+                #print('std',np.std(nonZeroErrors))
                 gValueErr = np.abs(errors - np.mean(nonZeroErrors)) / np.sqrt(np.std(nonZeroErrors))
-                print(errors, gValueErr)
+                #print(errors, gValueErr)
             #print(gValue, solution.fun, spectralIntensities,calcIntensities )
         outlier_index = np.where(gValueInt > self._configs['outlierLimit'])
+        #print('int',outlier_index,gValueInt,calcIntensities)
         if len(outlier_index[0]) == 0 and nonZeroLength>1:
             outlier_index = np.where((gValueErr>self.calculateCriticalVal(nonZeroLength,0.01)) & (errors != 0))
             if len(outlier_index[0])>0:
@@ -143,7 +144,7 @@ class IntensityModeller(object):
         denominator = np.sqrt(size) * np.sqrt(size-2+np.square(t_dist))
         if denominator > 0:
             critical_value = numerator / denominator
-            print(critical_value)
+            #print(critical_value)
             if critical_value>2:
                 return critical_value
         return 2

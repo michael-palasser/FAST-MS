@@ -229,8 +229,3 @@ class TestAnalyser(TestCase):
         self.assertAlmostEqual(3/4,calcCoverages['total'])
 
 
-        calcData =[(key,val*100) for key,val in calcCoverages.items()]
-        app = QApplication(sys.argv)
-        #gui = SequCovWidget(calcData, self.props.getSequenceList(), coverages[0], coverages[1], overall)
-        sys.exit(app.exec_())
-

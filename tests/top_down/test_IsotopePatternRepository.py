@@ -85,3 +85,4 @@ class TestIsotopePatternRepository(TestCase):
     def tearDown(self):
         self.sequenceService.delete('dummyRNA')
         self.sequenceService.delete('dummyProt')
+        self.sequenceService.close()

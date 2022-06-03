@@ -5,7 +5,8 @@ import numpy as np
 from src.Exceptions import InvalidInputException
 from src.services.IsotopePatternLogics import IsotopePatternLogics
 from src.MolecularFormula import MolecularFormula
-from src.entities.SearchSettings import SearchSettings, processTemplateName
+from src.entities.SearchSettings import SearchSettings
+from src.resources import processTemplateName
 from src.services.library_services.FragmentLibraryBuilder import FragmentLibraryBuilder
 from src.services.assign_services.AbstractSpectrumHandler import getMz
 from tests.test_MolecularFormula import RNA_formulaDummy, RNA_pattern

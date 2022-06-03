@@ -2,6 +2,7 @@ import os
 import pathlib
 import sys
 from platform import system
+from re import search as reSearch
 from subprocess import call
 
 DEVELOP = False
@@ -34,3 +35,15 @@ def autoStart(file):
     else:
         call(('xdg-open', file))
 
+
+def processTemplateName(templName):
+    '''
+    Splits the name of a template into species and modification
+    :param (str) templName:
+    :return: (tuple[str,str]) species, modification
+    '''
+    search = reSearch(r"([+,-])", templName)
+    if search == None:
+        return templName, ""
+    # print('hey',templName[0:search.start()], templName[search.start():])
+    return templName[0:search.start()], templName[search.start():]

@@ -8,7 +8,9 @@ from src.entities.GeneralEntities import Sequence
 from src.entities.Ions import Fragment, FragmentIon
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.services.IntensityModeller import IntensityModeller
-from src.entities.SearchSettings import processTemplateName
+from src.resources import processTemplateName
+
+
 #from src.services.assign_services.AbstractSpectrumHandler import peaksArrType
 
 
@@ -79,6 +81,9 @@ class IsotopePatternLogics(object):
 
     def getIon(self):
         return self._ion
+
+    def setIon(self, ion):
+        self._ion = ion
 
     def getNeutralMass(self):
         '''
@@ -253,3 +258,4 @@ class IsotopePatternLogics(object):
         '''
         isotopePattern = ion.getIsotopePattern()
         return isotopePattern[np.where(isotopePattern['used'])]
+

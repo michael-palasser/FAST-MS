@@ -146,10 +146,11 @@ class MolecularFormula(object):
         isotope_pattern = list()
         calculate, isotopeTable = self.determineSystem()
         sumInt = 0
-        while(sumInt < minSum and isoPeak != maxIso):              #ToDo:Parameter
+        while(sumInt < minSum and isoPeak != maxIso):
             setIsotopeTable(isotopeTable)
             #print(isoPeak, isotopeTable)
             ultrafineStruct = np.array(calculate(isoPeak, isotopeTable))
+            #print(isoPeak,len(ultrafineStruct))
             prop = np.sum(ultrafineStruct[:,1])
             M_iso = np.sum(ultrafineStruct[:,0]*ultrafineStruct[:,1])/prop
             isotope_pattern.append((M_iso,prop))
@@ -361,7 +362,6 @@ class MolecularFormula(object):
             M_iso = np.sum(ultrafineStruct[:,0]*ultrafineStruct[:,1])/prop
             isotope_pattern.append((M_iso,prop))
         return np.array(isotope_pattern, dtype=isoPatternDtype)
-
 
 
     """CIsotopes = np.array([(12,12.0, 0.98938), (13, 13.0033548350723, 0.01078)])

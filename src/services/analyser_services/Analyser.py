@@ -75,6 +75,8 @@ class Analyser(object):
                 if self._modification in ion.getModification():
                     modifiedSum += self.getCorrectValue(ion)
                 totalSum += self.getCorrectValue(ion)
+        if totalSum==0:
+            return 0
         return 1 - modifiedSum / totalSum
 
 
@@ -273,6 +275,61 @@ class Analyser(object):
         redSequLength = sequLength-1
         coverages = {}
         calcCoverages = dict()
+        overall = np.zeros((sequLength,3))
+        arr = np.zeros(sequLength)
+        for ion in self._ions:
+            if ion.getNumber()==0:
+                continue
+            type = ion.getType()
+            if type not in coverages.keys():
+                coverages[type]= deepcopy(arr)
+            row = ion.getNumber()-1
+            if type not in forwTypes:
+                row = sequLength-ion.getNumber()
+            coverages[type][row] = 1
+        #overall = np.zeros(sequLength)
+        for type,val in coverages.items():
+            calcCoverages[type] = np.sum(val)/(redSequLength)
+        overall[:,0] = np.any([val.astype(bool) for type,val in coverages.items() if type in forwTypes], axis=0)
+        calcCoverages['forward'] = np.sum(overall[:,0])/redSequLength
+        overall[:,1] = np.any([val.astype(bool) for type,val in coverages.items() if type not in forwTypes], axis=0)
+        calcCoverages['backward'] = np.sum(overall[:,1])/redSequLength
+        overall[:,2] = np.any((overall[:,0],overall[:,1]), axis=0)
+        calcCoverages['total'] = np.sum(overall[:,2])/sequLength
+        for type in coverages.keys():
+            if type in forwTypes:
+                coverages[type][-1] = np.nan
+            else:
+                coverages[type][0] = np.nan
+        #overall[-1,0] = np.nan
+        #overall[0,1] = np.nan
+        coveragesForw, coveragesBack = {},{}
+        for key,val in coverages.items():
+            if key in forwTypes:
+                coveragesForw[key] = val
+            else:
+                coveragesBack[key] = val
+        return (coveragesForw,coveragesBack), calcCoverages, overall
+
+
+
+    """    def getSequenceCoverage(self, forwTypes):
+        '''
+        Determines the sequence coverage for each fragment type, for each direction (N-/5'-terminus etc.) and the
+        global sequence coverage
+        :param (list[str]) forwTypes: list of all forward (N-terminal, 5'-, ...) fragment types
+        :return: (dict[str,ndArray[bool]], dict[str,float], ndArray[bool])
+            coverages: dictionary (fragm. type:array) whereby each row index of the array represents the cleavage site -1
+                and the boolean values states if a fragment was found at the corresponding site.
+            calcCoverages: dictionary (fragm. type:value) whereby the values represent the proportion of coverage
+            overall: 2D array (1.column = forward direction, 2.column = forward direction, 3.column = global) whereby
+                each row index of the array represents the cleavage site -1 and the boolean values states if a fragment
+                was found at the corresponding site.
+        '''
+        sequLength=len(self._sequence)
+        redSequLength = sequLength-1
+        coverages = {}
+        calcCoverages = dict()
         overall = np.zeros((redSequLength,3))
         arr = np.zeros(redSequLength)
         for ion in self._ions:
@@ -307,8 +364,7 @@ class Analyser(object):
                 coveragesForw[key] = val
             else:
                 coveragesBack[key] = val
-        return (coveragesForw,coveragesBack), calcCoverages, overall
-
+        return (coveragesForw,coveragesBack), calcCoverages, overall"""
     '''def addColumn(self, table, vals):
         for i, val in enumerate(vals):
             if isnan(val):

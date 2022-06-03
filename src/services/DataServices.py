@@ -3,6 +3,7 @@ from abc import ABC
 
 from src.Exceptions import InvalidInputException
 from src.entities.GeneralEntities import Macromolecule, Element, BuildingBlock, Sequence
+from src.resources import processTemplateName
 from src.repositories.TD_Repositories import *
 from src.repositories.MoleculeRepository import MoleculeRepository
 from src.repositories.PeriodicTableRepository import PeriodicTableRepository
@@ -430,7 +431,7 @@ class FragmentationService(AbstractServiceForPatterns):
         elements = elementRep.getAllPatternNames()
         self.checkFormatOfItems(pattern.getItems(), elements, self._repository.getIntegers()[0])
         for item in pattern.getItems():
-            if item[0][-1].isnumeric():
+            if processTemplateName(item[0])[-1].isnumeric():
                 raise InvalidInputException(item[0], "\nThe last character of a fragment's name must not be numeric!")
             if int(item[5]) not in [1,-1]:
                 raise InvalidInputException(item[0], "\nDirection must be 1 or -1 and not " + str(item[5]))

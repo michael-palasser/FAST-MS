@@ -10,7 +10,7 @@ import logging
 from src.Exceptions import InvalidInputException
 from src.MolecularFormula import MolecularFormula
 from src.entities.Ions import Fragment
-from src.entities.SearchSettings import processTemplateName
+from src.resources import processTemplateName
 
 logging.basicConfig(level=logging.INFO)
 logging.basicConfig(filename='logfile_LibraryBuilder.log',level=logging.INFO)

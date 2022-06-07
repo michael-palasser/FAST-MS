@@ -292,7 +292,7 @@ def loopThroughIsotopes(isotopePeak, isotopeTable, fineStructure, index):
     Recursive function which loops through molecular formula and calculates isotopic fine structure (recursive function):
     :param (int) isotopePeak: number of isotope peak (M+x)
     :type isotopeTable: ndarray(dtype=[float,float,float,float,float,float])
-    :param isotopeTable: isotope table (index, nr. of atoms of element, nr. of atoms of isotope, rel. abundance of
+    :param isotopeTable: isotope table (index, no. of atoms of element, no. of atoms of isotope, rel. abundance of
         isotope, mass of isotope, nominal mass shift compared to isotope with lowest m/z)
     :param (list[tuple[float,float]]) fineStructure: growing isotopic fineStructure (tuples of (mass,rel.abundance))
     :param (int) index: running index of corresponding element
@@ -300,7 +300,7 @@ def loopThroughIsotopes(isotopePeak, isotopeTable, fineStructure, index):
     '''
     #If final isotope table for one isotope composition found
     if (np.sum(isotopeTable['nrIso']*isotopeTable['M+']) == isotopePeak):
-        #if combined nuumber of isotopes of element is not higher than nr of corresponding element atoms in molecule
+        #if combined no. of isotopes of element is not higher than no. of corresponding element atoms in molecule
         if checkIsotopeTable(isotopeTable):
             #print(isotopePeak,isotopeTable)
             massI, propI = calculatePercentage(isotopeTable)
@@ -323,10 +323,10 @@ def loopThroughIsotopes(isotopePeak, isotopeTable, fineStructure, index):
         currentIso = isotopeTable[index]
         #loop over all possible
         for nrIso in range(int((isotopePeak + currentIso['M+']) / currentIso['M+'])):
-            #break if nr of isotope atoms is higher than nr of corresponding atoms of element in molecule
+            #break if no. of isotope atoms is higher than no. of corresponding atoms of element in molecule
             if nrIso>currentIso['nr']:
                 break
-            #set nr of current isotope in table
+            #set no. of current isotope in table
             isotopeTable[index]['nrIso'] = nrIso
             #loop to next isotope in table
             loopThroughIsotopes(isotopePeak, isotopeTable, fineStructure, index + 1)

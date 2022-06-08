@@ -311,7 +311,7 @@ writeFragments("Protein_ECD",fragPath, prcFrags)
 """
 
 from Other.SearchRepositoryOld import SearchRepository
-from src.repositories.SearchRepository import SearchRepository as SearchRepositoryNew
+from src.repositories.sql.SearchRepository import SearchRepository as SearchRepositoryNew
 
 rep = SearchRepository()
 repNew = SearchRepositoryNew()

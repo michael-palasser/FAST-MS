@@ -28,7 +28,7 @@ from src.services.library_services.FragmentLibraryBuilder import FragmentLibrary
 from src.services.SearchService import SearchService
 from src.services.assign_services.TD_SpectrumHandler import SpectrumHandler
 from src.services.IntensityModeller import IntensityModeller
-from src.services.export_services.ExcelWriter import ExcelWriter
+from src.repositories.export.ExcelWriter import ExcelWriter
 from src.gui.dialogs.CheckIonView import CheckMonoisotopicOverlapView, CheckOverlapsView
 from src.gui.tableviews.PlotTables import PlotTableView
 from src.gui.widgets.SequencePlots import PlotFactory, plotBars

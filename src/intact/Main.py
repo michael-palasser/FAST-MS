@@ -13,7 +13,7 @@ from src.services.library_services.IntactLibraryBuilder import IntactLibraryBuil
 from src.services.assign_services.Finders import IntactFinder
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.services.analyser_services.IntactAnalyser import IntactAnalyser
-from src.services.export_services.IntactExcelWriter import IntactExcelWriter
+from src.repositories.export.IntactExcelWriter import IntactExcelWriter
 from src.resources import path, autoStart
 
 

@@ -6,7 +6,7 @@ Created on 5 Oct 2020
 import xlsxwriter
 from xlsxwriter.utility import xl_rowcol_to_cell
 
-from src.services.export_services.ExcelWriter import ExcelWriter
+from src.repositories.export.ExcelWriter import ExcelWriter
 
 
 class IntactExcelWriter(object):

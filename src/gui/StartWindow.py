@@ -33,7 +33,7 @@ class Window(SimpleMainWindow):
                              (lambda:self.startTopDown(True), 'Starts analysis of top-down spectrum', None),
                          'Load Analysis':
                              (lambda:self.startTopDown(False), 'Loads an old analysis', None),
-                         'Open current Analysis':
+                         'Open Current Analysis':
                              (self.reopen, 'Re-opens the last analysis', None),
                          #'Calc. Abundances':
                          #    (lambda: modellingTool(self), 'Calculates relative abundances of an ion list', None),
@@ -56,7 +56,7 @@ class Window(SimpleMainWindow):
         self.createMenu('Other Tools',
                         {'Model Ion':
                              (lambda: IsotopePatternView(self), 'Calculates the isotope pattern of an ion', None),
-                         'Compare ion lists':
+                         'Compare Ion Lists':
                              (self.compareSpectra, 'Compares the ion lists of multiple spectra', None)},None)
         self.createMenu('Edit',
                         {'Configurations':(self.editTopDownConfig, 'Edit configurations', None),

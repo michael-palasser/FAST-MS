@@ -301,7 +301,6 @@ def loopThroughIsotopes(isotopePeak, isotopeTable, fineStructure, index):
     '''
     #if the isotope table for one isotope composition is finished
     if (np.sum(isotopeTable['nrIso']*isotopeTable['M+']) == isotopePeak):
-        print(isotopeTable)
         #check if the total no. of atoms of each element in the table is not higher than the ones in the molecular
         #formula
         if checkIsotopeTable(isotopeTable):

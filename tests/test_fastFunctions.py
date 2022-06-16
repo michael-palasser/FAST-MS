@@ -91,7 +91,7 @@ class fastFunctions_Test(TestCase):
         abundance_theo = binom.pmf(0, 5, 1.078000e-02) * binom.pmf(2, 5, 1.157000e-04) * binom.pmf(2, 5,
                                                                                                    3.642000e-03) * 1 * \
                          multinomial.pmf([0, 1, 1], 2, [9.975716e-01, 3.810000e-04, 2.051400e-03])
-        mass_i, propI = f.calculatePercentage(uni_table)
+        mass_i, propI = f.calculateSpecies(uni_table)
         self.assertAlmostEqual(mass_theo, mass_i)
         self.assertAlmostEqual(abundance_theo, propI)
 

@@ -6,7 +6,7 @@ setup(
     version='1.0',
     packages=['src', 'src.gui', 'src.gui.dialogs', 'src.gui.widgets', 'src.gui.controller', 'src.gui.tableviews',
               'src.intact', 'src.entities', 'src.services', 'src.services.assign_services',
-              'src.services.export_services', 'src.services.library_services', 'src.services.analyser_services',
+              'src.services.export', 'src.services.library_services', 'src.services.analyser_services',
               'src.top_down', 'src.repositories', 'tests', 'tests.intact', 'tests.top_down', 'tests.test_files'],
     install_requires=['numpy', 'scipy', 'matplotlib', 'pandas', 'PyQt5', 'pyqtgraph', 'xlsxwriter','logging',
                       'numba','tqdm'],

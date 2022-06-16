@@ -1,7 +1,7 @@
 from os.path import join
 
-from src.entities.GeneralEntities import Macromolecule, BuildingBlock
-from src.repositories.AbstractRepositories import AbstractRepositoryWithItems
+from src.entities.GeneralEntities import Macromolecule
+from src.repositories.sql.AbstractRepositories import AbstractRepositoryWithItems
 
 
 class MoleculeRepository(AbstractRepositoryWithItems):

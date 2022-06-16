@@ -4,11 +4,11 @@ from abc import ABC
 from src.Exceptions import InvalidInputException
 from src.entities.GeneralEntities import Macromolecule, Element, BuildingBlock, Sequence
 from src.resources import processTemplateName
-from src.repositories.TD_Repositories import *
-from src.repositories.MoleculeRepository import MoleculeRepository
-from src.repositories.PeriodicTableRepository import PeriodicTableRepository
-from src.repositories.SequenceRepository import SequenceRepository
-from src.repositories.IntactRepository import *
+from src.repositories.sql.TD_Repositories import *
+from src.repositories.sql.MoleculeRepository import MoleculeRepository
+from src.repositories.sql.PeriodicTableRepository import PeriodicTableRepository
+from src.repositories.sql.SequenceRepository import SequenceRepository
+from src.repositories.sql.IntactRepository import *
 from src.entities.IonTemplates import *
 
 

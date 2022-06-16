@@ -17,7 +17,7 @@ from src.entities.Info import Info
 from src.entities.IonTemplates import IntactModification
 from src.gui.controller.AbstractController import AbstractMainController
 from src.services.analyser_services.IntactAnalyser import IntactAnalyser
-from src.services.export_services.IntactExcelWriter import FullIntactExcelWriter
+from src.repositories.export.IntactExcelWriter import FullIntactExcelWriter
 from src.services.assign_services.Calibrator import Calibrator
 from src.services.library_services.IntactLibraryBuilder import IntactLibraryBuilder
 from src.services.assign_services.IntactSpectrumHandler import IntactSpectrumHandler

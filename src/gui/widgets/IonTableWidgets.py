@@ -49,7 +49,7 @@ class IonTableWidget(QTableWidget):
         return ['{:10.5f}','{:2d}', '{:12d}', '','{:4.2f}', '{:6.1f}', '{:4.2f}', '']
 
     def getHeaders(self):
-        return ['m/z','z','Intensity','Name','Error /ppm', 'S/N','Quality-Error']
+        return ['m/z','z','intensity','name','error /ppm', 'S/N','quality error']
 
     def getValue(self,ion):
         return ion.getValues()
@@ -126,7 +126,7 @@ class IsoPatternIon(IonTableWidget):
         return ['{:10.5f}','{:2d}', '{:12d}', '','{:4.2f}', '', '{:10.4f}','{:10.4f}']
 
     def getHeaders(self):
-        return ['m/z','z','Intensity','Name','Quality-Error', 'Formula', 'Neutral Mass', 'Av. Mass']
+        return ['m/z','z','intensity','name','quality error', 'formula', 'neutral mass', 'av. mass']
 
     def fill(self, row, ion):
         '''
@@ -162,7 +162,7 @@ class IsoPatternIon(IonTableWidget):
         try:
             return int(self.item(0,2).text())
         except ValueError:
-            raise InvalidInputException('Unvalid Intensity', self.item(0, 2).text())
+            raise InvalidInputException('Unvalid intensity', self.item(0, 2).text())
 
 
     def getIon(self, row):
@@ -218,7 +218,7 @@ class TickIonTableWidget(IonTableWidget):
         super(TickIonTableWidget, self).__init__(parent, data, yPos)
 
     def getHeaders(self):
-        return super(TickIonTableWidget, self).getHeaders() + ['Del.?']
+        return super(TickIonTableWidget, self).getHeaders() + ['del.?']
 
     def fill(self, row, ion):
         '''
@@ -285,7 +285,7 @@ class CalibrationIonTableWidget(QTableWidget):
         return ['{:10.5f}','{:2d}', '{:12d}', '', '{:4.2f}', '']
 
     def getHeaders(self):
-        return ['m/z','z','Intensity','Name','Error /ppm', 'Use']
+        return ['m/z','z','intensity','name','error /ppm', 'use']
 
     '''def getValue(self,ion):
         return ion.getValues()'''

@@ -339,8 +339,7 @@ class TD_MainController(AbstractMainController):
         fragmentationView = FragmentationTable([(type,val) for type,val in fragmentation.items()],
                                                table, headers)
         self._openWindows.append(fragmentationView)
-        plotBars(self._propStorage.getSequenceList(), np.array(table)[:,2:-2].astype(float), headers,
-                 'Fragmentation Efficiencies')
+        plotBars(self._propStorage.getSequenceList(), np.array(table)[:,2:-2].astype(float), headers, '')
 
 
     def showOccupancyPlot(self):
@@ -386,7 +385,7 @@ class TD_MainController(AbstractMainController):
                                         list(percentageDict.keys()), self._analyser.getModificationLoss(),
                                         absTable, headers)
             self._openWindows.append(occupView)
-            plotBars(sequence, np.array(absTable)[:,2:-2].astype(float), headers, 'Rel. abundances: '+modification, True)
+            plotBars(sequence, np.array(absTable)[:,2:-2].astype(float), headers, '', True)
 
     def getInterestingIons(self):
         interestingIons = ConfigurationHandlerFactory.getConfigHandler().get('interestingIons')

@@ -75,9 +75,9 @@ class AbstractMainController(ABC):
 
     def makeGeneralOptions(self):
         actionDict = dict()
-        editActions = {'Repeat ovl. modelling':
+        editActions = {'Repeat Ovl. Modelling':
                            (self.repeatModellingOverlaps, 'Repeat overlap modelling involving user inputs', None),
-                            'Add new ion':(self.addNewIonView, 'Add an ion manually', None),}
+                            'Add New Ion':(self.addNewIonView, 'Add an ion manually', None),}
         # 'Take Shot':(self.shootPic,'', None),}
         if DEVELOP:
             editActions['Take shot'] = (self.shootPic, '', None)
@@ -87,7 +87,7 @@ class AbstractMainController(ABC):
                                                  {'Results': (
                                                  self._mainWindow.show, 'Show lists of observed and deleted ions',
                                                  None),
-                                                  'Original values': (
+                                                  'Original Values': (
                                                   self.showRemodelledIons, 'Show original values of overlapping ions',
                                                   None),
                                                   'Protocol': (self._infoView.show, 'Show protocol', None),

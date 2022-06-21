@@ -63,7 +63,7 @@ class PlotFactory(object):
         self.addSequence(self._plot1)
         func()
         self.plot()
-        self._plot1.resize(len(sequence) * 25 + 200, 400)
+        self._plot1.resize(len(sequence) * 20 + 150, 400)
         self._plot2.resize(2000, 1000) #if too small the second graph will dissapear when scaling up
 
     def addSequence(self, plot):

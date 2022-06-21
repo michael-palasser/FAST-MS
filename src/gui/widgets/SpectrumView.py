@@ -26,6 +26,7 @@ class AbstractSpectrumView(QtWidgets.QWidget):
         super(AbstractSpectrumView, self).__init__(parent)
         self._peaks = peaks
         self._ions = ions
+        self._items = []
         self._layout = QtWidgets.QVBoxLayout(self)
         self._translate = QtCore.QCoreApplication.translate
         width = 0.02
@@ -55,6 +56,7 @@ class AbstractSpectrumView(QtWidgets.QWidget):
         pg.SignalProxy(self._graphWidget.scene().sigMouseMoved, rateLimit=60, slot=self.mouseClicked)
         self._graphWidget.scene().sigMouseClicked.connect(self.mouseClicked)
         setIcon(self)
+        self._noise = None
         self.show()
 
     def mouseMoved(self, evt):
@@ -114,13 +116,14 @@ class AbstractSpectrumView(QtWidgets.QWidget):
                                              symbol=markers[markerIndex],
                                              pen =pg.mkPen(color=colours[colourIndex], width=2),
                                              brush=(50,50,200,50), size=10, pxMode=True) #Todo resize"""
+                self._items.append(scatter)
                 maxMz = np.sort(ion.getIsotopePattern(), order='calcInt')[::-1]['m/z'][0]
                 noise.append((maxMz, ion.getNoise()))
                 self._graphWidget.addItem(scatter)
                 self._legend.addItem(scatter, ion.getId())
                 colourIndex += 1
-            noise = np.array(noise)
-            noiseLine = self._graphWidget.plot(noise[:, 0], noise[:, 1], pen='r')
+            self._noise = np.array(noise)
+            noiseLine = self._graphWidget.plot(self._noise[:, 0], self._noise[:, 1], pen='r')
             self._legend.addItem(noiseLine, 'noise')
         else:
             self._graphWidget.removeItem(self._peakBars)
@@ -128,9 +131,14 @@ class AbstractSpectrumView(QtWidgets.QWidget):
             self._peakBars = pg.BarGraphItem(x=self._peaks[:, 0], height=self._peaks[:, 1], width=width, brush='k')
             self._graphWidget.addItem(self._peakBars)
 
-    def changeWidth(self, bars):
-        self._graphWidget.removeItem(bars)
+    def changeWidth(self):
+        #self._graphWidget.removeItem(bars)
         self.plot(self._spinBox.value(), False)
+        for item in self._items:
+            self._graphWidget.removeItem(item)
+            self._graphWidget.addItem(item)
+        if self._noise is not None:
+            self._graphWidget.plot(self._noise[:, 0], self._noise[:, 1], pen='r')
         self.show()
 
 
@@ -142,7 +150,7 @@ class SpectrumView(AbstractSpectrumView):
     '''
     def __init__(self, parent, peaks, ions, minRange, maxRange, maxY):
         super(SpectrumView, self).__init__(parent, peaks, ions, minRange-1, maxRange+1, maxY, '18px')
-        self._spinBox.valueChanged.connect(lambda: self.changeWidth(self._peakBars))
+        self._spinBox.valueChanged.connect(self.changeWidth)
         self.resize(700,400)
 
 
@@ -157,13 +165,13 @@ class TheoSpectrumView(AbstractSpectrumView):
         yMax = max(np.max(peaks['calcInt']),np.max(peaks['relAb']))
         super(TheoSpectrumView, self).__init__(parent, spectrPeaks, peaks,
                np.min(peaks['m/z'])-tolerance, np.max(peaks['m/z'])+tolerance, yMax, "14px")
-        self._spinBox.valueChanged.connect(lambda: self.changeWidth(self._modelledBars))
+        self._spinBox.valueChanged.connect(self.changeWidth)
         self._spinBox.move(width - 70, 0)
 
     def plot(self, width, new):
-        self._modelledBars = pg.BarGraphItem(x=self._ions['m/z'], height=self._ions['calcInt'],
+        self._peakBars = pg.BarGraphItem(x=self._ions['m/z'], height=self._ions['calcInt'],
                                              pen =pg.mkPen(color='r', width=0.4), width=width, brush='r')
-        self._graphWidget.addItem(self._modelledBars)
+        self._graphWidget.addItem(self._peakBars)
         if len(self._peaks)>0:
             self._peakScatter = pg.ScatterPlotItem(x=self._peaks[:, 0], y=self._peaks[:, 1], symbol='star',
                                                    pen=pg.mkPen(color='k', width=0.2), size=12, pxMode=True)

@@ -17,7 +17,7 @@ class PlotTableModel(AbstractTableModel):
         #print(data, '\n', data[0][len(data)-1])
         valFormat = '{:2.'+str(precision)+'f}'
         format = ['','{:2d}'] + self._ionTypes * [valFormat] + ['{:2d}', '', ]
-        headers = ['Sequ. (f)','Cleav. Side (f)'] + keys + ['Cleav. Side (b)','Sequ. (b)']
+        headers = ['sequ. (f)','cleav. side (f)'] + keys + ['cleav. side (b)','sequ. (b)']
         super(PlotTableModel, self).__init__(data,format, headers)
 
     def data(self, index, role):
@@ -50,7 +50,7 @@ class PlotTableView(QtWidgets.QWidget):
             horizontalWidget = QtWidgets.QWidget(self)
             formLayout = QtWidgets.QFormLayout(horizontalWidget)
             label = QtWidgets.QLabel(horizontalWidget)
-            label.setText(self._translate(self.objectName(), 'Prec. Mod. Loss:'))
+            label.setText(self._translate(self.objectName(), '% modified precursor ions:'))
             formLayout.setWidget(0, QtWidgets.QFormLayout.LabelRole, label)
             valLabel = QtWidgets.QLabel(horizontalWidget)
             valLabel.setText(self._translate(self.objectName(), str(round(firstLine*100,1))+' %'))

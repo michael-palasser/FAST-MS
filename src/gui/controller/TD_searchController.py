@@ -350,7 +350,7 @@ class TD_MainController(AbstractMainController):
         interestingIons = self.getInterestingIons()
         if interestingIons is None:
             return
-        modification,ok = QtWidgets.QInputDialog.getText(self._mainWindow,'Occupancy Plot', 'Enter the modification: ',
+        modification,ok = QtWidgets.QInputDialog.getText(self._mainWindow,'Show Occupancies', 'Enter the modification: ',
                                                          text=self._propStorage.getModificationName())
         if ok and modification!='':
             if modification[0] not in ('+','-'):
@@ -380,9 +380,9 @@ class TD_MainController(AbstractMainController):
                 headers.append(key+modification)
             '''occupView = PlotTableView(self._analyser.toTable(forwardVals.values(), backwardVals.values()),
                                            list(percentageDict.keys()), 'Occupancies: '+modification, 3,
-                                      self._analyser.getModificationLoss())'''
+                                      self._analyser.getPrecursorModification())'''
             occupView = OccupancyWidget(modification, self._analyser.toTable(forwardVals.values(), backwardVals.values()),
-                                        list(percentageDict.keys()), self._analyser.getModificationLoss(),
+                                        list(percentageDict.keys()), self._analyser.getPrecursorModification(),
                                         absTable, headers)
             self._openWindows.append(occupView)
             plotBars(sequence, np.array(absTable)[:,2:-2].astype(float), headers, '', True)

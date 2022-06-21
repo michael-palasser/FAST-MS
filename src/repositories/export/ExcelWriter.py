@@ -297,9 +297,9 @@ class ExcelWriter(BasicExcelWriter):
         row+=1
         self._worksheet1.write(row, 0, ("analysis:"))
         row+=1
-        modLoss = analyser.getModificationLoss()
+        modLoss = analyser.getPrecursorModification()
         if modLoss != None:
-            self._worksheet1.write(row, 0, 'modification loss:')
+            self._worksheet1.write(row, 0, 'occupancy of precursor ions:')
             self._worksheet1.write(row, 1, modLoss, self._percentFormat)
             row +=1
         row +=1

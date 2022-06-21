@@ -66,7 +66,7 @@ class SequCovTableModel(AbstractTableModel):
     TableModel for a QTableView in SequCovWidget which shows the sequence coverage for each fragment type
     '''
     def __init__(self, data):
-        super(SequCovTableModel, self).__init__(data, (), ('fragm. type', 'dequ. cov. /%'))
+        super(SequCovTableModel, self).__init__(data, (), ('fragm. type', 'coverage /%'))
 
     def data(self, index, role):
         '''

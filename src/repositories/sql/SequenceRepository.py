@@ -7,7 +7,7 @@ import sqlite3
 from os.path import join
 
 from src.entities.GeneralEntities import Sequence
-from src.repositories.AbstractRepositories import AbstractRepository
+from src.repositories.sql.AbstractRepositories import AbstractRepository
 from src.Exceptions import AlreadyPresentException
 
 

@@ -1,8 +1,8 @@
 #import sqlite3
 from os.path import join
 
-from src.entities.IonTemplates import FragmentationPattern, FragItem, ModificationPattern, ModificationItem
-from src.repositories.AbstractRepositories import AbstractRepositoryWith2Items
+from src.entities.IonTemplates import FragmentationPattern, ModificationPattern
+from src.repositories.sql.AbstractRepositories import AbstractRepositoryWith2Items
 
 class FragmentationRepository(AbstractRepositoryWith2Items):
     '''

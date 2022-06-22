@@ -71,7 +71,7 @@ class IonTableModel(AbstractTableModel):
     TableModel for QTableView presenting ion values (in top-down search)
     '''
     def __init__(self, data, precRegion, maxQual, maxScore):
-        headers = ('m/z','z','Intensity','Name','Error /ppm', 'S/N','Quality-Error', 'Score', 'Comment')
+        headers = ('m/z','z','intensity','name','error /ppm', 'S/N','quality error', 'score', 'comment')
         if len(data)==0:
             data=[['' for _ in headers]]
         super(IonTableModel, self).__init__(data, ('{:10.5f}','{:2d}', '{:12d}', '','{:4.2f}', '{:6.1f}', '{:4.2f}',

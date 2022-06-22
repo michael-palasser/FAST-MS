@@ -10,7 +10,7 @@ from src.services.DataServices import SequenceService
 from src.entities.Ions import Fragment,FragmentIon
 from src.gui.dialogs.StartDialogs import OccupancyRecalcStartDialog
 from src.services.analyser_services.Analyser import Analyser
-from src.services.export_services.ExcelWriter import BasicExcelWriter
+from src.repositories.export.ExcelWriter import BasicExcelWriter
 from src.resources import path, autoStart
 
 

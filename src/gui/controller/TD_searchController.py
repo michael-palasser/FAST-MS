@@ -28,7 +28,7 @@ from src.services.library_services.FragmentLibraryBuilder import FragmentLibrary
 from src.services.SearchService import SearchService
 from src.services.assign_services.TD_SpectrumHandler import SpectrumHandler
 from src.services.IntensityModeller import IntensityModeller
-from src.services.export_services.ExcelWriter import ExcelWriter
+from src.repositories.export.ExcelWriter import ExcelWriter
 from src.gui.dialogs.CheckIonView import CheckMonoisotopicOverlapView, CheckOverlapsView
 from src.gui.tableviews.PlotTables import PlotTableView
 from src.gui.widgets.SequencePlots import PlotFactory, plotBars
@@ -339,8 +339,7 @@ class TD_MainController(AbstractMainController):
         fragmentationView = FragmentationTable([(type,val) for type,val in fragmentation.items()],
                                                table, headers)
         self._openWindows.append(fragmentationView)
-        plotBars(self._propStorage.getSequenceList(), np.array(table)[:,2:-2].astype(float), headers,
-                 'Fragmentation Efficiencies')
+        plotBars(self._propStorage.getSequenceList(), np.array(table)[:,2:-2].astype(float), headers, '')
 
 
     def showOccupancyPlot(self):
@@ -351,7 +350,7 @@ class TD_MainController(AbstractMainController):
         interestingIons = self.getInterestingIons()
         if interestingIons is None:
             return
-        modification,ok = QtWidgets.QInputDialog.getText(self._mainWindow,'Occupancy Plot', 'Enter the modification: ',
+        modification,ok = QtWidgets.QInputDialog.getText(self._mainWindow,'Show Occupancies', 'Enter the modification: ',
                                                          text=self._propStorage.getModificationName())
         if ok and modification!='':
             if modification[0] not in ('+','-'):
@@ -381,12 +380,12 @@ class TD_MainController(AbstractMainController):
                 headers.append(key+modification)
             '''occupView = PlotTableView(self._analyser.toTable(forwardVals.values(), backwardVals.values()),
                                            list(percentageDict.keys()), 'Occupancies: '+modification, 3,
-                                      self._analyser.getModificationLoss())'''
+                                      self._analyser.getPrecursorModification())'''
             occupView = OccupancyWidget(modification, self._analyser.toTable(forwardVals.values(), backwardVals.values()),
-                                        list(percentageDict.keys()), self._analyser.getModificationLoss(),
+                                        list(percentageDict.keys()), self._analyser.getPrecursorModification(),
                                         absTable, headers)
             self._openWindows.append(occupView)
-            plotBars(sequence, np.array(absTable)[:,2:-2].astype(float), headers, 'Rel. abundances: '+modification, True)
+            plotBars(sequence, np.array(absTable)[:,2:-2].astype(float), headers, '', True)
 
     def getInterestingIons(self):
         interestingIons = ConfigurationHandlerFactory.getConfigHandler().get('interestingIons')

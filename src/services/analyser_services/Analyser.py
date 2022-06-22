@@ -61,10 +61,10 @@ class Analyser(object):
         totalDict.update({type: np.sum(val/totalSum) for type, val in relAbundanceOfSpecies.items()})
         return totalDict, relAbundanceOfSpecies
 
-    def getModificationLoss(self):
+    def getPrecursorModification(self):
         '''
-        Calculates the proportion of modification loss of the precursor
-        :return: (float) modification loss proportion
+        Calculates the proportion of modified precursor ions
+        :return: (float) modified proportion
         '''
         if self._modification == "":
             return None
@@ -77,7 +77,7 @@ class Analyser(object):
                 totalSum += self.getCorrectValue(ion)
         if totalSum==0:
             return 0
-        return 1 - modifiedSum / totalSum
+        return modifiedSum / totalSum
 
 
     def calculateOccupancies(self, interestingIons, modification=None, unImportantMods=None):

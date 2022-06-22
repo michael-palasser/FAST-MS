@@ -4,11 +4,11 @@ from abc import ABC
 from src.Exceptions import InvalidInputException
 from src.entities.GeneralEntities import Macromolecule, Element, BuildingBlock, Sequence
 from src.resources import processTemplateName
-from src.repositories.TD_Repositories import *
-from src.repositories.MoleculeRepository import MoleculeRepository
-from src.repositories.PeriodicTableRepository import PeriodicTableRepository
-from src.repositories.SequenceRepository import SequenceRepository
-from src.repositories.IntactRepository import *
+from src.repositories.sql.TD_Repositories import *
+from src.repositories.sql.MoleculeRepository import MoleculeRepository
+from src.repositories.sql.PeriodicTableRepository import PeriodicTableRepository
+from src.repositories.sql.SequenceRepository import SequenceRepository
+from src.repositories.sql.IntactRepository import *
 from src.entities.IonTemplates import *
 
 
@@ -496,9 +496,13 @@ class ModificationService(AbstractServiceForPatterns):
             if item[0][0] not in ['+','-']:
                 checkedItem = ['+' + item[0]] + [elem for elem in item[1:]]
             checkedItems.append(checkedItem)
+
         pattern.setItems(checkedItems)
-        if pattern.getModification()[0] not in ['+','-']:
-            pattern.setModification('+'+pattern.getModification())
+        modification = pattern.getModification()
+        if modification[0] not in ['+','-']:
+            pattern.setModification('+'+modification)
+        if modification not in [item[0] for item in pattern.getItems()]:
+            raise InvalidInputException(modification,'Precursor modification must be included in the modification templates')
         pattern = super(ModificationService, self).save(pattern)
         elementRep.close()
         return pattern

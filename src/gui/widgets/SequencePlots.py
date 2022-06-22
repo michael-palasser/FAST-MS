@@ -52,7 +52,7 @@ class PlotFactory(object):
         self._plot2.setXLink(self._plot1)
         self._plot2.setYLink(self._plot1)
         styles = {"black": "#f00", "font-size": "20px"}
-        self._plot1.setLabel('bottom', 'Cleavage Site', **styles)
+        self._plot1.setLabel('bottom', 'cleavage site', **styles)
         yRange = [-self._maxY*0.05,self._maxY*1.05]
         self._plot1.setXRange(0.02, len(self._sequence) + 0.02)
         self._plot1.plotItem.vb.setLimits(xMin=0, xMax=len(self._sequence) + 0.01, yMin=yRange[0], yMax=yRange[1])
@@ -63,7 +63,7 @@ class PlotFactory(object):
         self.addSequence(self._plot1)
         func()
         self.plot()
-        self._plot1.resize(len(sequence) * 25 + 200, 400)
+        self._plot1.resize(len(sequence) * 20 + 150, 400)
         self._plot2.resize(2000, 1000) #if too small the second graph will dissapear when scaling up
 
     def addSequence(self, plot):
@@ -299,13 +299,13 @@ def plotBars(sequence, values, headers, title, occup=False):
             ax.bar(xVals, values[:,i], width, bottom= bottom, label=headers[i], color=colours[i])
         bottom += values[:,i]
     sequColour = 'black'
-    if occup:
-        sequColour = 'saddlebrown'
+    '''if occup:
+        sequColour = 'saddlebrown'''
     for i,bb in enumerate(sequence):
         plt.text(x=i+0.5, y=0, s=bb, fontsize=13, c=sequColour, ha='center')
     plt.rcParams['figure.figsize'] = nrRows/5+4, 4
-    ax.set_ylabel('Rel. Abundances in a.u.')
-    ax.set_xlabel('Cleavage Site')
+    ax.set_ylabel('rel. abundances /a.u.')
+    ax.set_xlabel('cleavage site')
     ax.xaxis.set_major_locator(MultipleLocator(5))
     #ax.xaxis.set_major_formatter('{x:.0f}')
     ax.xaxis.set_minor_locator(MultipleLocator(1))

@@ -3,10 +3,9 @@ Created on 29 Dec 2020
 
 @author: michael
 '''
-import sqlite3
 
-from src.entities.IonTemplates import IntactPattern, IntactModification
-from src.repositories.AbstractRepositories import AbstractRepositoryWithItems
+from src.entities.IonTemplates import IntactPattern
+from src.repositories.sql.AbstractRepositories import AbstractRepositoryWithItems
 from os.path import join
 
 class IntactRepository(AbstractRepositoryWithItems):

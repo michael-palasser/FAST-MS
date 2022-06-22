@@ -496,9 +496,13 @@ class ModificationService(AbstractServiceForPatterns):
             if item[0][0] not in ['+','-']:
                 checkedItem = ['+' + item[0]] + [elem for elem in item[1:]]
             checkedItems.append(checkedItem)
+
         pattern.setItems(checkedItems)
-        if pattern.getModification()[0] not in ['+','-']:
-            pattern.setModification('+'+pattern.getModification())
+        modification = pattern.getModification()
+        if modification[0] not in ['+','-']:
+            pattern.setModification('+'+modification)
+        if modification not in [item[0] for item in pattern.getItems()]:
+            raise InvalidInputException(modification,'Precursor modification must be included in the modification templates')
         pattern = super(ModificationService, self).save(pattern)
         elementRep.close()
         return pattern

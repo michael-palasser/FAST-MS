@@ -486,7 +486,7 @@ class ModificationEditorController(AbstractEditorControllerWithTabs):
         super(ModificationEditorController, self).__init__(ModificationService(), "Edit Modifications",
                                                            "Modification-Pattern")
         upperWidget = self.makeUpperWidget()
-        self.createWidgets(upperWidget, upperWidget.layout(), ["Name: ", "Modification: "],
+        self.createWidgets(upperWidget, upperWidget.layout(), ["Name: ", "Precursor Modification: "],
                            {"name": QtWidgets.QLineEdit(self._centralwidget),
                                    "modification": QtWidgets.QLineEdit(self._centralwidget)},
                            [self._pattern.getName(), self._pattern.getModification()])

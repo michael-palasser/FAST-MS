@@ -46,14 +46,14 @@ class FragmentationPattern(PatternWithItems):
         return fragTemplates
 
     def toString(self):
-        string = 'Name\tGain\tLoss\tBB\tRad.\tDir.\tEnabled'
+        string = '\tName\tGain\tLoss\tBB\tRad.\tDir.\tEnabled'
         for item in self._items:
             if isinstance(item, FragItem):
                 string += '\n\t' + '\t'.join(item.toString())
             else:
                 string += '\n\t' + '\t'.join([str(val) for val in item])
         string += '\n\t-Precursor-Fragments:\n' \
-                  'Name\tGain\tLoss\tBB\tRad.\tEnabled'
+                  '\tName\tGain\tLoss\tBB\tRad.\tEnabled'
         for item in self.__items2:
             if isinstance(item, PrecursorItem):
                 string += '\n\t' + '\t'.join(item.toString())
@@ -133,7 +133,7 @@ class ModificationPattern(PatternWithItems):
 
     def toString(self):
         string = self.__modification
-        string += '\nName\tGain\tLoss\tBB\tRad.\tz-Eff.\tCalc.occ.\tEnabled'
+        string += '\n\tName\tGain\tLoss\tBB\tRad.\tz-Eff.\tCalc.occ.\tEnabled'
         for item in self._items:
             if isinstance(item, ModificationItem):
                 string += '\n\t' + '\t'.join(item.toString())
@@ -185,7 +185,7 @@ class IntactPattern(PatternWithItems):
 
 
     def toString(self):
-        string = '\nName\tGain\tLoss\tNr.Mod.\tRad.\tEnabled'
+        string = '\n\tName\tGain\tLoss\tNr.Mod.\tRad.\tEnabled'
         for item in self._items:
             string += '\n\t' + '\t'.join(item.toString())
         return string

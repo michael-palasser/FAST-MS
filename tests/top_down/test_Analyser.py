@@ -82,7 +82,7 @@ class TestAnalyser(TestCase):
                 ion.setIntensity(10 ** 6)
             ions.append(ion)
         self.analyser.setIons(ions)
-        self.assertAlmostEqual(unModSum / precSum, self.analyser.getModificationLoss())
+        self.assertAlmostEqual(unModSum / precSum, self.analyser.getPrecursorModification())
 
     def test_calculate_occupancies(self):
         mod = self.props.getModifPattern().getModification()

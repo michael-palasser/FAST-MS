@@ -118,7 +118,7 @@ class PeakWidget(GeneralPeakWidget):
     QTableWidget which shows peak values. Used by PeakView (in top-down search)
     '''
     def __init__(self, parent, peaks):
-        super(PeakWidget, self).__init__(parent, ('m/z','Int. (Spectrum)','Int. (Calc.)','Error /ppm', 'Used'),
+        super(PeakWidget, self).__init__(parent, ('m/z','int. (spectrum)','int. (calc.)','error /ppm', 'used'),
                                          ('{:10.5f}','{:11d}', '{:11d}', '{:4.2f}', ''), peaks)
         connectTable(self, showOptions)
 
@@ -133,7 +133,7 @@ class PeakWidget(GeneralPeakWidget):
                 data.append((self.item(row, 0).text(), intensity, self.item(row, 2).text(), self.item(row, 3).text(),
                              int(self.item(row, 4).checkState()/2)==1))
             except ValueError:
-                raise InvalidInputException('Intensities must be numbers', 'Incorrect entry: '+self.item(row, 1).text())
+                raise InvalidInputException('Intensities must be numeric', 'Incorrect entry: '+self.item(row, 1).text())
         return data
 
 
@@ -142,7 +142,7 @@ class IsoPatternPeakWidget(GeneralPeakWidget):
     QTableWidget which shows peak values. Used by IsotopePatternView (for isotope pattern tool)
     '''
     def __init__(self, parent, peaks):
-        super(IsoPatternPeakWidget, self).__init__(parent, ('m/z','Int. (Spectrum)','Int. (Calc.)', 'Used'),
+        super(IsoPatternPeakWidget, self).__init__(parent, ('m/z','int. (spectrum)','int. (calc.)', 'used'),
                                          ('{:10.5f}','{:11d}', '{:11d}', ''), peaks)
         #connectTable(self, self.showOptions)
 
@@ -170,7 +170,7 @@ class IsoPatternPeakWidget(GeneralPeakWidget):
                 data.append((self.item(row, 0).text(), intensity, self.item(row, 2).text(),
                              int(self.item(row, 3).checkState()/2)==1))
             except ValueError:
-                raise InvalidInputException('Intensities must be numbers', 'Incorrect entry: '+self.item(row, 1).text())
+                raise InvalidInputException('Intensities must be numeric', 'Incorrect entry: '+self.item(row, 1).text())
         return data
 
     """def getDataframe(self):

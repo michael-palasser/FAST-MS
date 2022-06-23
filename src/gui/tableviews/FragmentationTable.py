@@ -13,7 +13,7 @@ class FragmentationTableModel(AbstractTableModel):
     TableModel for QTableView in FragmentationTable which shows the relative percentages of each fragment
     '''
     def __init__(self, data):
-        super(FragmentationTableModel, self).__init__(data, ('','{:1.3f}'), ('Type', 'Rel. Proportion'))
+        super(FragmentationTableModel, self).__init__(data, ('','{:1.3f}'), ('type', 'yield'))
         self._data = data
 
     def data(self, index, role):
@@ -40,9 +40,9 @@ class FragmentationTable(QtWidgets.QWidget):
     def __init__(self, typeData, siteData, siteHeaders):
         super().__init__(parent=None)
         verticalLayout = QtWidgets.QVBoxLayout(self)
-        scrollArea = QtWidgets.QScrollArea(self)
+        #scrollArea = QtWidgets.QScrollArea(self)
         #_scrollArea.setGeometry(QtCore.QRect(10, 10, len(typeData[0])*50+200, len(typeData)*22+25))
-        scrollArea.setWidgetResizable(True)
+        #scrollArea.setWidgetResizable(True)
         # _scrollArea.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         # _scrollArea.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self._table = TableView(self, FragmentationTableModel(typeData))
@@ -57,7 +57,9 @@ class FragmentationTable(QtWidgets.QWidget):
         connectTable(self._table, showOptions)"""
         '''self._table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self._table.customContextMenuRequested['QPoint'].connect(partial(self.showOptions, self._table))'''
-        scrollArea.setWidget(self._table)
+
+        #scrollArea.setWidget(self._table)
+
         #self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         #self._table.move(0,0)
         self.setObjectName('Fragmentation Efficiencies')
@@ -65,9 +67,12 @@ class FragmentationTable(QtWidgets.QWidget):
         self.setWindowTitle(self._translate(self.objectName(), self.objectName()))
         self._table.resizeColumnsToContents()
         self._table.resizeRowsToContents()
-        verticalLayout.addWidget(scrollArea)
+        #verticalLayout.addWidget(scrollArea)
+        verticalLayout.addWidget(self._table)
         #self.resize(len(typeData[0])*50+200, len(typeData)*22+25)
         table2 = PlotTableView(None, siteData, siteHeaders,'Fragmentation Efficiencies: ',0)
+        #table2.setContentsMargins(0,0,0,0)
+        table2.sortBy(1)
         verticalLayout.addWidget(table2)
         setIcon(self)
         self.show()

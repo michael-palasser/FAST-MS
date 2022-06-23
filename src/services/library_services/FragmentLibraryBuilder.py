@@ -78,18 +78,20 @@ class FragmentLibraryBuilder(object):
     def checkForResidue(residues, sequence):
         '''
         Checks if sequenceList contains a corresponding residue for residue-specific fragments
-        :param (list[str]) residues: li
-        :param (list[str]) sequence:
+        :param (list[str]) residues: list of residue/building blocks that must be included
+        :param (list[str]) sequence: list of bb strings
         :return: (bool)
         '''
+        checked = False
         for residue in residues:
-            if residue not in ('', '-'):
-                if residue[-1]=='!':
-                    if residue[:-1] != sequence[-1]:
-                        return False
-                elif residue not in sequence:
-                    return False
-        return True
+            if residue in ('', '-'):
+                return True
+            elif residue[-1]=='!':
+                if residue[:-1] == sequence[-1]:
+                    checked = True
+            elif residue in sequence:
+                checked = True
+        return checked
         #return (residue == '') or (residue == '-') or (residue in sequence)
 
 

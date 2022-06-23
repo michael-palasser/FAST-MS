@@ -19,10 +19,10 @@ def readCsv(file):
     return arr
 
 
-modification = '+CMCT'
+modification = '+CMC'
 newList = True
 all = False
-sequenceName = 'rre1'
+sequenceName = 'neoRibo'
 
 def run(mainWindow):
     '''

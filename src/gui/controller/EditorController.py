@@ -78,8 +78,8 @@ class AbstractSimpleEditorController(ABC):
                     tableWidget.setItem(i, j, newItem)
                 #tableWidget.setItem(i, j, newitem)
                 newItem.setToolTip(headers[headerKeys[j]])
-        if len(data) < 3:
-            for i in range(3-len(data)):
+        if len(data) < 2:
+            for i in range(2-len(data)):
                 self.insertRow(tableWidget, boolVals)
         tableWidget.resizeColumnsToContents()
         tableWidget.resizeRowsToContents()

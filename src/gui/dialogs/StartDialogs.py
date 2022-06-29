@@ -62,8 +62,8 @@ class TDStartDialog(StartDialog):
 
     def getLabels(self):
         return ("Sequence Name:", "Charge:", "Fragmentation:", "Modifications:", "No. of Modifications:",
-                      "Spectral Data:", "Noise Threshold (x10^6):", "Fragment Library:", 'Autocalibration',
-                      'Ions for Cal.')
+                      "Spectral Data:", "Noise Threshold (x10^6):", "Fragment Library:", 'Calibration:',
+                      'Ions for Cal.:')
 
     def getWidgets(self, args):
         sequences, fragPatterns, modPatterns = args
@@ -82,7 +82,7 @@ class TDStartDialog(StartDialog):
                     "fragLib": (QtWidgets.QLineEdit(self), "If the fragment list has / should have a special name.\n"
                             "If no file is stated, the program will search for the file with the standard name or create"
                                                            " a new one with that name"),
-                 "calibration": (QtWidgets.QCheckBox(), "Spectral data will be autocalibrated if option is ticked"),
+                 "calibration": (QtWidgets.QCheckBox(), "Spectral data will be calibrated if this option is ticked"),
                  "calIons": (OpenFileWidget(self, 1, join(path, 'Spectral_data', 'top-down'), "Open Files",
                                             "Plain Text Files (*txt);;Comma Separated Values (*csv);;All Files (*)"),
                              "Name of the file with ions for calibration (txt format)")}
@@ -168,22 +168,23 @@ class IntactStartDialog(StartDialog):
         #self._verticalLayout.addWidget(self.makeButtonWidget(self), 0, QtCore.Qt.AlignRight)
 
     def getLabels(self):
-        return ["Sequence Name", "Modifications", "Spectral File", "Spray Mode", 'Input Mode', "Min. m/z", "Max. m/z",
-                 'Autocalibration', "Output"]
+        return ["Sequence Name:", "Modifications:", "Spectral File:", "Spray Mode:", 'Input Mode:', "Min. m/z:", "Max. m/z:",
+                 'Calibration:', "Output:"]
 
     def getWidgets(self, args):
         sequences, modPatterns = args
-        return  {"sequName": (createComboBox(self, sequences), "Name of sequenceList"),
+        return  {"sequName": (createComboBox(self, sequences), "Name of sequence"),
                  "modifications": (createComboBox(self, modPatterns), "Name of the modification pattern"),
                  "spectralData": (
                  OpenFileWidget(self, 2, join(path, 'Spectral_data', 'intact'), "Open Files",  # changed here
                                 "Plain Text Files (*txt);;Comma Separated Values (*csv);;All Files (*)"),
                  "Name of the file with unassigned ions (txt format)"),
                  "sprayMode": (createComboBox(self, ("negative", "positive")), "Spray mode"),
-                 "inputMode": (createComboBox(self, ("intensities", "abundances (int./z)")), "Spectral data will be autocalibrated if option is ticked"),
+                 "inputMode": (createComboBox(self, ("intensities", "abundances (int./z)")), "Are the intensities or "
+                                                                                             "abundances stated in the third column of the data"),
                  "minMz": (self.getMinMaxWidget(), "m/z where search starts"),
                  "maxMz": (self.getMinMaxWidget(), "m/z where search ends"),
-                 "calibration": (QtWidgets.QCheckBox(self), "Spectral data will be autocalibrated if option is ticked"),
+                 "calibration": (QtWidgets.QCheckBox(self), "Spectral data will be autocalibrated if this option is ticked"),
                  "output": (QtWidgets.QLineEdit(self),
                             "Name of the output txt file\ndefault: name of spectral pattern file + _out.txt")}
 
@@ -236,11 +237,11 @@ class IntactStartDialogFull(IntactStartDialog):
 
     def getLabels(self):
         oldLabels = super(IntactStartDialogFull, self).getLabels()
-        return oldLabels[:4] + ["Noise Threshold (x10^6):"] + oldLabels[5:8] + ['Ions for Cal.']
+        return oldLabels[:4] + ["Noise Threshold (x10^6):"] + oldLabels[5:8] + ['Ions for Cal.:']
 
     def getWidgets(self, args):
         sequences, modPatterns =args
-        return {"sequName": (createComboBox(self, sequences), "Name of sequenceList"),
+        return {"sequName": (createComboBox(self, sequences), "Name of sequence"),
                  "modifications": (createComboBox(self, modPatterns), "Name of the modification pattern"),
                  "spectralData": (
                     OpenFileWidget(self, 1, join(path, 'Spectral_data', 'intact'), "Open Files",
@@ -250,7 +251,7 @@ class IntactStartDialogFull(IntactStartDialog):
                  'noiseLimit': (QtWidgets.QDoubleSpinBox(self), "Minimal noise level"),
                  "minMz": (self.getMinMaxWidget(), "m/z where search starts"),
                  "maxMz": (self.getMinMaxWidget(), "m/z where search ends"),
-                 "calibration": (QtWidgets.QCheckBox(self), "Spectral data will be autocalibrated if option is ticked"),
+                 "calibration": (QtWidgets.QCheckBox(self), "Spectral data will be calibrated if this option is ticked"),
                  "calIons": (OpenFileWidget(self, 1, join(path, 'Spectral_data', 'intact'), "Open Files",
                                             "Plain Text Files (*txt);;Comma Separated Values (*csv);;All Files (*)"),
                              "Name of the file with ions for calibration (txt format)")}

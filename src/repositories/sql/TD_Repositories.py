@@ -70,17 +70,17 @@ class FragmentationRepository(AbstractRepositoryWith2Items):
         :return: (dict[str,str]) dictionary of {column name: tooltip}
         '''
         columns1 = super(FragmentationRepository, self).getItemColumns()
-        columns1.update({'Residue': "If the species is dependent on the occurence of a specific residue within the "
-                                    "sequenceList, enter the residue",
-                         'Radicals': "Enter the number of radicals",
-                         'Direction': "Enter +1 for forward (e.g. N-/5'- terminus) or -1 for backward (e.g. C-/3'- terminus)",
-                         'Enabled': "Activate/Deactivate Species"})
-        columns1['Name'] = 'Name of the fragment, 1. letter specifies type of fragment, optionally followed by "+" or "-".\n' \
-                           + columns1['Name']
+        columns1.update({'residue': "If the species is dependent on the occurence of a specific residue within the "
+                                    "sequence, enter the building block",
+                         'radicals': "Enter the number of radicals",
+                         'direction': "Enter +1 for forward (e.g. N-/5'- terminus) or -1 for backward (e.g. C-/3'- terminus)",
+                         'enabled': "Activate/Deactivate Species"})
+        columns1['name'] = 'Name of the fragment, 1. letter specifies type of fragment, optionally followed by "+" or "-".\n' \
+                           + columns1['name']
         columns2 = super(FragmentationRepository, self).getItemColumns()
-        columns2.update({'Residue': "If the species is dependent on the occurence of a specific residue within the "
-                                    "sequenceList, enter the residue",
-                         'Radicals': "Enter the number of radicals", 'Enabled': "Activate/Deactivate Species"})
+        columns2.update({'residue': "If the species is dependent on the occurence of a specific residue within the "
+                                    "sequence, enter the residue",
+                         'radicals': "Enter the number of radicals", 'enabled': "Activate/Deactivate Species"})
         return (columns1,columns2)
 
     def getPattern(self, name):
@@ -180,12 +180,12 @@ class ModificationRepository(AbstractRepositoryWith2Items):
         :return: (dict[str,str]) dictionary of {column name: tooltip}
         '''
         columns = super(ModificationRepository, self).getItemColumns()
-        columns.update({'Residue': "If the species is dependent on the occurence of a specific residue within the "
-                                   "sequenceList, enter the residue", 'Radicals': "Enter the number of radicals",
-                        'z-Effect': "If the modification alters the charge of modified fragment enter an (empiric) number of the extent",
-                        'Calc.Occ.': 'Should the modification be used for occupancy calculation?',
-                        'Enabled': "Activate/Deactivate Modification"})
-        return (columns,{'Name': 'Modification to be excluded'})
+        columns.update({'residue': "If the species is dependent on the occurence of a specific building block within the "
+                                   "sequence, enter the building block", 'radicals': "Enter the number of radicals",
+                        'z-effect': "If the modification alters the charge of modified fragment enter an (empiric) number of the extent",
+                        'calc.occ.': 'Should the modification be used for calculating the occupancy?',
+                        'enabled': "Activate/Deactivate the modification"})
+        return (columns,{'name': 'Modification to be excluded'})
 
 
 

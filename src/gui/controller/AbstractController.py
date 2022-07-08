@@ -8,9 +8,9 @@ from abc import ABC
 
 import numpy as np
 import pandas as pd
-from PyQt5 import QtWidgets, QtCore
+from PyQt5 import QtWidgets
 
-from src.gui.GUI_functions import setIcon
+from src.gui.GUI_functions import setIcon, translate
 from src.resources import path, DEVELOP
 from src.gui.controller.IsotopePatternView import AddIonView
 from src.gui.dialogs.CalibrationView import CalibrationView
@@ -57,7 +57,7 @@ class AbstractMainController(ABC):
         '''
         self._openWindows = []
         #self._mainWindow = SimpleMainWindow(None, 'Results:  ' + os.path.split(self._settings['spectralData'])[-1])
-        self._translate = QtCore.QCoreApplication.translate
+        self._translate = translate
         self._mainWindow.setWindowTitle(self._translate(self._mainWindow.objectName(),
                                                         'Results:  ' + os.path.split(self._settings['spectralData'])[-1]))
         self._openWindows.append(self._mainWindow)
@@ -372,7 +372,7 @@ class AbstractMainController(ABC):
         '''
         remView = QtWidgets.QWidget(None)
         #title = 'Original Values of Overlapping Ions'
-        remView._translate = QtCore.QCoreApplication.translate
+        #remView._translate = translate
         remView.setWindowTitle(self._translate(remView.objectName(), 'Original Values of Overlapping Ions'))
         ions = self._intensityModeller.getRemodelledIons()
         verticalLayout = QtWidgets.QVBoxLayout(remView)

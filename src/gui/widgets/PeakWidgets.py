@@ -1,6 +1,7 @@
 from math import log10
 
-from PyQt5 import QtWidgets, QtCore
+from PyQt5 import QtWidgets
+from PyQt5.QtCore import Qt
 
 from src.Exceptions import InvalidInputException
 from src.gui.GUI_functions import connectTable, showOptions
@@ -26,7 +27,7 @@ class GeneralPeakWidget(QtWidgets.QTableWidget):
         self.setSortingEnabled(True)
         #connectTable(self, self.showOptions)
 
-        '''self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        '''self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested['QPoint'].connect(partial(self.showOptions, self))'''
 
 
@@ -38,25 +39,25 @@ class GeneralPeakWidget(QtWidgets.QTableWidget):
         for row, peak in enumerate(self._peaks):
             for j, item in enumerate(peak):
                 newItem = QtWidgets.QTableWidgetItem()
-                newItem.setTextAlignment(QtCore.Qt.AlignRight)
+                newItem.setTextAlignment(Qt.AlignRight)
                 if j == 1 or j==2:
                     formatString = self._format[2]
                     item = int(round(item))
                     if item >= 10 ** 12:
                         lg10 = str(int(log10(item) + 1))
                         formatString = '{:' + lg10 + 'd}'
-                    newItem.setData(QtCore.Qt.DisplayRole, formatString.format(item))
+                    newItem.setData(Qt.DisplayRole, formatString.format(item))
                     if j==2:
-                        newItem.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+                        newItem.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
                 elif j==len(peak)-1:
                     newItem = QtWidgets.QTableWidgetItem()
                     if item:
-                        newItem.setCheckState(QtCore.Qt.Checked)
+                        newItem.setCheckState(Qt.Checked)
                     else:
-                        newItem.setCheckState(QtCore.Qt.Unchecked)
+                        newItem.setCheckState(Qt.Unchecked)
                 else:
-                    newItem.setData(QtCore.Qt.DisplayRole, self._format[j].format(item))
-                    newItem.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+                    newItem.setData(Qt.DisplayRole, self._format[j].format(item))
+                    newItem.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
                 self.setItem(row, j, newItem)
         #self.resizeColumnsToContents()
         self.resizeRowsToContents()

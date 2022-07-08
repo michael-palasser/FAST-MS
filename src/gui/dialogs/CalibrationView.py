@@ -1,4 +1,5 @@
 from PyQt5 import QtWidgets
+from PyQt5.QtCore import Qt
 import pyqtgraph as pg
 import numpy as np
 
@@ -74,6 +75,7 @@ class CalibrationView(QtWidgets.QDialog):
         table.resizeRowsToContents()
         #connectTable(table, self.showOptions)
         table.setToolTip(toolTip)
+        table.sortByColumn(0, Qt.AscendingOrder)
         return table
 
 

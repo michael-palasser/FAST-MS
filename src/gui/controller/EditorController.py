@@ -1,13 +1,13 @@
 import traceback
 from functools import partial
-
-from PyQt5 import QtWidgets, QtCore
+from PyQt5 import QtWidgets
+from PyQt5.QtCore import Qt
 
 from src.Exceptions import CanceledException
 from src.resources import DEVELOP
 from src.services.DataServices import *
 from src.gui.AbstractMainWindows import SimpleMainWindow
-from src.gui.GUI_functions import createComboBox, shoot
+from src.gui.GUI_functions import createComboBox, shoot, translate
 from src.gui.dialogs.SimpleDialogs import OpenDialog
 
 
@@ -29,7 +29,7 @@ class AbstractSimpleEditorController(ABC):
     def setUpUi(self, title):
         self._mainWindow = SimpleMainWindow(None, title)
         #self.mainWindow.setObjectName(title)
-        self._translate = QtCore.QCoreApplication.translate
+        self._translate = translate
         self._centralwidget = self._mainWindow.centralWidget()
         self._formLayout = QtWidgets.QFormLayout(self._centralwidget)
         self._formLayout.setFieldGrowthPolicy(QtWidgets.QFormLayout.ExpandingFieldsGrow)
@@ -45,7 +45,7 @@ class AbstractSimpleEditorController(ABC):
         tableWidget = self.formatTableWidget(headers, tableWidget, data, bools)
         tableWidget.setHorizontalHeaderLabels(headers)
         tableWidget.resizeColumnsToContents()
-        tableWidget.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        tableWidget.setContextMenuPolicy(Qt.CustomContextMenu)
         tableWidget.customContextMenuRequested['QPoint'].connect(partial(self.editRow, tableWidget, bools))
         tableWidget.setSortingEnabled(True)
         tableWidget.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
@@ -69,9 +69,9 @@ class AbstractSimpleEditorController(ABC):
                 if j in boolVals:
                     newItem = QtWidgets.QTableWidgetItem(item)
                     if item == 1:
-                        newItem.setCheckState(QtCore.Qt.Checked)
+                        newItem.setCheckState(Qt.Checked)
                     elif item == 0:
-                        newItem.setCheckState(QtCore.Qt.Unchecked)
+                        newItem.setCheckState(Qt.Unchecked)
                     tableWidget.setItem(i, j, newItem)
                 else:
                     newItem = QtWidgets.QTableWidgetItem(str(item))
@@ -112,7 +112,7 @@ class AbstractSimpleEditorController(ABC):
                         rowData.append(int(widgetItem.checkState()/2))
                     except AttributeError as e:
                         newItem = QtWidgets.QTableWidgetItem()
-                        newItem.setCheckState(QtCore.Qt.Checked)
+                        newItem.setCheckState(Qt.Checked)
                         table.setItem(row,col, newItem)
                         rowData.append(1)
                         print(row,col,boolVals,widgetItem)
@@ -178,7 +178,7 @@ class AbstractSimpleEditorController(ABC):
         table.insertRow(table.rowCount())
         for i in bools:
             newitem = QtWidgets.QTableWidgetItem(0)
-            newitem.setCheckState(QtCore.Qt.Unchecked)
+            newitem.setCheckState(Qt.Unchecked)
             table.setItem(table.rowCount() - 1, i, newitem)
 
 
@@ -307,7 +307,7 @@ class AbstractEditorControllerWithTabs(AbstractEditorController, ABC):
     '''
     def setUpUi(self, title):
         self._mainWindow = SimpleMainWindow(None,title)
-        self._translate = QtCore.QCoreApplication.translate
+        self._translate = translate
         self._centralwidget = self._mainWindow.centralWidget()
         self._vertLayout = QtWidgets.QVBoxLayout(self._centralwidget)
 

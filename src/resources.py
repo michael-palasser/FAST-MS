@@ -5,7 +5,7 @@ from platform import system
 from re import search as reSearch
 from subprocess import call
 
-DEVELOP = False
+DEVELOP = True
 
 if getattr(sys, 'frozen', False):
     path = os.path.dirname(sys.executable)

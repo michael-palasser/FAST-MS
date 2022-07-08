@@ -1,8 +1,9 @@
 import pyqtgraph as pg
-from PyQt5 import QtWidgets, QtCore
+from PyQt5 import QtWidgets
+from PyQt5.QtCore import QRect
 import numpy as np
 
-from src.gui.GUI_functions import setIcon
+from src.gui.GUI_functions import setIcon, translate
 
 '''class BarGraphItem(pg.BarGraphItem):
 
@@ -28,7 +29,7 @@ class AbstractSpectrumView(QtWidgets.QWidget):
         self._ions = ions
         self._items = []
         self._layout = QtWidgets.QVBoxLayout(self)
-        self._translate = QtCore.QCoreApplication.translate
+        self._translate = translate
         width = 0.02
         styles = {"black": "#f00", "font-size": lblSize}
         self._graphWidget = pg.PlotWidget(self)
@@ -48,7 +49,7 @@ class AbstractSpectrumView(QtWidgets.QWidget):
         #print(np.average(self._peaks[:,0]))
         #self._cursorLabel = pg.TextItem(text='Hello' ,anchor=(0,0))
         self._cursorLabel = QtWidgets.QLabel(self)
-        self._cursorLabel.setGeometry(QtCore.QRect(85, 40, 80, 52))
+        self._cursorLabel.setGeometry(QRect(85, 40, 80, 52))
         #self._cursorLabel.setStyleSheet("border: 0.1px solid black;")
         #self._graphWidget.addItem(self._cursorLabel)
         pg.SignalProxy(self._graphWidget.scene().sigMouseMoved, rateLimit=60, slot=self.mouseMoved)
@@ -86,14 +87,14 @@ class AbstractSpectrumView(QtWidgets.QWidget):
         self._spinBox = QtWidgets.QDoubleSpinBox(self)
         self._spinBox.setDecimals(3)
         self._spinBox.setValue(width)
-        self._spinBox.setGeometry(QtCore.QRect(85, 10, 65, 26))
+        self._spinBox.setGeometry(QRect(85, 10, 65, 26))
         self._spinBox.setToolTip("Change Width of Peaks (in Da)")
         try:
             self._spinBox.setStepType(QtWidgets.QAbstractSpinBox.AdaptiveDecimalStepType)
         except AttributeError as e:
             print(e)
         #self._cursorLabel = QtWidgets.QLabel(self)
-        #self._cursorLabel.setGeometry(QtCore.QRect(70, 40, 200, 26))
+        #self._cursorLabel.setGeometry(QRect(70, 40, 200, 26))
 
     def plot(self, width, new=True):
         if new:

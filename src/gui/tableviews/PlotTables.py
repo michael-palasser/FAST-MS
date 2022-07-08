@@ -1,9 +1,9 @@
 from math import isnan
 
-from PyQt5 import QtWidgets, QtCore
+from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 
-from src.gui.GUI_functions import setIcon
+from src.gui.GUI_functions import setIcon, translate
 from src.gui.tableviews.TableModels import AbstractTableModel
 from src.gui.tableviews.TableViews import TableView
 
@@ -45,7 +45,7 @@ class PlotTableView(QtWidgets.QWidget):
     def __init__(self, parent, data, keys, title, precision, firstLine = None):
         super().__init__(parent)
         verticalLayout = QtWidgets.QVBoxLayout(self)
-        self._translate = QtCore.QCoreApplication.translate
+        self._translate = translate
         if firstLine is not None:
             horizontalWidget = QtWidgets.QWidget(self)
             formLayout = QtWidgets.QFormLayout(horizontalWidget)

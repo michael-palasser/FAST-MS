@@ -3,6 +3,7 @@ import os
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtGui import QIcon
 
+from src.gui.GUI_functions import translate
 from src.resources import autoStart, path
 
 
@@ -12,7 +13,7 @@ class SimpleMainWindow(QtWidgets.QMainWindow):
     '''
     def __init__(self, parent, title):
         super(SimpleMainWindow, self).__init__(parent)
-        self._translate = QtCore.QCoreApplication.translate
+        self._translate = translate
         self.setWindowTitle(self._translate(self.objectName(), title))
         self._centralwidget = QtWidgets.QWidget(self)
         self.setCentralWidget(self._centralwidget)

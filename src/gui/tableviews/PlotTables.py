@@ -54,7 +54,7 @@ class PlotTableView(QtWidgets.QWidget):
             formLayout.setWidget(0, QtWidgets.QFormLayout.LabelRole, label)
             valLabel = QtWidgets.QLabel(horizontalWidget)
             valLabel.setText(self._translate(self.objectName(), str(round(firstLine*100,1))+' %'))
-            valLabel.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse | QtCore.Qt.TextSelectableByKeyboard)
+            valLabel.setTextInteractionFlags(Qt.TextSelectableByMouse | Qt.TextSelectableByKeyboard)
             formLayout.setWidget(0, QtWidgets.QFormLayout.FieldRole, valLabel)
             verticalLayout.addWidget(horizontalWidget)
         scrollArea = QtWidgets.QScrollArea(self)

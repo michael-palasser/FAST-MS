@@ -10,8 +10,7 @@ def checkInstallation(package):
         pip.main(['install', package])
 
 if __name__ == '__main__':
-    for package in ['numpy', 'scipy', 'matplotlib', 'pandas', 'PyQt5', 'pyqtgraph', 'xlsxwriter','logging','multiprocessing', 'numba', 'math',
-                    'sqlite3','tqdm']:
+    for package in ['numpy', 'scipy', 'matplotlib', 'pandas', 'PyQt5', 'pyqtgraph', 'xlsxwriter', 'numba', 'tqdm']:
         checkInstallation(package)
     try:
         system("pyinstaller FAST-MS.py --clear")

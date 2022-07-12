@@ -131,7 +131,7 @@ class ExportDialog(AbstractDialog):
         options = ('m/z', 'z','intensity', 'int./z', 'name', 'error /ppm', 'S/N', 'quality', 'formula', 'score', 'comment',
                    'molecular mass', 'average mass', 'noise')
         label = QtWidgets.QLabel(self)
-        label.setText(self._translate(self.objectName(), 'Ion Values:'))
+        label.setText(self._translate(self.objectName(), 'Attributes:'))
         formLayout.addItem(QtWidgets.QSpacerItem(0,1))
         formLayout.setWidget(index + 1, QtWidgets.QFormLayout.SpanningRole, label)
         #for i in ('analysis','ions','peaks', 'deleted ions', 'ions before remodelling')

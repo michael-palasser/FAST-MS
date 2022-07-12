@@ -237,14 +237,14 @@ class AbstractEditorController(AbstractSimpleEditorController, ABC):
         '''
         To open a new pattern
         '''
-        if title is False:
-            title = "Open"
-        openedPattern = self.open(title)
-        if openedPattern != None:
-            self._pattern = openedPattern
+        if title is not False:
+            openedPattern = self.open(title)
+            if openedPattern != None:
+                self._pattern = openedPattern
         self._widgets["name"].setText(self._pattern.getName())
         self._table = self.formatTableWidget(self._service.getHeaders(), self._table, self._pattern.getItems(),
                                              self._service.getBoolVals())
+
 
     def open(self, title):
         '''
@@ -259,6 +259,9 @@ class AbstractEditorController(AbstractSimpleEditorController, ABC):
             else:
                 return self._service.makeNew()
 
+    def save(self, *args):
+        super(AbstractEditorController, self).save(args[0])
+        self.openAgain(title=False)
 
     def delete(self):
         '''
@@ -341,9 +344,10 @@ class AbstractEditorControllerWithTabs(AbstractEditorController, ABC):
         '''
         To open a new pattern
         '''
-        openedPattern = self.open(title)
-        if openedPattern != None:
-            self._pattern = openedPattern
+        if title is not False:
+            openedPattern = self.open(title)
+            if openedPattern != None:
+                self._pattern = openedPattern
         self._widgets["name"].setText(self._pattern.getName())
         self._table1 = self.formatTableWidget(self._service.getHeaders()[0], self._table1, self._pattern.getItems(),
                                               self._service.getBoolVals()[0])
@@ -382,7 +386,7 @@ class MoleculeEditorController(AbstractEditorController):
         '''
         To open a new pattern
         '''
-        super(MoleculeEditorController, self).openAgain()
+        super(MoleculeEditorController, self).openAgain(title)
         self._widgets["gain"].setText(self._pattern.getGain())
         self._widgets["loss"].setText(self._pattern.getLoss())
 
@@ -472,7 +476,7 @@ class FragmentEditorController(AbstractEditorControllerWithTabs):
         '''
         To open a new pattern
         '''
-        super(FragmentEditorController, self).openAgain()
+        super(FragmentEditorController, self).openAgain(title)
         self.updatePrecBox()
         self._widgets['precursor'].setCurrentText(self._pattern.getPrecursor())
 
@@ -502,7 +506,7 @@ class ModificationEditorController(AbstractEditorControllerWithTabs):
         '''
         To open a new pattern
         '''
-        super(ModificationEditorController, self).openAgain()
+        super(ModificationEditorController, self).openAgain(title)
         self._widgets["modification"].setText(self._pattern.getModification())
 
     def open(self, title):

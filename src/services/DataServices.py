@@ -491,6 +491,9 @@ class ModificationService(AbstractServiceForPatterns):
         elements = elementRep.getAllPatternNames()
         self.checkFormatOfItems(pattern.getItems(), elements, self._repository.getIntegers()[0])
         checkedItems = []
+        mod = pattern.getModification()
+        if mod[0] not in ['+', '-']:
+            pattern.setModification('+'+mod)
         for item in pattern.getItems():
             checkedItem = item
             if item[0][0] not in ['+','-']:

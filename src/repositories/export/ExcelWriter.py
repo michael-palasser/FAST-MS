@@ -90,7 +90,7 @@ class BasicExcelWriter(object):
             title = 'Av. Charge per Fragment (intensities):'
             plotTitle = 'Av. Charge (int.)'
         else:
-            title = 'Av. Charge per Fragment (abundances):'
+            title = 'Av. Charge per Fragment (I/z):'
             plotTitle = 'Av. Charge (ab.)'
         self._worksheet1.write(row, 0, title)
         row+=1

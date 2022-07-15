@@ -229,3 +229,10 @@ class TestAnalyser(TestCase):
         self.assertAlmostEqual(3/4,calcCoverages['total'])
 
 
+    def test_get_correct_value(self):
+        ion = FragmentIon(Fragment('c',1,'+','',[],0), 1., 1, [], 10e5)
+        intensity = 10
+        ion.setIntensity(intensity)
+        self.assertAlmostEqual(intensity, self.analyser.getCorrectValue(ion))
+        ion.setCharge(2)
+        self.assertAlmostEqual(intensity/2, self.analyser.getCorrectValue(ion))

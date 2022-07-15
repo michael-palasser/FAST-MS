@@ -5,7 +5,7 @@ from tqdm import tqdm
 
 from src.entities.Ions import FragmentIon, Fragment
 from src.entities.Search import Search
-from src.repositories.AbstractRepositories import AbstractRepository
+from src.repositories.sql.AbstractRepositories import AbstractRepository
 
 
 class SearchRepository(AbstractRepository):

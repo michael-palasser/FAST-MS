@@ -51,14 +51,15 @@ class Analyser(object):
             if ion.getNumber() == 0:
                 precInt+=relAb
                 precName = ion.getType()
+                totalSum += relAb
             else:
-                relAb /= 2
+                #relAb /= 2
                 if ion.getType() not in relAbundanceOfSpecies.keys():
                     relAbundanceOfSpecies[ion.getType()] = np.zeros(len(self._sequence))
                 relAbundanceOfSpecies[ion.getType()][ion.getNumber()-1] += relAb
-            totalSum += relAb
+                totalSum += relAb/2
         totalDict = {precName:precInt/totalSum}
-        totalDict.update({type: np.sum(val/totalSum) for type, val in relAbundanceOfSpecies.items()})
+        totalDict.update({type: np.sum(val)/(2*totalSum) for type, val in relAbundanceOfSpecies.items()})
         return totalDict, relAbundanceOfSpecies
 
     def getPrecursorModification(self):

@@ -115,7 +115,6 @@ class AbstractSimpleEditorController(ABC):
                         newItem.setCheckState(Qt.Checked)
                         table.setItem(row,col, newItem)
                         rowData.append(1)
-                        print(row,col,boolVals,widgetItem)
                         raise Warning(e.__str__())
                 elif widgetItem and widgetItem.text():
                     rowData.append(widgetItem.text())
@@ -199,7 +198,7 @@ class AbstractEditorController(AbstractSimpleEditorController, ABC):
             self._service.close()
             raise CanceledException("Closing")
         super(AbstractEditorController, self).__init__(pattern, title,
-                   {"Open " + name: (self.openAgain, None,"Ctrl+O"), "Delete " + name: (self.delete,None,None),
+                   {"Open " + name: (lambda: self.openAgain('Open'), None,"Ctrl+O"), "Delete " + name: (self.delete,None,None),
                     "Save": (self.save,None,"Ctrl+S"), "Save As": (self.saveNew,None,None),
                     "Close": (self.close,None,"Ctrl+Q")})
 

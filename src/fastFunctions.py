@@ -219,6 +219,7 @@ def calculatePeptFineStructure(isotopePeak, isotopeTable):
     #print(isotopeTable['nrIso'])
     massI, propI = calculateSpecies(isotopeTable)
     fineStructure = [(massI, propI)]
+    print(isotopePeak)
     for i13C in list(range(maxValues[1]))[::-1]:
         for i2H in range(maxValues[3] + 1):
             for i15N in range(maxValues[5] + 1):

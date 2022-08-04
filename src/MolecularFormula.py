@@ -153,7 +153,6 @@ class MolecularFormula(object):
             #print(isoPeak,len(ultrafineStruct))
             prop = np.sum(ultrafineStruct[:,1])
             M_iso = np.sum(ultrafineStruct[:,0]*ultrafineStruct[:,1])/prop
-            print(np.sum(ultrafineStruct[:,0]*ultrafineStruct[:,1]),M_iso)
             isotope_pattern.append((M_iso,prop))
             isoPeak += 1
             sumInt += prop

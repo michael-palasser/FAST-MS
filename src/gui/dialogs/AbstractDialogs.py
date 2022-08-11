@@ -1,13 +1,14 @@
 import traceback
 import os
 
-from PyQt5 import QtWidgets, QtCore
+from PyQt5 import QtWidgets
+from PyQt5.QtCore import QSize
 from PyQt5.QtWidgets import QMessageBox
 
 from src.resources import path
 from src.Exceptions import InvalidInputException
 from src.services.DataServices import SequenceService
-from src.gui.GUI_functions import makeFormLayout, setIcon
+from src.gui.GUI_functions import makeFormLayout, setIcon, translate
 from src.gui.widgets.Widgets import OpenFileWidget
 
 
@@ -22,7 +23,7 @@ class AbstractDialog(QtWidgets.QDialog):
         #self.lineSpacing = lineSpacing
         self._widgets = dict()
         #self.sizePolicy = self.makeSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
-        self._translate = QtCore.QCoreApplication.translate
+        self._translate = translate
         self.setWindowTitle(self._translate(self.objectName(), title))
         self._widgetSizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         self._widgetSizePolicy.setHorizontalStretch(0)
@@ -190,7 +191,7 @@ class StartDialog(AbstractDialog):
         sizePolicy = self.makeSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHeightForWidth(self._defaultButton.sizePolicy().hasHeightForWidth())
         self._defaultButton.setSizePolicy(sizePolicy)
-        self._defaultButton.setMinimumSize(QtCore.QSize(113, 0))
+        self._defaultButton.setMinimumSize(QSize(113, 0))
         self._defaultButton.clicked.connect(self.backToLast)
         self._defaultButton.setText(self._translate(self.objectName(), "last settings"))
         return self._defaultButton

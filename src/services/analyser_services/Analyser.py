@@ -40,7 +40,7 @@ class Analyser(object):
             relative fragment type abundances per cleavage site
         '''
         relAbundanceOfSpecies = dict()
-        precInt = 0
+        precAb = 0
         totalSum = 0
         precName= 'prec'
         """for type in fragmentList:
@@ -49,16 +49,17 @@ class Analyser(object):
             #if (ion.getScore() < 5) or (ion.getQuality()<0.3) or (ion.getNumber() == 0):
             relAb = self.getCorrectValue(ion)
             if ion.getNumber() == 0:
-                precInt+=relAb
+                precAb+=relAb
                 precName = ion.getType()
+                totalSum += relAb
             else:
-                relAb /= 2
+                #relAb /= 2
                 if ion.getType() not in relAbundanceOfSpecies.keys():
                     relAbundanceOfSpecies[ion.getType()] = np.zeros(len(self._sequence))
                 relAbundanceOfSpecies[ion.getType()][ion.getNumber()-1] += relAb
-            totalSum += relAb
-        totalDict = {precName:precInt/totalSum}
-        totalDict.update({type: np.sum(val/totalSum) for type, val in relAbundanceOfSpecies.items()})
+                totalSum += relAb/2
+        totalDict = {precName:precAb/totalSum}
+        totalDict.update({type: np.sum(val)/(2*totalSum) for type, val in relAbundanceOfSpecies.items()})
         return totalDict, relAbundanceOfSpecies
 
     def getPrecursorModification(self):

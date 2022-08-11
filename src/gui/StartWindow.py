@@ -5,6 +5,7 @@ Created on 20 Oct 2020
 '''
 import sys
 
+from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication, QPushButton
 
 from src.gui.controller.IntactSearchController import IntactMainController

@@ -217,7 +217,7 @@ class AbstractSpectrumHandler(ABC):
     def calculateNoise(self, point, windowSize, currentWindow=None):
         '''
         Calculates the noise within a certain window in the spectrum
-        Noise is calculated by averaging the lowest peaks within window multiplied by a factor (0.67).
+        Noise is calculated by the mean of the lowest peaks within an m/z window multiplied by a factor (0.67).
         Lowest peaks are filtered by iteratively filtering out peaks with intensities higher than average+tolerance
         If the number of peaks is below a threshold, the user indicated noise level is used
         :param (float) point: m/z (median)
@@ -234,26 +234,26 @@ class AbstractSpectrumHandler(ABC):
             currentWindow = self.getPeaksInWindow(self._spectrum, point, windowSize * 2)
         if currentWindow[:,1].size > 10:     #parameter
             peakInt = currentWindow[:, 1]
-            avPeakInt = np.average(peakInt)
+            meanPeakInt = np.mean(peakInt)
             #stdDevPeakInt = np.std(peakInt)
             while True:
-                avPeakInt0 = avPeakInt
-                lowAbundendantPeaks = peakInt[np.where(peakInt < (avPeakInt +noise))]# 2* 10**6))]#2 * stdDevPeakInt))] #ToDo parameter
-                avPeakInt = np.average(lowAbundendantPeaks)
-                if (len(lowAbundendantPeaks) == 1) or (avPeakInt - avPeakInt0 == 0):
-                    #print(avPeakInt,stdDevPeakInt)
+                meanPeakInt0 = meanPeakInt
+                lowAbundendantPeaks = peakInt[np.where(peakInt < (meanPeakInt +noise))]# 2* 10**6))]#2 * stdDevPeakInt))] #ToDo parameter
+                meanPeakInt = np.mean(lowAbundendantPeaks)
+                if (len(lowAbundendantPeaks) == 1) or (meanPeakInt - meanPeakInt0 == 0):
+                    #print(meanPeakInt,stdDevPeakInt)
                     #print('exit 1')
-                    #return avPeakInt * 0.67
+                    #return meanPeakInt * 0.67
                     break
-                '''if avPeakInt - avPeakInt0 == 0:
+                '''if meanPeakInt - meanPeakInt0 == 0:
                     #print('exit 2')
                     break'''
                 #else:
                     #stdDevPeakInt = np.std(lowAbundendantPeaks)
-            avPeakInt *= 0.67 #used to be 0.6
-            if avPeakInt > noise:#*0.67:
-                noise = avPeakInt
-            #print(avPeakInt,stdDevPeakInt)
+            meanPeakInt *= 0.67 #used to be 0.6
+            if meanPeakInt > noise:#*0.67:
+                noise = meanPeakInt
+            #print(meanPeakInt,stdDevPeakInt)
         return noise
 
     @staticmethod

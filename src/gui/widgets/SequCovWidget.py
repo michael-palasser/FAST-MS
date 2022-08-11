@@ -8,10 +8,10 @@ import matplotlib.ticker as mticker
 #import matplotlib.path as mpath
 
 from PyQt5 import QtWidgets, QtGui
-from PyQt5.QtCore import Qt, QVariant, QCoreApplication
+from PyQt5.QtCore import Qt, QVariant
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 
-from src.gui.GUI_functions import makeLabelInputWidget, createComboBox, setIcon
+from src.gui.GUI_functions import makeLabelInputWidget, createComboBox, setIcon, translate
 from src.gui.tableviews.TableModels import AbstractTableModel
 from src.gui.tableviews.TableViews import TableView
 
@@ -91,7 +91,7 @@ class SequCovWidget(QtWidgets.QWidget):
     def __init__(self, values, sequence, coveragesForw, coveragesBackw, globalData):
         super().__init__(parent=None)
         self._fragments = {}
-        self._translate = QCoreApplication.translate
+        self._translate = translate
         self._coveragesForw = coveragesForw
         self._coveragesBackw = coveragesBackw
         self._globalData = globalData

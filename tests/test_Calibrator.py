@@ -87,6 +87,9 @@ class TestCalibrator(TestCase):
             self.assertAlmostEqual(uncal[1], cal[1])
 
         configs = ConfigurationHandlerFactory.getConfigHandler().getAll()
+
+        configs['maxStd']=1.5
+
         filePath = os.path.join(path, 'tests', 'test_files', 'CR_1_2_annealed_noMg_ESI_500mMDEPC_125min_Sk75_CAD12p5_134_uncal.txt')
         settings = {'sequName': 'CR_1_2', 'charge': -4, 'fragmentation': 'RNA_CAD', 'modifications': +134,
                     'nrMod': 1, 'spectralData': filePath, 'noiseLimit': 10 ** 6, 'fragLib': '',
@@ -123,7 +126,7 @@ class TestCalibrator(TestCase):
             deviation = calculateError(autoCalIons[key].getMonoisotopic(),manCalIons[key].getMonoisotopic())
             '''if abs(deviation)> 0.1:
                 print(deviation, autoCalIons[key].getMonoisotopic(), autoCalIons[key].getName())'''
-            self.assertLess(abs(deviation),0.4)
+            self.assertLess(abs(deviation),1)
             autoError = calculateError(autoCalIons[key].getMonoisotopic(),autoCalIons[key].getTheoMz())
             manError = calculateError(manCalIons[key].getMonoisotopic(),manCalIons[key].getTheoMz())
             if abs(manError) < 10:
@@ -132,7 +135,7 @@ class TestCalibrator(TestCase):
                 deviations.append(deviation)
         print(np.std(deviations), np.average([abs(error) for error in deviations]))
 
-        self.assertLess(np.std(deviations),0.2)
+        self.assertLess(np.std(deviations),configs['maxStd'])
         self.assertLess(np.average([abs(error) for error in deviations]),0.25)
         print(np.average([abs(error) for error in autoErrors]), np.average([abs(error) for error in manErrors]))
         self.assertLess(np.average([abs(error) for error in autoErrors]), np.average([abs(error) for error in manErrors]))

@@ -1,4 +1,5 @@
-from PyQt5 import QtWidgets, QtCore
+from PyQt5 import QtWidgets
+from PyQt5.QtCore import Qt
 
 
 class ExportTable(QtWidgets.QTableWidget):
@@ -37,11 +38,11 @@ class ExportTable(QtWidgets.QTableWidget):
         for row, option in enumerate(self._options):
             items = [QtWidgets.QTableWidgetItem(option), QtWidgets.QTableWidgetItem()]
             if option in stored:
-                items[1].setCheckState(QtCore.Qt.Checked)
+                items[1].setCheckState(Qt.Checked)
             else:
-                items[1].setCheckState(QtCore.Qt.Unchecked)
+                items[1].setCheckState(Qt.Unchecked)
             for i in range(2):
-                items[i].setTextAlignment(QtCore.Qt.AlignCenter)
+                items[i].setTextAlignment(Qt.AlignCenter)
                 self.setItem(row, i, items[i])
         self.resizeRowsToContents()
         #self.resizeColumnsToContents()

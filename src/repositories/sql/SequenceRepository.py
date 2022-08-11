@@ -84,8 +84,8 @@ class SequenceRepository(AbstractRepository):
         Returns the column names and corresponding tooltips for the user
         :return: (dict[str,str]) dictionary of {column name: tooltip}
         '''
-        return {"Name": "Enter the name for the sequenceList",
-                "Sequence":"Enter the sequenceList (no Spaces allowed)", "Molecule":"Enter the type of Molecule"}
+        return {"name": "Enter the name for the sequence",
+                "sequence":"Enter the sequence (no spaces allowed)", "molecule":"Enter the molecule type"}
 
 
 

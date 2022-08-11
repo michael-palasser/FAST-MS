@@ -1,8 +1,8 @@
 
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 
-from src.gui.GUI_functions import setIcon
+from src.gui.GUI_functions import setIcon, translate
 from src.gui.tableviews.PlotTables import PlotTableView
 from src.gui.tableviews.TableModels import AbstractTableModel
 from src.gui.tableviews.TableViews import TableView
@@ -21,7 +21,7 @@ class FragmentationTableModel(AbstractTableModel):
         Overwrites the typeData method of AbstractTableModel to correctly format each value
         '''
         if index.isValid():
-            if role == QtCore.Qt.DisplayRole:
+            if role == Qt.DisplayRole:
                 col = index.column()
                 item = self._data[index.row()][col]
                 formatString = self._format[col]
@@ -29,8 +29,8 @@ class FragmentationTableModel(AbstractTableModel):
                     return item
                 else:
                     return formatString.format(item)
-        if role == QtCore.Qt.TextAlignmentRole:
-            return QtCore.Qt.AlignCenter
+        if role == Qt.TextAlignmentRole:
+            return Qt.AlignCenter
 
 
 class FragmentationTable(QtWidgets.QWidget):
@@ -63,7 +63,7 @@ class FragmentationTable(QtWidgets.QWidget):
         #self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         #self._table.move(0,0)
         self.setObjectName('Fragmentation Efficiencies')
-        self._translate = QtCore.QCoreApplication.translate
+        self._translate = translate
         self.setWindowTitle(self._translate(self.objectName(), self.objectName()))
         self._table.resizeColumnsToContents()
         self._table.resizeRowsToContents()

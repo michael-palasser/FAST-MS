@@ -198,6 +198,9 @@ class PeriodicTableService(AbstractServiceForPatterns):
         '''
         #print('id', pattern.getId())
         self.checkName(pattern.getName())
+        formatedItems = []
+        for item in pattern.getItems():
+            formatedItems.append(float(val) for val in item)
         self.checkFormatOfItems(pattern.getItems(), None, self._repository.getIntegers())
         self.checkIfUnique(pattern)
         if pattern.getId() == None:
@@ -206,7 +209,7 @@ class PeriodicTableService(AbstractServiceForPatterns):
             self._repository.updatePattern(pattern)
         return self.get(pattern.getName())
 
-    def checkFormatOfItems(self, items, *args):
+    def checkFormatOcheckFormatOfItemsfItems(self, items, *args):
         super(PeriodicTableService, self).checkFormatOfItems(items, *args)
         sumAbundances = 0
         nucNums = []
@@ -238,7 +241,7 @@ class PeriodicTableService(AbstractServiceForPatterns):
     def checkFormatOfItem(self, item, *args):
         super(PeriodicTableService, self).checkFormatOfItem(item, *args)
         for val in item:
-            if val<0:
+            if float(val)<0:
                 raise InvalidInputException(val, 'No negative values allowed')
 
     '''def checkFormatOfItem(self, item, *args):
@@ -491,6 +494,9 @@ class ModificationService(AbstractServiceForPatterns):
         elements = elementRep.getAllPatternNames()
         self.checkFormatOfItems(pattern.getItems(), elements, self._repository.getIntegers()[0])
         checkedItems = []
+        mod = pattern.getModification()
+        if mod[0] not in ['+', '-']:
+            pattern.setModification('+'+mod)
         for item in pattern.getItems():
             checkedItem = item
             if item[0][0] not in ['+','-']:

@@ -323,7 +323,7 @@ class IsotopePatternView(SimpleMainWindow):
         action = menu.exec_(table.viewport().mapToGlobal(pos))
         if action == copyAllAction:
             # df = self.getDataframe()
-            df = DataFrame(self.getData(), columns=self._headers)
+            df = DataFrame(table.getData(), columns=table.getHeaders())
             df.to_clipboard(index=False, header=True)
         if action == copyAction:
             it = table.indexAt(pos)

@@ -17,7 +17,7 @@ logging.basicConfig(level=logging.INFO)
 logging.basicConfig(filename='logfile_SpectrumHandler.log',level=logging.INFO)
 
 
-# ToDo: Test SearchParameters, Proteins!, Parameters
+"""# ToDo: Test SearchParameters, Proteins!, Parameters
 def getFragmentChargeRange(molecule, sprayMode, normalisationFactor, fragment, precModCharge, fragModCharge, precCharge,
                            tolerance):
     '''
@@ -58,7 +58,7 @@ def getFragmentChargeRange(molecule, sprayMode, normalisationFactor, fragment, p
     if (probableZ + tolerance) < highZ:
         highZ = round(probableZ + tolerance)
     # print(fragment.getName(),lowZ,round(probableZ,2),highZ)
-    return range(lowZ, highZ + 1), probableZ
+    return range(lowZ, highZ + 1), probableZ"""
 
 
 class SpectrumHandler(AbstractSpectrumHandler):
@@ -161,7 +161,6 @@ class SpectrumHandler(AbstractSpectrumHandler):
         The charge is calculated using the number of phosphates (RNA/DNA) or using the length of the sequence (proteins)
         :param fragment: corresponding fragment
         :type fragment: Fragment
-        :param (float) precModCharge: charge effect of precursor modification
         :return: (generator) range between lowest possible z and highest possible z
         '''
         if self._moleculeName in ['RNA','DNA'] and self._sprayMode == -1:
@@ -178,7 +177,7 @@ class SpectrumHandler(AbstractSpectrumHandler):
             probableZ = len(fragment.getSequence()) * self._normalisationFactor
         else:
             probableZ = len(fragment.getSequence()) * self._normalisationFactor
-        probableZ -= fragment.getRadicals()
+        probableZ -= fragment.getRadicals()+self._precursor.getRadicals()
         tolerance = self._configs['zTolerance']
         lowZ, highZ = 1, self._charge
         if fragment.getNumber()==0:

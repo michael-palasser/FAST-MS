@@ -41,10 +41,10 @@ class IntactRepository(AbstractRepositoryWithItems):
         Returns the column names and corresponding tooltips for the user
         :return: (dict[str,str]) dictionary of {column name: tooltip}
         '''
-        return {'Name':"Enter \"+\"modification or \"-\"loss", 'Gain':"molecular formula to be added",
-                'Loss':"molecular formula to be subtracted", 'Nr.Mod.':"How often is species modified",
-                'Radicals': "Enter the number of radicals",
-                'Enabled':"Activate/Deactivate Species"}
+        return {'name':"Enter \"+\"modification or \"-\"loss", 'gain':"Molecular formula to be added",
+                'loss':"Molecular formula to be subtracted", 'no.mod.':"Number how often the species is modified",
+                'radicals': "Enter the number of radicals",
+                'enabled':"Activate/Deactivate Species"}
 
 
     def getPattern(self, name):

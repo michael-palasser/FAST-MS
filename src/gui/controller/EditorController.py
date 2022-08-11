@@ -1,13 +1,13 @@
 import traceback
 from functools import partial
-
-from PyQt5 import QtWidgets, QtCore
+from PyQt5 import QtWidgets
+from PyQt5.QtCore import Qt
 
 from src.Exceptions import CanceledException
 from src.resources import DEVELOP
 from src.services.DataServices import *
 from src.gui.AbstractMainWindows import SimpleMainWindow
-from src.gui.GUI_functions import createComboBox, shoot
+from src.gui.GUI_functions import createComboBox, shoot, translate
 from src.gui.dialogs.SimpleDialogs import OpenDialog
 
 
@@ -29,7 +29,7 @@ class AbstractSimpleEditorController(ABC):
     def setUpUi(self, title):
         self._mainWindow = SimpleMainWindow(None, title)
         #self.mainWindow.setObjectName(title)
-        self._translate = QtCore.QCoreApplication.translate
+        self._translate = translate
         self._centralwidget = self._mainWindow.centralWidget()
         self._formLayout = QtWidgets.QFormLayout(self._centralwidget)
         self._formLayout.setFieldGrowthPolicy(QtWidgets.QFormLayout.ExpandingFieldsGrow)
@@ -45,7 +45,7 @@ class AbstractSimpleEditorController(ABC):
         tableWidget = self.formatTableWidget(headers, tableWidget, data, bools)
         tableWidget.setHorizontalHeaderLabels(headers)
         tableWidget.resizeColumnsToContents()
-        tableWidget.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        tableWidget.setContextMenuPolicy(Qt.CustomContextMenu)
         tableWidget.customContextMenuRequested['QPoint'].connect(partial(self.editRow, tableWidget, bools))
         tableWidget.setSortingEnabled(True)
         tableWidget.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
@@ -69,17 +69,17 @@ class AbstractSimpleEditorController(ABC):
                 if j in boolVals:
                     newItem = QtWidgets.QTableWidgetItem(item)
                     if item == 1:
-                        newItem.setCheckState(QtCore.Qt.Checked)
+                        newItem.setCheckState(Qt.Checked)
                     elif item == 0:
-                        newItem.setCheckState(QtCore.Qt.Unchecked)
+                        newItem.setCheckState(Qt.Unchecked)
                     tableWidget.setItem(i, j, newItem)
                 else:
                     newItem = QtWidgets.QTableWidgetItem(str(item))
                     tableWidget.setItem(i, j, newItem)
                 #tableWidget.setItem(i, j, newitem)
                 newItem.setToolTip(headers[headerKeys[j]])
-        if len(data) < 3:
-            for i in range(3-len(data)):
+        if len(data) < 2:
+            for i in range(2-len(data)):
                 self.insertRow(tableWidget, boolVals)
         tableWidget.resizeColumnsToContents()
         tableWidget.resizeRowsToContents()
@@ -112,10 +112,9 @@ class AbstractSimpleEditorController(ABC):
                         rowData.append(int(widgetItem.checkState()/2))
                     except AttributeError as e:
                         newItem = QtWidgets.QTableWidgetItem()
-                        newItem.setCheckState(QtCore.Qt.Checked)
+                        newItem.setCheckState(Qt.Checked)
                         table.setItem(row,col, newItem)
                         rowData.append(1)
-                        print(row,col,boolVals,widgetItem)
                         raise Warning(e.__str__())
                 elif widgetItem and widgetItem.text():
                     rowData.append(widgetItem.text())
@@ -178,7 +177,7 @@ class AbstractSimpleEditorController(ABC):
         table.insertRow(table.rowCount())
         for i in bools:
             newitem = QtWidgets.QTableWidgetItem(0)
-            newitem.setCheckState(QtCore.Qt.Unchecked)
+            newitem.setCheckState(Qt.Unchecked)
             table.setItem(table.rowCount() - 1, i, newitem)
 
 
@@ -199,7 +198,7 @@ class AbstractEditorController(AbstractSimpleEditorController, ABC):
             self._service.close()
             raise CanceledException("Closing")
         super(AbstractEditorController, self).__init__(pattern, title,
-                   {"Open " + name: (self.openAgain, None,"Ctrl+O"), "Delete " + name: (self.delete,None,None),
+                   {"Open " + name: (lambda: self.openAgain('Open'), None,"Ctrl+O"), "Delete " + name: (self.delete,None,None),
                     "Save": (self.save,None,"Ctrl+S"), "Save As": (self.saveNew,None,None),
                     "Close": (self.close,None,"Ctrl+Q")})
 
@@ -237,14 +236,14 @@ class AbstractEditorController(AbstractSimpleEditorController, ABC):
         '''
         To open a new pattern
         '''
-        if title is False:
-            title = "Open"
-        openedPattern = self.open(title)
-        if openedPattern != None:
-            self._pattern = openedPattern
+        if title is not False:
+            openedPattern = self.open(title)
+            if openedPattern != None:
+                self._pattern = openedPattern
         self._widgets["name"].setText(self._pattern.getName())
         self._table = self.formatTableWidget(self._service.getHeaders(), self._table, self._pattern.getItems(),
                                              self._service.getBoolVals())
+
 
     def open(self, title):
         '''
@@ -259,6 +258,9 @@ class AbstractEditorController(AbstractSimpleEditorController, ABC):
             else:
                 return self._service.makeNew()
 
+    def save(self, *args):
+        super(AbstractEditorController, self).save(args[0])
+        self.openAgain(title=False)
 
     def delete(self):
         '''
@@ -307,7 +309,7 @@ class AbstractEditorControllerWithTabs(AbstractEditorController, ABC):
     '''
     def setUpUi(self, title):
         self._mainWindow = SimpleMainWindow(None,title)
-        self._translate = QtCore.QCoreApplication.translate
+        self._translate = translate
         self._centralwidget = self._mainWindow.centralWidget()
         self._vertLayout = QtWidgets.QVBoxLayout(self._centralwidget)
 
@@ -341,9 +343,10 @@ class AbstractEditorControllerWithTabs(AbstractEditorController, ABC):
         '''
         To open a new pattern
         '''
-        openedPattern = self.open(title)
-        if openedPattern != None:
-            self._pattern = openedPattern
+        if title is not False:
+            openedPattern = self.open(title)
+            if openedPattern != None:
+                self._pattern = openedPattern
         self._widgets["name"].setText(self._pattern.getName())
         self._table1 = self.formatTableWidget(self._service.getHeaders()[0], self._table1, self._pattern.getItems(),
                                               self._service.getBoolVals()[0])
@@ -382,7 +385,7 @@ class MoleculeEditorController(AbstractEditorController):
         '''
         To open a new pattern
         '''
-        super(MoleculeEditorController, self).openAgain()
+        super(MoleculeEditorController, self).openAgain(title)
         self._widgets["gain"].setText(self._pattern.getGain())
         self._widgets["loss"].setText(self._pattern.getLoss())
 
@@ -472,7 +475,7 @@ class FragmentEditorController(AbstractEditorControllerWithTabs):
         '''
         To open a new pattern
         '''
-        super(FragmentEditorController, self).openAgain()
+        super(FragmentEditorController, self).openAgain(title)
         self.updatePrecBox()
         self._widgets['precursor'].setCurrentText(self._pattern.getPrecursor())
 
@@ -502,7 +505,7 @@ class ModificationEditorController(AbstractEditorControllerWithTabs):
         '''
         To open a new pattern
         '''
-        super(ModificationEditorController, self).openAgain()
+        super(ModificationEditorController, self).openAgain(title)
         self._widgets["modification"].setText(self._pattern.getModification())
 
     def open(self, title):

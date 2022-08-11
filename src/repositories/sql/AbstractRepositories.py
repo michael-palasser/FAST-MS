@@ -3,13 +3,10 @@ Created on 29 Dec 2020
 
 @author: michael
 '''
-import pathlib
 from abc import ABC, abstractmethod
 import sqlite3
-import os
-import sys
 
-from src.resources import getRelativePath, path
+from src.resources import getRelativePath
 
 
 class AbstractRepository(ABC):
@@ -297,8 +294,8 @@ class AbstractRepositoryWith2Items(AbstractRepositoryWithItems, ABC):
         Returns the column names and corresponding tooltips for the user
         :return: (dict[str,str]) dictionary of {column name: tooltip}
         '''
-        return {'Name':"Enter \"+\"modification or \"-\"loss", 'Gain':"molecular formula to be added",
-                'Loss':"molecular formula to be subtracted"}
+        return {'name':"Enter \"+\"modification or \"-\"loss", 'gain':"molecular formula to be added",
+                'loss':"molecular formula to be subtracted"}
 
 
     def updatePattern(self, pattern):

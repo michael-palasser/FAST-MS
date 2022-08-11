@@ -233,7 +233,7 @@ class TestModificationService(TestCase):
     def test_save(self):
         name = 'dummy'
         assert name not in self.service.getAllPatternNames()
-        pattern = ModificationPattern(name,name,[('+X','CH5N2O','','-',0,0.4,1,1),('+X-y','CH5N2O','','-',0,-0.4,1,1)],
+        pattern = ModificationPattern(name,'+X',[('+X','CH5N2O','','-',0,0.4,1,1),('+X-y','CH5N2O','','-',0,-0.4,1,1)],
                                        [('+X-y-G',)],None)
         self.service.save(pattern)
         savedPattern = self.service.get(pattern.getName())
@@ -244,13 +244,13 @@ class TestModificationService(TestCase):
         self.service.delete(name)
         self.assertNotIn(name, self.service.getAllPatternNames())
 
-        pattern = ModificationPattern(name,name,[('X','CH5N2O','','-',0,0.4,1,1)],[('+X-y-G',)],None)
+        pattern = ModificationPattern(name,'X',[('X','CH5N2O','','-',0,0.4,1,1)],[('+X-y-G',)],None)
         self.service.save(pattern)
         self.assertEqual('+X', self.service.get(pattern.getName()).getItems()[0][0])
         self.service.delete(name)
         self.assertNotIn(name, self.service.getAllPatternNames())
 
-        dummies = [ModificationPattern(name,name,[('+X','CH5N2O','','-',0,0.4,1,1),('+X','CH5N2O','','-',0,-0.4,1,1)],
+        dummies = [ModificationPattern(name,'X',[('+X','CH5N2O','','-',0,0.4,1,1),('+X','CH5N2O','','-',0,-0.4,1,1)],
                                        [('+X-y-G',)],None),
                    ModificationPattern(name, name, [('+X', 'CxH5N2O', '', '-', 0, 0.4, 1, 1),
                                                     ('+X-y', 'CH5N2O', '', '-', 0, -0.4, 1, 1)],[('+X-y-G',)], None)]

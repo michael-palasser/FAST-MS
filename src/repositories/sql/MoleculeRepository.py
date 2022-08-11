@@ -34,10 +34,10 @@ class MoleculeRepository(AbstractRepositoryWithItems):
         Returns the column names and corresponding tooltips for the user
         :return: (dict[str,str]) dictionary of {column name: tooltip}
         '''
-        return {'Name':'First Letter must be uppercase, all other letters must be lowercase',
-                'Formula':'molecular formula of the building block',
-                'GB+':'Enter the gas phase basicity (kJ/mol) of the building block in positive mode',
-                'GB-':'Enter the gas phase basicity (kJ/mol) of the (deprotonated) building block in negative mode\n'
+        return {'name':'First Letter must be uppercase, all other letters must be lowercase',
+                'formula':'molecular formula of the building block',
+                'gb+':'Enter the gas phase basicity (kJ/mol) of the building block in positive mode',
+                'gb-':'Enter the gas phase basicity (kJ/mol) of the (deprotonated) building block in negative mode\n'
                       '(not relevant for nucleic acids)'}
 
     def getPattern(self, name):

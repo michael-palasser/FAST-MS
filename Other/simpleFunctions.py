@@ -75,6 +75,7 @@ def calculatePercentage(isotopeTable):
     massI = 0.
     finishedIndizes = list()
     #print(massI,'\n')
+
     for isotope in isotopeTable:
         if isotope['index'] not in finishedIndizes:
             finishedIndizes.append(isotope['index'])

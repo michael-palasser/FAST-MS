@@ -9,6 +9,8 @@
       <excludeFolder url="file://$MODULE_DIR$/Spectral_data/intact/26.4.19" />
       <excludeFolder url="file://$MODULE_DIR$/Spectral_data/intact/4.6.19" />
       <excludeFolder url="file://$MODULE_DIR$/Spectral_data/intact/ribA_DEPC" />
+      <excludeFolder url="file://$MODULE_DIR$/build" />
+      <excludeFolder url="file://$MODULE_DIR$/dist" />
       <excludeFolder url="file://$MODULE_DIR$/venv" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.8 (FAST_MS)" jdkType="Python SDK" />

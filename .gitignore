@@ -11,3 +11,5 @@
 /Spectral_data/model_output.txt
 /dist/
 /Fragment_lists/
+/venv/
+/build/

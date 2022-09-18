@@ -1,0 +1,13 @@
+/For GitHub/
+/Library/
+/Other/
+/Spectral_data/comparison/*
+/Spectral_data/intact/*
+/Spectral_data/top-down/*
+/Spectral_data/Occupancies_out.xlsx
+/Spectral_data/debug_correct.txt
+/Spectral_data/debug_incorrect.csv
+/Spectral_data/model_input.txt
+/Spectral_data/model_output.txt
+/dist/
+/Fragment_lists/

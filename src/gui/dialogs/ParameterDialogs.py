@@ -167,11 +167,11 @@ class ConfigurationDialog(DialogWithTabs):
 
         self._widgets["manualDeletion"].setMinimum(1)
         self._qualityBox = self.fillBox(self._outputTab, "Quality thresholds",
-                                        ("quality (deletion)","quality (highlighting)","score (highlighting)", 'SNR (deletion)'),
+                                        ("quality (deletion)","quality (highlighting)","score (highlighting)", 'S/N (deletion)'),
                         {"shapeDel": (QtWidgets.QDoubleSpinBox(),"ions which have a higher value will be deleted"),
                          "shapeMarked": (QtWidgets.QDoubleSpinBox(), "ions which have a higher value will be highlighted"),
                          "scoreMarked": (QtWidgets.QDoubleSpinBox(),"ions which have a higher value will be highlighted"),
-                         "SNR": (QtWidgets.QDoubleSpinBox(),"ions which have a lower signal to noise ratio will be deleted")})
+                         "SNR": (QtWidgets.QDoubleSpinBox(),"ions which have a lower signal-to-noise ratio will be deleted")})
         self._analysisBox = self.fillBox(self._outputTab, "Analysis", ("Use Abundances (int./z)",),
                                         {"useAb": (QtWidgets.QCheckBox(),
                                                    "Ticked if the abundaces (int./z) of the ions should be used for the "

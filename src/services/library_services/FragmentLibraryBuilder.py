@@ -246,6 +246,7 @@ class FragmentLibraryBuilder(object):
         criticalLength = 30
         if self.__sequence.getMolecule() == 'Protein':
             criticalLength = 60
+        #criticalLength=10000
         if len(self.__sequence.getSequenceList())<criticalLength: #flag == 0:
             #self._bar = tqdm(total=len(self.__fragmentLibrary))
             logging.debug('Normal calculation')

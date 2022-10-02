@@ -2,12 +2,11 @@ import sys
 
 import numpy as np
 import sympy as sym
-import subprocess
 import os
 
 from PyQt5 import QtWidgets
 
-from src import path
+from src.resources import path, autoStart
 
 
 def main(mainWindow):
@@ -16,7 +15,7 @@ def main(mainWindow):
     :param (PyQt5.QtWidgets.QMainWindow | Any) mainWindow: Qt parent
     '''
     inputFile = os.path.join(path, 'Spectral_data','model_input.txt')
-    subprocess.call(['open', inputFile])
+    autoStart(inputFile)
     start = QtWidgets.QMessageBox.question(mainWindow, 'Modelling Isotope Patterns ',
             'Paste the real and theoretical values in the text file and press "Ok"',
                                                         QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
@@ -83,7 +82,7 @@ def main(mainWindow):
                     output_file.write(str(elem) + '\t')
                 output_file.write('\n')
 
-        subprocess.call(['open', outputFile])
+        autoStart(outputFile)
     else:
         return
 

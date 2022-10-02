@@ -1,8 +1,9 @@
 from math import isnan
 
-from PyQt5 import QtWidgets, QtCore
+from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 
+from src.gui.GUI_functions import setIcon, translate
 from src.gui.tableviews.TableModels import AbstractTableModel
 from src.gui.tableviews.TableViews import TableView
 
@@ -16,7 +17,7 @@ class PlotTableModel(AbstractTableModel):
         #print(data, '\n', data[0][len(data)-1])
         valFormat = '{:2.'+str(precision)+'f}'
         format = ['','{:2d}'] + self._ionTypes * [valFormat] + ['{:2d}', '', ]
-        headers = ['sequ. (f)','cleav.side (f)'] + keys + ['cleav.side (b)','sequ. (b)']
+        headers = ['sequ. (f)','cleav. side (f)'] + keys + ['cleav. side (b)','sequ. (b)']
         super(PlotTableModel, self).__init__(data,format, headers)
 
     def data(self, index, role):
@@ -44,16 +45,16 @@ class PlotTableView(QtWidgets.QWidget):
     def __init__(self, parent, data, keys, title, precision, firstLine = None):
         super().__init__(parent)
         verticalLayout = QtWidgets.QVBoxLayout(self)
-        self._translate = QtCore.QCoreApplication.translate
+        self._translate = translate
         if firstLine is not None:
             horizontalWidget = QtWidgets.QWidget(self)
             formLayout = QtWidgets.QFormLayout(horizontalWidget)
             label = QtWidgets.QLabel(horizontalWidget)
-            label.setText(self._translate(self.objectName(), 'prec. mod. loss:'))
+            label.setText(self._translate(self.objectName(), '% modified precursor ions:'))
             formLayout.setWidget(0, QtWidgets.QFormLayout.LabelRole, label)
             valLabel = QtWidgets.QLabel(horizontalWidget)
             valLabel.setText(self._translate(self.objectName(), str(round(firstLine*100,1))+' %'))
-            valLabel.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse | QtCore.Qt.TextSelectableByKeyboard)
+            valLabel.setTextInteractionFlags(Qt.TextSelectableByMouse | Qt.TextSelectableByKeyboard)
             formLayout.setWidget(0, QtWidgets.QFormLayout.FieldRole, valLabel)
             verticalLayout.addWidget(horizontalWidget)
         scrollArea = QtWidgets.QScrollArea(self)
@@ -81,6 +82,7 @@ class PlotTableView(QtWidgets.QWidget):
         self._table.resizeRowsToContents()
         verticalLayout.addWidget(scrollArea)
         #self.resize(len(data[0])*50+200, len(data)*22+25)
+        setIcon(self)
         self.show()
 
     def sortBy(self, columnIndex):

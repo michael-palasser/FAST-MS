@@ -63,7 +63,7 @@ class PlotFactory(object):
         self.addSequence(self._plot1)
         func()
         self.plot()
-        self._plot1.resize(len(sequence) * 25 + 200, 400)
+        self._plot1.resize(len(sequence) * 20 + 150, 400)
         self._plot2.resize(2000, 1000) #if too small the second graph will dissapear when scaling up
 
     def addSequence(self, plot):
@@ -299,12 +299,12 @@ def plotBars(sequence, values, headers, title, occup=False):
             ax.bar(xVals, values[:,i], width, bottom= bottom, label=headers[i], color=colours[i])
         bottom += values[:,i]
     sequColour = 'black'
-    if occup:
-        sequColour = 'saddlebrown'
+    '''if occup:
+        sequColour = 'saddlebrown'''
     for i,bb in enumerate(sequence):
         plt.text(x=i+0.5, y=0, s=bb, fontsize=13, c=sequColour, ha='center')
     plt.rcParams['figure.figsize'] = nrRows/5+4, 4
-    ax.set_ylabel('Rel.abundances in a.u.')
+    ax.set_ylabel('rel. abundances /a.u.')
     ax.set_xlabel('cleavage site')
     ax.xaxis.set_major_locator(MultipleLocator(5))
     #ax.xaxis.set_major_formatter('{x:.0f}')

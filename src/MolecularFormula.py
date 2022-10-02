@@ -120,6 +120,7 @@ class MolecularFormula(object):
         '''
         #elements = [key for key,val in self._formulaDict.items() if val>0]
         #if self.checkSystem(elements, {'C', 'H', 'N', 'O', 'P'}):
+        specific = True
         if self._formulaDict.keys() == {'C', 'H', 'N', 'O', 'P'} or self._formulaDict.keys() == {'C', 'H', 'N', 'O'}:
             calculate = calculateNuclFineStructure
             isotopeTable = self.makeNucIsotopeTable()
@@ -128,10 +129,16 @@ class MolecularFormula(object):
             calculate = calculatePeptFineStructure
             isotopeTable = self.makeProteinIsotopeTable()
         else:
+            specific = False
             calculate = calculateFineStructure
             isotopeTable = self.makeIsotopeTable()
+        if specific:
+            lengths = {'C': 2, 'H': 2, 'N': 2, 'O': 3, 'P': 1, 'S': 3}
+            for key in self._formulaDict.keys():
+                if len(self._periodicTable[key]) != lengths[key]:
+                    calculate = calculateFineStructure
+                    isotopeTable = self.makeIsotopeTable()
         return calculate, isotopeTable
-
 
     def calculateIsotopePattern(self, minSum, maxIso=-1):
         '''
@@ -146,10 +153,10 @@ class MolecularFormula(object):
         isotope_pattern = list()
         calculate, isotopeTable = self.determineSystem()
         sumInt = 0
-        while(sumInt < minSum and isoPeak != maxIso):              #ToDo:Parameter
+        while(sumInt < minSum and isoPeak != maxIso):
             setIsotopeTable(isotopeTable)
-            #print(isoPeak, isotopeTable)
             ultrafineStruct = np.array(calculate(isoPeak, isotopeTable))
+            #print(isoPeak,len(ultrafineStruct))
             prop = np.sum(ultrafineStruct[:,1])
             M_iso = np.sum(ultrafineStruct[:,0]*ultrafineStruct[:,1])/prop
             isotope_pattern.append((M_iso,prop))
@@ -361,189 +368,4 @@ class MolecularFormula(object):
             M_iso = np.sum(ultrafineStruct[:,0]*ultrafineStruct[:,1])/prop
             isotope_pattern.append((M_iso,prop))
         return np.array(isotope_pattern, dtype=isoPatternDtype)
-
-
-
-    """CIsotopes = np.array([(12,12.0, 0.98938), (13, 13.0033548350723, 0.01078)])
-    OIsotopes = np.array([(16,15.9949146195717,0.9975716),(17,16.9991317565069,0.000381),(18,17.9991596128676,0.0020514)])
-    elements = [CIsotopes,OIsotopes]
-    elementNrs = [20,30]
-    for currentElement, N in zip(elements, elementNrs):
-        print(N)
-        I= len(currentElement)
-    
-        #if I>2:
-        dimensionality = tuple([N+1 for i in range(I-1)])
-        #else:
-        #    dimensionality=(1,N+1)
-        print('dim',dimensionality)
-        E=np.zeros(dimensionality)
-        dimList = [0 for dim in dimensionality]
-        E[tuple(dimList)]=currentElement[0,2]
-        for i in range(1,I):
-            index = deepcopy(dimList)
-            '''if len(index)==1:
-                E[tuple(index)]=currentElement[i,2]
-            else:'''
-            index[-i]=1
-            print('index1',index)
-            print(index,currentElement[i,2])
-            E[tuple(index)]=currentElement[i,2]
-            print(E[tuple(index)])
-        #E[0, 1] = currentElement[1, 2]
-        print('E',E)
-        #E_N = np.zeros(dimensionality)
-        #E_N[tuple(dimList)]=currentElement[0,2]
-        fftArrs = []
-        if I==2:
-            result = ifft(fft(E) ** N).real
-            result /= np.sum(result)
-            print('result',result)
-            continue
-        elif I==3:
-            result1= np.zeros(dimensionality, dtype=complex)
-            for i,row in enumerate(E):
-                result1[i,:] = fft(row)
-            result2= np.zeros(dimensionality, dtype=complex)
-            result= np.zeros(dimensionality, dtype=complex)
-            for i,col in enumerate(result1.T):
-                result2[i,:] = ifft(fft(col)**N)
-            for i,row in enumerate(result2.T):
-                result[i,:] = ifft(row)
-            result = result.real
-            result /= np.sum(result)
-            print('result',result.real)
-            continue"""
-
-    """def makeFFTCorrectionTable(self,neutralPattern):
-        '''
-        Creates an array with the abundances of each isotope, an array with the nrs of each element and estimates the
-        spacing between the isotope peaks (in Da). For universal elemental composition.
-        :param (float) monoMass: monoisotopic mass of the molecule
-        :return:
-            (ndarray(dtype=[float,])) abundance table (2D array, each row represents an element, column index represents
-                the number of nucleons;
-            (ndarray(dtype=[float])) nr. of each element in the formula (1D array, each row represents an element);
-            (float) estimated spacing between the isotope peaks
-        '''
-        maxMass = int(np.max(neutralPattern['m/z']))+2
-        abundanceTable = np.zeros((2,maxMass))
-        for i,line in enumerate(sorted(neutralPattern['calcInt'])):
-            abundanceTable[0][100+i] = line
-        abundanceTable[1][1] = self._periodicTable['H'][2]
-        return abundanceTable 
-    
-    def correctNeutralIsotopePattern(self, neutralPattern, charge):
-        abundanceTable=self.makeFFTCorrectionTable(neutralPattern)
-        self.calculateAbundancesFFT(neutralPattern, )"""
-
-
-
-
-
-
-    '''def makePoissonTable(self):
-        lamdaHNOS = 0
-        massShiftHNOS = 0
-        isotopeTable = list()
-        index = 1
-        for elem in ['C','H','N','O','S','P']:
-            if elem in self._periodicTable.keys():
-                mono = self._periodicTable[elem][0][0]
-                if elem in ('H','N','O','S'):
-                    monoMass = self._periodicTable[elem][0][1]
-                    nr = self._formulaDict[elem]
-
-                    for isotope in self._periodicTable[elem]:
-                        if isotope[0]-mono==1:
-                            isotope = 
-                    p=isotope[2]
-                    new_p = nr * p
-                    lamdaHNOS += new_p
-                    massShiftHNOS += new_p * (isotope[0] - monoMass)
-                else:    
-                    for isotope in self._periodicTable[elem]:
-                        isotopeTable.append((index, self._formulaDict[elem], 0, isotope[2], isotope[1], isotope[0] - mono))'''
-
-
-
-    """def calculatePoissonIsotopePattern(self, accelerate):
-        '''
-        Calculates isotope patterns based on molecular formulas
-        :param (int) accelerate: isotopePeak from which the calculation should be accelerated
-        :return: (ndarray(dtype=[float,float])) isotope pattern (structured numpy array: [(mass,relative Abundance)])
-        '''
-        #mostAbundant=10**(-10)
-        #prop = 1
-        np.set_printoptions(suppress=True)
-        isoPeak=0
-        isotope_pattern = list()
-        calculate, isotopeTable = self.determineSystem()
-        reducedTable, poissonElement = self.makePoissonTable()
-        if poissonElement['nr']==0:
-            return self.calculateIsotopePattern()
-        sumInt = 0
-        while(sumInt <MIN_SUM):              #ToDo:Parameter
-            setIsotopeTable(isotopeTable)
-            #print(isoPeak, isotopeTable)
-            if isoPeak<accelerate:
-                print('not now',isoPeak)
-                ultrafineStruct = np.array(calculate(isoPeak, isotopeTable))
-            else:
-                ultrafineStruct = np.array(calculatePoissonFineStructure(isoPeak, reducedTable,poissonElement))
-                print('MolForm',ultrafineStruct)
-            prop = np.sum(ultrafineStruct[:,1])
-            M_iso = np.sum(ultrafineStruct[:,0]*ultrafineStruct[:,1])/prop
-            isotope_pattern.append((M_iso,prop))
-            isoPeak += 1
-            sumInt += prop
-        return np.array(isotope_pattern, dtype=isoPatternDtype)
-
-
-    def makePoissonTable(self):
-        isotopeTable = list()
-        elements = [elem for elem,val in self._periodicTable.items() if self._formulaDict[elem] > 0]
-        lambda1 = 0
-        massShift1 = 0
-        nr1 = 0
-        monoIsoMass = 0
-        for index, elem in enumerate(sorted(elements)):
-            monoNuc = self._periodicTable[elem][0][0]
-            monoMassElem = self._periodicTable[elem][0][1]
-            nr = self._formulaDict[elem]
-            isotope1 = self._periodicTable[elem][1]
-            if (nr>50) and (len(self._periodicTable[elem])==2) and (isotope1[0]-monoNuc==1) and (isotope1[2]<0.05): #isotope1[2]*15000<nr:# and (maxIso<3):
-                #for isotope in self._periodicTable[elem]:
-                #p=isotope1[2]
-                #if (isotope[0]-monoNuc==1) and (p<0.05):
-                monoIsoMass += monoMassElem*nr
-                new_p = nr*isotope1[2]
-                lambda1 += new_p
-                massShift1 +=new_p*(isotope1[1]-monoMassElem)
-                nr1 += nr
-                    #else:
-                    #    isotopeTable.append((index+1, self._formulaDict[elem], 0, isotope[2], isotope[1], isotope[0] - monoNuc))
-            else:
-                for isotope in self._periodicTable[elem]:
-                    #if self._formulaDict[elem] != 0:
-                    isotopeTable.append((index+1, self._formulaDict[elem], 0, isotope[2], isotope[1], isotope[0] - monoNuc))
-        #lastIndex = index+1
-        #isotopeTable.append((lastIndex, 0, 0, lambda1, massShift1, -100))
-        '''isotopeTable = np.array([(index+1, nr1, 0, lambda1, massShift1, -100)]
-                                +sorted(isotopeTable,key=lambda tup: tup[1], reverse=True), dtype=isoTableDtype)'''
-        '''isotopeTable = np.array(sorted(isotopeTable,key=lambda tup: tup[1], reverse=True)
-                                , dtype=isoTableDtype)'''
-        '''if len(getByIndex(isotopeTable, isotopeTable['index'][0])) != 2:
-            isotopeTable = self.reorderTable(isotopeTable)'''
-        '''isotopeTable = np.concatenate((isotopeTable, np.array([(lastIndex+1, nr1, 0, lambda1, massShift1, -100)], dtype=
-                                                             isoTableDtype)), axis=0)'''
-
-        isotopeTable = np.array(sorted(isotopeTable,key=lambda tup: tup[1], reverse=True)
-                                , dtype=isoTableDtype)
-        if len(getByIndex(isotopeTable, isotopeTable['index'][0])) != 2:
-            isotopeTable = self.reorderTable(isotopeTable)
-        poissonElement = np.array((nr1,monoIsoMass, lambda1,massShift1/lambda1),
-                                  dtype=[('nr', float),('monoMass', float),('lambda',float), ('deltaMass',float)])
-        return isotopeTable, poissonElement"""
-
 

@@ -1,4 +1,3 @@
-import sys
 from copy import deepcopy
 
 import numpy as np
@@ -6,15 +5,13 @@ import matplotlib
 from matplotlib import pyplot as plt
 import matplotlib.ticker as mticker
 
-import matplotlib.path as mpath
+#import matplotlib.path as mpath
 
 from PyQt5 import QtWidgets, QtGui
-from PyQt5.QtCore import Qt, QVariant, QCoreApplication
-from PyQt5.QtWidgets import QApplication
+from PyQt5.QtCore import Qt, QVariant
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
-from matplotlib.patches import Rectangle
 
-from src.gui.GUI_functions import connectTable, showOptions, makeLabelInputWidget, createComboBox
+from src.gui.GUI_functions import makeLabelInputWidget, createComboBox, setIcon, translate
 from src.gui.tableviews.TableModels import AbstractTableModel
 from src.gui.tableviews.TableViews import TableView
 
@@ -25,6 +22,7 @@ class SequCovPlotTableModel(AbstractTableModel):
     '''
     def __init__(self, data, headers):
         super(SequCovPlotTableModel, self).__init__(data, (), headers)
+
 
     def data(self, index, role):
         '''
@@ -38,10 +36,29 @@ class SequCovPlotTableModel(AbstractTableModel):
         if role == Qt.BackgroundRole:
             row,col = index.row(), index.column()
             if (row!=0) and (row!=len(self._data)-1) and (col!=0):
+            #if (row != len(self._data) - 1) and (col != 0):
                 if self._data[row][col]==1:
                     return QVariant(QtGui.QColor(Qt.green))
                 elif self._data[row][col]==0:
                     return QVariant(QtGui.QColor(Qt.red))
+
+    def sort(self, Ncol, order):
+        """
+        Sort table by selected column
+        """
+        self.layoutAboutToBeChanged.emit()
+        #self._data = self._data.sort_values(self._headers[Ncol], ascending=order == Qt.AscendingOrder)
+        if order == Qt.AscendingOrder:
+            #self._data.sort(key= lambda tup:tup[Ncol])
+            #data = sorted(self._data[1:-1], key= lambda tup:tup[Ncol])
+            data = sorted(self._data[:-1], key= lambda tup:tup[Ncol])
+        else:
+            #self._data.sort(key= lambda tup:tup[Ncol], reverse=True)
+            #data = sorted(self._data[1:-1],key= lambda tup:tup[Ncol], reverse=True)
+            data = sorted(self._data[:-1],key= lambda tup:tup[Ncol], reverse=True)
+        #self._data = [self._data[0]]+data+[self._data[-1]]
+        self._data = data + [self._data[-1]]
+        self.layoutChanged.emit()
 
 
 class SequCovTableModel(AbstractTableModel):
@@ -49,7 +66,7 @@ class SequCovTableModel(AbstractTableModel):
     TableModel for a QTableView in SequCovWidget which shows the sequence coverage for each fragment type
     '''
     def __init__(self, data):
-        super(SequCovTableModel, self).__init__(data, (), ('fragm. type', 'sequ.cov. /%'))
+        super(SequCovTableModel, self).__init__(data, (), ('fragm. type', 'coverage /%'))
 
     def data(self, index, role):
         '''
@@ -74,7 +91,7 @@ class SequCovWidget(QtWidgets.QWidget):
     def __init__(self, values, sequence, coveragesForw, coveragesBackw, globalData):
         super().__init__(parent=None)
         self._fragments = {}
-        self._translate = QCoreApplication.translate
+        self._translate = translate
         self._coveragesForw = coveragesForw
         self._coveragesBackw = coveragesBackw
         self._globalData = globalData
@@ -86,6 +103,7 @@ class SequCovWidget(QtWidgets.QWidget):
         table.setSortingEnabled(True)
         connectTable(table,showOptions)"""
         table = TableView(self, SequCovTableModel(values))
+        table.sortByColumn(0, Qt.AscendingOrder)
         #table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         table.resizeColumnsToContents()
         [table.setRowHeight(i,23) for i in range(len(values))]
@@ -95,6 +113,7 @@ class SequCovWidget(QtWidgets.QWidget):
         all.update(coveragesBackw)
         coverageData = self.addCleavageSites([[key] + list(val) for key,val in all.items()])
         verticalLayout.addWidget(self.makeCoverageTable(coverageData, ['fragm.'] + sequence))
+        #verticalLayout.addWidget(self.makeCoverageTable(coverageData, ['Fragm.'] + [str(i+1) for i in range(self._sequLength)]))
         #verticalLayout.addWidget(self.makeCoverageTable(globalData, ['direction'] + sequence))
         width = 10
         if self._sequLength>200:
@@ -123,6 +142,7 @@ class SequCovWidget(QtWidgets.QWidget):
         self._sequPlot = SequenceCoveragePlot(sequence, globalData[:,0].reshape((self._sequLength,1)),
                                               globalData[:,1].reshape((self._sequLength,1)), width)
         updateBtn.clicked.connect(self.updatePlot)
+        setIcon(self)
 
     def fillGrid(self, type, row, checked=False):
         label = QtWidgets.QLabel(self._inputWidget)
@@ -143,6 +163,8 @@ class SequCovWidget(QtWidgets.QWidget):
         connectTable(table,showOptions)"""
         #table.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
         table = TableView(self, SequCovPlotTableModel(data, headers))
+        table.sortByColumn(0, Qt.AscendingOrder)
+        table.setSortingEnabled(False)
         table.resizeColumnsToContents()
         table.setColumnWidth(0,70)
         table.resizeRowsToContents()
@@ -151,8 +173,7 @@ class SequCovWidget(QtWidgets.QWidget):
 
 
     def addCleavageSites(self, data):
-        newData = [[''] + [str(i + 1) for i in range(self._sequLength)]]
-        newData += data
+        newData = [[''] + [str(i + 1) for i in range(self._sequLength)]]+data
         newData.append([''] + [str(self._sequLength - i) for i in range(self._sequLength)])
         return newData
 
@@ -167,19 +188,17 @@ class SequCovWidget(QtWidgets.QWidget):
             backwardC.append(colour)
             backward.append(self._globalData[:,1])
         for key, tup in self._fragments.items():
-            if key in self._coveragesForw.keys():
-                if tup[0].isChecked():
-                    forward.append(self._coveragesForw[key])
-                    forwardC.append(tup[1].currentText())
-            elif key in self._coveragesBackw.keys():
-                if tup[0].isChecked():
-                    backward.append(self._coveragesBackw[key])
-                    backwardC.append(tup[1].currentText())
+            if tup[0].isChecked():
+                if key in self._coveragesForw.keys():
+                        forward.append(self._coveragesForw[key])
+                        forwardC.append(tup[1].currentText())
+                elif key in self._coveragesBackw.keys():
+                        backward.append(self._coveragesBackw[key])
+                        backwardC.append(tup[1].currentText())
         forward2,backward2 = [],[]
         for i in range(self._sequLength):
             forward2.append([arr[i] for arr in forward])
             backward2.append([arr[i] for arr in backward])
-        print(self._coveragesForw.keys())
         self._sequPlot.makePlot(forward2, backward2,self._lineWidth.value(), forwardC,backwardC)
         self._sequPlot.draw()
         self.show()
@@ -224,16 +243,20 @@ class SequenceCoveragePlot(FigureCanvasQTAgg):
         #size = 0.01
         for i,bb in enumerate(self._sequence):
             plt.text(x=xPos, y=1-line, s=bb, fontsize=20)
+            if i == len(self._sequence):
+                continue
             for j,coverageForward in enumerate(coveragesForward[i]):
                 if coverageForward and not np.isnan(coverageForward):
                     yPos_j=1-line+step_y*0.6+(len(coveragesForward[i])-j-1)*step_y*0.2
                     plt.text(x=xPos+step_x*0.491, y=yPos_j, s='L', ha='center', c=coloursF[j],rotation=180)
                     plt.text(x=xPos+step_x*0.586, y=1-line+step_y*0.15, s='I', ha='center', c=coloursF[-1])
             counter+=1
-            if not (i+1)%lineWidth:
-                line+=2*step_y
-                plt.text(x=-step_x*0.5, y=1-line, s=str(counter), fontsize=nrSize)
-                xPos=step_x/2
+            '''if (i+1)%lineWidth:
+                xPos+=step_x'''
+            '''if not (i + 1) % lineWidth:
+                line += 2 * step_y
+                plt.text(x=-step_x * 0.5, y=1 - line, s=str(counter), fontsize=nrSize)
+                xPos = step_x / 2'''
             if i != (sequLength):
                 for j,coverageBackward in enumerate(coveragesBackward[i]):
                     if coverageBackward and not np.isnan(coverageBackward):
@@ -241,19 +264,25 @@ class SequenceCoveragePlot(FigureCanvasQTAgg):
                         #plt.text(x=xPos+step_x*0.62, y=yPos_j, s='L', ha='left', c=coloursB[j])
                         plt.text(x=xPos-step_x*0.375, y=yPos_j, s='L', ha='center', c=coloursB[j])
                         plt.text(x=xPos-step_x*0.414, y=1-line-step_y*0.15, s='I', ha='center', c=coloursB[-1])
-
                         #if (not coveragesForward[i]) or (xPos==step_x/2):
                         #plt.text(x=xPos+step_x*0.62, y=1-line-step_y*0.05, s='I', ha='left', c=coloursB[-1])
+        #plt.savefig('foo.png')
             if (i+1)%lineWidth:
                 xPos+=step_x
+            else:
+                line += 2 * step_y
+                plt.text(x=-step_x * 0.5, y=1 - line, s=str(counter), fontsize=nrSize)
+                xPos = step_x / 2
 
-        #plt.savefig('foo.png')
         plt.show()
 
 
-if __name__ == '__main__':
+"""if __name__ == '__main__':
+    from PyQt5.QtWidgets import QApplication
+    import sys
+    
     sequ = list('GGCUGCUUGUCCUUUAAUGGUCCAGUC')
-    '''app = QApplication(sys.argv)
+    app = QApplication(sys.argv)
     overall = [(key,val*100) for key,val in
                {'a': 0.7692307692307693, 'c': 0.9230769230769231, 'w': 0.7692307692307693, 'y': 0.9230769230769231, 'allForward': 0.9615384615384616, 'allBackward': 0.9230769230769231, 'all': 0.9259259259259259}.items()]
     gui = SequCovWidget( overall,
@@ -277,7 +306,7 @@ if __name__ == '__main__':
     '''verts = np.concatenate([circle.vertices, star])
     codes = np.concatenate([circle.codes, star])
     cut_star = mpath.Path(verts, codes)
-    plt.plot(np.arange(10) ** 2, '--r', marker=cut_star, markersize=15)'''
+    plt.plot(np.arange(10) ** 2, '--r', marker=cut_star, markersize=15)
 
     plt.show()
-    #sys.exit(app.exec_())
+    #sys.exit(app.exec_())"""

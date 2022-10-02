@@ -6,7 +6,7 @@ Created on 31 Aug 2020
 
 import json
 from os.path import isfile, join
-from src import path
+from src.resources import getRelativePath, path
 
 top_down_search = {'sequName': '', 'charge': -1, 'fragmentation': '', 'modifications': '', 'nrMod': 0,
                    'spectralData': '', 'noiseLimit': 0.0, 'fragLib': '', 'calibration': False, 'calIons': ''}
@@ -15,7 +15,7 @@ intact_search = {'sequName': '', 'modifications': '', 'spectralData': '', 'spray
 intact_assign = {'sequName': '', 'modifications': '', 'spectralData': [''], 'sprayMode': 'negative',
                  'inputMode': 'abundances (int./z)', 'minMz': 300, 'maxMz': 1600, 'calibration': True, 'output': ''}
 configurations = {'lowerBound': 300, 'minUpperBound': 1200, 'upperBoundTolerance': 100, 'upperBoundWindowSize': 20.0,
-                  'errorLimitCalib': 50, 'maxStd': 1.0, 'overwrite': False, 'zTolerance': 0.8, 'k': 4.5, 'd': 0.5,
+                  'errorLimitCalib': 50, 'maxStd': 1.5, 'overwrite': False, 'zTolerance': 0.8, 'k': 4.5, 'd': 0.5,
                   'errorTolerance': 2.5, 'noiseWindowSize': 4.0, 'thresholdFactor': 0.45, 'maxIso': 0.996,
                   'approxIso': 20, 'outlierLimit': 1.6, 'manualDeletion': 3, 'overlapThreshold': 0.8, 'shapeDel': 0.6,
                   'shapeMarked': 0.25, 'scoreMarked': 2.5, 'SNR': 2.0, 'useAb': True, 'interestingIons': ['c', 'y']}
@@ -87,7 +87,7 @@ class ConfigHandler(object):
     def update2(self, parameter, value):
         self.__parameters[parameter] = value
 
-dataPath = join(path, "src", "data")
+#dataPath = join("src", "data")
 
 class ConfigurationHandlerFactory(object):
     '''
@@ -95,28 +95,28 @@ class ConfigurationHandlerFactory(object):
     '''
     @staticmethod
     def getTD_SettingHandler():
-        return ConfigHandler(join(dataPath,"settings_top_down.json"), top_down_search)
+        return ConfigHandler(getRelativePath("settings_top_down.json"), top_down_search)
 
     @staticmethod
     def getConfigHandler():
-        return ConfigHandler(join(dataPath,"configurations.json"), configurations)
+        return ConfigHandler(getRelativePath("configurations.json"), configurations)
 
 
     @staticmethod
     def getExportHandler():
-        return ConfigHandler(join(dataPath, "export_options.json"), top_down_export)
+        return ConfigHandler(getRelativePath("export_options.json"), top_down_export)
 
     @staticmethod
     def getIntactExportHandler():
-        return ConfigHandler(join(dataPath, "export_options_intact.json"), intact_export)
+        return ConfigHandler(getRelativePath("export_options_intact.json"), intact_export)
 
     @staticmethod
     def getIntactAssignHandler():
-        return ConfigHandler(join(dataPath, "settings_intact.json"), intact_assign)
+        return ConfigHandler(getRelativePath("settings_intact.json"), intact_assign)
 
     @staticmethod
     def getFullIntactHandler():
-        return ConfigHandler(join(dataPath, "settings_intactFull.json"), intact_search)
+        return ConfigHandler(getRelativePath("settings_intactFull.json"), intact_search)
 
 
 """

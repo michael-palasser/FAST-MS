@@ -3,7 +3,7 @@ from unittest import TestCase
 from random import randint
 import os
 
-from src import path
+from src.resources import path
 from src.Exceptions import InvalidIsotopePatternException
 from src.MolecularFormula import MolecularFormula
 from src.services.DataServices import SequenceService
@@ -24,7 +24,6 @@ class TestIsotopePatternRepository(TestCase):
                          enumerate(self.sequenceService.getSequences())]
             sequences.append(Sequence('dummyRNA', 'GACU', 'RNA', len(sequences) + 1))
             sequences.append(Sequence('dummyProt', 'GAPH', 'Protein', len(sequences) + 1))
-            print(sequences)
             self.sequenceService.save(sequences)
             self.initLibrary()
 
@@ -86,3 +85,4 @@ class TestIsotopePatternRepository(TestCase):
     def tearDown(self):
         self.sequenceService.delete('dummyRNA')
         self.sequenceService.delete('dummyProt')
+        self.sequenceService.close()

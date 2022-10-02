@@ -68,41 +68,42 @@ def multinomial(k, n, p):
 
 
 @njit
-def calculatePercentage(isotopeTable):
+def calculateSpecies(isotopeTable):
     '''
-    Calculates the percentage & mass of a certain isotope composition (isotopic fine structure)
+    Calculates the mass & abundance of an isotope composition
     :type isotopeTable: ndarray(dtype=[float,float,float,float,float,float])
-    :param isotopeTable: isotope table (index, nr. of atoms of element, nr. of atoms of isotope, rel. abundance of
-        isotope, mass of isotope, nominal mass shift compared to isotope with lowest m/z)
-    :return: (tuple[float,float]) mass, percentage (rel.abundance)
+    :param isotopeTable: isotope table (index, no. of atoms of the element, no. of atoms of the isotope,
+        rel. abundance of the isotope, mass of the isotope,
+        nominal mass shift compared to the isotope with the lowest m/z)
+    :return: (tuple[float,float]) mass, rel. abundance
     '''
-    propI = 1.
-    massI = 0.
+    abundance = 1.
+    mass = 0.
     finishedIndizes = list()
-    #print(massI,'\n')
+    #print(mass,'\n')
     for isotope in isotopeTable:
         if isotope['index'] not in finishedIndizes:
             finishedIndizes.append(isotope['index'])
             isotopes = getByIndex(isotopeTable,isotope['index'])
             if len(isotopes) == 1:
-                massI += isotope['nr'] * isotope['mass']
+                mass += isotope['nr'] * isotope['mass']
             elif len(isotopes) == 2:
-                propI *= binomial(isotopes[1]['nrIso'], isotope['nr'], isotopes[1]['relAb'])
-                massI += (isotopes[0]['mass']*(isotope['nr']-isotopes[1]['nrIso'])
+                abundance *= binomial(isotopes[1]['nrIso'], isotope['nr'], isotopes[1]['relAb'])
+                mass += (isotopes[0]['mass']*(isotope['nr']-isotopes[1]['nrIso'])
                           +isotopes[1]['mass']*isotopes[1]['nrIso'])
                 x=isotopes               #array changed otherwise for unkown reasons
             elif len(isotopes) == 3:
-                propI *= multinomial(k=np.array([isotope['nr'] - np.sum(isotopes['nrIso']),
+                abundance *= multinomial(k=np.array([isotope['nr'] - np.sum(isotopes['nrIso']),
                                           isotopes[1]['nrIso'], isotopes[2]['nrIso']]),
                                          n=isotope['nr'],
                                          p=np.array([isotopes[0]['relAb'], isotopes[1]['relAb'],
                                             isotopes[2]['relAb']]))
-                massI += (isotopes[0]['mass'] * (isotope['nr'] - np.sum(isotopes['nrIso']))
+                mass += (isotopes[0]['mass'] * (isotope['nr'] - np.sum(isotopes['nrIso']))
                           + isotopes[1]['mass'] * (isotopes[1]['nrIso'])
                           + isotopes[2]['mass'] * (isotopes[2]['nrIso']))
                 x = isotopes               #array changed otherwise for unkown reasons
             else:       #ToDo: Test
-                massI += isotopes[0]['mass'] * (isotope['nr'] - np.sum(isotopes['nrIso']))
+                mass += isotopes[0]['mass'] * (isotope['nr'] - np.sum(isotopes['nrIso']))
                 '''k_arr = np.empty(len(isotopes), dtype=np.int16)
                 p_arr = np.empty(len(isotopes), dtype=np.float32)
                 k_arr[0] = isotope['nr'] - np.sum(isotopes['nrIso'])
@@ -110,15 +111,15 @@ def calculatePercentage(isotopeTable):
                 kList = [isotope['nr'] - np.sum(isotopes['nrIso'])]
                 pList = [isotopes[0]['relAb']]
                 for i in range(1, len(isotopes)):
-                    massI += isotopes[i]['mass'] * (isotopes[i]['nrIso'])
+                    mass += isotopes[i]['mass'] * (isotopes[i]['nrIso'])
                     kList.append(isotopes[i]['nrIso'])
                     pList.append(isotopes[i]['relAb'])
                     '''k_arr[i] = isotopes[i]['nrIso']
                     p_arr[i] = isotopes[i]['relAb']'''
-                propI *= multinomial(k=np.array(kList), n=isotope['nr'], p=np.array(pList))
-                #propI *= multinomial(k=k_arr, n=isotope['nr'], p=p_arr)
+                abundance *= multinomial(k=np.array(kList), n=isotope['nr'], p=np.array(pList))
+                #abundance *= multinomial(k=k_arr, n=isotope['nr'], p=p_arr)
                 x = isotopes  # array changed otherwise for unkown reasons
-    return massI,propI
+    return mass,abundance
 
 
 
@@ -128,8 +129,9 @@ def calculateNuclFineStructure(isotopePeak, isotopeTable):
     Calculates isotopic fine structure of isotope peak for elemental composition CHNOP (RNA/DNA/proteins without S)
     :param (int) isotopePeak: number of isotope peak (M+x)
     :type isotopeTable: ndarray(dtype=[float,float,float,float,float,float])
-    :param isotopeTable: isotope table (index, nr. of atoms of element, nr. of atoms of isotope, rel. abundance of
-        isotope, mass of isotope, nominal mass shift compared to isotope with lowest m/z)
+    :param isotopeTable: isotope table (index, no. of atoms of the element, no. of atoms of the isotope,
+        rel. abundance of the isotope, mass of the isotope,
+        nominal mass shift compared to the isotope with the lowest m/z)
     :return: (ndarray(dtype=[float,float])) fine structure [(mass,rel.abundance)]
     '''
     #print(isotopePeak)
@@ -142,7 +144,7 @@ def calculateNuclFineStructure(isotopePeak, isotopeTable):
     if isotopePeak > 0:
         isotopeTable[1]['nrIso'] = isotopePeak"""
     #print(isotopeTable['nrIso'])
-    massI, propI = calculatePercentage(isotopeTable)
+    massI, propI = calculateSpecies(isotopeTable)
     fineStructure = [(massI, propI)]
     for i13C in list(range(maxValues[1]))[::-1]:
         for i2H in range(maxValues[3] + 1):
@@ -157,7 +159,7 @@ def calculateNuclFineStructure(isotopePeak, isotopeTable):
                                 isotopeTable[i]['nrIso']=nrIsoList[i]
                             #massI, propI = calculatePercentage(isotopeTable)
                             #fineStructure.append((massI,propI))
-                            fineStructure.append(calculatePercentage(isotopeTable))
+                            fineStructure.append(calculateSpecies(isotopeTable))
     return fineStructure
 
 
@@ -199,8 +201,9 @@ def calculatePeptFineStructure(isotopePeak, isotopeTable):
     Calculates isotopic fine structure of isotope peak for elemental composition CHNOS (proteins)
     :param (int) isotopePeak: number of isotope peak (M+x)
     :type isotopeTable: ndarray(dtype=[float,float,float,float,float,float])
-    :param isotopeTable: isotope table (index, nr. of atoms of element, nr. of atoms of isotope, rel. abundance of
-        isotope, mass of isotope, nominal mass shift compared to isotope with lowest m/z)
+    :param isotopeTable: isotope table (index, no. of atoms of the element, no. of atoms of the isotope,
+        rel. abundance of the isotope, mass of the isotope,
+        nominal mass shift compared to the isotope with the lowest m/z)
     :return: (ndarray(dtype=[float,float])) fine structure [(mass,percentage)]
     '''
     #print(isotopeTable)
@@ -214,7 +217,7 @@ def calculatePeptFineStructure(isotopePeak, isotopeTable):
     if isotopePeak > 0:
         isotopeTable[1]['nrIso'] = isotopePeak"""
     #print(isotopeTable['nrIso'])
-    massI, propI = calculatePercentage(isotopeTable)
+    massI, propI = calculateSpecies(isotopeTable)
     fineStructure = [(massI, propI)]
     for i13C in list(range(maxValues[1]))[::-1]:
         for i2H in range(maxValues[3] + 1):
@@ -229,7 +232,7 @@ def calculatePeptFineStructure(isotopePeak, isotopeTable):
                                         nrIsoList= np.array([0.,i13C,0.,i2H,0.,i15N,0.,i17O,i18O,0.,i33S,i34S])
                                         for i in range(len(isotopeTable)):
                                             isotopeTable[i]['nrIso']=nrIsoList[i]
-                                        massI, propI = calculatePercentage(isotopeTable)
+                                        massI, propI = calculateSpecies(isotopeTable)
                                         fineStructure.append((massI,propI))
     return fineStructure
 
@@ -254,26 +257,22 @@ def setIsotopeTable(isotopeTable):
 @njit
 def calculateFineStructure(isotopePeak, isotopeTable):
     '''
-    Calculates isotopic fine structure of isotope peak for molecules with a general elemental composition
-    :param (int) isotopePeak: number of isotope peak (M+x)
+    Calculates the isotopic fine structure of an isotope peak for molecules with an unspecific elemental composition
+    :param (int) isotopePeak: number of the isotope peak (M+x)
     :type isotopeTable: ndarray(dtype=[float,float,float,float,float,float])
-    :param isotopeTable: isotope table (index, nr. of atoms of element, nr. of atoms of isotope, rel. abundance of
-        isotope, mass of isotope, nominal mass shift compared to isotope with lowest m/z)
-    :return: (ndarray(dtype=[float,float])) fine structure [(mass,percentage)]
+    :param isotopeTable: isotope table (index, no. of atoms of the element, no. of atoms of the isotope,
+        rel. abundance of the isotope, mass of the isotope,
+        nominal mass shift compared to the isotope with the lowest m/z)
+    :return: (ndarray(dtype=[float,float])) final fine structure [(mass,percentage)]
     '''
-    #print(isotopePeak)
     fineStructure = [(0.,0.)]
     for iFirst in list(range(isotopePeak + 1))[::-1]:
         isotopeTable[1]['nrIso'] = iFirst
-        #print('first',iFirst)
         if iFirst == isotopePeak:
-            massI, propI = calculatePercentage(isotopeTable)
-            #print(isotopeTable['nrIso'])
+            massI, propI = calculateSpecies(isotopeTable)
             fineStructure.append((massI,propI))
         else:
             fineStructure = loopThroughIsotopes(isotopePeak, isotopeTable, fineStructure, 3)
-            #elements = isotopeTable[np.where(isotopeTable['M+']>1)]
-            #fineStructure = loopThroughIsotopesNew(isotopePeak, isotopeTable, fineStructure, elements)
     return fineStructure[1:]
 
 
@@ -289,179 +288,47 @@ def checkIsotopeTable(isotopeTable):
 @njit
 def loopThroughIsotopes(isotopePeak, isotopeTable, fineStructure, index):
     '''
-    Recursive function which loops through molecular formula and calculates isotopic fine structure (recursive function):
-    :param (int) isotopePeak: number of isotope peak (M+x)
+    Recursive function which loops through all possible isotope compositions for an isotope peak and calculates the
+    isotopic fine structure:
+    :param (int) isotopePeak: number of the isotope peak (M+x)
     :type isotopeTable: ndarray(dtype=[float,float,float,float,float,float])
-    :param isotopeTable: isotope table (index, nr. of atoms of element, nr. of atoms of isotope, rel. abundance of
-        isotope, mass of isotope, nominal mass shift compared to isotope with lowest m/z)
-    :param (list[tuple[float,float]]) fineStructure: growing isotopic fineStructure (tuples of (mass,rel.abundance))
-    :param (int) index: running index of corresponding element
+    :param isotopeTable: isotope table (index, no. of atoms of the element, no. of atoms of the isotope,
+        rel. abundance of the isotope, mass of the isotope,
+        nominal mass shift compared to the isotope with the lowest m/z)
+    :param (list[tuple[float,float]]) fineStructure: isotopic fine structure (tuples of (mass, rel. ab.))
+    :param (int) index: current row index in the table
     :return: (list[tuple[float,float]]) final fineStructure [(mass,rel.abundance)]
     '''
-    #If final isotope table for one isotope composition found
+    #if the isotope table for one isotope composition is finished
     if (np.sum(isotopeTable['nrIso']*isotopeTable['M+']) == isotopePeak):
-        #if combined nuumber of isotopes of element is not higher than nr of corresponding element atoms in molecule
+        #check if the total no. of atoms of each element in the table is not higher than the ones in the molecular
+        #formula
         if checkIsotopeTable(isotopeTable):
-            #print(isotopePeak,isotopeTable)
-            massI, propI = calculatePercentage(isotopeTable)
+            massI, propI = calculateSpecies(isotopeTable)
             fineStructure.append((massI, propI))
-        return fineStructure #eig sinnlos
-    #If isotope table unfinished
+        return fineStructure
+    #if the isotope table is unfinished
     elif index < len(isotopeTable):
         '''for i in range(int((isotopePeak + isotopeTable[index]['M+']) / isotopeTable[index]['M+'])):
             if i>isotopeTable[index]['nr']:
                 break
             isotopeTable[index]['nrIso'] = i
             loopThroughIsotopes(isotopePeak, isotopeTable, fineStructure, index + 1)'''
-        #if current isotope in table is highest abundant isotope loop until M+x (x>=1) isotope is current isotope
+        #loop until the current row in the table does not correspond to a monoisotopic isotope
         while (isotopeTable[index]['M+'] == 0):
             index+=1
-            #if end of table is reached
+            #if the end of the table is reached
             if index >= len(isotopeTable):
-                #print('exit')
                 return fineStructure
         currentIso = isotopeTable[index]
-        #loop over all possible
+        #loop over all possible isotope combinations
         for nrIso in range(int((isotopePeak + currentIso['M+']) / currentIso['M+'])):
-            #break if nr of isotope atoms is higher than nr of corresponding atoms of element in molecule
+            #break if the no. of the atoms of the current isotope is higher than the ones of the corresponding element
             if nrIso>currentIso['nr']:
                 break
-            #set nr of current isotope in table
+            #set no. of atoms of the current isotope in table
             isotopeTable[index]['nrIso'] = nrIso
-            #loop to next isotope in table
+            #loop to next isotope in the table
             loopThroughIsotopes(isotopePeak, isotopeTable, fineStructure, index + 1)
     return fineStructure
-
-"""@njit
-def calculatePoissonFineStructure(isotopePeak, isotopeTable, poissonElement):
-    '''
-    Calculates isotopic fine structure of isotope peak for molecules with a general elemental composition
-    :param (int) isotopePeak: number of isotope peak (M+x)
-    :type isotopeTable: ndarray(dtype=[float,float,float,float,float,float])
-    :param isotopeTable: isotope table (index, nr. of atoms of element, nr. of atoms of isotope, rel. abundance of
-        isotope, mass of isotope, nominal mass shift compared to isotope with lowest m/z)
-    :return: (ndarray(dtype=[float,float])) fine structure [(mass,percentage)]
-    '''
-    #print(isotopePeak)
-    fineStructure = [(0.,0.)]
-    oldIndex= 1
-    monoVals = calculatePercentage(isotopeTable)
-    for iFirst in list(range(isotopePeak + 1))[::-1]:
-        #isotopeTable[1]['nrIso'] = iFirst
-        #print('first',iFirst)
-        if iFirst == isotopePeak:
-            poissonVals = calculatePoissonPercentage(poissonElement, iFirst)
-            #vals = calculatePercentage(isotopeTable)
-            #val = np.array(calculatePercentage(isotopeTable))*calculatePoissonPercentage(poissonElement, iFirst)
-            #print(isotopeTable['nrIso'])
-
-            fineStructure.append((poissonVals[0]+monoVals[0], poissonVals[1]*monoVals[1]))
-            print('hey',fineStructure[-1])
-            oldIndex+= 1
-        else:
-            fineStructure = loopThroughIsotopes(isotopePeak-iFirst, isotopeTable, fineStructure, 0)
-            #elements = isotopeTable[np.where(isotopeTable['M+']>1)]
-            #fineStructure = loopThroughIsotopesNew(isotopePeak, isotopeTable, fineStructure, elements)
-        val = calculatePoissonPercentage(poissonElement, iFirst)
-        size = len(fineStructure)
-        print('hey',val,iFirst,oldIndex,size)
-        #fineStructure2 = [(0.,0.)]
-        for i in range(oldIndex+1,size):
-            print('vorher',fineStructure[i], monoVals[0])
-            fineStructure[i] = (fineStructure[i][0] + val[0], fineStructure[i][1] * val[1])
-            print('nachher',fineStructure[i], iFirst)
-            '''if i>oldIndex:
-                fineStructure2.append(fineStructure[i])
-            else:
-                fineStructure2.append((fineStructure[i][0] + val[0]))
-                
-            fineStructure[i][0] + val[0]
-            fineStructure[i][1] += val[1]'''
-        #print('hoho', fineStructure)
-        oldIndex= size
-    return fineStructure[1:]
-
-
-@njit
-def calculatePoissonPercentage(poissonElement, k):
-    prop = poissonElement['lambda']**k / fact(k) * math.exp(-poissonElement['lambda'])
-    return poissonElement['deltaMass']*k+poissonElement['monoMass'], prop
-
-@njit
-def fact(k):
-    fact = 1
-    for i in range(1,k+1):
-        fact *= i
-    return fact"""
-
-
-"""def calculateFFTFineStructure(abundanceTable, formula):
-    MAX_ELEMENTS = abundanceTable.shape[0]
-    MAX_MASS = abundanceTable.shape[1]
-    abundanceTable_trans = fft(abundanceTable, axis=1)
-    ptA = np.ones(MAX_MASS, dtype=complex)
-    for i in range(MAX_ELEMENTS):
-        ptA *= (abundanceTable_trans[i, :] ** formula[i])
-    riptA = ifft(ptA).real
-    riptA/=np.sum(riptA)
-    '''massTable_trans = fft(massTable, axis=1)
-    ptM = np.zeros(MAX_MASS, dtype=complex)
-    for i in range(MAX_ELEMENTS):
-        ptM += (massTable_trans[i, :] ** formula[i])
-    riptM = ifft(ptM).real'''
-
-    masses = np.arange(1.0, MAX_MASS + 1, 1)#+riptM
-    notZero = np.where(riptA >= 10e-10)
-    #print(riptM[notZero])
-    '''final = np.array([(mass_i, riptA_i) for mass_i, riptA_i in zip(masses[notZero],riptA[notZero])])
-    print('j',[(mass_i, riptA_i) for mass_i, riptA_i in zip(masses[notZero],riptA[notZero])])
-    #final.reshape((final.shape[0],2))'''
-    return [(mass_i, riptA_i) for mass_i, riptA_i in zip(masses[notZero],riptA[notZero])]
-    #return np.stack((masses[notZero], riptA[notZero]), axis = 1)"""
-
-"""@njit
-def calculateFineStructure(isotopePeak, isotopeTable):
-    '''
-    Calculates isotopic fine structure of isotope peak for molecules with a general elemental composition
-    :param isotopePeak: number of isotope peak (M+x), int
-    :param isotopeTable: 2D numpy array
-    :return: fine structure [(mass,percentage)]
-    '''
-    global maxValues
-    maxValues = getMaxValues(isotopePeak, isotopeTable)
-    fineStructure = [(0.,0.)]
-    for iFirst in list(range(isotopePeak + 1))[::-1]:
-        isotopeTable[1]['nrIso'] = iFirst
-        if iFirst == isotopePeak:
-            massI, propI = calculatePercentage(isotopeTable)
-            fineStructure.append((massI,propI))
-        else:
-            fineStructure = loopThroughIsotopes(isotopePeak, isotopeTable, fineStructure, maxValues, 3)
-    return fineStructure[1:]
-
-@njit
-def loopThroughIsotopes(isotopePeak, isotopeTable, fineStructure, maxValues, index):
-    '''
-    Loops through molecular formula and calculates isotopic fine structure (recursive function)
-    :param isotopePeak: number of isotope peak (M+x), int
-    :param isotopeTable: 2D numpy array
-    :param fineStructure: isotopic fineStructure (list)
-    :param index: running index of corresponding element
-    :return: fineStructure [(mass,percentage)]
-    '''
-    if (np.sum(isotopeTable['nrIso']*isotopeTable['M+']) == isotopePeak):
-        massI, propI = calculatePercentage(isotopeTable)
-        fineStructure.append((massI, propI))
-        return fineStructure
-    elif index < len(isotopeTable):
-        while (isotopeTable[index]['M+'] == 0):
-            index+=1
-            if index >= len(isotopeTable):
-                return fineStructure
-        for i in range(int((maxValues[index] + isotopeTable[index]['M+']) / isotopeTable[index]['M+'])):
-            '''if i>isotopeTable[index]['nr']:
-                break'''
-            isotopeTable[index]['nrIso'] = i
-            loopThroughIsotopes(isotopePeak, isotopeTable, fineStructure, maxValues, index + 1)
-    return fineStructure"""
 

@@ -1,7 +1,7 @@
 from PyQt5 import QtCore, QtWidgets
 from os.path import join
 
-from src import path
+from src.resources import path
 #from src.gui.GUI_functions import shoot
 from src.gui.GUI_functions import shoot
 from src.gui.dialogs.AbstractDialogs import DialogWithTabs
@@ -109,11 +109,11 @@ class ConfigurationDialog(DialogWithTabs):
 
     def setupUi(self, configDialog):
         configDialog.move(200,100)
-        self._spectrumTab = self.createTab("spectrum")
-        self._findingTab = self.createTab("finding")
-        self._modellingTab = self.createTab("modelling")
+        self._spectrumTab = self.createTab("Spectrum")
+        self._findingTab = self.createTab("Finding")
+        self._modellingTab = self.createTab("Modelling")
         #self._threshold2Tab = self.createTab("thresholds 2")
-        self._outputTab = self.createTab("analysis/output")
+        self._outputTab = self.createTab("Analysis/Output")
         self._mzBox = self.fillBox(self._spectrumTab, "m/z area containing peaks", ("min. m/z", "min. max. m/z", "tolerance", "window size"),
                         {"lowerBound": (QtWidgets.QSpinBox(),"lower m/z bound (just peaks with higher m/z are examined)"),
                          "minUpperBound":(QtWidgets.QSpinBox(), "minimal upper m/z bound"),
@@ -167,11 +167,11 @@ class ConfigurationDialog(DialogWithTabs):
 
         self._widgets["manualDeletion"].setMinimum(1)
         self._qualityBox = self.fillBox(self._outputTab, "Quality thresholds",
-                                        ("quality (deletion)","quality (highlighting)","score (highlighting)", 'SNR (deletion)'),
+                                        ("quality (deletion)","quality (highlighting)","score (highlighting)", 'S/N (deletion)'),
                         {"shapeDel": (QtWidgets.QDoubleSpinBox(),"ions which have a higher value will be deleted"),
                          "shapeMarked": (QtWidgets.QDoubleSpinBox(), "ions which have a higher value will be highlighted"),
                          "scoreMarked": (QtWidgets.QDoubleSpinBox(),"ions which have a higher value will be highlighted"),
-                         "SNR": (QtWidgets.QDoubleSpinBox(),"ions which have a lower signal to noise ratio will be deleted")})
+                         "SNR": (QtWidgets.QDoubleSpinBox(),"ions which have a lower signal-to-noise ratio will be deleted")})
         self._analysisBox = self.fillBox(self._outputTab, "Analysis", ("Use Abundances (int./z)",),
                                         {"useAb": (QtWidgets.QCheckBox(),
                                                    "Ticked if the abundaces (int./z) of the ions should be used for the "

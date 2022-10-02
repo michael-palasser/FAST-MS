@@ -1,9 +1,8 @@
 import copy
 
-import pandas as pd
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtWidgets
 
-from src.gui.GUI_functions import connectTable, showOptions
+from src.gui.GUI_functions import connectTable, showOptions, setIcon, translate
 from src.gui.tableviews.TableViews import TableView
 from src.gui.widgets.IonTableWidgets import IonTableWidget
 from src.gui.widgets.PeakWidgets import PeakWidget
@@ -37,10 +36,11 @@ class SimplePeakView(QtWidgets.QWidget):
         # self._table.move(0,0)
         #title = peaks[0][3] + ', ' + str(peaks[0][1])
         self.setObjectName(ion.getId())
-        self._translate = QtCore.QCoreApplication.translate
+        self._translate = translate
         self.setWindowTitle(self._translate(self.objectName(), self.objectName()))
         layout.addWidget(self._table)
         #self.resize(650, (len(self._peaks)) * 38 + 30)
+        setIcon(self)
         self.show()
 
     """def showOptions(self, table, pos):
@@ -70,7 +70,7 @@ class PeakView(QtWidgets.QMainWindow):
     def __init__(self, parent, ion, model, save):
         super(PeakView, self).__init__(parent)
         self._ion = copy.deepcopy(ion)
-        self._translate = QtCore.QCoreApplication.translate
+        self._translate = translate
         self.setWindowTitle(self._translate(self.objectName(), ion.getName()+', '+str(ion.getCharge())))
         #self.centralwidget = QtWidgets.QWidget(self)
         self.setCentralWidget(QtWidgets.QWidget(self))

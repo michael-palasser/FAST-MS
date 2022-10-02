@@ -1,6 +1,6 @@
 from PyQt5 import QtWidgets
-from PyQt5 import QtCore
 
+from src.gui.GUI_functions import setIcon
 from src.gui.tableviews.PlotTables import PlotTableView
 
 
@@ -32,6 +32,7 @@ class OccupancyWidget(QtWidgets.QWidget):
         table2 = PlotTableView(None, absData, absHeaders, 'Abs. Occupancies: ' + modification, 1)
         table2.sortBy(1)
         verticalLayout.addWidget(table2)
+        setIcon(self)
         self.show()
         #self.setObjectName('Occupancioes')
         #self._translate = QtCore.QCoreApplication.translate

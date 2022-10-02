@@ -10,7 +10,7 @@ import logging
 from src.Exceptions import InvalidInputException
 from src.MolecularFormula import MolecularFormula
 from src.entities.Ions import Fragment
-from src.entities.SearchSettings import processTemplateName
+from src.resources import processTemplateName
 
 logging.basicConfig(level=logging.INFO)
 logging.basicConfig(filename='logfile_LibraryBuilder.log',level=logging.INFO)
@@ -75,14 +75,24 @@ class FragmentLibraryBuilder(object):
 
 
     @staticmethod
-    def checkForResidue(residue, sequence):
+    def checkForResidue(residues, sequence):
         '''
         Checks if sequenceList contains a corresponding residue for residue-specific fragments
-        :param (str) residue:
-        :param (list[str]) sequence:
+        :param (list[str]) residues: list of residue/building blocks that must be included
+        :param (list[str]) sequence: list of bb strings
         :return: (bool)
         '''
-        return (residue == '') or (residue == '-') or (residue in sequence)
+        checked = False
+        for residue in residues:
+            if residue in ('', '-'):
+                return True
+            elif residue[-1]=='!':
+                if residue[:-1] == sequence[-1]:
+                    checked = True
+            elif residue in sequence:
+                checked = True
+        return checked
+        #return (residue == '') or (residue == '-') or (residue in sequence)
 
 
     def checkForProlines(self, type, sequ, nextBB):
@@ -125,7 +135,7 @@ class FragmentLibraryBuilder(object):
                 if self.checkForProlines(species,linkSequ, basicLadder[len(linkSequ)][0][-1]):
                     continue
                 formula = linkFormula.addFormula(template.getFormula())
-                if self.checkForResidue(template.getResidue(), linkSequ):
+                if self.checkForResidue(template.getListOfResidues(), linkSequ):
                     if (not formula.checkForNegativeValues()) and template.isEnabled():
                         ladder.append(Fragment(species, len(linkSequ), rest, formula, linkSequ,
                                                templateRadicals))
@@ -135,7 +145,7 @@ class FragmentLibraryBuilder(object):
                                     modifName = modif.getName()
                                     formula = linkFormula.addFormula(template.getFormula(),
                                                 MolecularFormula(modif.getFormula()).multiplyFormula(nrMod).getFormulaDict())
-                                    if self.checkForResidue(modif.getResidue(), linkSequ) and not formula.checkForNegativeValues()\
+                                    if self.checkForResidue(modif.getListOfResidues(), linkSequ) and not formula.checkForNegativeValues()\
                                             and ((modifName+rest) not in self.__modifPattern.getExcluded()):
                                             #Constructor: type, number, modification, loss, formula
                                             if self.__maxMod > 1:
@@ -236,6 +246,7 @@ class FragmentLibraryBuilder(object):
         criticalLength = 30
         if self.__sequence.getMolecule() == 'Protein':
             criticalLength = 60
+        #criticalLength=10000
         if len(self.__sequence.getSequenceList())<criticalLength: #flag == 0:
             #self._bar = tqdm(total=len(self.__fragmentLibrary))
             logging.debug('Normal calculation')

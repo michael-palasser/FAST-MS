@@ -5,7 +5,6 @@ from math import log10
 except ImportError:
     from tkinter import Tk'''
 from PyQt5 import QtCore, QtGui
-from PyQt5.QtCore import Qt
 
 
 class AbstractTableModel(QtCore.QAbstractTableModel):
@@ -24,7 +23,7 @@ class AbstractTableModel(QtCore.QAbstractTableModel):
         Overwrites the data method of QAbstractTableModel to correctly format each value
         '''
         if index.isValid():
-            if role == Qt.DisplayRole:
+            if role == QtCore.Qt.DisplayRole:
                 col = index.column()
                 item = self._data[index.row()][col]
                 formatString = self._format[col]
@@ -56,8 +55,8 @@ class AbstractTableModel(QtCore.QAbstractTableModel):
         Sort table by selected column
         """
         self.layoutAboutToBeChanged.emit()
-        #self._data = self._data.sort_values(self._headers[Ncol], ascending=order == Qt.AscendingOrder)
-        if order == Qt.AscendingOrder:
+        #self._data = self._data.sort_values(self._headers[Ncol], ascending=order == QtCore.Qt.AscendingOrder)
+        if order == QtCore.Qt.AscendingOrder:
             #self._data.sort(key= lambda tup:tup[Ncol])
             self._data = sorted(self._data, key= lambda tup:tup[Ncol])
         else:
@@ -71,11 +70,11 @@ class IonTableModel(AbstractTableModel):
     TableModel for QTableView presenting ion values (in top-down search)
     '''
     def __init__(self, data, precRegion, maxQual, maxScore):
-        headers = ('m/z','z','intensity','fragment','error /ppm', 'S/N','quality', 'score', 'comment')
+        headers = ('m/z','z','intensity','name','error /ppm', 'S/N','quality error', 'score', 'comment')
         if len(data)==0:
             data=[['' for _ in headers]]
         super(IonTableModel, self).__init__(data, ('{:10.5f}','{:2d}', '{:12d}', '','{:4.2f}', '{:6.1f}', '{:4.2f}',
-               '{:4.1f}', ''), ('m/z','z','intensity','fragment','error /ppm', 'S/N','quality', 'score', 'comment'))
+               '{:4.1f}', ''), headers)
         self._precRegion = precRegion
         self._maxQual = maxQual
         self._maxScore = maxScore
@@ -88,7 +87,7 @@ class IonTableModel(AbstractTableModel):
         Overwrites the data method of AbstractTableModel to correctly format each value
         '''
         if index.isValid():
-            if role == Qt.DisplayRole:
+            if role == QtCore.Qt.DisplayRole:
                 if self._data[0][0] == '':
                     return ''
                 col = index.column()
@@ -102,17 +101,17 @@ class IonTableModel(AbstractTableModel):
                         formatString = '{:' + lg10 + 'd}'
                     return formatString.format(item)
                 return formatString.format(item)
-        if role == Qt.TextAlignmentRole:
+        if role == QtCore.Qt.TextAlignmentRole:
             if index.column() == 3 or index.column() == 8:
-                return Qt.AlignLeft
+                return QtCore.Qt.AlignLeft
             else:
-                return Qt.AlignRight
-        if role == Qt.FontRole:
+                return QtCore.Qt.AlignRight
+        if role == QtCore.Qt.FontRole:
             if index.column() == 8:
                 font = QtGui.QFont()
                 font.setPointSize(10)
                 return font
-        if role == Qt.ForegroundRole:
+        if role == QtCore.Qt.ForegroundRole:
             col = index.column()
             item = self._data[index.row()][col]
             if item == '':
@@ -136,7 +135,10 @@ class IonTableModel(AbstractTableModel):
     def addData(self, newRow):
         if self._data[0][0] == '':
             del self._data[0]
+        dataLength = len(self._data)
+        self.beginInsertRows(QtCore.QModelIndex(),dataLength, dataLength)
         self._data.append(newRow)
+        self.endInsertRows()
 
     def removeData(self, name, charge):
         for i, row in enumerate(self._data):
@@ -144,7 +146,9 @@ class IonTableModel(AbstractTableModel):
                 self.removeByIndex(i)
 
     def removeByIndex(self, indexToRemove):
+        self.beginRemoveRows(QtCore.QModelIndex(), indexToRemove, indexToRemove)
         del self._data[indexToRemove]
+        self.endRemoveRows()
         if len(self._data)==0:
             self._data.append(['' for _ in self._headers])
 
@@ -162,7 +166,7 @@ class PeakTableModel(AbstractTableModel):
     '''
     def __init__(self, data):
         super(PeakTableModel, self).__init__(data, ('{:10.5f}', '{:11d}', '{:11d}', '{:4.2f}', ''),
-                         ('m/z', 'int. (spectrum)', 'int. (calc.)', 'error /ppm', 'used'))
+                         ('m/z', 'Int. (Spectrum)', 'Int. (Calc.)', 'Error /ppm', 'Used'))
         self._data = data
         #print('data',data)
         #self._format = ['{:10.5f}', '{:11d}', '{:11d}','{:4.2f}', '']
@@ -176,7 +180,7 @@ class PeakTableModel(AbstractTableModel):
         Overwrites the data method of AbstractTableModel to correctly format each value
         '''
         if index.isValid():
-            if role == Qt.DisplayRole:
+            if role == QtCore.Qt.DisplayRole:
                 col = index.column()
                 item = self._data[index.row()][col]
                 #print(item)
@@ -191,8 +195,8 @@ class PeakTableModel(AbstractTableModel):
                         return 'True'
                     return 'False'
                 return formatString.format(item)
-        if role == Qt.TextAlignmentRole:
-            return Qt.AlignRight
+        if role == QtCore.Qt.TextAlignmentRole:
+            return QtCore.Qt.AlignRight
 
 
     """def rowCount(self, index):
@@ -214,7 +218,7 @@ class CalibrationInfoTable1(AbstractTableModel):
     '''
     def __init__(self, data, precision):
         super(CalibrationInfoTable1, self).__init__(data, ['',precision],
-                         ['variable','value'])
+                         ['Variable','Value'])
         #print('data',data)
         #self._format = ['{:10.5f}', '{:11d}', '{:11d}','{:4.2f}', '']
 
@@ -227,7 +231,7 @@ class CalibrationInfoTable1(AbstractTableModel):
         Overwrites the data method of AbstractTableModel to correctly format each value
         '''
         if index.isValid():
-            if role == Qt.DisplayRole:
+            if role == QtCore.Qt.DisplayRole:
                 col = index.column()
                 item = self._data[index.row()][col]
                 if col == 0:
@@ -235,11 +239,11 @@ class CalibrationInfoTable1(AbstractTableModel):
                 #print(item)
                 formatString = self._format[col]
                 return formatString.format(item)
-        if role == Qt.TextAlignmentRole:
+        if role == QtCore.Qt.TextAlignmentRole:
             col = index.column()
             if col == 0:
-                return Qt.AlignCenter
-            return Qt.AlignRight
+                return QtCore.Qt.AlignCenter
+            return QtCore.Qt.AlignRight
 
 class CalibrationInfoTable2(CalibrationInfoTable1):
     '''
@@ -248,5 +252,5 @@ class CalibrationInfoTable2(CalibrationInfoTable1):
     def __init__(self, data, precision):
         super(CalibrationInfoTable2, self).__init__(data, precision)
         self._format.append(precision)
-        self._headers.append('error')
+        self._headers.append('Error')
 

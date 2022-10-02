@@ -209,8 +209,8 @@ class TestFragmentationService(TestCase):
         self.service.checkFormatOfItems([('a','C5','CH5N2O','-',0,1,1),('y-G','-','CH5N2O','G',0,-1,0)],knownElements,self.numericals)
         dummies = [[('a','C5','CH5N2O','-',0,1,1),('a','C5','CH5N2O','-',0,1,1)],
                    [('a','Cx5','CH5N2O','-',0,1,1)],
-                   [('a','C5','CH5N2O',0,0,'',1)],
-                   [('a','C5','cCH5N2O',0,0,1,1)]]
+                   [('a','C5','CH5N2O','-',0,'',1)],
+                   [('a','C5','cCH5N2O','0',0,1,1)]]
         for dummy in dummies:
             with self.assertRaises(InvalidInputException):
                 self.service.checkFormatOfItems(dummy,knownElements,self.numericals)
@@ -233,7 +233,7 @@ class TestModificationService(TestCase):
     def test_save(self):
         name = 'dummy'
         assert name not in self.service.getAllPatternNames()
-        pattern = ModificationPattern(name,name,[('+X','CH5N2O','','-',0,0.4,1,1),('+X-y','CH5N2O','','-',0,-0.4,1,1)],
+        pattern = ModificationPattern(name,'+X',[('+X','CH5N2O','','-',0,0.4,1,1),('+X-y','CH5N2O','','-',0,-0.4,1,1)],
                                        [('+X-y-G',)],None)
         self.service.save(pattern)
         savedPattern = self.service.get(pattern.getName())
@@ -244,13 +244,13 @@ class TestModificationService(TestCase):
         self.service.delete(name)
         self.assertNotIn(name, self.service.getAllPatternNames())
 
-        pattern = ModificationPattern(name,name,[('X','CH5N2O','','-',0,0.4,1,1)],[('+X-y-G',)],None)
+        pattern = ModificationPattern(name,'X',[('X','CH5N2O','','-',0,0.4,1,1)],[('+X-y-G',)],None)
         self.service.save(pattern)
         self.assertEqual('+X', self.service.get(pattern.getName()).getItems()[0][0])
         self.service.delete(name)
         self.assertNotIn(name, self.service.getAllPatternNames())
 
-        dummies = [ModificationPattern(name,name,[('+X','CH5N2O','','-',0,0.4,1,1),('+X','CH5N2O','','-',0,-0.4,1,1)],
+        dummies = [ModificationPattern(name,'X',[('+X','CH5N2O','','-',0,0.4,1,1),('+X','CH5N2O','','-',0,-0.4,1,1)],
                                        [('+X-y-G',)],None),
                    ModificationPattern(name, name, [('+X', 'CxH5N2O', '', '-', 0, 0.4, 1, 1),
                                                     ('+X-y', 'CH5N2O', '', '-', 0, -0.4, 1, 1)],[('+X-y-G',)], None)]

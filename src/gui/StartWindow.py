@@ -5,10 +5,11 @@ Created on 20 Oct 2020
 '''
 import sys
 
+from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication, QPushButton
 
 from src.gui.controller.IntactSearchController import IntactMainController
-from src.gui.IsotopePatternView import IsotopePatternView
+from src.gui.controller.IsotopePatternView import IsotopePatternView
 from src.gui.controller.EditorController import *
 from src.gui.dialogs.ParameterDialogs import ConfigurationDialog
 from src.gui.dialogs.StartDialogs import IntactStartDialog
@@ -33,7 +34,7 @@ class Window(SimpleMainWindow):
                              (lambda:self.startTopDown(True), 'Starts analysis of top-down spectrum', None),
                          'Load Analysis':
                              (lambda:self.startTopDown(False), 'Loads an old analysis', None),
-                         'Open current Analysis':
+                         'Open Current Analysis':
                              (self.reopen, 'Re-opens the last analysis', None),
                          #'Calc. Abundances':
                          #    (lambda: modellingTool(self), 'Calculates relative abundances of an ion list', None),
@@ -56,7 +57,7 @@ class Window(SimpleMainWindow):
         self.createMenu('Other Tools',
                         {'Model Ion':
                              (lambda: IsotopePatternView(self), 'Calculates the isotope pattern of an ion', None),
-                         'Compare ion lists':
+                         'Compare Ion Lists':
                              (self.compareSpectra, 'Compares the ion lists of multiple spectra', None)},None)
         self.createMenu('Edit',
                         {'Configurations':(self.editTopDownConfig, 'Edit configurations', None),
@@ -64,13 +65,14 @@ class Window(SimpleMainWindow):
                          'Molecules': (lambda: self.editData(MoleculeEditorController), 'Edit Molecular Properties', None),
                          'Sequences': (lambda: self.editData(SequenceEditorController), 'Edit stored sequences', None)},
                         None)
+        self.makeHelpMenu()
         self.move(200,200)
         # self.setWindowIcon(QIcon('pic.png'))
         self._lastSearch = None
         self.showButtons()
 
     def showButtons(self):
-        xPos = self.makeButton('Analyse top-down\nspectrum', 'Starts analysis of top-down spectrum', 40,
+        xPos = self.makeButton('Analyse Top-Down\nSpectrum', 'Starts analysis of top-down spectrum', 40,
                                lambda:self.startTopDown(True))
         xPos = self.makeButton('Assign\nIntact Ions', 'Starts assignment and analysis of lists with unfragmented ions',
                                xPos, self.startIntactIonSearch)
@@ -134,6 +136,7 @@ class Window(SimpleMainWindow):
 
 def run():
     app = QApplication(sys.argv)
+    app.setApplicationName("FAST MS")
     gui = Window()
     sys.exit(app.exec_())
 

@@ -3,8 +3,9 @@ from functools import partial
 import pandas as pd
 
 from PyQt5 import QtWidgets, QtCore
+from PyQt5.QtGui import QIcon
 
-from src import path
+from src.resources import path, DEVELOP
 
 translate = QtCore.QCoreApplication.translate
 
@@ -75,7 +76,11 @@ def getData(table):
 
 
 def shoot(widget):
-    #filename = datetime.now().strftime('%Y-%m-%d_%H-%M-%S.png')
-    p=widget.grab()
-    p.save(os.path.join(path,'pics',widget.windowTitle()+'.png'), 'png')
-    print('Shot taken')
+    if DEVELOP:
+        #filename = datetime.now().strftime('%Y-%m-%d_%H-%M-%S.png')
+        p=widget.grab()
+        p.save(os.path.join(path,'pics',widget.windowTitle()+'.png'), 'png')
+        print('Shot taken')
+
+def setIcon(widget):
+    widget.setWindowIcon(QIcon(os.path.join(path, 'icon.ico')))

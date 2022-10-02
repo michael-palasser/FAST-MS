@@ -1,7 +1,7 @@
 from math import log10
-import pandas as pd
 
-from PyQt5 import QtWidgets, QtCore
+from PyQt5 import QtWidgets
+from PyQt5.QtCore import Qt
 
 from src.Exceptions import InvalidInputException
 from src.gui.GUI_functions import connectTable, showOptions
@@ -27,7 +27,7 @@ class GeneralPeakWidget(QtWidgets.QTableWidget):
         self.setSortingEnabled(True)
         #connectTable(self, self.showOptions)
 
-        '''self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        '''self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested['QPoint'].connect(partial(self.showOptions, self))'''
 
 
@@ -39,25 +39,25 @@ class GeneralPeakWidget(QtWidgets.QTableWidget):
         for row, peak in enumerate(self._peaks):
             for j, item in enumerate(peak):
                 newItem = QtWidgets.QTableWidgetItem()
-                newItem.setTextAlignment(QtCore.Qt.AlignRight)
+                newItem.setTextAlignment(Qt.AlignRight)
                 if j == 1 or j==2:
                     formatString = self._format[2]
                     item = int(round(item))
                     if item >= 10 ** 12:
                         lg10 = str(int(log10(item) + 1))
                         formatString = '{:' + lg10 + 'd}'
-                    newItem.setData(QtCore.Qt.DisplayRole, formatString.format(item))
+                    newItem.setData(Qt.DisplayRole, formatString.format(item))
                     if j==2:
-                        newItem.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+                        newItem.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
                 elif j==len(peak)-1:
                     newItem = QtWidgets.QTableWidgetItem()
                     if item:
-                        newItem.setCheckState(QtCore.Qt.Checked)
+                        newItem.setCheckState(Qt.Checked)
                     else:
-                        newItem.setCheckState(QtCore.Qt.Unchecked)
+                        newItem.setCheckState(Qt.Unchecked)
                 else:
-                    newItem.setData(QtCore.Qt.DisplayRole, self._format[j].format(item))
-                    newItem.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+                    newItem.setData(Qt.DisplayRole, self._format[j].format(item))
+                    newItem.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
                 self.setItem(row, j, newItem)
         #self.resizeColumnsToContents()
         self.resizeRowsToContents()
@@ -110,6 +110,9 @@ class GeneralPeakWidget(QtWidgets.QTableWidget):
     def getPeaks(self):
         return self._peaks
 
+    def getHeaders(self):
+        return self._headers
+
 
 class PeakWidget(GeneralPeakWidget):
     '''
@@ -131,7 +134,7 @@ class PeakWidget(GeneralPeakWidget):
                 data.append((self.item(row, 0).text(), intensity, self.item(row, 2).text(), self.item(row, 3).text(),
                              int(self.item(row, 4).checkState()/2)==1))
             except ValueError:
-                raise InvalidInputException('Intensities must be numbers', 'Incorrect entry: '+self.item(row, 1).text())
+                raise InvalidInputException('Intensities must be numeric', 'Incorrect entry: '+self.item(row, 1).text())
         return data
 
 
@@ -142,7 +145,7 @@ class IsoPatternPeakWidget(GeneralPeakWidget):
     def __init__(self, parent, peaks):
         super(IsoPatternPeakWidget, self).__init__(parent, ('m/z','int. (spectrum)','int. (calc.)', 'used'),
                                          ('{:10.5f}','{:11d}', '{:11d}', ''), peaks)
-        connectTable(self, self.showOptions)
+        #connectTable(self, self.showOptions)
 
 
     '''def readTable(self):
@@ -168,7 +171,7 @@ class IsoPatternPeakWidget(GeneralPeakWidget):
                 data.append((self.item(row, 0).text(), intensity, self.item(row, 2).text(),
                              int(self.item(row, 3).checkState()/2)==1))
             except ValueError:
-                raise InvalidInputException('Intensities must be numbers', 'Incorrect entry: '+self.item(row, 1).text())
+                raise InvalidInputException('Intensities must be numeric', 'Incorrect entry: '+self.item(row, 1).text())
         return data
 
     """def getDataframe(self):
@@ -196,14 +199,19 @@ class IsoPatternPeakWidget(GeneralPeakWidget):
             [self.removeRow(rowCount-i-1) for i in range(abs(nrRows))]
         self.fill()
 
-    def showOptions(self, table, pos):
+    def deleteLastPeak(self):
+        for i, oldPeak in enumerate(self.getData()[:-1]):
+            self._peaks[i][1] = oldPeak[1]
+        self.updateTable(self._peaks[:-1])
+
+    """def showOptions(self, table, pos):
         '''
         Right click options of the table
         '''
         menu = QtWidgets.QMenu()
         copyAllAction = menu.addAction("Copy Table")
         copyAction = menu.addAction("Copy Cell")
-        deleteAction = menu.addAction("Delete last Peak")
+        deleteAction = menu.addAction("Delete Last Peak")
         action = menu.exec_(table.viewport().mapToGlobal(pos))
         if action == copyAllAction:
             #df = self.getDataframe()
@@ -219,5 +227,6 @@ class IsoPatternPeakWidget(GeneralPeakWidget):
             df = pd.DataFrame([self.getData()[selectedRow][selectedCol]])
             df.to_clipboard(index=False, header=False)
         if action == deleteAction:
-            print(self._peaks[-1])
-            self.updateTable(self._peaks[:-1])
+            for i,oldPeak in enumerate(self.getData()[:-1]):
+                self._peaks[i][1]=oldPeak[1]
+            self.updateTable(self._peaks[:-1])"""

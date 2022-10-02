@@ -8,10 +8,11 @@ from abc import ABC
 
 import numpy as np
 import pandas as pd
-from PyQt5 import QtWidgets, QtCore
+from PyQt5 import QtWidgets
 
-from src import path
-from src.gui.IsotopePatternView import AddIonView
+from src.gui.GUI_functions import setIcon, translate
+from src.resources import path, DEVELOP
+from src.gui.controller.IsotopePatternView import AddIonView
 from src.gui.dialogs.CalibrationView import CalibrationView
 from src.gui.tableviews.TableViews import TableView
 from src.gui.widgets.InfoView import InfoView
@@ -19,7 +20,6 @@ from src.gui.tableviews.TableModels import IonTableModel
 from src.gui.tableviews.ShowPeaksViews import PeakView, SimplePeakView
 from src.gui.widgets.SpectrumView import SpectrumView
 
-FOTO_SESSION=True
 
 
 class AbstractMainController(ABC):
@@ -57,7 +57,7 @@ class AbstractMainController(ABC):
         '''
         self._openWindows = []
         #self._mainWindow = SimpleMainWindow(None, 'Results:  ' + os.path.split(self._settings['spectralData'])[-1])
-        self._translate = QtCore.QCoreApplication.translate
+        self._translate = translate
         self._mainWindow.setWindowTitle(self._translate(self._mainWindow.objectName(),
                                                         'Results:  ' + os.path.split(self._settings['spectralData'])[-1]))
         self._openWindows.append(self._mainWindow)
@@ -67,37 +67,34 @@ class AbstractMainController(ABC):
         self._infoView = InfoView(None, self._info)
         self._openWindows.append(self._infoView)
         self.createMenuBar()
+        self._mainWindow.makeHelpMenu()
         self.fillMainWindow()
-        '''self._tables = []
-        for data, name in zip((self._intensityModeller.getObservedIons(), self._intensityModeller.getDeletedIons()),
-                               ('Observed Ions', 'Deleted Ions')):
-            self.makeTabWidget(data, name)
-        self.verticalLayout.addWidget(self._tabWidget)'''
         self._mainWindow.resize(1000, 900)
         self._mainWindow.show()
 
 
-    def createMenuBar(self):
-        '''
-        Makes the QMenuBar
-        :return:
-        '''
-        self._mainWindow.createMenuBar()
-        self._actions = dict()
-        _,actions = self._mainWindow.createMenu("File", {#'Save': (self.saveAnalysis, None, "Ctrl+S"),
-                                'Export and Analysis': (self.export,'Analyses and exports the results to Excel',None),
-                                'Close': (self.close,None,"Ctrl+Q")}, None)
-        self._actions.update(actions)
-        _,actions = self._mainWindow.createMenu("Edit", {'Repeat ovl. modelling':
-                            (self.repeatModellingOverlaps,'Repeat overlap modelling involving user inputs',None),
-                                                         #'Add new ion':(self.addNewIonView, 'Add an ion manually', None),
-                                                         'Take Shot':(self.shootPic,'', None),
-                                                         }, None)
-        self._actions.update(actions)
-        _,actions = self._mainWindow.createMenu("Show",
-                {'Results': (self._mainWindow.show, 'Show lists of observed and deleted ions', None),
-                 'Original Values':(self.showRemodelledIons,'Show original values of overlapping ions',None),
-                 'Protocol':(self._infoView.show,'Show Protocol',None)}, None)
+    def makeGeneralOptions(self):
+        actionDict = dict()
+        editActions = {'Repeat Ovl. Modelling':
+                           (self.repeatModellingOverlaps, 'Repeat overlap modelling involving user inputs', None),
+                            'Add New Ion':(self.addNewIonView, 'Add an ion manually', None),}
+        # 'Take Shot':(self.shootPic,'', None),}
+        if DEVELOP:
+            editActions['Take shot'] = (self.shootPic, '', None)
+        _, actions = self._mainWindow.createMenu("Edit", editActions, None)
+        actionDict.update(actions)
+        _, actions = self._mainWindow.createMenu("Show",
+                                                 {'Results': (
+                                                 self._mainWindow.show, 'Show lists of observed and deleted ions',
+                                                 None),
+                                                  'Original Values': (
+                                                  self.showRemodelledIons, 'Show original values of overlapping ions',
+                                                  None),
+                                                  'Protocol': (self._infoView.show, 'Show protocol', None),
+                                                 'Spectrum': (self.showAllInSpectrum, 'Show the entire spectrum', None)},
+                                                 None)
+        actionDict.update(actions)
+        return actionDict
 
     def shootPic(self):
         widgets = {w.windowTitle():w for w in self._openWindows}
@@ -161,7 +158,7 @@ class AbstractMainController(ABC):
         Makes an ion table
         '''
         tableModel = IonTableModel(data, precursorRegion, self._configs['shapeMarked'], self._configs['scoreMarked'])
-        table = TableView(parent, tableModel, fun)
+        table = TableView(parent, tableModel, fun, 3)
         """table = QtWidgets.QTableView(parent)
         table.setModel(tableModel)
         table.setSortingEnabled(True)
@@ -225,7 +222,7 @@ class AbstractMainController(ABC):
             df.to_clipboard(index=False,header=True)
         elif action == delAction:
             choice = QtWidgets.QMessageBox.question(self._mainWindow, "",
-                                        actionStrings[mode][:-1] +'ing ' + selectedIon.getName() +"?",
+                                        actionStrings[mode] +' ' + selectedIon.getName() +"?",
                                                     QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
             if choice == QtWidgets.QMessageBox.Yes:
                 if mode ==0:
@@ -373,9 +370,9 @@ class AbstractMainController(ABC):
         '''
         Makes a table with the original values of the remodelled ions
         '''
-        remView = QtWidgets.QWidget(self._mainWindow)
+        remView = QtWidgets.QWidget(None)
         #title = 'Original Values of Overlapping Ions'
-        remView._translate = QtCore.QCoreApplication.translate
+        #remView._translate = translate
         remView.setWindowTitle(self._translate(remView.objectName(), 'Original Values of Overlapping Ions'))
         ions = self._intensityModeller.getRemodelledIons()
         verticalLayout = QtWidgets.QVBoxLayout(remView)
@@ -384,6 +381,7 @@ class AbstractMainController(ABC):
         verticalLayout.addWidget(scrollArea)
         remView.resize(1000, 750)
         self._openWindows.append(remView)
+        setIcon(remView)
         remView.show()
 
     def showRedOptions(self, table, pos):
@@ -429,3 +427,10 @@ class AbstractMainController(ABC):
     def getIonList(self):
         return list(self._intensityModeller.getObservedIons().values())
 
+    def showAllInSpectrum(self):
+        global spectrumView
+        ions = sorted(self.getIonList(),key=lambda obj:obj.getIsotopePattern()['m/z'][0])
+        # minWindow, maxWindow, maxY = self._intensityModeller.getLimits(ajacentIons)
+        peaks = self._spectrumHandler.getSpectrum()
+        spectrumView = SpectrumView(None, peaks, ions, np.min(peaks[:,0]),np.max(peaks[:,0]),np.max(peaks[:,1]))
+        self._openWindows.append(spectrumView)

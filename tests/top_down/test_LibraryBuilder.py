@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from src.services.library_services.FragmentLibraryBuilder import FragmentLibraryBuilder
-from src.entities.SearchSettings import SearchSettings, processTemplateName
+from src.entities.SearchSettings import SearchSettings
 from src.services.DataServices import *
 
 
@@ -45,10 +45,16 @@ class TestFragmentLibraryBuilder(TestCase):
             self.builderRNA.buildSimpleLadder(sequ)
 
     def test_check_for_residue(self):
-        self.assertTrue(self.builderRNA.checkForResidue('G', ['A', 'G', 'U']))
-        self.assertTrue(self.builderRNA.checkForResidue('-', ['A', 'G', 'U']))
-        self.assertTrue(self.builderRNA.checkForResidue('', ['A', 'G', 'U']))
-        self.assertFalse(self.builderRNA.checkForResidue('C', ['A', 'G', 'U']))
+        self.assertTrue(self.builderRNA.checkForResidue(['G'], ['A', 'G', 'U']))
+        self.assertTrue(self.builderRNA.checkForResidue(['-'], ['A', 'G', 'U']))
+        self.assertTrue(self.builderRNA.checkForResidue([''], ['A', 'G', 'U']))
+        self.assertFalse(self.builderRNA.checkForResidue(['C'], ['A', 'G', 'U']))
+        self.assertFalse(self.builderRNA.checkForResidue(['G!'], ['A', 'G', 'U']))
+        self.assertTrue(self.builderRNA.checkForResidue(['G!'], ['A', 'U', 'G']))
+        self.assertTrue(self.builderRNA.checkForResidue(['G!','A'], ['A', 'U', 'G']))
+        self.assertTrue(self.builderRNA.checkForResidue(['G!','C'], ['A', 'U', 'G']))
+        self.assertTrue(self.builderRNA.checkForResidue(['G','C'], ['A', 'U', 'G']))
+        self.assertFalse(self.builderRNA.checkForResidue(['G','C'], ['A', 'U', 'A']))
 
     def test_check_for_prolines(self):
         self.assertFalse(self.builderRNA.checkForProlines('c', ['G', 'A'], 'P'))

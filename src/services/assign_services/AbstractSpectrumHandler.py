@@ -1,13 +1,13 @@
 import copy
 import logging
 from abc import ABC
-from subprocess import call
 
 import numpy as np
 
 from src.Exceptions import InvalidInputException
 from src.FormulaFunctions import protMass, eMass
 from src.MolecularFormula import MolecularFormula
+from src.resources import autoStart
 
 
 def getErrorLimit(mz, k, d):
@@ -46,13 +46,13 @@ class AbstractSpectrumHandler(ABC):
         self._normalizationFactor = None
         self._foundIons = list()
         self._ionsInNoise = list()
-        self._searchedChargeStates = dict()
+        #self._searchedChargeStates = dict()
         self._noiseLevel = 0
         if peaks is None:
             self.addSpectrum(self._settings['spectralData'])
         else:
             self._spectrum = np.array(sorted(list(peaks), key=lambda tup: tup[0]))
-            self._upperBound = np.max(peaks)
+            self._upperBound = max([peak[0] for peak in peaks])
             self._noiseLevel = noiseLevel
         self._IonClass = IonClass
         self._foundIons = list()
@@ -145,13 +145,13 @@ class AbstractSpectrumHandler(ABC):
                     items = line.rstrip().split(delimiter)
                 if len(items)>1:
                     try:
-                        print((float(items[0]),float(items[1])))
                         spectralList.append((float(items[0]),float(items[1])))
                     except ValueError:
                         if i==0:
                             continue
                         try:
-                            call(['open', self._settings['spectralData']])
+                            autoStart(self._settings['spectralData'])
+                            #call(['open', self._settings['spectralData']])
                         except:
                             pass
                         if not csv:
@@ -217,7 +217,7 @@ class AbstractSpectrumHandler(ABC):
     def calculateNoise(self, point, windowSize, currentWindow=None):
         '''
         Calculates the noise within a certain window in the spectrum
-        Noise is calculated by averaging the lowest peaks within window multiplied by a factor (0.67).
+        Noise is calculated by the mean of the lowest peaks within an m/z window multiplied by a factor (0.67).
         Lowest peaks are filtered by iteratively filtering out peaks with intensities higher than average+tolerance
         If the number of peaks is below a threshold, the user indicated noise level is used
         :param (float) point: m/z (median)
@@ -234,26 +234,26 @@ class AbstractSpectrumHandler(ABC):
             currentWindow = self.getPeaksInWindow(self._spectrum, point, windowSize * 2)
         if currentWindow[:,1].size > 10:     #parameter
             peakInt = currentWindow[:, 1]
-            avPeakInt = np.average(peakInt)
+            meanPeakInt = np.mean(peakInt)
             #stdDevPeakInt = np.std(peakInt)
             while True:
-                avPeakInt0 = avPeakInt
-                lowAbundendantPeaks = peakInt[np.where(peakInt < (avPeakInt +noise))]# 2* 10**6))]#2 * stdDevPeakInt))] #ToDo parameter
-                avPeakInt = np.average(lowAbundendantPeaks)
-                if (len(lowAbundendantPeaks) == 1) or (avPeakInt - avPeakInt0 == 0):
-                    #print(avPeakInt,stdDevPeakInt)
+                meanPeakInt0 = meanPeakInt
+                lowAbundendantPeaks = peakInt[np.where(peakInt < (meanPeakInt +noise))]# 2* 10**6))]#2 * stdDevPeakInt))] #ToDo parameter
+                meanPeakInt = np.mean(lowAbundendantPeaks)
+                if (len(lowAbundendantPeaks) == 1) or (meanPeakInt - meanPeakInt0 == 0):
+                    #print(meanPeakInt,stdDevPeakInt)
                     #print('exit 1')
-                    #return avPeakInt * 0.67
+                    #return meanPeakInt * 0.67
                     break
-                '''if avPeakInt - avPeakInt0 == 0:
+                '''if meanPeakInt - meanPeakInt0 == 0:
                     #print('exit 2')
                     break'''
                 #else:
                     #stdDevPeakInt = np.std(lowAbundendantPeaks)
-            avPeakInt *= 0.67 #used to be 0.6
-            if avPeakInt > noise:#*0.67:
-                noise = avPeakInt
-            #print(avPeakInt,stdDevPeakInt)
+            meanPeakInt *= 0.67 #used to be 0.6
+            if meanPeakInt > noise:#*0.67:
+                noise = meanPeakInt
+            #print(meanPeakInt,stdDevPeakInt)
         return noise
 
     @staticmethod
@@ -281,7 +281,8 @@ class AbstractSpectrumHandler(ABC):
         3. If found noise is calculated and the isotope peaks which could theoretically be above the noise are calculated:
             Programm searches for these peaks in spectrum
             If all isotope peaks are calculated to be below noise threshold, ion is added to deleted ion (comment = noise)
-        :param (list) fragmentLibrary: list of Fragment-objects
+        :param (Fragment | Neutral) neutral: neutral species
+        :param (Generator) zRange: range of possible charge states of neutral species
         '''
         '''np.set_printoptions(suppress=True)
         precModCharge = self.getModCharge(self._precursor)
@@ -300,6 +301,7 @@ class AbstractSpectrumHandler(ABC):
         radicals = neutral.getRadicals()
         for z in zRange:
             logging.debug('* z'+str(z))
+            print(neutral.getName(), z)
             theoreticalPeaks = copy.deepcopy(sortedPattern)
             theoreticalPeaks['m/z'] = getMz(theoreticalPeaks['m/z'], z * self._sprayMode, radicals)
             theoreticalPeaks = self.getChargedIsotopePattern(sortedPattern, z, radicals)
@@ -327,6 +329,7 @@ class AbstractSpectrumHandler(ABC):
                     sumInt += notFound * noise * 0.5              #if one or more isotope peaks were not found noise added #parameter
                     notInNoise = np.where(theoreticalPeaks['calcInt'] >noise*
                                           self._configs['thresholdFactor'] / (sumInt/sumIntTheo))
+
                     if theoreticalPeaks[notInNoise].size > peakQuantity:
                         logging.debug('* All Peaks:')
                         foundPeaks = [self.findPeak(theoPeak, self._configs['errorTolerance']) for theoPeak in theoreticalPeaks[notInNoise]]
@@ -337,7 +340,7 @@ class AbstractSpectrumHandler(ABC):
                             [print("\t",np.around(peak['m/z'],4),"\t",peak['relAb']) for peak in foundPeaksArr if peak['relAb']>0]
                             [logging.info(neutral.getName()+"\t"+str(z)+"\t"+str(np.around(peak['m/z'],4))+"\t"+str(peak['relAb']) )for peak in foundPeaksArr if peak['relAb']>0]
                         else:
-                            self.addToDeletedIons(neutral, foundMainPeaks, noise, np.min(theoreticalPeaks['m/z']), z)
+                            self.addToDeletedIons(neutral, foundMainPeaks, noise, np.min(theoreticalPeaks['m/z']), z,'noise')
                     elif theoreticalPeaks[notInNoise].size > 0:
                         foundMainPeaksArr = np.sort(np.array(foundMainPeaks, dtype=peaksArrType), order=['m/z'])
                         self._foundIons.append(self._IonClass(neutral, np.min(theoreticalPeaks['m/z']), z,
@@ -347,7 +350,8 @@ class AbstractSpectrumHandler(ABC):
                                       str(peak['relAb'])) for peak in foundMainPeaksArr if peak['relAb'] > 0]
                     else:
                         print('deleting: '+neutral.getName()+", "+str(z))
-                        self.addToDeletedIons(neutral, foundMainPeaks, noise, np.min(theoreticalPeaks['m/z']), z)
+                        self.addToDeletedIons(neutral, foundMainPeaks, noise, np.min(theoreticalPeaks['m/z']), z,'noise')
+
 
 
     def getProtonIsotopePatterns(self):
@@ -413,7 +417,7 @@ class AbstractSpectrumHandler(ABC):
 
 
 
-    def addToDeletedIons(self, fragment, foundMainPeaks, noise, monoisotopic, z):
+    def addToDeletedIons(self, fragment, foundMainPeaks, noise, monoisotopic, z, text):
         '''
         Adds an ion to deleted ions (_ionsInNoise), (comment "noise")
         :param fragment: fragment where one charge state should be deleted
@@ -422,10 +426,11 @@ class AbstractSpectrumHandler(ABC):
         :param (int) noise: calculated noise
         :param (float) monoisotopic: theoretical m/z of monoisotopic peak
         :param (int) z: charge of ion
+        :param (str) text: reason for deletion
         '''
         foundMainPeaksArr = np.sort(np.array(foundMainPeaks, dtype=peaksArrType), order=['m/z'])
         noiseIon = self._IonClass(fragment, monoisotopic, z, foundMainPeaksArr, noise)
-        noiseIon.addComment('noise')
+        noiseIon.addComment(text)
         self._ionsInNoise.append(noiseIon)
 
     def getCorrectPeak(self, foundIsotopePeaks, theoPeak):

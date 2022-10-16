@@ -313,6 +313,7 @@ class MolecularFormula(object):
         '''
         #assert minSumCorrection+MIN_SUM<1
         #print('new',self.calculateIsotopePattern(accelerate)[0])
+        #print(minSum, accelerate, exactPattern)
         if exactPattern is None:
             exactPattern= self.calculateIsotopePattern(minSum, accelerate)
         if np.sum(exactPattern['calcInt']) > minSum:#+minSumCorrection:
@@ -321,12 +322,17 @@ class MolecularFormula(object):
         isotope_pattern =  np.array(self.calculateAbundancesFFT(abundanceTable, elemNrs), dtype=isoPatternDtype)
         sumInt=np.sum(exactPattern['calcInt'])
         isoPeak = len(exactPattern)
-        isotope_pattern['m/z'] =(isotope_pattern['m/z']-isotope_pattern['m/z'][isoPeak-1])*dm+exactPattern['m/z'][-1]
-        finalPattern = [row for row in exactPattern]
-        while sumInt <minSum:#+minSumCorrection:
-            finalPattern.append(isotope_pattern[isoPeak])
-            sumInt+=isotope_pattern[isoPeak]['calcInt']
-            isoPeak+=1
+
+        print(isoPeak, np.sum(exactPattern['calcInt']),exactPattern, isotope_pattern['m/z'])
+        try:
+            isotope_pattern['m/z'] =(isotope_pattern['m/z']-isotope_pattern['m/z'][isoPeak-1])*dm+exactPattern['m/z'][-1]
+            finalPattern = [row for row in exactPattern]
+            while sumInt <minSum:#+minSumCorrection:
+                finalPattern.append(isotope_pattern[isoPeak])
+                sumInt+=isotope_pattern[isoPeak]['calcInt']
+                isoPeak+=1
+        except IndexError:
+            finalPattern = isotope_pattern
         return np.array(finalPattern, dtype=isoPatternDtype)
 
     @staticmethod

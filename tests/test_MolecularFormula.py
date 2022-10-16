@@ -210,6 +210,9 @@ class MolecularFormulaTest(TestCase):
 
 
     def test_calculate_isotope_pattern_fft(self):
+        #print(key for key in {'S'} in {'C','S','H'})
+        #print(MolecularFormula('S').calculateIsotopePatternFFT(0.996,10))
+        #return
         for i in range(10):
             randNr = randint(30, 150)
             molFormulaDummy_RNA = MolecularFormula({key:int(round(val*randNr)) for key,val in averaginine.items()})

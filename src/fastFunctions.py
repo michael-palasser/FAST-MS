@@ -64,6 +64,7 @@ def multinomial(k, n, p):
     for i in range(len(k)):
         coeff -= logFact(k[i])
         rest *= p[i]**k[i]
+    print('multi',k, n, p,math.exp(coeff) * rest)
     return math.exp(coeff) * rest
 
 
@@ -135,6 +136,7 @@ def calculateNuclFineStructure(isotopePeak, isotopeTable):
     :return: (ndarray(dtype=[float,float])) fine structure [(mass,rel.abundance)]
     '''
     #print(isotopePeak)
+    print('calculateNuclFineStructure')
     maxValues = getMaxValues(isotopePeak, isotopeTable)
     """for i in range(10):
         if isotopePeak>isotopeTable[i]['nr']:
@@ -207,6 +209,7 @@ def calculatePeptFineStructure(isotopePeak, isotopeTable):
     :return: (ndarray(dtype=[float,float])) fine structure [(mass,percentage)]
     '''
     #print(isotopeTable)
+    print('calculatePeptFineStructure')
     maxValues = getMaxValues(isotopePeak, isotopeTable)
     """maxValues = []
     for i in range(12):
@@ -232,6 +235,7 @@ def calculatePeptFineStructure(isotopePeak, isotopeTable):
                                         nrIsoList= np.array([0.,i13C,0.,i2H,0.,i15N,0.,i17O,i18O,0.,i33S,i34S])
                                         for i in range(len(isotopeTable)):
                                             isotopeTable[i]['nrIso']=nrIsoList[i]
+                                        print('isotopeTable',isotopeTable)
                                         massI, propI = calculateSpecies(isotopeTable)
                                         fineStructure.append((massI,propI))
     return fineStructure
@@ -265,6 +269,7 @@ def calculateFineStructure(isotopePeak, isotopeTable):
         nominal mass shift compared to the isotope with the lowest m/z)
     :return: (ndarray(dtype=[float,float])) final fine structure [(mass,percentage)]
     '''
+    print('calculateFineStructure')
     fineStructure = [(0.,0.)]
     for iFirst in list(range(isotopePeak + 1))[::-1]:
         isotopeTable[1]['nrIso'] = iFirst

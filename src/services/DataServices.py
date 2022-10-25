@@ -209,7 +209,7 @@ class PeriodicTableService(AbstractServiceForPatterns):
             self._repository.updatePattern(pattern)
         return self.get(pattern.getName())
 
-    def checkFormatOcheckFormatOfItemsfItems(self, items, *args):
+    def checkFormatOfItems(self, items, *args):
         super(PeriodicTableService, self).checkFormatOfItems(items, *args)
         sumAbundances = 0
         nucNums = []

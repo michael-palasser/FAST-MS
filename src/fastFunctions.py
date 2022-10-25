@@ -64,7 +64,6 @@ def multinomial(k, n, p):
     for i in range(len(k)):
         coeff -= logFact(k[i])
         rest *= p[i]**k[i]
-    #print('multi',k, n, p,math.exp(coeff) * rest)
     return math.exp(coeff) * rest
 
 

@@ -1,1 +1,3 @@
-
+FAST MS (Free Analysis Software for Top-down Mass Spectrometry) is a software package for data analysis of MS and MS/MS spectra.
+Please consider the manual ("FAST MS Manual.pdf") or my dissertation (chapter 3 "FAST MS: An Open-Source Software for Automated and Quantitative Analysis of Mass Spectra" in "RNA Structure Characterisation by "Chemical Probing and Mass Spectrometry"). The information in the manual is more extensive but has not been updated for a few months.
+For reporting bugs or any questions concerning the programme, you can write an email to "michael.palasser@uibk.ac.at".

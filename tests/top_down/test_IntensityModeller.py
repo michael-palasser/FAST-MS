@@ -282,7 +282,7 @@ class TestIntensityModeller(TestCase):
         self.intensityModeller.remodelIntensity(simplePatterns,[])
         for hash,ion in self.intensityModeller.getObservedIons().items():
             if hash in theoIons.keys():
-                self.assertEqual(ion.getIntensity(),theoIons[hash].getIntensity())
+                self.assertAlmostEqual(ion.getIntensity()/theoIons[hash].getIntensity(),1)
 
         simplePatterns,theoIons = self.test_find_overlaps()
         deleted = list(self.intensityModeller.getObservedIons().keys())[1]

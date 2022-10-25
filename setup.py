@@ -11,7 +11,7 @@ setup(
     install_requires=['numpy', 'scipy', 'matplotlib', 'pandas', 'PyQt5', 'pyqtgraph', 'xlsxwriter', 'numba','tqdm'],
     url='https://git.uibk.ac.at/c7261075/fast_ms',
     license='GNU General Public License v3.0',
-    author='eva-maria',
+    author='Michael Palasser',
     author_email='michael.palasser@uibk.ac.at',
     description='Free Analysis Software for Top-Down Mass Spectrometry',
     classifiers = [

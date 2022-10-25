@@ -136,6 +136,7 @@ class IsotopePatternLogics(object):
                 self._isotopePattern = tempFormula.calculateIsotopePattern(self._configs['maxIso'])
             else:
                 self._isotopePattern = tempFormula.calculateIsotopePatternFFT(self._configs['maxIso'], accelerate)
+            print('logics',self._isotopePattern)
             '''else:
                 self._isotopePattern = tempFormula.calcIsotopePatternSlowly()'''
         #isotopePattern = copy.deepcopy(self._isotopePattern)

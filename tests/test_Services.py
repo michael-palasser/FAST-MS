@@ -46,10 +46,11 @@ class TestPeriodicTableService(TestCase):
         self.service.checkFormatOfItems([(1,100,0.5),(2,100,0.49)],knownElements,self.numericals)
         dummies = [[(1,100,0.5),(2,100,0.4)],
                    [(1,100,0.5),(2,100.1,0.51)],
-                   [(1,100,0.5),(1,100,0.51)],
+                   [(1,100,0.5),(1,100,0.5)],
                    [(1.1,100,0.5),(2,100,0.49)]]
         for dummy in dummies:
             with self.assertRaises(InvalidInputException):
+                print(dummy)
                 self.service.checkFormatOfItems(dummy,knownElements,self.numericals)
 
 

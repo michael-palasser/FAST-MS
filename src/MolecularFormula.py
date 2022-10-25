@@ -152,6 +152,8 @@ class MolecularFormula(object):
         isoPeak=0
         isotope_pattern = list()
         calculate, isotopeTable = self.determineSystem()
+        #if calculate == calculateFineStructure:
+        #   return self.calculateIsotopePatternFFT(minSum,1)
         sumInt = 0
         while(sumInt < minSum and isoPeak != maxIso):
             setIsotopeTable(isotopeTable)
@@ -320,10 +322,11 @@ class MolecularFormula(object):
             return np.array(exactPattern, dtype=isoPatternDtype)
         abundanceTable, elemNrs, dm = self.makeFFTTables(exactPattern['m/z'][0])
         isotope_pattern =  np.array(self.calculateAbundancesFFT(abundanceTable, elemNrs), dtype=isoPatternDtype)
+        #print('++',isotope_pattern)
         sumInt=np.sum(exactPattern['calcInt'])
         isoPeak = len(exactPattern)
 
-        print(isoPeak, np.sum(exactPattern['calcInt']),exactPattern, isotope_pattern['m/z'])
+        #print(isoPeak, np.sum(exactPattern['calcInt']),exactPattern, isotope_pattern['m/z'])
         try:
             isotope_pattern['m/z'] =(isotope_pattern['m/z']-isotope_pattern['m/z'][isoPeak-1])*dm+exactPattern['m/z'][-1]
             finalPattern = [row for row in exactPattern]

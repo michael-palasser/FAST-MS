@@ -107,6 +107,14 @@ class fastFunctions_Test(TestCase):
     (4., 2., 1., 2.051400e-03, 17.99915961, 2.)],'''
 
     def test_calculate_nucl_fine_structure(self):
+        fine1 = np.array(f.calculateFineStructure(5, MolecularFormula('C2H2NO2P').makeIsotopeTable()))[:, 1]
+        fine2 = np.array(f.calculateNuclFineStructure(5, MolecularFormula('C2H2NO2P').makeNucIsotopeTable()))[:, 1]
+        self.assertEqual(len(fine1), len(fine2))
+        prop1 = np.sum(fine1)
+        prop2 = np.sum(fine2)
+        print(prop1, prop2)
+        self.assertAlmostEqual(prop1, prop2)
+
         isotopeTable = MolecularFormula('C5H5N5OP').makeNucIsotopeTable()
         for i, nr in enumerate([1, 4, 10, 19]):
             f.setIsotopeTable(isotopeTable)
@@ -131,8 +139,23 @@ class fastFunctions_Test(TestCase):
         table2 = MolecularFormula('C14H27N5O5S').makeProteinIsotopeTable()
         for correct, val in zip([1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0], f.getMaxValues(1, table2)):
             self.assertEqual(correct, val)
+        table3 = MolecularFormula('CHNOS').makeNucIsotopeTable()
+        self.assertEqual(0.,table3['nrIso'][1])
+        f.getMaxValues(3, table3)
+        self.assertEqual(0.,table3['nrIso'][1])
+
+
 
     def test_calculate_pept_fine_structure(self):
+        fine1 = np.array(f.calculateFineStructure(3, MolecularFormula('C2HNOS20').makeIsotopeTable()))[:, 1]
+        fine2 = np.array(f.calculatePeptFineStructure(3, MolecularFormula('C2HNOS20').makeProteinIsotopeTable()))[:, 1]
+        self.assertEqual(len(fine1), len(fine2))
+        prop1 = np.sum(fine1)
+        prop2 = np.sum(fine2)
+        print(prop1, prop2)
+        self.assertAlmostEqual(prop1, prop2)
+        print('Peptide ok')
+
         isotopeTable = MolecularFormula('C36H56N12O14S').makeProteinIsotopeTable()  # GCASDQHPV
         for i, nr in enumerate([1, 5, 16, 39]):
             f.setIsotopeTable(isotopeTable)

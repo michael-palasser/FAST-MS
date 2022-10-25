@@ -64,7 +64,7 @@ def multinomial(k, n, p):
     for i in range(len(k)):
         coeff -= logFact(k[i])
         rest *= p[i]**k[i]
-    print('multi',k, n, p,math.exp(coeff) * rest)
+    #print('multi',k, n, p,math.exp(coeff) * rest)
     return math.exp(coeff) * rest
 
 
@@ -78,6 +78,7 @@ def calculateSpecies(isotopeTable):
         nominal mass shift compared to the isotope with the lowest m/z)
     :return: (tuple[float,float]) mass, rel. abundance
     '''
+    #print('+',isotopeTable)
     abundance = 1.
     mass = 0.
     finishedIndizes = list()
@@ -136,7 +137,6 @@ def calculateNuclFineStructure(isotopePeak, isotopeTable):
     :return: (ndarray(dtype=[float,float])) fine structure [(mass,rel.abundance)]
     '''
     #print(isotopePeak)
-    print('calculateNuclFineStructure')
     maxValues = getMaxValues(isotopePeak, isotopeTable)
     """for i in range(10):
         if isotopePeak>isotopeTable[i]['nr']:
@@ -146,9 +146,12 @@ def calculateNuclFineStructure(isotopePeak, isotopeTable):
     if isotopePeak > 0:
         isotopeTable[1]['nrIso'] = isotopePeak"""
     #print(isotopeTable['nrIso'])
-    massI, propI = calculateSpecies(isotopeTable)
-    fineStructure = [(massI, propI)]
-    for i13C in list(range(maxValues[1]))[::-1]:
+    fineStructure = [(0, 0)]
+    '''if isotopeTable[1]['nrIso']!=0:
+        massI, propI = calculateSpecies(isotopeTable)
+        fineStructure.append((massI, propI))
+        print(isotopeTable)'''
+    for i13C in range(maxValues[1] + 1):# list(range(maxValues[1]))[::-1]:
         for i2H in range(maxValues[3] + 1):
             for i15N in range(maxValues[5] + 1):
                 for i17O in range(maxValues[7] + 1):
@@ -162,7 +165,7 @@ def calculateNuclFineStructure(isotopePeak, isotopeTable):
                             #massI, propI = calculatePercentage(isotopeTable)
                             #fineStructure.append((massI,propI))
                             fineStructure.append(calculateSpecies(isotopeTable))
-    return fineStructure
+    return fineStructure[1:]
 
 
 @njit
@@ -192,9 +195,8 @@ def getMaxValues(isotopePeak, isotopeTable):
         else:
             maxValues.append(maxVal)
             #maxValues[i] = maxVal
-    if isotopePeak > 0:
+    if (isotopePeak > 0) and (isotopeTable[1]['nr']>=isotopePeak):
         isotopeTable[1]['nrIso'] = isotopePeak
-    #print('maxValues',isotopePeak,maxValues)
     return maxValues
 
 @njit
@@ -209,7 +211,6 @@ def calculatePeptFineStructure(isotopePeak, isotopeTable):
     :return: (ndarray(dtype=[float,float])) fine structure [(mass,percentage)]
     '''
     #print(isotopeTable)
-    print('calculatePeptFineStructure')
     maxValues = getMaxValues(isotopePeak, isotopeTable)
     """maxValues = []
     for i in range(12):
@@ -220,9 +221,11 @@ def calculatePeptFineStructure(isotopePeak, isotopeTable):
     if isotopePeak > 0:
         isotopeTable[1]['nrIso'] = isotopePeak"""
     #print(isotopeTable['nrIso'])
-    massI, propI = calculateSpecies(isotopeTable)
-    fineStructure = [(massI, propI)]
-    for i13C in list(range(maxValues[1]))[::-1]:
+    fineStructure = [(0, 0)]
+    #if isotopeTable[1]['nrIso']!=0:
+    #    massI, propI = calculateSpecies(isotopeTable)
+    #    fineStructure.append((massI, propI))
+    for i13C in range(maxValues[1] + 1):#list(range(maxValues[1]))[::-1]:
         for i2H in range(maxValues[3] + 1):
             for i15N in range(maxValues[5] + 1):
                 for i17O in range(maxValues[7] + 1):
@@ -235,10 +238,9 @@ def calculatePeptFineStructure(isotopePeak, isotopeTable):
                                         nrIsoList= np.array([0.,i13C,0.,i2H,0.,i15N,0.,i17O,i18O,0.,i33S,i34S])
                                         for i in range(len(isotopeTable)):
                                             isotopeTable[i]['nrIso']=nrIsoList[i]
-                                        print('isotopeTable',isotopeTable)
                                         massI, propI = calculateSpecies(isotopeTable)
                                         fineStructure.append((massI,propI))
-    return fineStructure
+    return fineStructure[1:]
 
 
 
@@ -269,15 +271,18 @@ def calculateFineStructure(isotopePeak, isotopeTable):
         nominal mass shift compared to the isotope with the lowest m/z)
     :return: (ndarray(dtype=[float,float])) final fine structure [(mass,percentage)]
     '''
-    print('calculateFineStructure')
     fineStructure = [(0.,0.)]
-    for iFirst in list(range(isotopePeak + 1))[::-1]:
+    fineStructure = loopThroughIsotopes(isotopePeak, isotopeTable, fineStructure, 0)
+
+    '''for iFirst in list(range(isotopePeak + 1))[::-1]:#
         isotopeTable[1]['nrIso'] = iFirst
         if iFirst == isotopePeak:
             massI, propI = calculateSpecies(isotopeTable)
             fineStructure.append((massI,propI))
         else:
-            fineStructure = loopThroughIsotopes(isotopePeak, isotopeTable, fineStructure, 3)
+            fineStructure = loopThroughIsotopes(isotopePeak, isotopeTable, fineStructure, 2)
+            break'''
+            #fineStructure = loopThroughIsotopes(isotopePeak, isotopeTable, fineStructure, 3)
     return fineStructure[1:]
 
 
@@ -311,7 +316,8 @@ def loopThroughIsotopes(isotopePeak, isotopeTable, fineStructure, index):
         if checkIsotopeTable(isotopeTable):
             massI, propI = calculateSpecies(isotopeTable)
             fineStructure.append((massI, propI))
-        return fineStructure
+            #print(index,isotopeTable,'\n')
+        #return fineStructure
     #if the isotope table is unfinished
     elif index < len(isotopeTable):
         '''for i in range(int((isotopePeak + isotopeTable[index]['M+']) / isotopeTable[index]['M+'])):
@@ -329,6 +335,7 @@ def loopThroughIsotopes(isotopePeak, isotopeTable, fineStructure, index):
         #loop over all possible isotope combinations
         for nrIso in range(int((isotopePeak + currentIso['M+']) / currentIso['M+'])):
             #break if the no. of the atoms of the current isotope is higher than the ones of the corresponding element
+
             if nrIso>currentIso['nr']:
                 break
             #set no. of atoms of the current isotope in table

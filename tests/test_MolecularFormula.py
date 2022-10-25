@@ -1,7 +1,7 @@
 from unittest import TestCase
 import numpy as np
 from random import randint
-from src.fastFunctions import getByIndex
+from src.fastFunctions import getByIndex, calculatePeptFineStructure, calculateFineStructure, calculateNuclFineStructure
 
 from src.MolecularFormula import MolecularFormula
 from src.services.DataServices import PeriodicTableService
@@ -13,13 +13,13 @@ molFormulaDummy = MolecularFormula('C5H4N3O')
 RNA_formulaDummy = MolecularFormula('C38H48N15O26P3')  # GACU
 peptideFormulaDummy = MolecularFormula('C36H56N12O14S')  # GCASDQHPV
 uniFormulaDummy = MolecularFormula('C5H5N5ONa')
-RNA_pattern = np.array([(1223.2107777180972, 0.58545685), (1224.2134684, 0.28360589), (1225.21578726, 0.09861313),
-                        (1226.21815597, 0.02558403), (1227.22044876, 0.00558521)],
+RNA_pattern = np.array([(1223.21078, 0.58727166), (1224.21346, 0.28260795), (1225.21578 , 0.09801103 ),
+                        (1226.21814, 0.02534772), (1227.22043, 0.00552071)],
                        dtype=[('m/z', np.float64), ('calcInt', np.float64)])
-peptide_pattern = np.array([(912.37596571, 0.59104661), (913.37869526, 0.26946771), (914.37874787, 0.1035717),
-                            (915.37979107, 0.02834297), (916.38113847, 0.00624432)],
+peptide_pattern = np.array([(912.37597, 0.59277779), (913.37869, 0.26845428), (914.37872, 0.10304914),
+                            (915.37977, 0.02810875), (916.38111, 0.00617633)],
                            dtype=[('m/z', np.float64), ('calcInt', np.float64)])
-uni_pattern = np.array([(174.03917908, 0.92733003), (175.04099458, 0.06836688), (176.04296025, 0.00412072)],
+uni_pattern = np.array([(174.03918, 0.92771614), (175.04099, 0.06800264), (176.04295, 0.00409642)],
                        dtype=[('m/z', np.float64), ('calcInt', np.float64)])
 
 dict0 = {'C': 5, 'H': 4, 'N': 3, 'O': 1}
@@ -110,6 +110,7 @@ class MolecularFormulaTest(TestCase):
     def test_calculate_mono_isotopic(self):
         self.assertAlmostEqual(1223.210776, RNA_formulaDummy.calculateMonoIsotopic(), delta=5 * 10 ** (-6))
         self.assertAlmostEqual(912.375965, peptideFormulaDummy.calculateMonoIsotopic(), delta=5 * 10 ** (-6))
+
 
     def test_calculate_isotope_pattern(self):
         P2 = MolecularFormula('P2').calculateIsotopePattern(MIN_SUM)

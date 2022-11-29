@@ -239,6 +239,10 @@ class fastFunctions_Test(TestCase):
             print(np.sum(np.array(fineStructure)[:, 1]))
         print(sumInt)
 
+    def test_calculate_fine_structure_strange_elements(self):
+        MolecularFormula('Br').calculateIsotopePattern(0.96)
+        #ToDo: test e.g. Fe
+
     def test_loop_through_isotopes(self):
         isotopeTable = MolecularFormula('C5H5N5OP').makeIsotopeTable()
         self.assertEqual(2, len(f.loopThroughIsotopes(0, isotopeTable, [(0., 0.)], 0)))

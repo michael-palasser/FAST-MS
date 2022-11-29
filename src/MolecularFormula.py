@@ -158,12 +158,12 @@ class MolecularFormula(object):
         while(sumInt < minSum and isoPeak != maxIso):
             setIsotopeTable(isotopeTable)
             ultrafineStruct = np.array(calculate(isoPeak, isotopeTable))
-            #print(isoPeak,len(ultrafineStruct))
-            prop = np.sum(ultrafineStruct[:,1])
-            M_iso = np.sum(ultrafineStruct[:,0]*ultrafineStruct[:,1])/prop
-            isotope_pattern.append((M_iso,prop))
+            if len(ultrafineStruct)>0:
+                prop = np.sum(ultrafineStruct[:,1])
+                M_iso = np.sum(ultrafineStruct[:,0]*ultrafineStruct[:,1])/prop
+                isotope_pattern.append((M_iso,prop))
+                sumInt += prop
             isoPeak += 1
-            sumInt += prop
             #if prop > mostAbundant:
                 #mostAbundant = prop
             """if args and args[0]:
@@ -217,10 +217,11 @@ class MolecularFormula(object):
         #for index, elem in enumerate(sorted(list(self._periodicTable.keys()))):
         for index, elem in enumerate(sorted(elements)):
             mono = self._periodicTable[elem][0][0]
+            #lightest = sorted(self._periodicTable[elem][0][0]
             for isotope in self._periodicTable[elem]:
                 #if self._formulaDict[elem] != 0:
                 isotopeTable.append((index, self._formulaDict[elem], 0, isotope[2], isotope[1], isotope[0] - mono))
-        isotopeTable = np.array(sorted(isotopeTable,key=lambda tup: tup[1], reverse=True)
+        isotopeTable = np.array(sorted(isotopeTable,key=lambda tup: tup[0], reverse=True)
                                 , dtype=isoTableDtype)
         """isotopeTable = np.array(isotopeTable
                                 , dtype=[('index', np.float64), ('nr', np.float64), ('nrIso', np.float64),

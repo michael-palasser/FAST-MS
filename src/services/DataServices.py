@@ -120,6 +120,7 @@ class AbstractServiceForPatterns(AbstractService, ABC):
         elements = args[0]
         numericals = args[1]
         names = []
+        print(items)
         for item in items:
             name = item[0]
             if name in names:
@@ -198,9 +199,10 @@ class PeriodicTableService(AbstractServiceForPatterns):
         '''
         #print('id', pattern.getId())
         self.checkName(pattern.getName())
-        formatedItems = []
+        '''formated = []
         for item in pattern.getItems():
-            formatedItems.append(float(val) for val in item)
+            formattedItems = [int()]
+            formatedItems.append([float(val) for val in item])'''
         self.checkFormatOfItems(pattern.getItems(), None, self._repository.getIntegers())
         self.checkIfUnique(pattern)
         if pattern.getId() == None:
@@ -214,9 +216,9 @@ class PeriodicTableService(AbstractServiceForPatterns):
         sumAbundances = 0
         nucNums = []
         for item in items:
-            sumAbundances+=item[2]
+            sumAbundances+=float(item[2])
             if item[0] in nucNums:
-                raise InvalidInputException(item[0], "one nucleon number must not occur more than once")
+                raise InvalidInputException(item[0], "nucleon numbers must be unique")
             if isinstance(item[0], float):
                 raise InvalidInputException(item[0], "nucleon number must be an integer")
             nucNums.append(item[0])

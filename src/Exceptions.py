@@ -22,8 +22,8 @@ class InvalidInputException(Exception):
         :param (str) element: invalid element
         :param (str) message:
         '''
-        self.element = element
-        self.message = message
+        self.element = str(element)
+        self.message = str(message)
 
     def __str__(self):
         return(repr("Invalid Input: " + self.element + ", " + self.message))

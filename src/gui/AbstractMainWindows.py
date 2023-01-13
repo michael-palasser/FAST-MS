@@ -20,11 +20,13 @@ class SimpleMainWindow(QtWidgets.QMainWindow):
         self.setWindowIcon(QIcon(os.path.join(path, 'icon.ico')))
 
     def updateComboBox(self, comboBox, newOptions):
-        toAdjust = comboBox.count() - len(newOptions)
+        optionLength = len(newOptions)
+        toAdjust = comboBox.count() - optionLength
         if toAdjust > 0:
-            [comboBox.removeItem(i) for i in range(len(newOptions), len(newOptions) + toAdjust)]
+            [comboBox.removeItem(optionLength) for i in range(optionLength, optionLength + toAdjust)]
         elif toAdjust < 0:
             [comboBox.addItem("") for i in range(-1 * toAdjust)]
+        print(comboBox.count())
         for i, option in enumerate(newOptions):
             comboBox.setItemText(i, self._translate(self.objectName(), option))
 

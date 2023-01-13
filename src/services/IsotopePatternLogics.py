@@ -59,7 +59,7 @@ class IsotopePatternLogics(object):
         return [fragTemplate.getName() for fragTemplate in
                 self._fragService.getPatternWithObjects(fragmentationName).getItems()],\
                [precTemplate.getName() for precTemplate in
-                self._fragService.getPatternWithObjects(fragmentationName).getItems2()][1:]
+                self._fragService.getPatternWithObjects(fragmentationName).getItems2()]
 
     def getRadicals(self, moleculeName, sequString, fragmentationName, fragTemplName, modifPatternName, modifName,
                     nrMod):

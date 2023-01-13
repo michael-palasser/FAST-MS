@@ -265,6 +265,7 @@ class AbstractSpectrumHandler(ABC):
         :param (float) windowSize: window: [point-windowSize/2, point+windowSize/2]
         :return: (ndarray(dtype=float, ndim=2)) peaks within window
         '''
+        print(allPeaks, point, windowSize)
         spectralWindowIndex = np.where(abs(allPeaks[:, 0] - point) < (windowSize / 2))
         return allPeaks[spectralWindowIndex]
 

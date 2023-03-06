@@ -3,6 +3,10 @@ from re import findall
 from src.entities.AbstractEntities import PatternWithItems, AbstractItem1, AbstractPattern, AbstractItem2
 
 
+rnaDict = {'G': 'R(G)P', 'U': 'R(U)P', 'C': 'R(C)P', 'A': 'R(A)P','Gms': '[mR](G)[sP]', 'Gm': '[mR](G)P', 'Um': '[mR](U)P', 'Cm': '[mR](C)P', 'Am': '[mR](A)P', 'Cf': '[fR](C)P', 'Uf': '[fR](U)P', 'Agalnac': '[Adem-GalNAc](A)P', 'Umps': '[MeMOP](U)[sP]', 'Gfs': '[fR](G)[sP]', 'Afs': '[fR](A)[sP]', 'Af': '[fR](A)P', 'Cms': '[mR](C)[sP]'}
+aadict = {'A': 'Ala', 'Aib': 'Aib', 'C': 'Cys', 'D': 'Asp', 'E': 'Glu', 'F': 'Phe', 'G': 'Gly', 'H': 'His', 'I': 'Ile', 'K': 'Lys', 'Kbrac': 'Lys(bromoacetyl)', 'L': 'Leu', 'Q': 'Gln', 'R': 'Arg', 'S': 'Ser', 'T': 'Thr', 'V': 'Val', 'W': 'Trp', 'Y': 'Tyr', 'M': 'Met', 'N': 'Asn', 'O': 'Pyl', 'P': 'Pro', 'U': 'Sec'}
+
+
 class Macromolecule(PatternWithItems):
     '''
     Class which stores molecule properties. E.g. protein, RNA, DNA
@@ -16,9 +20,18 @@ class Macromolecule(PatternWithItems):
             list of building blocks
         :param (int | None) id: id of macromolecule
         '''
-        super(Macromolecule, self).__init__(name, buildingBlocks, id)
+        bbs = [list(bb) for bb in buildingBlocks]
+        if len(buildingBlocks[0])<5:
+            bbs = [[bb[0],bb[1],bb[2],bb[3]] for bb in buildingBlocks]
+        super(Macromolecule, self).__init__(name, bbs, id)
         self.__gain = moleculeGain
         self.__loss = moleculeLoss
+
+
+            
+
+    def setItems(self, items):
+        self._items = items
 
     def getGain(self):
         return self.__gain
@@ -33,6 +46,7 @@ class Macromolecule(PatternWithItems):
         '''
         formula = AbstractItem2.stringToFormula(self.__gain, dict(), 1)
         return AbstractItem2.stringToFormula(self.__loss, formula, -1)
+    
 
     def getBBDict(self):
         '''
@@ -54,19 +68,31 @@ class BuildingBlock(AbstractItem1):
     #def __init__(self, name, formulaString, acidity):
     def __init__(self, item):
         '''
-        :param (list[str, str, float, float] | tuple[str, str, float, float]) item:
-            list of properties (name, formulaString, gas-phase basicity (gb) in positive mode, gb in negative mode)
+        :param (list[str, str, str, float, float] | tuple[str, str, str, float, float]) item:
+            list of properties (name, formulaString, translation, gas-phase basicity (gb) in positive mode, gb in negative mode)
         '''
         super(BuildingBlock, self).__init__(item[0])
-        self.__formulaString = item[1]
-        self.__gbP = item[2]
-        self.__gbN = item[3]
+        #if len(item)==5:
+            #raise NotImplementedError("Building Block Table not updated")
+            #self.__translation = ""
+            #self.__gbP = item[2]
+            #self.__gbN = item[3]
+        #else:
+        self.__translation = item[1]
+        self.__formulaString = item[2]
+        self.__gbP = item[3]
+        self.__gbN = item[4]
 
     def getFormulaString(self):
         return self.__formulaString
 
     def getFormula(self):
         return self.stringToFormula(self.__formulaString,dict(),1)
+
+    def getTranslation(self):
+        return self.__translation
+    def setTranslation(self, translation):
+        self.__translation = translation
 
     def getGbP(self):
         return self.__gbP

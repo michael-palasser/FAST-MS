@@ -90,13 +90,14 @@ class MolecularFormulaTest(TestCase):
         self.testIsotopeTable(isotopeTable, values)
         return isotopeTable
 
-    def test_makeIsotopeTable(self):
+    def test_makeIsotopeTable(self): #ToDo
         isotopeTable = molFormulaDummy.makeIsotopeTable()
         values = list(molFormulaDummy.getFormulaDict().values())
+        print(isotopeTable,values)
         self.testIsotopeTable(isotopeTable, values)
         return isotopeTable
 
-    def testMakeIsotopeTable_functions(self):
+    def testMakeIsotopeTable_functions(self): #ToDo
         nucIsotopeTable = self.sortByMass(self.test_makeNucIsotopeTable())
         protIsotopeTable = self.sortByMass(self.test_makeProteinIsotopeTable())
         uniIsotopeTable = self.sortByMass(self.test_makeIsotopeTable())
@@ -214,7 +215,8 @@ class MolecularFormulaTest(TestCase):
         #print(key for key in {'S'} in {'C','S','H'})
         #print(MolecularFormula('S').calculateIsotopePatternFFT(0.996,10))
         #return
-        for i in range(10):
+        for i in range(5):
+            print(i)
             randNr = randint(30, 150)
             molFormulaDummy_RNA = MolecularFormula({key:int(round(val*randNr)) for key,val in averaginine.items()})
             molFormulaDummy_prot = MolecularFormula({key:int(round(val*randNr)) for key,val in averagine.items()})

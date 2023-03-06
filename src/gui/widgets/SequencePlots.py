@@ -43,7 +43,7 @@ class PlotFactory(object):
         self._sequence = sequence
         self._maxY = maxY
         self._plot1 = pg.plot()
-        self._plot1.addLegend(labelTextSize='14pt')
+        self._plot1.addLegend(labelTextSize='12pt')
         self._plot1.setBackground('w')
         self._plot1.showAxis('right')
         self._plot2 = pg.ViewBox()
@@ -51,8 +51,15 @@ class PlotFactory(object):
         self._plot1.getAxis('right').linkToView(self._plot2)
         self._plot2.setXLink(self._plot1)
         self._plot2.setYLink(self._plot1)
-        styles = {"black": "#f00", "font-size": "20px"}
+        styles = {"black": "#f00", "font-size": "12pt"}
         self._plot1.setLabel('bottom', 'cleavage site', **styles)
+
+        for axisName in ("left", "bottom", "right"):
+            font=QtGui.QFont()
+            font.setPointSize(10)
+            axis = self._plot1.getAxis(axisName)
+            axis.setStyle(tickFont=font)
+            axis.setTextPen("k")
         yRange = [-self._maxY*0.05,self._maxY*1.05]
         self._plot1.setXRange(0.02, len(self._sequence) + 0.02)
         self._plot1.plotItem.vb.setLimits(xMin=0, xMax=len(self._sequence) + 0.01, yMin=yRange[0], yMax=yRange[1])
@@ -78,7 +85,7 @@ class PlotFactory(object):
                 sequMarkers[bb] = self.makeCustomMarker(bb)
         for i, bb in enumerate(self._sequence):
             scatter = pg.ScatterPlotItem(x=(i+0.5,),y=(0,), symbol=sequMarkers[bb],
-                                         pen=pg.mkPen(color='k', width=0.1), size=10, pxMode=True)
+                                         pen=pg.mkPen(color='k', width=0.1), size=12, pxMode=True)
             plot.addItem(scatter)
 
 
@@ -103,7 +110,7 @@ class PlotFactory(object):
         '''
         self._plot1.setWindowTitle('Charge Distribution')
         yLabel = 'average charge '
-        styles = {"black": "#f00", "font-size": "18px"}
+        styles = {"black": "#f00", "font-size": "12pt"}
         self._plot1.setLabel('left', yLabel + ','.join(self._forwardVals.keys()), **styles)
         self._plot1.setLabel('right', yLabel + ','.join(self._backwardVals.keys()), **styles)
 
@@ -114,7 +121,7 @@ class PlotFactory(object):
         self._plot1.setWindowTitle('Occupancies ' +modification)
         #yLabel = '% '+modification + ' ('
         yLabel = modification + ' ('
-        styles = {"black": "#f00", "font-size": "18px"}
+        styles = {"black": "#f00", "font-size": "12pt"}
         self._plot1.setLabel('left', yLabel + ','.join(self._forwardVals.keys()) + ')', **styles)
         self._plot1.setLabel('right', yLabel + ','.join(self._backwardVals.keys()) + ')', **styles)
 
@@ -148,7 +155,7 @@ class PlotFactory(object):
             if parent!=self._plot1:
                 vals = [self._maxY-val for val in vals]
             newXVals, newVals = self.removeNANVals(xVals,vals)
-            curve = pg.PlotCurveItem(x=newXVals,y=newVals,pen=pg.mkPen(color=colours[i], width=2), name = name)
+            curve = pg.PlotCurveItem(x=newXVals,y=newVals,pen=pg.mkPen(color=colours[i], width=2))
             scatter = pg.ScatterPlotItem(x=newXVals, y=newVals, symbol=markers[i],
                                          pen =pg.mkPen(color=colours[i], width=2),
                                          brush=(0,0,0,0), size=10, pxMode=True, name = name)
@@ -278,7 +285,7 @@ def plotBars(sequence, values, headers, title, occup=False):
     :return:
     '''
     #sequLength = len(sequence)
-    colours = ['tab:red','royalblue','tab:green', 'tab:orange', 'tab:purple', 'tab:cyan', 'tab:brown']
+    colours = ['tab:red','royalblue','tab:green', 'tab:orange', 'tab:purple', 'tab:cyan', 'tab:brown', 'tab:olive', 'tab:gray', 'm','gold','darkred','limegreen','gold']
     nrCols = len(headers)
     nrRows = len(values)
     xVals = np.arange(1,nrRows+1)
@@ -286,6 +293,7 @@ def plotBars(sequence, values, headers, title, occup=False):
 
     fig, ax = plt.subplots()#figsize=(50,nrRows*10+50))
     bottom=np.zeros(nrRows)
+    
     for i in range(nrCols):
         #index=nrCols-i-1
         if occup:

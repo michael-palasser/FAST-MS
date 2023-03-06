@@ -31,6 +31,12 @@ class AbstractTableModel(QtCore.QAbstractTableModel):
 
     def getData(self):
         return self._data
+    
+    def setData(self, newData):
+        if len(newData)==0:
+            newData = ['' for _ in self._headers]
+        self._data = newData
+        self.layoutChanged.emit()
 
     def getHeaders(self):
         return self._headers

@@ -119,7 +119,7 @@ class AbstractIonView(QtWidgets.QDialog):
             ions = self.getIons(table)
             minLimit, maxLimit, YLimit = self.getLimits(ions)
             peaks = self._spectrum[
-                np.where((self._spectrum[:, 0] > (minLimit - 5)) & (self._spectrum[:, 0] < (maxLimit + 5)))]
+                np.where((self._spectrum['m/z'] > (minLimit - 5)) & (self._spectrum['m/z'] < (maxLimit + 5)))]
 
             view = SpectrumView(None, peaks, ions, minLimit, maxLimit, YLimit)
         elif action == peakAction:
@@ -146,7 +146,7 @@ class AbstractIonView(QtWidgets.QDialog):
     @staticmethod
     def getLimits(ions):
         '''
-        Returns the min and max m/z value and the max relAb of the ions in a table
+        Returns the min and max m/z value and the max I of the ions in a table
         :param (list[FragmentIon]) ions:
         :return:
         '''
@@ -157,7 +157,7 @@ class AbstractIonView(QtWidgets.QDialog):
             isoPattern = ion.getIsotopePattern()
             minMz = np.min(isoPattern['m/z'])
             maxMz = np.max(isoPattern['m/z'])
-            maxY = np.max(isoPattern['relAb'])
+            maxY = np.max(isoPattern['I'])
             if minLimit > minMz:
                 minLimit = minMz
             if maxLimit < maxMz:

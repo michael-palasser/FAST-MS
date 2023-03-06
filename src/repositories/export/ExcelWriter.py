@@ -109,10 +109,13 @@ class BasicExcelWriter(object):
             currentRow = row
             self._worksheet1.write(currentRow, col, key)
             currentRow += 1
+            fragType= self.getFragType(key)
             for i in range(len(sequence)):
-                if key in backFrags:
+                if fragType in backFrags:
+                    print(fragType,key, "back")
                     val = valueDict[key][len(sequence) - i - 2]
-                elif key in forwFrags:
+                elif fragType in forwFrags:
+                    print(fragType,key, "forward")
                     val = valueDict[key][i]
                 else:
                     raise Exception("Unknown Direction of Fragment:",key)
@@ -156,7 +159,8 @@ class BasicExcelWriter(object):
         else:
             backwardFrags = ['w', 'x', 'y', 'z']'''
         for key in sorted(list(valueDict.keys())):
-            if key in backwardFrags:
+            fragType= self.getFragType(key)
+            if fragType in backwardFrags:
                 chart.add_series({
                     'name': ['analysis', row, col],
                     'categories': ['analysis', row+1, 1, lastRow, 1],
@@ -198,6 +202,11 @@ class BasicExcelWriter(object):
         chart.set_style(10)
         # Insert the chart into the worksheet (with an offset).
         self._worksheet1.insert_chart(row, len(valueDict) + 4, chart, {'x_offset': 25, 'y_offset': 10})
+
+    def getFragType(self, key):
+        if len(key)>1:
+            return key[0]
+        return key
 
 
     def closeWorkbook(self):

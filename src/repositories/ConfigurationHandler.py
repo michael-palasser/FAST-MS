@@ -23,6 +23,15 @@ top_down_export = {'columns': ['m/z', 'z', 'intensity', 'fragment', 'error /ppm'
                    'analysis': ['occupancies', 'reduced charges'], 'dir': join(path,'Spectral_data','top-down')}
 intact_export = {'columns': ['m/z', 'z', 'intensity', 'fragment', 'error /ppm', 'S/N', 'quality', 'formula', 'score', 'comment'],
                  'analysis': [], 'dir': join(path,'Spectral_data','intact')}
+                 
+md = {'sequName': '', 'charge': 1, 'fragmentation': '', 'modifications': '', 'nrMod': 0,
+                   'spectralData': '', 'snapData': "","output":""}
+
+
+scoreDict = {'pen_S/N':-10,'pen_error':-3,'pen_prec':-5,
+             'I':1,'S/N':1, 'quality':2,                          #FAST MS
+             'I_SNAP':0.5,'S/N_SNAP':1, 'quality_SNAP':1,       #SNAP
+             'I_mono':0.5,'S/N_mono':5}  
 
 
 class ConfigHandler(object):
@@ -118,6 +127,13 @@ class ConfigurationHandlerFactory(object):
     def getFullIntactHandler():
         return ConfigHandler(getRelativePath("settings_intactFull.json"), intact_search)
 
+    @staticmethod
+    def getMDHandler():
+        return ConfigHandler(getRelativePath("settings_MD.json"), md)
+
+    @staticmethod
+    def getMDScoresHandler():
+        return ConfigHandler(getRelativePath("settings_MD_scores.json"), scoreDict)
 
 """
 from src import path

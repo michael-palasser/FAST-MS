@@ -39,7 +39,7 @@ class TDStartDialog(StartDialog):
         #self.setValueOfWidget(self._widgets['charge'],self._configHandler.get('charge'))
         #self._widgets['noiseLimit'].setMinimum(0)
         self._widgets['noiseLimit'].setMaximum(99)
-        self._widgets['noiseLimit'].setDecimals(3)
+        self._widgets['noiseLimit'].setDecimals(5)
         self._widgets['modifications'].currentTextChanged.connect(self.changeNrOfMods)
         #self._buttonBox.setGeometry(QtCore.QRect(210, yPos+20, 164, 32))
         #self._widgets['_charge'].setValue(2)
@@ -58,7 +58,7 @@ class TDStartDialog(StartDialog):
         self._formLayout.setWidget(index+1, QtWidgets.QFormLayout.LabelRole, self._defaultButton)'''
         self._widgets['calibration'].stateChanged.connect(lambda: self.updateCal(self._widgets['calibration'].isChecked()))
         self.updateCal(self._widgets['calibration'].isChecked())
-        #self.backToLast()
+        self.backToLast()
 
     def getLabels(self):
         return ("Sequence Name:", "Charge:", "Fragmentation:", "Modifications:", "No. of Modifications:",
@@ -74,7 +74,7 @@ class TDStartDialog(StartDialog):
                     "fragmentation": (createComboBox(self,fragPatterns), "Name of the fragmentation - pattern"),
                     "modifications": (createComboBox(self,modPatterns), "Name of the modification/ligand - pattern"),
                     "nrMod": (QtWidgets.QSpinBox(self), "How often is the precursor ion modified?"),
-                    "spectralData": (OpenFileWidget(self, 1, join(path, 'Spectral_data','top-down'),
+                    "spectralData": (OpenFileWidget(self, 1, self.getDefaultDirectory("spectralData"),
                                     "Open File","Plain Text Files (*txt);;Comma Separated Values (*csv);;All Files (*)"),
                                 "Name of the file with spectral peaks (txt or csv format)\n"
                                  "If no file is stated, the program will just calculate the fragment library"),
@@ -83,7 +83,7 @@ class TDStartDialog(StartDialog):
                             "If no file is stated, the program will search for the file with the standard name or create"
                                                            " a new one with that name"),
                  "calibration": (QtWidgets.QCheckBox(), "Spectral data will be calibrated if this option is ticked"),
-                 "calIons": (OpenFileWidget(self, 1, join(path, 'Spectral_data', 'top-down'), "Open Files",
+                 "calIons": (OpenFileWidget(self, 1, self.getDefaultDirectory("spectralData"), "Open Files",
                                             "Plain Text Files (*txt);;Comma Separated Values (*csv);;All Files (*)"),
                              "Name of the file with ions for calibration (txt format)")}
 

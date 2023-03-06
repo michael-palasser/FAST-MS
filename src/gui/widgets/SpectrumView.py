@@ -1,7 +1,14 @@
 import pyqtgraph as pg
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import QRect
+from PyQt5.QtGui import QFont
 import numpy as np
+
+#Delete if not working
+import platform
+import ctypes
+if platform.system()=='Windows' and int(platform.release()) >= 8:   
+    ctypes.windll.shcore.SetProcessDpiAwareness(True)
 
 from src.gui.GUI_functions import setIcon, translate
 
@@ -35,30 +42,44 @@ class AbstractSpectrumView(QtWidgets.QWidget):
         self._graphWidget = pg.PlotWidget(self)
         self._graphWidget.setLabel('left', 'signal', **styles)
         self._graphWidget.setLabel("bottom", "m/z", **styles)
+        for axisName in ("left", "bottom"):
+            font=QFont()
+            font.setPointSize(10)
+            axis = self._graphWidget.getAxis(axisName)
+            axis.setTextPen('k')
+            axis.setStyle(tickFont=font)
         self._graphWidget.setBackground('w')
-        self._graphWidget.setXRange(minRange, maxRange, padding=0)
-        self._graphWidget.setYRange(0, maxY * 1.1, padding=0)
+
+        self._vb = self._graphWidget.plotItem.vb
         baseLine = pg.InfiniteLine(pos=0,angle=0,pen='k',movable=False)
         self._graphWidget.addItem(baseLine)
         self.plot(width, True) #ToDo: Correct Width (linear fct)
         self.makeWidthWidgets(width)
-        self._mzRange = range(int(min(self._peaks[:,0])), int(max(self._peaks[:,0]))+1)
+        
+        self.setWindow(minRange, maxRange,maxY)
+        pg.SignalProxy(self._graphWidget.scene().sigMouseMoved, rateLimit=60, slot=self.mouseMoved)
+        self._graphWidget.scene().sigMouseMoved.connect(self.mouseMoved)
+        self._clicks = []
+        pg.SignalProxy(self._graphWidget.scene().sigMouseMoved, rateLimit=60, slot=self.mouseClicked)
+        self._graphWidget.scene().sigMouseClicked.connect(self.mouseClicked)
+        
         self._layout.addWidget(self._graphWidget)
-
-        self._vb = self._graphWidget.plotItem.vb
         #print(np.average(self._peaks[:,0]))
         #self._cursorLabel = pg.TextItem(text='Hello' ,anchor=(0,0))
         self._cursorLabel = QtWidgets.QLabel(self)
         self._cursorLabel.setGeometry(QRect(85, 40, 80, 52))
         #self._cursorLabel.setStyleSheet("border: 0.1px solid black;")
         #self._graphWidget.addItem(self._cursorLabel)
-        pg.SignalProxy(self._graphWidget.scene().sigMouseMoved, rateLimit=60, slot=self.mouseMoved)
-        self._graphWidget.scene().sigMouseMoved.connect(self.mouseMoved)
-        pg.SignalProxy(self._graphWidget.scene().sigMouseMoved, rateLimit=60, slot=self.mouseClicked)
-        self._graphWidget.scene().sigMouseClicked.connect(self.mouseClicked)
         setIcon(self)
         self._noise = None
         self.show()
+
+    def setWindow(self, minRange, maxRange,maxY):
+        self._mzRange = range(int(min(self._peaks['m/z'])), int(max(self._peaks['m/z']))+1)
+        maxInt = np.max(self._peaks["I"])     #total maximum
+        self._vb.setLimits(xMin=np.min(self._peaks["m/z"]), xMax=np.max(self._peaks["m/z"]), yMin=-0.005*maxInt, yMax=maxInt*1.4)
+        self._graphWidget.setXRange(minRange-1, maxRange+1, padding=0)
+        self._graphWidget.setYRange(0, maxY * 1.1, padding=0)
 
     def mouseMoved(self, evt):
         pos = evt
@@ -74,14 +95,34 @@ class AbstractSpectrumView(QtWidgets.QWidget):
 
     def mouseClicked(self,evt):  # action if start button clicked
         # mousePoint = self._vb.mapSceneToView(pos)
+        
         position = self._vb.mapSceneToView(evt.pos())
-        index = int(position.x())
+        x= position.x()
+        index = int(x)
         #print(self._vb.mapSceneToView(position).x())
         #print(pos.x())
         if index in self._mzRange:
-            print(position.x(), round(position.y()))
-        '''else:
-            print('not', mousePoint.x(), mousePoint.y())'''
+            x = round(position.x(),5)
+            y = round(position.y())
+            print("\t",x, y)
+            if len(self._clicks)==0:  # First mouse click - ONLY register coordinates
+                self._clicks.append((x,y))
+            elif len(self._clicks)==1:  # Second mouse click - register coordinates of second click
+                self._clicks.append((x,y))
+                distance = self._clicks[1][0]-self._clicks[0][0]
+                print("distance:",round(distance,3), "; charge:",abs(round(1/distance,1)))
+
+                # Draw line connecting the two clicks
+                #print("...drawing line")
+                #line = pg.LineSegmentROI(self._clicks, pen=(4,9)) 
+                #self._graphWidget.plotItem.vb.addItem(line)
+
+                # reset clicks array
+                self._clicks = [] # this resets the *content* of clicks without changing the object itself
+            else:  # something went wrong, just reset clicks
+                self._clicks = []
+                '''else:
+                    print('not', mousePoint.x(), mousePoint.y())'''
 
     def makeWidthWidgets(self, width):
         self._spinBox = QtWidgets.QDoubleSpinBox(self)
@@ -98,38 +139,58 @@ class AbstractSpectrumView(QtWidgets.QWidget):
 
     def plot(self, width, new=True):
         if new:
-            self._peakBars = pg.BarGraphItem(x=self._peaks[:, 0], height=self._peaks[:, 1], width=width, brush='k')
+            self._peakBars = pg.BarGraphItem(x=self._peaks['m/z'], height=self._peaks['I'], width=width, brush='k')
             self._graphWidget.addItem(self._peakBars)
-            colours = ['b','r','g', 'c', 'm', 'y']
-            markers = ['o','t', 's', 'p','h', 'star', '+', 'd', 'x', 't1','t2', 't3']
+            colours = ['b','r','g', 'c', 'm', 'y',]
+            markers = ['o','t', 's', 'p','h', 'star', '+', 'd', 'x', 't1','t2']#, 't3']
+            noise = []
+            maxIndizes = (len(colours), len(markers))
+            coulour_index=0
+            marker_index=0
             self._legend = pg.LegendItem(offset=(0., .5), labelTextSize='12pt')
             self._legend.setParentItem(self._graphWidget.graphicsItem())
-            noise = []
-            markerIndex = 0
-            colourIndex = 0
+            #maxRow =0
             for ion in self._ions:
-                if colourIndex == len(colours):
+                """if colourIndex == len(colours):
                     colourIndex = 0
                     markerIndex += 1
                     if markerIndex == len(markers):
-                        markerIndex = 0
+                        markerIndex = 0"""
                 scatter = pg.ScatterPlotItem(x=ion.getIsotopePattern()['m/z'], y=ion.getIsotopePattern()['calcInt'],
-                                             symbol=markers[markerIndex],
-                                             pen =pg.mkPen(color=colours[colourIndex], width=2),
+                                             symbol=markers[marker_index],
+                                             pen =pg.mkPen(color=colours[coulour_index], width=2),
                                              brush=(50,50,200,50), size=10, pxMode=True) #Todo resize"""
                 self._items.append(scatter)
                 maxMz = np.sort(ion.getIsotopePattern(), order='calcInt')[::-1]['m/z'][0]
                 noise.append((maxMz, ion.getNoise()))
                 self._graphWidget.addItem(scatter)
+
                 self._legend.addItem(scatter, ion.getId())
-                colourIndex += 1
-            self._noise = np.array(noise)
-            noiseLine = self._graphWidget.plot(self._noise[:, 0], self._noise[:, 1], pen='r')
-            self._legend.addItem(noiseLine, 'noise')
+                coulour_index += 1
+                marker_index+=1                
+                if coulour_index == maxIndizes[0]:
+                    coulour_index = 0
+                if marker_index == maxIndizes[1]:
+                    marker_index = 0
+                """marker_index+=1
+                coulour_index+=1
+                if coulour_index< maxIndizes[0]:
+                    marker_index=0
+                    maxRow +=1
+                    if maxRow==maxIndizes[0]:
+                        maxRow=0
+                    coulour_index=maxRow
+                if marker_index==maxIndizes[1]:
+                    marker_index=0"""
+            if len(noise)>0:
+                self._noise = np.array(noise)
+                noiseLine = self._graphWidget.plot(self._noise[:, 0], self._noise[:, 1], pen='r')
+                self._legend.addItem(noiseLine, 'noise')
+                self._items.append(noiseLine)
         else:
             self._graphWidget.removeItem(self._peakBars)
             del self._peakBars
-            self._peakBars = pg.BarGraphItem(x=self._peaks[:, 0], height=self._peaks[:, 1], width=width, brush='k')
+            self._peakBars = pg.BarGraphItem(x=self._peaks['m/z'], height=self._peaks['I'], width=width, brush='k')
             self._graphWidget.addItem(self._peakBars)
 
     def changeWidth(self):
@@ -150,10 +211,58 @@ class SpectrumView(AbstractSpectrumView):
     Used in top-down search.
     '''
     def __init__(self, parent, peaks, ions, minRange, maxRange, maxY):
-        super(SpectrumView, self).__init__(parent, peaks, ions, minRange-1, maxRange+1, maxY, '18px')
+        super(SpectrumView, self).__init__(parent, peaks, ions, minRange-1, maxRange+1, maxY, '12pt')
         self._spinBox.valueChanged.connect(self.changeWidth)
         self.resize(700,400)
 
+    def updateView(self, peaks, ions, minRange, maxRange, maxY):
+        self._peaks = peaks
+        self._ions = ions
+        self._items = []
+        #self._layout = QtWidgets.QVBoxLayout(self)
+        #self._translate = translate
+        width = 0.02
+        styles = {"black": "#f00", "font-size": '12px'}
+
+        #self._layout.removeWidget(self._graphWidget)
+        #del self._graphWidget
+
+        """self._graphWidget = pg.PlotWidget(self)
+        self._graphWidget.setLabel('left', 'signal', **styles)
+        self._graphWidget.setLabel("bottom", "m/z", **styles)
+        self._graphWidget.setBackground('w')
+        self._graphWidget.setXRange(minRange-1, maxRange+1, padding=0)
+        self._graphWidget.setYRange(0, maxY * 1.1, padding=0)
+        baseLine = pg.InfiniteLine(pos=0,angle=0,pen='k',movable=False)
+        self._graphWidget.addItem(baseLine)"""
+        self._legend.scene().removeItem(self._legend)
+        for item in self._items:
+            self._graphWidget.removeItem(item)
+            self._legend.removeItem(item)
+            del item
+        #del self._graphWidget
+        self.plot(width, True) #ToDo: Correct Width (linear fct)
+        #self.makeWidthWidgets(width)
+        self._mzRange = range(int(min(self._peaks['m/z'])), int(max(self._peaks['m/z']))+1)
+        #self._layout.addWidget(self._graphWidget)
+
+        #self._vb = self._graphWidget.plotItem.vb
+        #print(minRange, maxRange, maxY)
+        self.setWindow(minRange, maxRange, maxY)
+        #print(np.average(self._peaks[:,0]))
+        #self._cursorLabel = pg.TextItem(text='Hello' ,anchor=(0,0))
+        #self._cursorLabel = QtWidgets.QLabel(self)
+        #self._cursorLabel.setGeometry(QRect(85, 40, 80, 52))
+        #self._cursorLabel.setStyleSheet("border: 0.1px solid black;")
+        #self._graphWidget.addItem(self._cursorLabel)
+        """pg.SignalProxy(self._graphWidget.scene().sigMouseMoved, rateLimit=60, slot=self.mouseMoved)
+        self._graphWidget.scene().sigMouseMoved.connect(self.mouseMoved)
+        pg.SignalProxy(self._graphWidget.scene().sigMouseMoved, rateLimit=60, slot=self.mouseClicked)
+        self._graphWidget.scene().sigMouseClicked.connect(self.mouseClicked)"""
+        #setIcon(self)
+        #self._cursorLabel.setGeometry(QRect(85, 40, 80, 52))
+
+        #self._noise = None
 
 class TheoSpectrumView(AbstractSpectrumView):
     '''
@@ -161,11 +270,11 @@ class TheoSpectrumView(AbstractSpectrumView):
     Used in isotope pattern tool.
     '''
     def __init__(self, parent, peaks, width):
-        spectrPeaks = np.array([(peak['m/z'],peak['relAb']) for peak in peaks])
+        spectrPeaks = peaks[['m/z', 'I']]
         tolerance = (np.max(peaks['m/z'])-np.min(peaks['m/z']))*0.2
-        yMax = max(np.max(peaks['calcInt']),np.max(peaks['relAb']))
+        yMax = max(np.max(peaks['calcInt']),np.max(peaks['I']))
         super(TheoSpectrumView, self).__init__(parent, spectrPeaks, peaks,
-               np.min(peaks['m/z'])-tolerance, np.max(peaks['m/z'])+tolerance, yMax, "14px")
+               np.min(peaks['m/z'])-tolerance, np.max(peaks['m/z'])+tolerance, yMax, "12pt")
         self._spinBox.valueChanged.connect(self.changeWidth)
         self._spinBox.move(width - 70, 0)
 
@@ -174,7 +283,16 @@ class TheoSpectrumView(AbstractSpectrumView):
                                              pen =pg.mkPen(color='r', width=0.4), width=width, brush='r')
         self._graphWidget.addItem(self._peakBars)
         if len(self._peaks)>0:
-            self._peakScatter = pg.ScatterPlotItem(x=self._peaks[:, 0], y=self._peaks[:, 1], symbol='star',
+            self._peakScatter = pg.ScatterPlotItem(x=self._peaks['m/z'], y=self._peaks['I'], symbol='star',
                                                    pen=pg.mkPen(color='k', width=0.2), size=12, pxMode=True)
             self._graphWidget.addItem(self._peakScatter)
 
+
+    def setWindow(self, minRange, maxRange,maxY):
+        self._mzRange = range(int(min(self._peaks['m/z'])), int(max(self._peaks['m/z']))+1)
+        maxInt = np.max(self._peaks["I"])     #total maximum
+        if maxInt<maxY:
+            maxInt=maxY
+        self._vb.setLimits(xMin=minRange-0.5, xMax=maxRange+0.5, yMin=-0.005*maxInt, yMax=maxInt*1.4)
+        self._graphWidget.setXRange(minRange-1, maxRange+1, padding=0)
+        self._graphWidget.setYRange(0, maxY * 1.1, padding=0)

@@ -5,6 +5,7 @@ Created on 21 Jul 2020
 '''
 from multiprocessing import Pool
 import logging
+from numpy import sort
 #from tqdm import tqdm
 
 from src.Exceptions import InvalidInputException
@@ -73,9 +74,8 @@ class FragmentLibraryBuilder(object):
             length += 1
         return simpleLadder
 
-
-    @staticmethod
-    def checkForResidue(residues, sequence):
+    #ToDo: and or (momentan nur or)
+    def checkForResidue(self, residues, sequence, forward=True):
         '''
         Checks if sequenceList contains a corresponding residue for residue-specific fragments
         :param (list[str]) residues: list of residue/building blocks that must be included
@@ -88,6 +88,12 @@ class FragmentLibraryBuilder(object):
                 return True
             elif residue[-1]=='!':
                 if residue[:-1] == sequence[-1]:
+                    checked = True
+            elif residue[-1]=='+':
+                fullSequence = self.__sequence.getSequenceList()
+                if forward:
+                    fullSequence = fullSequence[::-1]
+                if residue[:-1] == fullSequence[len(fullSequence)-len(sequence)-1]:
                     checked = True
             elif residue in sequence:
                 checked = True
@@ -135,7 +141,8 @@ class FragmentLibraryBuilder(object):
                 if self.checkForProlines(species,linkSequ, basicLadder[len(linkSequ)][0][-1]):
                     continue
                 formula = linkFormula.addFormula(template.getFormula())
-                if self.checkForResidue(template.getListOfResidues(), linkSequ):
+                forward = template.getDirection()==1
+                if self.checkForResidue(template.getListOfResidues(), linkSequ,forward):
                     if (not formula.checkForNegativeValues()) and template.isEnabled():
                         ladder.append(Fragment(species, len(linkSequ), rest, formula, linkSequ,
                                                templateRadicals))
@@ -145,7 +152,7 @@ class FragmentLibraryBuilder(object):
                                     modifName = modif.getName()
                                     formula = linkFormula.addFormula(template.getFormula(),
                                                 MolecularFormula(modif.getFormula()).multiplyFormula(nrMod).getFormulaDict())
-                                    if self.checkForResidue(modif.getListOfResidues(), linkSequ) and not formula.checkForNegativeValues()\
+                                    if self.checkForResidue(modif.getListOfResidues(), linkSequ,forward) and not formula.checkForNegativeValues()\
                                             and ((modifName+rest) not in self.__modifPattern.getExcluded()):
                                             #Constructor: type, number, modification, loss, formula
                                             if self.__maxMod > 1:
@@ -278,4 +285,3 @@ class FragmentLibraryBuilder(object):
         #self._bar.update(1) does not work in python 3.8
         #self._fun()
         return fragment
-

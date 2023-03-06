@@ -53,6 +53,10 @@ class TestFragmentLibraryBuilder(TestCase):
         self.assertTrue(self.builderRNA.checkForResidue(['G!'], ['A', 'U', 'G']))
         self.assertTrue(self.builderRNA.checkForResidue(['G!','A'], ['A', 'U', 'G']))
         self.assertTrue(self.builderRNA.checkForResidue(['G!','C'], ['A', 'U', 'G']))
+        self.assertTrue(self.builderRNA.checkForResidue(['G+'], ['A','C','U'],False))
+        self.assertTrue(self.builderRNA.checkForResidue(['C+'], ['G', 'A']))
+        self.assertTrue(self.builderRNA.checkForResidue(['A+'], ['C','U'],False))
+        self.assertFalse(self.builderRNA.checkForResidue(['G+'], ['C','U'],False))
         self.assertTrue(self.builderRNA.checkForResidue(['G','C'], ['A', 'U', 'G']))
         self.assertFalse(self.builderRNA.checkForResidue(['G','C'], ['A', 'U', 'A']))
 

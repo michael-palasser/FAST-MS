@@ -10,8 +10,9 @@ import numpy as np
 from scipy.constants import R
 
 from src.entities.Ions import FragmentIon
+from src.repositories.SpectralDataReader import SpectralDataReader
 #from Other.simpleFunctions import eMass, protMass
-from src.services.assign_services.AbstractSpectrumHandler import AbstractSpectrumHandler
+from src.services.assign_services.AbstractSpectrumHandler import AbstractSpectrumHandler, getMz
 
 logging.basicConfig(level=logging.INFO)
 logging.basicConfig(filename='logfile_SpectrumHandler.log',level=logging.INFO)
@@ -219,3 +220,48 @@ class SpectrumHandler(AbstractSpectrumHandler):
 
     def setSearchedChargeStates(self, searchedZStates):
         self._searchedChargeStates = searchedZStates
+
+
+    def findMonoisotopics(self, fragmentLibrary, peakData):
+        '''
+        Assigns peaks in spectrum to isotope peaks of corresponding ion
+        1. Possible charges of species are calculated
+        2. Search for n highest isotope peaks in spectrum: n either 1, 2 or 3 (see Fragment.getNumberOfHighestIsotopes)
+        3. If found noise is calculated and the isotope peaks which could theoretically be above the noise are calculated:
+            Programm searches for these peaks in spectrum
+            If all isotope peaks are calculated to be below noise threshold, ion is added to deleted ion (comment = noise)
+        :param (Fragment | Neutral) neutral: neutral species
+        :param (Generator) zRange: range of possible charge states of neutral species
+        '''
+        found = []
+        for fragment in fragmentLibrary:
+            zRange = self.getChargeRange(fragment)
+            logging.info(fragment.getName())
+            radicals = fragment.getRadicals()
+            for z in zRange:
+                logging.debug('* z'+str(z))
+                monoisotopic = np.sort(fragment.getIsotopePattern(), order='m/z')[0]
+                monoisotopic['m/z'] = getMz(monoisotopic['m/z'], z * self._sprayMode, radicals)
+                if (self._configs['lowerBound'] < monoisotopic['m/z'] < self._upperBound):
+                    spectralPeak = self.findPeak(monoisotopic)
+                    if spectralPeak[1] != 0:
+                        snr = peakData[peakData['m/z'] == spectralPeak[0]]['S/N']
+                        #m/z, z, int, name, error
+                        found.append((spectralPeak[0], z, spectralPeak[1], fragment.getName(), round(monoisotopic['m/z'],5),round(spectralPeak[3],2),snr))
+        return np.array(found, dtype=np.dtype([('m/z', float), ('z', int), ('I', int), ('name', 'U32'), ('m/z_theo', float), ('error', float), ('S/N', float)]))
+
+
+
+"""class MDSpectrumHandler(SpectrumHandler):
+    def __init__(self, properties, precursor, settings, configs):
+        super(MDSpectrumHandler, self).__init__(properties, precursor, settings, configs)
+        self._dType = np.dtype([('m/z', float), ('I', float), ('S/N', float)])
+
+    def addSpectrumFromTxt(self, filePath, csv=False):
+            '''
+            :param (str) filePath: path of text-file
+            :return: (ndarray(dtype=float, ndim=2)) [(m/z, int)]
+            '''
+            return SpectralDataReader().openTxtFile(filePath, np.dtype([('m/z', float), ('I', float), ('S/N', float)]))"""
+
+

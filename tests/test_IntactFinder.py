@@ -55,7 +55,7 @@ class TestFinder(TestCase):
         self.assertEqual(4, len(self.finderRNA.getData()[0]))
         for spectrum in self.finderRNA.getData()[0]:
             self.assertGreater(len(spectrum),0)
-            self.assertEqual(np.dtype([('m/z', np.float64), ('z', np.uint8), ('relAb', np.float64)]), spectrum.dtype)
+            self.assertEqual(np.dtype([('m/z', np.float64), ('z', np.uint8), ('I', np.float64)]), spectrum.dtype)
 
     '''def test_get_mz(self):
         self.fail()

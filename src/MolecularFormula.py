@@ -13,7 +13,7 @@ Created on 3 Jul 2020
 '''
 
 periodicTableService = PeriodicTableService()
-isoTableDtype= np.dtype([('index', float), ('nr', float), ('nrIso', float),('relAb',float), ('mass',float), ('M+',float)])
+isoTableDtype= np.dtype([('index', float), ('nr', float), ('nrIso', float),('I',float), ('mass',float), ('M+',float)])
 isoPatternDtype = np.dtype([('m/z',float),('calcInt', float)])
 #MIN_SUM = 0.996
 
@@ -225,7 +225,7 @@ class MolecularFormula(object):
                                 , dtype=isoTableDtype)
         """isotopeTable = np.array(isotopeTable
                                 , dtype=[('index', np.float64), ('nr', np.float64), ('nrIso', np.float64),
-                                         ('relAb', np.float64), ('mass', np.float64), ('M+', np.float64)])"""
+                                         ('I', np.float64), ('mass', np.float64), ('M+', np.float64)])"""
         if len(getByIndex(isotopeTable, isotopeTable['index'][0])) != 2:
             isotopeTable = self.reorderTable(isotopeTable)
         return isotopeTable

@@ -137,6 +137,13 @@ class AbstractDialog(QtWidgets.QDialog):
             for name, item in self._widgets.items():
                 self.setValueOfWidget(item, self._configHandler.get(name))
 
+    
+    def getDefaultDirectory(self, widgetName):
+        default = os.path.split(self._configHandler.get(widgetName))[:-1][0]
+        if os.path.isdir(default):
+            return default
+        return os.path.join(path, 'Spectral_data','top-down')
+
     def reject(self):
         self._canceled = True
         super(AbstractDialog, self).reject()

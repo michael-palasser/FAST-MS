@@ -30,7 +30,10 @@ class AbstractSimpleEditorController(ABC):
         self._mainWindow = SimpleMainWindow(None, title)
         #self.mainWindow.setObjectName(title)
         self._translate = translate
-        self._centralwidget = self._mainWindow.centralWidget()
+        centralWidget = self._mainWindow.centralWidget()
+        verticalLayout = QtWidgets.QVBoxLayout(centralWidget)
+        self._centralwidget = QtWidgets.QScrollArea(centralWidget)
+        verticalLayout.addWidget(self._centralwidget)
         self._formLayout = QtWidgets.QFormLayout(self._centralwidget)
         self._formLayout.setFieldGrowthPolicy(QtWidgets.QFormLayout.ExpandingFieldsGrow)
 

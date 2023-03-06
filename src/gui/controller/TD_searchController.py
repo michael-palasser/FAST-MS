@@ -11,7 +11,7 @@ import numpy as np
 import time
 from PyQt5 import QtWidgets
 
-from src.resources import path, autoStart
+from src.resources import path, autoStart, DEVELOP
 from src.Exceptions import InvalidIsotopePatternException, InvalidInputException
 from src.entities.Info import Info
 from src.gui.AbstractMainWindows import SimpleMainWindow
@@ -55,7 +55,7 @@ class TD_MainController(AbstractMainController):
         '''
         super(TD_MainController, self).__init__(window)
         if new:
-            dialog = TDStartDialog(parent)
+            dialog = self.startDialog(parent)
             dialog.exec_()
             if dialog.canceled():
                 return
@@ -76,7 +76,8 @@ class TD_MainController(AbstractMainController):
                 traceback.print_exc()
                 QtWidgets.QMessageBox.warning(None, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
         else:
-            searchService = SearchService()
+            self.loadSearch(parent)
+            """searchService = SearchService()
             #self._search =
             dialog = SelectSearchDlg(parent, searchService.getAllSearchNames(),self.deleteSearch, searchService)
             if dialog.exec_() and not dialog.canceled():
@@ -114,7 +115,61 @@ class TD_MainController(AbstractMainController):
                 self._analyser = Analyser(None, self._propStorage.getSequenceList(), self._settings['charge'],
                                           self._propStorage.getModificationName(), self._configs['useAb'])
                 self._saved = True
-                self.setUpUi()
+                self.setUpUi()"""
+
+    #new:
+    @staticmethod
+    def startDialog(parent):
+        return TDStartDialog(parent)
+    
+    def loadSearch(self,parent):
+        searchService = SearchService()
+        #self._search =
+        dialog = SelectSearchDlg(parent, searchService.getAllSearchNames(),self.deleteSearch, searchService)
+        if dialog.exec_() and not dialog.canceled():
+            self._configs = ConfigurationHandlerFactory.getConfigHandler().getAll()
+            start=time.time()
+            self._settings, noiseLevel, observedIons, delIons, remIons, searchedZStates, logFile = \
+                searchService.getSearch(dialog.getName())
+            print('time:', time.time()-start)
+            self._info = Info(logFile)
+            self._savedName = dialog.getName()
+            peaks = None
+            if not os.path.isfile(self._settings['spectralData']):
+                choice = QtWidgets.QMessageBox.question(parent, 'Spectral Data not found!',
+                    'File with spectral data could not be found.\n'
+                    'Do you want to manually select the file? Otherwise, the analysis will be loaded without the '
+                    'spectral data.',
+                    QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+                if choice == QtWidgets.QMessageBox.Yes:
+                    dlg = OpenSpectralDataDlg(parent)
+                    if dlg.exec_() and not dlg.canceled():
+                        self._settings['spectralData'] = dlg.getValue()
+                elif choice == QtWidgets.QMessageBox.No:
+                    peaks = searchService.getAllAssignedPeaks(observedIons+delIons)
+            self._propStorage = SearchSettings(self._settings['sequName'], self._settings['fragmentation'],
+                                                self._settings['modifications'])
+            self._libraryBuilder = FragmentLibraryBuilder(self._propStorage, self._settings['nrMod'],
+                                                            self._configs['maxIso'], self._configs['approxIso'])
+            self._libraryBuilder.createFragmentLibrary()
+
+            self._spectrumHandler = SpectrumHandler(self._propStorage, self._libraryBuilder.getPrecursor(),
+                                                    self._settings, self._configs, peaks)
+            self._spectrumHandler.setSearchedChargeStates(searchedZStates)
+            self._intensityModeller = IntensityModeller(self._configs, noiseLevel)
+            self._intensityModeller.setIonLists(observedIons, delIons, remIons)
+            
+            types = self._propStorage.getFragmentsByDir(1)
+            types.update(self._propStorage.getFragmentsByDir(-1))         
+            for key in {ion.getType() for ion in self._intensityModeller.getObservedIons().values()}:
+                if key not in types:
+                    QtWidgets.QMessageBox.warning(None, "Fragment type not found", '"'+ key + '" was not found in fragmentation template list. Add the template to "' 
+                                                  + self._propStorage.getFragmentation().getName() + '" to ensure correct behaviour', QtWidgets.QMessageBox.Ok)
+            self._analyser = Analyser(None, self._propStorage.getSequenceList(), self._settings['charge'],
+                                        self._propStorage.getModificationName(), self._configs['useAb'])
+            self._saved = True
+            self.setUpUi()
+
 
     @staticmethod
     def deleteSearch(name, searchService):
@@ -134,10 +189,9 @@ class TD_MainController(AbstractMainController):
         """read existing ion-list file or create new one"""
         libraryImported = False
         patternReader = IsotopePatternRepository()
+        settings = [self._settings[setting] for setting in ['sequName', 'fragmentation', 'nrMod', 'modifications']]
         if self._settings['fragLib'] != '':
             settings = [self._settings['fragLib']]
-        else:
-            settings = [self._settings[setting] for setting in ['sequName', 'fragmentation', 'nrMod', 'modifications']]
         if patternReader.findFile(settings):
             print("\n********** Importing list of isotope patterns from:", patternReader.getFile(), "**********")
             try:
@@ -239,7 +293,6 @@ class TD_MainController(AbstractMainController):
         return 0
 
 
-
     def createMenuBar(self):
         '''
         Makes the QMenuBar
@@ -325,15 +378,30 @@ class TD_MainController(AbstractMainController):
                 if dlg.exec_() and dlg == QtWidgets.QMessageBox.Ok:
                     return
 
+
     def showFragmentation(self):
         '''
         Makes a widget with a table with the proportion of each fragment type and a table with the relative abundances
         for every fragment type and cleavage site. The latter is plotted (bar plot).
         '''
         self._analyser.setIons(self.getIonList())
+        if DEVELOP:
+            for ion in self.getIonList():
+                sortedArray = np.sort(ion.getIsotopePattern(), order='I')[::-1]
+                print(ion.getName(), ion.getCharge(), ion.getType(), ion.getNumber(), ion.getModification(),
+                      sortedArray['m/z'][0], sortedArray['calcInt'][0])
         fragmentation, fragPerSite = self._analyser.calculateRelAbundanceOfSpecies()
         forwardVals = self._propStorage.filterByDir(fragPerSite, 1)
         backwardVals = self._propStorage.filterByDir(fragPerSite, -1)
+        if len(forwardVals.keys())+len(backwardVals.keys()) != (len(fragPerSite.keys())):
+            forwardKeys, backwardKeys = forwardVals.keys(), backwardVals.keys()
+            for key in fragPerSite.keys():
+                if (key not in forwardKeys) and (key not in backwardKeys):
+                    QtWidgets.QMessageBox.warning(None, "Fragment type not found", '"'+ key + '" was not found in fragmentation template list. Add the template "'+
+                                                key+'" to "' + self._propStorage.getFragmentation().getName() + '" and try again', QtWidgets.QMessageBox.Ok)
+                    return
+                    """raise InvalidInputException("Fragment type not found", key + " was not found in fragmentation template list. Add the template "+
+                                                key+" to " + self._propStorage.getFragmentation().getName() + " and try again")"""
         table = self._analyser.toTable(forwardVals.values(), backwardVals.values())
         headers= list(fragPerSite.keys())
         fragmentationView = FragmentationTable([(type,val) for type,val in fragmentation.items()],
@@ -427,9 +495,9 @@ class TD_MainController(AbstractMainController):
         chargeView = PlotTableView(centralWidget, self._analyser.toTable(forwardVals.values(), backwardVals.values()),
                                        list(chargeDict.keys()), 'Av. Charge per Fragment', 1)
         chargeView.sortBy(1)
-        layout.addWidget(chargeView)
+        layout.addWidget(chargeView,2)
         layout.addWidget(plotFactory1.showChargePlot(self._propStorage.getSequenceList(), forwardVals,
-                                    backwardVals, self._spectrumHandler.getCharge(), forwardLimits, backwardLimits))
+                                    backwardVals, self._spectrumHandler.getCharge(), forwardLimits, backwardLimits),3)
         mainWindow.show()
         #self._openWindows.append(chargeView)
 

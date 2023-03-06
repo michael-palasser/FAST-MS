@@ -21,7 +21,7 @@ from tests.top_down.test_SpectrumHandler import initTestLibraryBuilder
 def getTestIntactSettings():
     settings = ConfigurationHandlerFactory.getFullIntactHandler().getAll()
     spectralFile = os.path.join(path, 'tests', 'test_files', '2511_neoRibo_3xRIO_CMCT_1.5mMPip_4mMIm_01_0.52.txt')
-    calFile = os.path.join(path, 'tests', 'test_files', '2511_RIO_test.txt')
+    calFile = os.path.join(path, 'tests', 'test_files', '2511_RIO_test_0.txt')
     try:
         settings.update({'sequName': 'neoRibo', 'modifications': 'CMCT', 'calibration': True,
                          'spectralData': spectralFile, "calIons": calFile, 'noiseLimit': 520000, 'sprayMode':'negative',

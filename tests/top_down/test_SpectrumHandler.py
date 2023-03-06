@@ -16,6 +16,7 @@ from src.services.assign_services.AbstractSpectrumHandler import getErrorLimit, 
 from tests.test_MolecularFormula import averaginine, averagine
 from tests.top_down.test_LibraryBuilder import initTestSequences
 
+theoPeakType = np.dtype([('m/z', np.float64), ('calcInt', np.float64)])
 
 def initTestLibraryBuilder(charge=-3, modif='CMCT'):
     initTestSequences()
@@ -69,11 +70,13 @@ class TestSpectrumHandler(TestCase):
         fromCsv = self.spectrumHandler.addSpectrumFromCsv(os.path.join(path, 'tests', 'test_files', 'dummySpectrum.csv'))
         #with open(self.settings['spectralData'], 'r') as f:
         fromTxt = self.spectrumHandler.addSpectrumFromTxt(self.settings['spectralData'])
+        print('txt',fromTxt, fromTxt.dtype)
+        print('csv',fromCsv, fromCsv.dtype)
         N = len(fromCsv)
         self.assertEqual(N, len(fromTxt))
         for row in range(N):
-            for col in range(2):
-                self.assertAlmostEqual(fromCsv[row, col], fromTxt[row, col])
+            for col in ('m/z', 'I'):
+                self.assertAlmostEqual(fromCsv[row][col], fromTxt[row][col])
 
     def test_find_upper_bound(self):
         self.assertAlmostEqual(1800 + self.configs['upperBoundTolerance'], self.spectrumHandler.findUpperBound())
@@ -87,9 +90,10 @@ class TestSpectrumHandler(TestCase):
 
     def test_get_peaks_in_window(self):
         allPeaks = np.column_stack((np.arange(100., 300.), np.ones(200)))
+        allPeaks=allPeaks.astype(self.spectrumHandler.getDtype())
         peaks = self.spectrumHandler.getPeaksInWindow(allPeaks, 200, 10)
         for theo, peak in zip(np.arange(196., 205.), peaks):
-            self.assertAlmostEqual(theo, peak[0])
+            self.assertAlmostEqual(theo, peak['m/z'])
 
     def test_get_mod_charge(self):
         zEffect = self.props.getModifPattern().getItems()[0].getZEffect()
@@ -155,10 +159,10 @@ class TestSpectrumHandler(TestCase):
         return range(low, high + 1)
 
     def test_get_correct_peak(self):
-        '''isotopePattern_dtype = np.dtype([('m/z', np.float64), ('relAb', np.float64),
+        '''isotopePattern_dtype = np.dtype([('m/z', np.float64), ('I', np.float64),
                                        ('calcInt', np.float64), ('error', np.float32), ('used', np.bool_)])'''
-        dtype = [('m/z', np.float64), ('calcInt', np.float64)]
-        theoPeak = np.array([(300.54, 0.5)], dtype=dtype)
+        dtype = self.spectrumHandler.getDtype()
+        theoPeak = np.array([(300.54, 0.5)], dtype=theoPeakType)
         self.assertEqual(0, self.spectrumHandler.getCorrectPeak(np.array([]), theoPeak[0])[1])
         dummyPeak, error = self.getDummyPeak(theoPeak)
         finPeak = self.spectrumHandler.getCorrectPeak(dummyPeak, theoPeak[0])
@@ -170,13 +174,13 @@ class TestSpectrumHandler(TestCase):
         for i in range(20):
             dummyPeak1, error1 = self.getDummyPeak(theoPeak)
             dummyPeak2 = deepcopy(dummyPeak1)
-            dummyPeak2[0] *= (1 + error1 / 10 ** 6)
+            dummyPeak2['m/z'] *= (1 + error1 / 10 ** 6)
             dummyPeak3 = deepcopy(dummyPeak1)
-            dummyPeak3[0] *= (1 - 2.1 * error1 / 10 ** 6)
+            dummyPeak3['m/z'] *= (1 - 2.1 * error1 / 10 ** 6)
             dummyPeaks = np.concatenate((dummyPeak1, dummyPeak2, dummyPeak3), axis=0)
             finPeak = self.spectrumHandler.getCorrectPeak(dummyPeaks, theoPeak[0])
-            self.assertAlmostEqual(dummyPeak1[0][0], finPeak[0])
-            self.assertAlmostEqual(dummyPeak1[0][1], finPeak[1])
+            self.assertAlmostEqual(dummyPeak1[0]['m/z'], finPeak[0])
+            self.assertAlmostEqual(dummyPeak1[0]['I'], finPeak[1])
             self.assertAlmostEqual(theoPeak['calcInt'], finPeak[2])
             self.assertAlmostEqual(error1, finPeak[3])
             self.assertAlmostEqual(True, finPeak[4])
@@ -191,21 +195,21 @@ class TestSpectrumHandler(TestCase):
             randomError = (np.random.rand(1) + 1) * (-1) ** (np.random.randint(2)) * getErrorLimit(theoPeak['m/z'],
                                                                             configs['k'], configs['d'])
         mz = theoPeak['m/z'] * (1 + randomError / 10 ** 6)
-        return np.array([(mz[0], (theoPeak['calcInt'] + np.random.rand(1) / 10 * (-1) ** (np.random.randint(2)))[0])]), \
+        return np.array([(mz[0], (theoPeak['calcInt'] + np.random.rand(1) / 10 * (-1) ** (np.random.randint(2)))[0])],
+                        dtype=self.spectrumHandler.getDtype()), \
                randomError[0]
 
     def test_find_peak(self):
-        dtype = [('m/z', np.float64), ('calcInt', np.float64)]
-        theoPeak = np.array([(310.58, 0.5)], dtype=dtype)
+        theoPeak = np.array([(310.58, 0.5)], dtype=theoPeakType)
         for i in range(5):
             dummyPeak, error = self.getDummyPeak(theoPeak, True)
-            dummyPeak[0][1] *= 10 ** 7
+            dummyPeak[0]["I"] *= 10 ** 7
             self.spectrumHandler.setSpectrum(np.concatenate((self.spectrumHandler.getSpectrum(), dummyPeak), axis=0))
             self.assertEqual(0, self.spectrumHandler.findPeak(theoPeak[0])[1])
             theoPeak['m/z'] += 100
         for i in range(5):
             dummyPeak, error = self.getDummyPeak(theoPeak)
-            dummyPeak[0][1] *= 10 ** 7
+            dummyPeak[0]["I"] *= 10 ** 7
             self.spectrumHandler.setSpectrum(np.concatenate((self.spectrumHandler.getSpectrum(), dummyPeak), axis=0))
             self.assertTrue(self.spectrumHandler.findPeak(theoPeak[0])[1] > 0)
             theoPeak['m/z'] += 100
@@ -231,9 +235,9 @@ class TestSpectrumHandler(TestCase):
                     peaksToFind = []
                     for peak in theoreticalPeaks[:np.random.randint(low=1, high=len(isotopePattern))]:
                         dummyPeak, error = self.getDummyPeak(peak)
-                        dummyPeak[0][1] = round(10 ** 8 * dummyPeak[0][1])
+                        dummyPeak[0][1] = round(10 ** 8 * dummyPeak[0]["I"])
                         peaksToFind.append(dummyPeak[0])
-                    peaksToFind = np.array(peaksToFind)
+                    peaksToFind = np.array(peaksToFind,dtype=self.spectrumHandler.getDtype())
 
                     # find ions
                     self.spectrumHandler.setSpectrum(
@@ -271,7 +275,7 @@ class TestSpectrumHandler(TestCase):
                     sortedPeaks = sorted(theoreticalPeaks, key=lambda row: row[1], reverse=True)
 
                     dummyPeak, error = self.getDummyPeak(sortedPeaks[0])
-                    dummyPeak[0][1] = round(self.settings['noiseLimit'] / 100 * dummyPeak[0][1])
+                    dummyPeak[0]["I"] = round(self.settings['noiseLimit'] / 100 * dummyPeak[0]["I"])
                     peaksToFind = dummyPeak
 
                     # find ions
@@ -288,10 +292,10 @@ class TestSpectrumHandler(TestCase):
                     self.assertEqual(fragment.getName(), foundFragment.getName())
                     foundIsoPattern = foundFragment.getIsotopePattern()
                     for peak in foundIsoPattern:
-                        if peak['m/z'] in peaksToFind[:, 0]:
-                            self.assertAlmostEqual(peaksToFind[0, 1], peak['relAb'])
+                        if peak['m/z'] in peaksToFind['m/z']:
+                            self.assertAlmostEqual(peaksToFind[0]["I"], peak['I'])
                         else:
-                            self.assertAlmostEqual(0, peak['relAb'])
+                            self.assertAlmostEqual(0, peak['I'])
 
             self.setUp()
 

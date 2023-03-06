@@ -6,6 +6,7 @@ from src.entities.Ions import FragmentIon, Fragment
 from src.entities.Search import Search
 from src.resources import processTemplateName
 from src.repositories.sql.AbstractRepositories import AbstractRepository
+from src.services.assign_services.AbstractSpectrumHandler import peaksArrType
 from tqdm import tqdm
 
 
@@ -95,8 +96,8 @@ class SearchRepository(AbstractRepository):
         bar = tqdm(total=len(ionVals)+4)
         for ionVals in ionVals:
             peaks = [(peak[1], peak[2], peak[3], peak[4], peak[5]) for peak in self.getItems(ionVals[0],'peaks')]
-            peaks = np.array(peaks, dtype=[('m/z', float), ('relAb', float),('calcInt', float),('error', np.float32),
-                                           ('used', bool)])
+            
+            peaks = np.array(peaks, dtype=peaksArrType)
             type, modification = processTemplateName(ionVals[1])
 
             ion = FragmentIon(Fragment(type, ionVals[2], modification, ionVals[3], [],0),

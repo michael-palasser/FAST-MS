@@ -104,7 +104,7 @@ class TestIntensityModeller(TestCase):
         self.fail()'''
 
     def test_calculate_intensity(self):
-        peaksArrType = np.dtype([('m/z', np.float64), ('relAb', np.float64),
+        peaksArrType = np.dtype([('m/z', np.float64), ('I', np.float64),
                                        ('calcInt', np.float64), ('error', np.float32), ('used', np.bool_)])
         for fragment in self.builder.getFragmentLibrary():
             #isotopePattern = fragment.getIsotopePattern() *10**7
@@ -130,7 +130,7 @@ class TestIntensityModeller(TestCase):
             newIsotopePattern = deepcopy(finIsoPattern)
             outlierIndex = int(np.random.randint(1,len(isotopePattern)-1))
             print(newIsotopePattern)
-            newIsotopePattern['relAb'][outlierIndex] *= 10
+            newIsotopePattern['I'][outlierIndex] *= 10
             print(newIsotopePattern,outlierIndex)
             outlierIon.setIsotopePattern(newIsotopePattern)
 
@@ -147,7 +147,7 @@ class TestIntensityModeller(TestCase):
         configs = deepcopy(self.configs)
         configs['SNR']=2
         intensityModeller = IntensityModeller(configs)
-        peaksArrType = np.dtype([('m/z', np.float64), ('relAb', np.float64),
+        peaksArrType = np.dtype([('m/z', np.float64), ('I', np.float64),
                                  ('calcInt', np.float64), ('error', np.float32), ('used', np.bool_)])
         for fragment in self.builder.getFragmentLibrary():
             # isotopePattern = fragment.getIsotopePattern() *10**7
@@ -205,7 +205,7 @@ class TestIntensityModeller(TestCase):
         ions = {}
         i = 1
         allPeaks = {}
-        dtype = np.dtype([('m/z', np.float64), ('relAb', np.float64),('calcInt', np.float64), ('error', np.float32),
+        dtype = np.dtype([('m/z', np.float64), ('I', np.float64),('calcInt', np.float64), ('error', np.float32),
                           ('used', np.bool_)])
         for formulaStr, type in zip(['C200H300NOP', 'C200H302NOP', 'C200H304NOP'],
                                     ['a', 'b', 'c', 'd']):
@@ -228,7 +228,7 @@ class TestIntensityModeller(TestCase):
             isotopePattern = []
             for peak in theoIon.getIsotopePattern():
                 intensity = allPeaks[peak['m/z']]
-                print('hey', peak['relAb'],intensity)
+                print('hey', peak['I'],intensity)
                 isotopePattern.append((peak['m/z'], intensity, peak['calcInt'], 0., True))
             isotopePattern = np.array(isotopePattern, dtype=dtype)
             ion = deepcopy(theoIon)
@@ -266,8 +266,8 @@ class TestIntensityModeller(TestCase):
             spectr_peaks = list()
             for ion in pattern:
                 for peak in observedIons[ion].getIsotopePattern():  # spectral list
-                    if (peak['m/z'], peak['relAb']) not in spectr_peaks:
-                        spectr_peaks.append((peak['m/z'], peak['relAb']))
+                    if (peak['m/z'], peak['I']) not in spectr_peaks:
+                        spectr_peaks.append((peak['m/z'], peak['I']))
             spectr_peaks = np.array(sorted(spectr_peaks, key=lambda tup: tup[0]))'''
 
     '''def test_fun_sum_square(self):

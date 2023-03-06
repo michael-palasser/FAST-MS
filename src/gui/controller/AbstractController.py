@@ -204,7 +204,7 @@ class AbstractMainController(ABC):
             peaks = self._spectrumHandler.getSpectrum(minLimit - 1, maxLimit + 1)
             spectrumView = SpectrumView(None, peaks, ajacentIons, np.min(selectedIon.getIsotopePattern()['m/z']),
                                 np.max(selectedIon.getIsotopePattern()['m/z']),
-                                        np.max(selectedIon.getIsotopePattern()['relAb']))
+                                        np.max(selectedIon.getIsotopePattern()['I']))
             self._openWindows.append(spectrumView)
         elif action == peakAction:
             #global peakview
@@ -291,7 +291,7 @@ class AbstractMainController(ABC):
         newIon = addIonView.getIon()
         newIon.setCharge(abs(newIon.getCharge()))
         mz = newIon.getMonoisotopic()
-        spectrum = self._spectrumHandler.getSpectrum()[:,0]
+        spectrum = self._spectrumHandler.getSpectrum()['m/z']
         if int(mz) not in range(int(np.min(spectrum)), int(np.max(spectrum))+1):
             newIon.setNoise(self._spectrumHandler.getNoiseLevel())
         else:
@@ -407,7 +407,7 @@ class AbstractMainController(ABC):
             ajacentIons = [ion for ion in ajacentIons if ion.getHash()!=selectedHash]
             peaks = self._spectrumHandler.getSpectrum(minLimit - 1, maxLimit + 1)
             view = SpectrumView(None, peaks, [selectedIon]+ajacentIons, np.min(selectedIon.getIsotopePattern()['m/z']),
-                                np.max(selectedIon.getIsotopePattern()['m/z']), np.max(selectedIon.getIsotopePattern()['relAb']))
+                                np.max(selectedIon.getIsotopePattern()['m/z']), np.max(selectedIon.getIsotopePattern()['I']))
             self._openWindows.append(view)
         elif action == peakAction:
             global peakview
@@ -432,5 +432,5 @@ class AbstractMainController(ABC):
         ions = sorted(self.getIonList(),key=lambda obj:obj.getIsotopePattern()['m/z'][0])
         # minWindow, maxWindow, maxY = self._intensityModeller.getLimits(ajacentIons)
         peaks = self._spectrumHandler.getSpectrum()
-        spectrumView = SpectrumView(None, peaks, ions, np.min(peaks[:,0]),np.max(peaks[:,0]),np.max(peaks[:,1]))
+        spectrumView = SpectrumView(None, peaks, ions, np.min(peaks['m/z']),np.max(peaks['m/z']),np.max(peaks['I']))
         self._openWindows.append(spectrumView)

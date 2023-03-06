@@ -192,7 +192,6 @@ class AbstractRepositoryWithItems(AbstractRepository, ABC):
         table = [key for key in self._itemDict.keys()][index]
         for item in items:
             #self.checkFormatOfItem(item)
-            print(item)
             self.createItem(table, list(item) + [patternId])
 
 

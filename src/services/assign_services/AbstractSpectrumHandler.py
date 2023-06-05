@@ -253,7 +253,13 @@ class AbstractSpectrumHandler(ABC):
                     break'''
                 #else:
                     #stdDevPeakInt = np.std(lowAbundendantPeaks)
-            meanPeakInt *= 0.67 #used to be 0.6
+            factor =0.67
+            density = len(lowAbundendantPeaks)/windowSize
+            noisy = 5
+            if density>noisy:
+                factor= density/(noisy*0.5+density)
+                print('density',density, factor)
+            meanPeakInt *= factor #used to be 0.6
             if meanPeakInt > noise:#*0.67:
                 noise = meanPeakInt
             #print(meanPeakInt,stdDevPeakInt)

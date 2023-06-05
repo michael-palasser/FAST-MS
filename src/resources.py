@@ -5,7 +5,7 @@ from platform import system
 from re import search as reSearch
 from subprocess import call
 
-DEVELOP = False
+DEVELOP = True
 INTERN = True
 
 if getattr(sys, 'frozen', False):

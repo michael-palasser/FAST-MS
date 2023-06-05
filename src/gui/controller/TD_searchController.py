@@ -160,7 +160,8 @@ class TD_MainController(AbstractMainController):
             self._intensityModeller.setIonLists(observedIons, delIons, remIons)
             
             types = self._propStorage.getFragmentsByDir(1)
-            types.update(self._propStorage.getFragmentsByDir(-1))         
+            types.update(self._propStorage.getFragmentsByDir(-1))
+            types.add(self._settings['sequName'])
             for key in {ion.getType() for ion in self._intensityModeller.getObservedIons().values()}:
                 if key not in types:
                     QtWidgets.QMessageBox.warning(None, "Fragment type not found", '"'+ key + '" was not found in fragmentation template list. Add the template to "' 
@@ -389,7 +390,7 @@ class TD_MainController(AbstractMainController):
             for ion in self.getIonList():
                 sortedArray = np.sort(ion.getIsotopePattern(), order='I')[::-1]
                 print(ion.getName(), ion.getCharge(), ion.getType(), ion.getNumber(), ion.getModification(),
-                      sortedArray['m/z'][0], sortedArray['calcInt'][0])
+                      sortedArray['m/z'][0], sortedArray['calcInt'][0], ion.getSignalToNoise())
         fragmentation, fragPerSite = self._analyser.calculateRelAbundanceOfSpecies()
         forwardVals = self._propStorage.filterByDir(fragPerSite, 1)
         backwardVals = self._propStorage.filterByDir(fragPerSite, -1)

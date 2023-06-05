@@ -17,6 +17,7 @@ class AbstractSimpleEditorController(ABC):
     '''
     def __init__(self, pattern, title, options):
         self._pattern = pattern
+        self._translate = translate
         #self.pattern = self.service.makeNew()
         self.setUpUi(title)
         self._mainWindow.createMenuBar()
@@ -27,15 +28,14 @@ class AbstractSimpleEditorController(ABC):
 
 
     def setUpUi(self, title):
-        self._mainWindow = SimpleMainWindow(None, title)
+        self._mainWindow = SimpleMainWindow(None, title, QtWidgets.QScrollArea)
         #self.mainWindow.setObjectName(title)
-        self._translate = translate
-        centralWidget = self._mainWindow.centralWidget()
-        verticalLayout = QtWidgets.QVBoxLayout(centralWidget)
-        self._centralwidget = QtWidgets.QScrollArea(centralWidget)
-        verticalLayout.addWidget(self._centralwidget)
-        self._formLayout = QtWidgets.QFormLayout(self._centralwidget)
-        self._formLayout.setFieldGrowthPolicy(QtWidgets.QFormLayout.ExpandingFieldsGrow)
+        self._centralwidget = self._mainWindow.centralWidget()
+        self._verticalLayout = QtWidgets.QVBoxLayout(self._centralwidget)
+        self._mainWindow.resize(800,500)
+        #self._centralwidget = QtWidgets.QScrollArea(self._centralwidget)
+        #self._formLayout = QtWidgets.QFormLayout(self._centralwidget)
+        #self._formLayout.setFieldGrowthPolicy(QtWidgets.QFormLayout.ExpandingFieldsGrow)
 
 
     def createTableWidget(self, parent, data, headers, bools):
@@ -52,6 +52,10 @@ class AbstractSimpleEditorController(ABC):
         tableWidget.customContextMenuRequested['QPoint'].connect(partial(self.editRow, tableWidget, bools))
         tableWidget.setSortingEnabled(True)
         tableWidget.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        """header = tableWidget.horizontalHeader()
+        header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        for col in range(1, tableWidget.columnCount()):
+            header.setSectionResizeMode(col, QtWidgets.QHeaderView.ResizeToContents)"""
         return tableWidget
 
     def formatTableWidget(self, headers, tableWidget, data, boolVals):
@@ -65,8 +69,8 @@ class AbstractSimpleEditorController(ABC):
         '''
         headerKeys = list(headers.keys())
         tableWidget.setRowCount(len(data))
-        tableWidget.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
-        tableWidget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        #tableWidget.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        tableWidget.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
         for i, row in enumerate(data):
             for j, item in enumerate(row):
                 if j in boolVals:
@@ -84,8 +88,6 @@ class AbstractSimpleEditorController(ABC):
         if len(data) < 2:
             for i in range(2-len(data)):
                 self.insertRow(tableWidget, boolVals)
-        tableWidget.resizeColumnsToContents()
-        tableWidget.resizeRowsToContents()
         return tableWidget
 
     def save(self, *args):
@@ -119,6 +121,8 @@ class AbstractSimpleEditorController(ABC):
                         table.setItem(row,col, newItem)
                         rowData.append(1)
                         raise Warning(e.__str__())
+                elif isinstance(widgetItem, QtWidgets.QComboBox):
+                    rowData.append(widgetItem.currentText())
                 elif widgetItem and widgetItem.text():
                     rowData.append(widgetItem.text())
                 else:
@@ -160,11 +164,16 @@ class AbstractSimpleEditorController(ABC):
                 #self.insertRow(table, bools)
                 table.insertRow(rowCount)
             for j in range(columnCount):
+                item = table.item(rowCount, j)
                 if not table.item(selectedRowIndex, j) is None:
-                    table.setItem(emptyRow, j, QtWidgets.QTableWidgetItem(table.item(selectedRowIndex, j).text()))
-                    if j in bools:
-                        #print('bool',emptyRow, j)
-                        table.item(emptyRow, j).setCheckState(table.item(selectedRowIndex, j).checkState())
+                    if isinstance(item,QtWidgets.QComboBox):
+                        item.setCurrentText(table.item(selectedRowIndex, j).currentText())
+                    else:
+                        table.setItem(emptyRow, j, QtWidgets.QTableWidgetItem(table.item(selectedRowIndex, j).text()))
+                        if j in bools:
+                            #print('bool',emptyRow, j)
+                            table.item(emptyRow, j).setCheckState(table.item(selectedRowIndex, j).checkState())
+
             table.resizeRowsToContents()
         if action == deleteRowAction:
             table.removeRow(selectedRowIndex)
@@ -204,6 +213,9 @@ class AbstractEditorController(AbstractSimpleEditorController, ABC):
                    {"Open " + name: (lambda: self.openAgain('Open'), None,"Ctrl+O"), "Delete " + name: (self.delete,None,None),
                     "Save": (self.save,None,"Ctrl+S"), "Save As": (self.saveNew,None,None),
                     "Close": (self.close,None,"Ctrl+Q")})
+        upperWidget = QtWidgets.QWidget(self._centralwidget)
+        self._verticalLayout.addWidget(upperWidget)
+        self._formLayout = QtWidgets.QFormLayout(upperWidget)
 
 
     def createWidgets(self, parent, formLayout, labels, widgets, initialValues):
@@ -310,18 +322,18 @@ class AbstractEditorControllerWithTabs(AbstractEditorController, ABC):
     Abstract controller class to edit patterns with multiple item classes: parent class of FragmentEditorController,
     ModificationEditorController
     '''
-    def setUpUi(self, title):
+    """def setUpUi(self, title):
         self._mainWindow = SimpleMainWindow(None,title)
         self._translate = translate
         self._centralwidget = self._mainWindow.centralWidget()
-        self._vertLayout = QtWidgets.QVBoxLayout(self._centralwidget)
+        self._verticalLayout = QtWidgets.QVBoxLayout(self._centralwidget)"""
 
     def makeTabWidget(self, tabName1, tabName2):
         tabWidget = QtWidgets.QTabWidget(self._centralwidget)
         self._tab1, self._table1 = self.makeTab(tabWidget, self._pattern.getItems(), 0, tabName1)
         self._tab2, self._table2 = self.makeTab(tabWidget, self._pattern.getItems2(), 1, tabName2)
         tabWidget.setEnabled(True)
-        self._vertLayout.addWidget(tabWidget)
+        self._verticalLayout.addWidget(tabWidget)
         return tabWidget
 
     def makeTab(self, tabWidget, items, index, tabName):
@@ -339,7 +351,7 @@ class AbstractEditorControllerWithTabs(AbstractEditorController, ABC):
         upperWidget = QtWidgets.QWidget(self._centralwidget)
         formLayout = QtWidgets.QFormLayout(upperWidget)
         formLayout.setFieldGrowthPolicy(QtWidgets.QFormLayout.ExpandingFieldsGrow)
-        self._vertLayout.addWidget(upperWidget)
+        self._verticalLayout.addWidget(upperWidget)
         return upperWidget
 
     def openAgain(self, title='Open'):
@@ -423,20 +435,62 @@ class SequenceEditorController(AbstractSimpleEditorController):
     '''
     def __init__(self):
         self._service = SequenceService()
+        self._moleculeService = MoleculeService()
         super(SequenceEditorController, self).__init__(self._service.getSequences(), "Edit Sequences",
                                            {"Save": (self.save, None, "Ctrl+S"), "Close": (self.close, None, "Ctrl+Q")})
         if len(self._pattern)<5:
             [self._pattern.append(self._service.makeNew()) for i in range(6 - len(self._pattern))]
         self._table = self.createTableWidget(self._centralwidget, self._pattern,
                                              self._service.getHeaders(), self._service.getBoolVals())
-        self._formLayout.setWidget(1, QtWidgets.QFormLayout.SpanningRole, self._table)   #ToDo
+        self._verticalLayout.addWidget(self._table)   #ToDo
         self._mainWindow.show()
+
+
+    def insertRow(self, table, bools):
+        '''
+        Inserts a row at the end of the table
+        :param table:
+        :param bools:
+        :return:
+        '''
+        super().insertRow(table, bools)
+        comboBox = createComboBox(table,self._moleculeService.getAllPatternNames())
+        table.setCellWidget(table.rowCount()-1, table.columnCount()-1, comboBox)
 
     def save(self):
         sequences = []
         for sequTuple in self.readTable(self._table, self._service.getBoolVals()):
             sequences.append((sequTuple[0], sequTuple[1], sequTuple[2]))
         super(SequenceEditorController, self).save(sequences)
+
+    def formatTableWidget(self, headers, tableWidget, data, boolVals):
+        '''
+        Fills the QTableWidget with data
+        :param (list[str] | tuple[str]) headers: names of the headers
+        :param (QWidgets.QTableWidget) tableWidget:
+        :param data: 2D data
+        :param (list[int]) boolVals: indizes of columns with boolean values
+        :return: tableWidget
+        '''
+        super(SequenceEditorController, self).formatTableWidget(headers, tableWidget, data, boolVals)
+        allMolecules = self._moleculeService.getAllPatternNames()
+        lastCol = len(data[0])-1
+        for i, row in enumerate(data):
+            comboBox = createComboBox(tableWidget,allMolecules)
+            molecule = row[lastCol]
+            if molecule in allMolecules:
+                comboBox.setCurrentText(row[lastCol])
+            else:
+                QtWidgets.QMessageBox.warning(self, "Warning",
+                                              'The molecule type "'+molecule+'" of sequence "'+ row[0] +
+                                              '" is unknown. Change the molecule to an existing type or add '
+                                              'the corresponding molecule type.',
+                                              QtWidgets.QMessageBox.Ok)
+            tableWidget.setCellWidget(i, lastCol, comboBox)
+        tableWidget.horizontalHeader().setMaximumSectionSize(1500)
+        return tableWidget
+
+
 
 
 class FragmentEditorController(AbstractEditorControllerWithTabs):
@@ -541,7 +595,6 @@ class ModificationEditorController(AbstractEditorControllerWithTabs):
         if openDialog.exec_() and openDialog.accepted:
             text = openDialog.getName()
             if text != "--New--" and text != '-':
-                print('Deleting ' + text)
                 choice = QtWidgets.QMessageBox.question(self._mainWindow, 'Deleting ',
                                                         "Warning: Deleting " + text +
                                                         " cannot be undone!\n\nResume?",

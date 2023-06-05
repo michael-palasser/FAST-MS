@@ -11,11 +11,14 @@ class SimpleMainWindow(QtWidgets.QMainWindow):
     '''
     Used by TD_searchController, EditorControllers; parent class of StartWindow, IsotopePatternView
     '''
-    def __init__(self, parent, title):
+    def __init__(self, parent, title, centralWidget = None):
         super(SimpleMainWindow, self).__init__(parent)
         self._translate = translate
         self.setWindowTitle(self._translate(self.objectName(), title))
-        self._centralwidget = QtWidgets.QWidget(self)
+        if centralWidget is None:
+            self._centralwidget = QtWidgets.QWidget(self)
+        else:
+            self._centralwidget = centralWidget(self)
         self.setCentralWidget(self._centralwidget)
         self.setWindowIcon(QIcon(os.path.join(path, 'icon.ico')))
 

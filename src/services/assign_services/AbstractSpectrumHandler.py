@@ -51,7 +51,7 @@ class AbstractSpectrumHandler(ABC):
         if peaks is None:
             self.addSpectrum(self._settings['spectralData'])
         else:
-            self._spectrum = np.array(sorted(list(peaks), key=lambda tup: tup[0]))
+            self._spectrum = np.array(sorted(list(peaks), key=lambda tup: tup[0]), dtype=self._dType)
             self._upperBound = max([peak[0] for peak in peaks])
             self._noiseLevel = noiseLevel
         self._IonClass = IonClass

@@ -37,7 +37,7 @@ class AbstractSpectrumHandler(ABC):
     '''
     Abstract superclass for reading a spectrum (peak list), calculating the noise and finding isotope peaks
     '''
-    def __init__(self, settings, configs, spraymode, IonClass, peaks=None, noiseLevel=None):
+    def __init__(self, settings, configs, spraymode, IonClass, peaks=None, noise=None):
         self._settings = settings
         self._configs = configs
         self._sprayMode = spraymode
@@ -48,12 +48,15 @@ class AbstractSpectrumHandler(ABC):
         self._ionsInNoise = list()
         #self._searchedChargeStates = dict()
         self._noiseLevel = 0
+        self._noise = []
+        if noise is not None:
+            self._noise = noise
         if peaks is None:
             self.addSpectrum(self._settings['spectralData'])
         else:
             self._spectrum = np.array(sorted(list(peaks), key=lambda tup: tup[0]), dtype=self._dType)
             self._upperBound = max([peak[0] for peak in peaks])
-            self._noiseLevel = noiseLevel
+            #self._noiseLevel = noiseLevel
         self._IonClass = IonClass
         self._foundIons = list()
         self._ionsInNoise = list()
@@ -62,6 +65,15 @@ class AbstractSpectrumHandler(ABC):
 
     def getNoiseLevel(self):
         return self._noiseLevel
+
+    def getNoise(self, borders=None):
+        if type(self._noise)==list:
+            self._noise=np.sort(np.array(self._noise, dtype=self._dType), order='m/z')
+        if borders is None:
+            return self._noise
+        else:
+            return self._noise[np.where((self._noise['m/z']>borders[0]) & (self._noise['m/z']<borders[1]))]
+
 
     def getSpectrum(self, *args):
         '''
@@ -334,6 +346,7 @@ class AbstractSpectrumHandler(ABC):
                 if sumInt > 0:
                     #theoreticalPeaks=self.getChargedIsotopePattern2(formula, theoreticalPeaks, z-radicals)
                     noise = self.calculateNoise(theoreticalPeaks[0]['m/z'], self._configs['noiseWindowSize'])
+                    self._noise.append((theoreticalPeaks[0]['m/z'], noise))
                     logging.debug('Noise:'+str(noise))
                     sumInt += notFound * noise * 0.5              #if one or more isotope peaks were not found noise added #parameter
                     notInNoise = np.where(theoreticalPeaks['calcInt'] >noise*
@@ -360,6 +373,7 @@ class AbstractSpectrumHandler(ABC):
                     else:
                         print('deleting: '+neutral.getName()+", "+str(z))
                         self.addToDeletedIons(neutral, foundMainPeaks, noise, np.min(theoreticalPeaks['m/z']), z,'noise')
+
 
 
 

@@ -109,7 +109,7 @@ class IntactMainController(AbstractMainController):
         sameMonoisotopics = self._intensityModeller.findSameMonoisotopics()
         print('mono', sameMonoisotopics)
         if len(sameMonoisotopics) > 0:
-            view = CheckMonoisotopicOverlapView(sameMonoisotopics, self._spectrumHandler.getSpectrum())
+            view = CheckMonoisotopicOverlapView(sameMonoisotopics, self._spectrumHandler)
             print("User Input requested")
             view.exec_()
             if view and not view.canceled():

@@ -30,11 +30,18 @@ class AbstractSpectrumView(QtWidgets.QWidget):
     '''
     QWidget which shows a part of the spectrum. Superclass of SpectrumView and TheoSpectrumView.
     '''
-    def __init__(self, parent, peaks, ions, minRange, maxRange, maxY, lblSize):
+    def __init__(self, parent, peaks, ions, minRange, maxRange, maxY, lblSize, ionMode, noise=None):
         super(AbstractSpectrumView, self).__init__(parent)
         self._peaks = peaks
         self._ions = ions
         self._items = []
+        if ionMode>0:
+            self._ionMode = "+"
+        else:
+            self._ionMode = "-"
+        self._noise = noise
+        if self._noise is None:
+            self._noise = self.getNoiseArray()
         self._layout = QtWidgets.QVBoxLayout(self)
         self._translate = translate
         width = 0.02
@@ -71,8 +78,15 @@ class AbstractSpectrumView(QtWidgets.QWidget):
         #self._cursorLabel.setStyleSheet("border: 0.1px solid black;")
         #self._graphWidget.addItem(self._cursorLabel)
         setIcon(self)
-        self._noise = None
         self.show()
+
+    def getNoiseArray(self):
+        noise = []
+        for ion in self._ions:
+            maxMz = np.sort(ion.getIsotopePattern(), order='calcInt')[::-1]['m/z'][0]
+            noise.append((maxMz, ion.getNoise()))
+        return np.sort(np.array(noise, dtype=[('m/z', float), ('I', float)]), order='m/z')
+
 
     def setWindow(self, minRange, maxRange,maxY):
         self._mzRange = range(int(min(self._peaks['m/z'])), int(max(self._peaks['m/z']))+1)
@@ -143,11 +157,11 @@ class AbstractSpectrumView(QtWidgets.QWidget):
             self._graphWidget.addItem(self._peakBars)
             colours = ['b','r','g', 'c', 'm', 'y',]
             markers = ['o','t', 's', 'p','h', 'star', '+', 'd', 'x', 't1','t2']#, 't3']
-            noise = []
+            #noise = []
             maxIndizes = (len(colours), len(markers))
             coulour_index=0
             marker_index=0
-            self._legend = pg.LegendItem(offset=(0., .5), labelTextSize='12pt')
+            self._legend = pg.LegendItem(offset=(0., .5), labelTextSize='10pt')
             self._legend.setParentItem(self._graphWidget.graphicsItem())
             #maxRow =0
             for ion in self._ions:
@@ -161,11 +175,11 @@ class AbstractSpectrumView(QtWidgets.QWidget):
                                              pen =pg.mkPen(color=colours[coulour_index], width=2),
                                              brush=(50,50,200,50), size=10, pxMode=True) #Todo resize"""
                 self._items.append(scatter)
-                maxMz = np.sort(ion.getIsotopePattern(), order='calcInt')[::-1]['m/z'][0]
-                noise.append((maxMz, ion.getNoise()))
+                #maxMz = np.sort(ion.getIsotopePattern(), order='calcInt')[::-1]['m/z'][0]
+                #noise.append((maxMz, ion.getNoise()))
                 self._graphWidget.addItem(scatter)
-
-                self._legend.addItem(scatter, ion.getId())
+                text = ion.getName(True)+"<sup>"+str(ion.getCharge())+self._ionMode+"</sup>"
+                self._legend.addItem(scatter, text)#ion.getId())
                 coulour_index += 1
                 marker_index+=1                
                 if coulour_index == maxIndizes[0]:
@@ -182,9 +196,9 @@ class AbstractSpectrumView(QtWidgets.QWidget):
                     coulour_index=maxRow
                 if marker_index==maxIndizes[1]:
                     marker_index=0"""
-            if len(noise)>0:
-                self._noise = np.array(noise)
-                noiseLine = self._graphWidget.plot(self._noise[:, 0], self._noise[:, 1], pen='r')
+            if len(self._noise)>0:
+                #self._noise = np.array(noise)
+                noiseLine = self._graphWidget.plot(self._noise['m/z'], self._noise['I'], pen='r')
                 self._legend.addItem(noiseLine, 'noise')
                 self._items.append(noiseLine)
         else:
@@ -210,15 +224,18 @@ class SpectrumView(AbstractSpectrumView):
      modelled intensities are shown as scatter plots.
     Used in top-down search.
     '''
-    def __init__(self, parent, peaks, ions, minRange, maxRange, maxY):
-        super(SpectrumView, self).__init__(parent, peaks, ions, minRange-1, maxRange+1, maxY, '12pt')
+    def __init__(self, parent, peaks, ions, minRange, maxRange, maxY, ionMode, noise=None):
+        super(SpectrumView, self).__init__(parent, peaks, ions, minRange-1, maxRange+1, maxY, '12pt', ionMode, noise)
         self._spinBox.valueChanged.connect(self.changeWidth)
         self.resize(700,400)
 
-    def updateView(self, peaks, ions, minRange, maxRange, maxY):
+    def updateView(self, peaks, ions, minRange, maxRange, maxY, noise):
         self._peaks = peaks
         self._ions = ions
         self._items = []
+        self._noise = noise
+        if self._noise is None:
+            self._noise = self.getNoiseArray()
         #self._layout = QtWidgets.QVBoxLayout(self)
         #self._translate = translate
         width = 0.02
@@ -269,12 +286,12 @@ class TheoSpectrumView(AbstractSpectrumView):
     QWidget which shows a modelled peaks as red bars. Spectral intensities of this peaks are indicated by grey stars.
     Used in isotope pattern tool.
     '''
-    def __init__(self, parent, peaks, width):
+    def __init__(self, parent, peaks, width, ionMode):
         spectrPeaks = peaks[['m/z', 'I']]
         tolerance = (np.max(peaks['m/z'])-np.min(peaks['m/z']))*0.2
         yMax = max(np.max(peaks['calcInt']),np.max(peaks['I']))
         super(TheoSpectrumView, self).__init__(parent, spectrPeaks, peaks,
-               np.min(peaks['m/z'])-tolerance, np.max(peaks['m/z'])+tolerance, yMax, "12pt")
+               np.min(peaks['m/z'])-tolerance, np.max(peaks['m/z'])+tolerance, yMax, "12pt", ionMode)
         self._spinBox.valueChanged.connect(self.changeWidth)
         self._spinBox.move(width - 70, 0)
 

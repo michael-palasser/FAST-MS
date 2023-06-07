@@ -220,10 +220,16 @@ class Fragment(object):
     def getRadicals(self):
         return self._radicals
 
-    def getName(self):
+    def getName(self, html=False):
         if self._number == 0:
             return self._type + self._modification
+        elif html:
+            if self._modification=="":
+                return self._type + "<sub>"+str(self._number)+"</sub>"
+            else:
+                return "["+self._type + "<sub>"+str(self._number)+"</sub>" + self._modification+"]"
         return self._type + format(self._number, "02d") + self._modification  # + "-" + self.loss
+
 
     def toString(self):
         return self.getName() + "\t\t" + self._formula.toString()

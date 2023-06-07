@@ -152,9 +152,12 @@ class TD_MainController(AbstractMainController):
             self._libraryBuilder = FragmentLibraryBuilder(self._propStorage, self._settings['nrMod'],
                                                             self._configs['maxIso'], self._configs['approxIso'])
             self._libraryBuilder.createFragmentLibrary()
-
+            noise = []
+            for ion in observedIons+delIons:
+                mostAb = np.sort(ion.getIsotopePattern(),order='I')[::-1][0]['m/z']
+                noise.append((mostAb, ion.getNoise()))
             self._spectrumHandler = SpectrumHandler(self._propStorage, self._libraryBuilder.getPrecursor(),
-                                                    self._settings, self._configs, peaks)
+                                                    self._settings, self._configs, peaks, noise)
             self._spectrumHandler.setSearchedChargeStates(searchedZStates)
             self._intensityModeller = IntensityModeller(self._configs, noiseLevel)
             self._intensityModeller.setIonLists(observedIons, delIons, remIons)
@@ -263,7 +266,7 @@ class TD_MainController(AbstractMainController):
         print("\n********** Handling overlaps **********")
         sameMonoisotopics = self._intensityModeller.findSameMonoisotopics()
         if len(sameMonoisotopics) > 0:
-            view = CheckMonoisotopicOverlapView(sameMonoisotopics, self._spectrumHandler.getSpectrum())
+            view = CheckMonoisotopicOverlapView(sameMonoisotopics, self._spectrumHandler)
             print("User Input requested")
             view.exec_()
             if view and not view.canceled():
@@ -277,7 +280,7 @@ class TD_MainController(AbstractMainController):
         print("\n********** Re-modelling overlaps **********")
         complexPatterns = self._intensityModeller.remodelOverlaps()
         if len(complexPatterns) > 0:
-            view = CheckOverlapsView(complexPatterns, self._spectrumHandler.getSpectrum())
+            view = CheckOverlapsView(complexPatterns, self._spectrumHandler)
             print("User Input requested")
             view.exec_()
             if view and not view.canceled():

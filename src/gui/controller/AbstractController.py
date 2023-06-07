@@ -9,6 +9,7 @@ from abc import ABC
 import numpy as np
 import pandas as pd
 from PyQt5 import QtWidgets
+from PyQt5.QtCore import Qt
 
 from src.gui.GUI_functions import setIcon, translate
 from src.resources import path, DEVELOP
@@ -202,9 +203,11 @@ class AbstractMainController(ABC):
             ajacentIons, minLimit, maxLimit  = self._intensityModeller.getAdjacentIons(selectedHash)
             #minWindow, maxWindow, maxY = self._intensityModeller.getLimits(ajacentIons)
             peaks = self._spectrumHandler.getSpectrum(minLimit - 1, maxLimit + 1)
-            spectrumView = SpectrumView(None, peaks, ajacentIons, np.min(selectedIon.getIsotopePattern()['m/z']),
-                                np.max(selectedIon.getIsotopePattern()['m/z']),
-                                        np.max(selectedIon.getIsotopePattern()['I']))
+            minMz,maxMz = np.min(selectedIon.getIsotopePattern()['m/z']), np.max(selectedIon.getIsotopePattern()['m/z'])
+            spectrumView = SpectrumView(None, peaks, ajacentIons, minMz,
+                                        maxMz, np.max(selectedIon.getIsotopePattern()['I']),
+                                        self._spectrumHandler.getSprayMode(),
+                                        self._spectrumHandler.getNoise((np.min(peaks['m/z']),np.max(peaks['m/z']))))
             self._openWindows.append(spectrumView)
         elif action == peakAction:
             #global peakview
@@ -406,8 +409,10 @@ class AbstractMainController(ABC):
             ajacentIons, minLimit, maxLimit  = self._intensityModeller.getAdjacentIons(selectedHash)
             ajacentIons = [ion for ion in ajacentIons if ion.getHash()!=selectedHash]
             peaks = self._spectrumHandler.getSpectrum(minLimit - 1, maxLimit + 1)
-            view = SpectrumView(None, peaks, [selectedIon]+ajacentIons, np.min(selectedIon.getIsotopePattern()['m/z']),
-                                np.max(selectedIon.getIsotopePattern()['m/z']), np.max(selectedIon.getIsotopePattern()['I']))
+            minMz,maxMz = np.min(selectedIon.getIsotopePattern()['m/z']), np.max(selectedIon.getIsotopePattern()['m/z'])
+            view = SpectrumView(None, peaks, [selectedIon]+ajacentIons, minMz,maxMz,
+                                np.max(selectedIon.getIsotopePattern()['I']), self._spectrumHandler.getSprayMode(),
+                                (np.min(peaks['m/z']),np.max(peaks['m/z'])))
             self._openWindows.append(view)
         elif action == peakAction:
             global peakview
@@ -416,7 +421,11 @@ class AbstractMainController(ABC):
         elif action == formulaAction:
             text = 'Ion:\t' + selectedIon.getName()+\
                    '\n\nFormula:\t'+selectedIon.getFormula().toString()
-            QtWidgets.QMessageBox.information(self._mainWindow, selectedIon.getName(), text, QtWidgets.QMessageBox.Ok)
+            #QtWidgets.QMessageBox.information(self._mainWindow, selectedIon.getName(), text, QtWidgets.QMessageBox.Ok)
+            box=QtWidgets.QMessageBox(parent=self._mainWindow,title =selectedIon.getName(),
+                                              text=text, buttons=QtWidgets.QMessageBox.Ok)
+            box.setTextInteractionFlags(Qt.TextSelectableByMouse)
+            box.exec_()
         elif action == copyRowAction:
             df=pd.DataFrame(data=[table.model().getRow(selectedRow)], columns=table.model().getHeaders())
             df.to_clipboard(index=False,header=True)
@@ -432,5 +441,9 @@ class AbstractMainController(ABC):
         ions = sorted(self.getIonList(),key=lambda obj:obj.getIsotopePattern()['m/z'][0])
         # minWindow, maxWindow, maxY = self._intensityModeller.getLimits(ajacentIons)
         peaks = self._spectrumHandler.getSpectrum()
-        spectrumView = SpectrumView(None, peaks, ions, np.min(peaks['m/z']),np.max(peaks['m/z']),np.max(peaks['I']))
+        spectrumView = SpectrumView(None, peaks, ions, np.min(peaks['m/z']),np.max(peaks['m/z']),np.max(peaks['I']),
+                                    self._spectrumHandler.getSprayMode(), self._spectrumHandler.getNoise())
         self._openWindows.append(spectrumView)
+        if DEVELOP:
+            for vals in self._spectrumHandler.getNoise():
+                print(vals[0], vals[1])

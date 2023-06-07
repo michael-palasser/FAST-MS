@@ -72,7 +72,7 @@ class SpectrumHandler(AbstractSpectrumHandler):
     acidicAA = {'D': 10, 'E': 10,
                 'H': 0.9, 'R': 0.5, 'K': 0.5, }
 
-    def __init__(self, properties, precursor, settings, configs, peaks=None):
+    def __init__(self, properties, precursor, settings, configs, peaks=None, noise=None):
         '''
         Constructor, also processes spectrum
         :param properties: propertyStorage of search
@@ -85,7 +85,7 @@ class SpectrumHandler(AbstractSpectrumHandler):
         sprayMode = 1
         if settings['charge'] < 0:
             sprayMode = -1
-        super(SpectrumHandler, self).__init__(settings, configs, sprayMode, FragmentIon, peaks)
+        super(SpectrumHandler, self).__init__(settings, configs, sprayMode, FragmentIon, peaks, noise)
         self._sequList = properties.getSequenceList()
         self._properties = properties
         '''
@@ -248,7 +248,11 @@ class SpectrumHandler(AbstractSpectrumHandler):
                         snr = peakData[peakData['m/z'] == spectralPeak[0]]['S/N']
                         #m/z, z, int, name, error
                         found.append((spectralPeak[0], z, spectralPeak[1], fragment.getName(), round(monoisotopic['m/z'],5),round(spectralPeak[3],2),snr))
-        return np.array(found, dtype=np.dtype([('m/z', float), ('z', int), ('I', int), ('name', 'U32'), ('m/z_theo', float), ('error', float), ('S/N', float)]))
+        try:
+            return np.array(found, dtype=np.dtype([('m/z', float), ('z', int), ('I', int), ('name', 'U32'), ('m/z_theo', float), ('error', float), ('S/N', float)]))
+        except OverflowError:
+            return np.array(found, dtype=np.dtype([('m/z', float), ('z', int), ('I', np.int64), ('name', 'U32'), ('m/z_theo', float), ('error', float), ('S/N', float)]))
+
 
 
 

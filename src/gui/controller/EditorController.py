@@ -546,9 +546,10 @@ class ModificationEditorController(AbstractEditorControllerWithTabs):
         super(ModificationEditorController, self).__init__(ModificationService(), "Edit Modifications",
                                                            "Modification-Pattern")
         upperWidget = self.makeUpperWidget()
+        self._modNames = self.getNames(self._pattern.getItems())
         self.createWidgets(upperWidget, upperWidget.layout(), ["Name: ", "Precursor Modification: "],
                            {"name": QtWidgets.QLineEdit(self._centralwidget),
-                                   "modification": QtWidgets.QLineEdit(self._centralwidget)},
+                                   "modification": createComboBox(self._centralwidget, [""]+self._modNames)},
                            [self._pattern.getName(), self._pattern.getModification()])
         self._widgets["name"].setToolTip("Pattern will be stored under this name.")
         self._widgets["modification"].setToolTip("Modification of the precursor")
@@ -556,14 +557,26 @@ class ModificationEditorController(AbstractEditorControllerWithTabs):
         self._tab1.setToolTip("For every fragment, the corresponding modified fragment will be included")
         self._tab2.setToolTip("These modifications will be excluded from ion search")
         self._table2.setColumnWidth(0, 200)
+        self._table1.itemChanged.connect(self.tableChanged)
         self._mainWindow.show()
+
+    def getNames(self, data):
+        return [row[0] for row in data if row[7]]
+
+    def tableChanged(self):
+        names = self.getNames(self.readTable(self._table1, self._service.getBoolVals()[0]))
+        if names!=self._modNames:
+            self._modNames= names
+            self._widgets["modification"].clear()
+            self._widgets["modification"].addItems([""]+self._modNames)
+
 
     def openAgain(self, title='Open'):
         '''
         To open a new pattern
         '''
         super(ModificationEditorController, self).openAgain(title)
-        self._widgets["modification"].setText(self._pattern.getModification())
+        self._widgets["modification"].setCurrentText(self._pattern.getModification())
 
     def open(self, title):
         '''
@@ -583,7 +596,7 @@ class ModificationEditorController(AbstractEditorControllerWithTabs):
         if args and args[0] == None:
             id = None
         super(ModificationEditorController, self).save(ModificationPattern(self._widgets["name"].text(),
-                                                                           self._widgets["modification"].text(), self.readTable(self._table1, self._service.getBoolVals()[0]),
+                                                                           self._widgets["modification"].currentText(), self.readTable(self._table1, self._service.getBoolVals()[0]),
                                                                            self.readTable(self._table2, self._service.getBoolVals()[1]), id))
 
     def delete(self):

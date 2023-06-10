@@ -255,21 +255,21 @@ class IsotopePatternView(SimpleMainWindow):
         except InvalidInputException as e:
             QtWidgets.QMessageBox.warning(self, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
             return
-        self.renderView(self._ion, neutralMass, avMass)
+        self.renderView(self._ion, neutralMass, avMass,charge)
 
-    def renderView(self, ion, neutralMass, avMass):
-        self.renderSpectrumView(ion)
+    def renderView(self, ion, neutralMass, avMass, charge):
+        self.renderSpectrumView(ion,charge)
         self._ionTable.updateTable((self.getIonVals(ion,neutralMass,avMass),))
         self._ionTable.resizeColumnsToContents()
         self._peakTable.updateTable(ion.getIsotopePattern())
         self._peakTable.resizeColumnsToContents()
 
-    def renderSpectrumView(self, ion):
+    def renderSpectrumView(self, ion, charge):
         self._spectrumView.hide()
         self._vertLayoutRight.removeWidget(self._spectrumView)
         del self._spectrumView
         #isotopePattern = self._logics.getIsotopePattern(ion)
-        self._spectrumView = TheoSpectrumView(self._rightWidget, ion.getIsotopePattern(), 365)
+        self._spectrumView = TheoSpectrumView(self._rightWidget, ion.getIsotopePattern(), 365, charge)
         self._spectrumView.setMinimumSize(365, 300)
         self._vertLayoutRight.addWidget(self._spectrumView)
 
@@ -339,7 +339,7 @@ class IsotopePatternView(SimpleMainWindow):
             ion = self._logics.getIon()
             ion.setIsotopePattern(ion.getIsotopePattern()[:-1])
             self._logics.setIon(ion)
-            self.renderSpectrumView(ion)
+            self.renderSpectrumView(ion,int(self._charge.text()))
 
 
 class AddIonView(IsotopePatternView):

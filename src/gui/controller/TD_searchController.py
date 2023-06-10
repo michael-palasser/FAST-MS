@@ -310,10 +310,10 @@ class TD_MainController(AbstractMainController):
         self._actions.update(actions)
         self._actions.update(self.makeGeneralOptions())
         _,actions = self._mainWindow.createMenu("Analysis",
-                {'Fragmentation': (self.showFragmentation, 'Show fragmentation efficiencies (% of each fragment type)', None),
-                 'Occupancies': (self.showOccupancyPlot,'Show occupancies as a function of sequence pos.',None),
-                 'Charge States (int.)': (lambda: self.showChargeDistrPlot(False),'Show av. charge as a function of cleavage site (Calculated with int. values)',None),
-                 'Charge States (int./z)':(lambda: self.showChargeDistrPlot(True),'Show av. charge as a function of cleavage site (Calculated with int./z values)',None),
+                {'Fragmentation Yields': (self.showFragmentation, 'Determines the site-specific fragment yields', None),
+                 'Localise Modifications': (self.showOccupancyPlot,'Relatively quantifies the site-specific labeled fractions. Works for covalent and non-covalent modifications',None),
+                 'Charge States (int.)': (lambda: self.showChargeDistrPlot(False),'Show av. charge as a function of cleavage site (Calculated using int. values)',None),
+                 'Charge States (int./z)':(lambda: self.showChargeDistrPlot(True),'Show av. charge as a function of cleavage site (Calculated using int./z values)',None),
                  'Sequence Coverage': (self.showSequenceCoverage,'Show sequence coverage',None)}, None)
 
         self._actions.update(actions)
@@ -422,7 +422,7 @@ class TD_MainController(AbstractMainController):
         interestingIons = self.getInterestingIons()
         if interestingIons is None:
             return
-        modification,ok = QtWidgets.QInputDialog.getText(self._mainWindow,'Show Occupancies', 'Enter the modification: ',
+        modification,ok = QtWidgets.QInputDialog.getText(self._mainWindow,'Localise Modifications', 'Enter the modification: ',
                                                          text=self._propStorage.getModificationName())
         if ok and modification!='':
             if modification[0] not in ('+','-'):

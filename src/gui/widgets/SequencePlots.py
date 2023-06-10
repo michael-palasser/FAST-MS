@@ -155,13 +155,17 @@ class PlotFactory(object):
             if parent!=self._plot1:
                 vals = [self._maxY-val for val in vals]
             newXVals, newVals = self.removeNANVals(xVals,vals)
-            curve = pg.PlotCurveItem(x=newXVals,y=newVals,pen=pg.mkPen(color=colours[i], width=2))
-            scatter = pg.ScatterPlotItem(x=newXVals, y=newVals, symbol=markers[i],
+            #curve = pg.PlotCurveItem(x=newXVals,y=newVals,pen=pg.mkPen(color=colours[i], width=2))
+            """scatter = pg.ScatterPlotItem(x=newXVals, y=newVals, symbol=markers[i],
                                          pen =pg.mkPen(color=colours[i], width=2),
-                                         brush=(0,0,0,0), size=10, pxMode=True, name = name)
+                                         brush=(0,0,0,0), size=10, pxMode=True, name = name)"""
+            plotData = pg.PlotDataItem(x=newXVals, y=newVals, symbol=markers[i],
+                                       pen =pg.mkPen(color=colours[i], width=2),
+                                       symbolPen=pg.mkPen(color=colours[i], width=2),
+                                       symbolBrush=(0,0,0,0), symbolSize=10, pxMode=True, name = name)
             #newXVals, newVals = self.removeNANVals(xVals,vals)
-            self._plot1.addItem(curve)
-            self._plot1.addItem(scatter)
+            self._plot1.addItem(plotData)
+            #self._plot1.addItem(scatter)
             i+=1
 
     def removeNANVals(self, xVals, vals):
@@ -332,12 +336,12 @@ if __name__ == '__main__':
         for j in range(2):
             arr[i,j] = np.random.randint(100000)
     sequ = list('GGCUGCUUGUCCUUUAAUGGUCCAGUC')
-    plotBars(sequ, arr, ['c','y'], 'hey')
+    #plotBars(sequ, arr, ['c','y'], 'hey')
     arr = np.zeros((26,4))
     for i in range(26):
         for j in range(4):
             arr[i,j] = np.random.randint(100000)
-    plotBars(sequ, arr, ['c','c+CMCT','y','y+CMCT'], 'hey', False)
+    #plotBars(sequ, arr, ['c','c+CMCT','y','y+CMCT'], 'hey', False)
 
     app = QApplication(sys.argv)
     plotFactory = PlotFactory(None)
@@ -351,6 +355,6 @@ if __name__ == '__main__':
     backwardVals= {'y': np.array([np.nan, 0., 0., 0., 0.,
                  0., 0., 0., 0., 0.,
                  0., 0.08697064, 0.09865665, 0., np.nan])}
-    plotFactory.showOccupancyPlot(sequ, forwardVals, backwardVals,1, 'CMCT')
+    plot = plotFactory.showOccupancyPlot(sequ, forwardVals, backwardVals,1, 'CMCT')
 
     sys.exit(app.exec_())

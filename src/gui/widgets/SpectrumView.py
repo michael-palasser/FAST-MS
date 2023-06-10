@@ -109,15 +109,18 @@ class AbstractSpectrumView(QtWidgets.QWidget):
 
     def mouseClicked(self,evt):  # action if start button clicked
         # mousePoint = self._vb.mapSceneToView(pos)
-        
-        position = self._vb.mapSceneToView(evt.pos())
-        x= position.x()
-        index = int(x)
+
+        scene_coords = evt.scenePos()
+        #position = self._vb.mapSceneToView(evt.pos())
+        #x= position.x()
+        #index = int(x)
         #print(self._vb.mapSceneToView(position).x())
         #print(pos.x())
-        if index in self._mzRange:
-            x = round(position.x(),5)
-            y = round(position.y())
+        #if index in self._mzRange:
+        if self._graphWidget.sceneBoundingRect().contains(scene_coords):
+            point =self._vb.mapSceneToView(scene_coords)
+            x = round(point.x(),5)
+            y = round(point.y())
             print("\t",x, y)
             if len(self._clicks)==0:  # First mouse click - ONLY register coordinates
                 self._clicks.append((x,y))
@@ -291,7 +294,8 @@ class TheoSpectrumView(AbstractSpectrumView):
         tolerance = (np.max(peaks['m/z'])-np.min(peaks['m/z']))*0.2
         yMax = max(np.max(peaks['calcInt']),np.max(peaks['I']))
         super(TheoSpectrumView, self).__init__(parent, spectrPeaks, peaks,
-               np.min(peaks['m/z'])-tolerance, np.max(peaks['m/z'])+tolerance, yMax, "12pt", ionMode)
+               np.min(peaks['m/z'])-tolerance, np.max(peaks['m/z'])+tolerance, yMax, "12pt", ionMode,
+                                               noise=[(0,0)])
         self._spinBox.valueChanged.connect(self.changeWidth)
         self._spinBox.move(width - 70, 0)
 

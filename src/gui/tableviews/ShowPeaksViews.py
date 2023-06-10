@@ -87,10 +87,10 @@ class PeakView(QtWidgets.QMainWindow):
                                 'Replaces old values with newly calculated ones', self.saveIon))
         #horizontalLayout.addWidget(self.makeIntensityWidget(self.centralWidget()))
         horizontalLayout.addItem(QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum))
-        self._verticalLayout.addWidget(buttonWidget)
+        self._verticalLayout.addWidget(buttonWidget,1)
 
-        self._verticalLayout.addWidget(self._ionTable)
-        self._verticalLayout.addWidget(self._peakTable)
+        self._verticalLayout.addWidget(self._ionTable, 1)
+        self._verticalLayout.addWidget(self._peakTable, 15)
 
         connectTable(self._ionTable,showOptions)
         '''self._ionTable.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)

@@ -176,6 +176,7 @@ class Window(SimpleMainWindow):
 
 def run():
     app = QApplication(sys.argv)
+    app.setStyle(QtWidgets.QStyleFactory.create("Fusion"))
     app.setApplicationName("FAST MS")
     gui = Window()
     sys.exit(app.exec_())

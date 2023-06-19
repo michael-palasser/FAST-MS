@@ -3,15 +3,12 @@ Created on 27 Jul 2020
 
 @author: michael
 '''
-from math import exp
 from re import findall
 import logging
 import numpy as np
-from scipy.constants import R
 
 from src.entities.Ions import FragmentIon
-from src.repositories.SpectralDataReader import SpectralDataReader
-#from Other.simpleFunctions import eMass, protMass
+from src.resources import DEVELOP
 from src.services.assign_services.AbstractSpectrumHandler import AbstractSpectrumHandler, getMz
 
 logging.basicConfig(level=logging.INFO)
@@ -100,6 +97,7 @@ class SpectrumHandler(AbstractSpectrumHandler):
         self._charge = self.calcPrecCharge(self._settings['charge'], self._precursor.getRadicals())
         self._normalisationFactor = self.getNormalisationFactor()
         self._precModCharge = self.getModCharge(self._precursor)
+        self._calculatedZs = []
 
     def setPrecModCharge(self, precModCharge):
         self._precModCharge = precModCharge
@@ -126,16 +124,18 @@ class SpectrumHandler(AbstractSpectrumHandler):
         #elif self._moleculeName in ['RNA', 'DNA'] and self._sprayMode == 1:
         #    return self._charge / len(self._sequList)
         else:
-            return self._charge  / len(self._sequList)#self.getChargeScore(self._sequList)
+            #return self._charge  / self.getChargeScore(self._sequList)
+            return self._charge  / len(self._sequList)
 
-    def getChargeScore(self, fragment): #ToDo: For proteins, currently not use
-        chargeDict = self._properties.getGPBsOfBBs(self._sprayMode)
+    def getChargeScore(self, sequence): #ToDo: For proteins, currently not use
+        chargeDict = self._properties.getP_chargedOfBBs(self._sprayMode)
         score = 0
         """if self._properties.getFragmentation()[fragment.type].getDirection() == 1 and self._sprayMode== 1:
             score ="""
         #if self._sprayMode == 1:
-        for bb in fragment.sequenceList:
-            score += exp(self._sprayMode*chargeDict[bb]/(R*298))
+        for bb in sequence:
+            #score += exp(self._sprayMode*chargeDict[bb]/(R*298))
+            score += chargeDict[bb]
         return score
 
     def getModCharge(self, fragment):
@@ -166,19 +166,21 @@ class SpectrumHandler(AbstractSpectrumHandler):
         '''
         if self._moleculeName in ['RNA','DNA'] and self._sprayMode == -1:
             #probableZ = (fragment.number-1) * self._normalisationFactor
-            formula = fragment.getFormula().getFormulaDict()
+            """formula = fragment.getFormula().getFormulaDict()
             if ('P' not in formula.keys()) or (fragment.getFormula().getFormulaDict()['P'] == 0):
-                return range(0,0)
+                return range(0,0)"""
             probableZ = fragment.getFormula().getFormulaDict()['P']* self._normalisationFactor
             #probableZ = fragment.formula.formulaDict['P'] * self._normalisationFactor
-        elif self._moleculeName == 'Protein':
-            #probableZ = self.getChargeScore(fragment) * self._normalisationFactor
-            probableZ = len(fragment.getSequence()) * self._normalisationFactor
-        elif self._moleculeName in ['RNA' ,'DNA'] and self._sprayMode == 1:
-            probableZ = len(fragment.getSequence()) * self._normalisationFactor
+            """elif self._moleculeName == 'Protein':
+                #probableZ = self.getChargeScore(fragment) * self._normalisationFactor
+                probableZ = len(fragment.getSequence()) * self._normalisationFactor
+            elif self._moleculeName in ['RNA' ,'DNA'] and self._sprayMode == 1:
+                probableZ = len(fragment.getSequence()) * self._normalisationFactor"""
         else:
+            #probableZ = self.getChargeScore(fragment.getSequence()) * self._normalisationFactor
             probableZ = len(fragment.getSequence()) * self._normalisationFactor
-        probableZ -= fragment.getRadicals()+self._precursor.getRadicals()
+        #print('hey',probableZ,fragment.getRadicals(),self._precursor.getRadicals(),self._charge)
+        #probableZ -= (fragment.getRadicals()-self._precursor.getRadicals())
         tolerance = self._configs['zTolerance']
         lowZ, highZ = 1, self._charge
         if fragment.getNumber()==0:
@@ -193,6 +195,7 @@ class SpectrumHandler(AbstractSpectrumHandler):
             highZ = round(probableZ + tolerance)
         #print(fragment.getName(),lowZ,round(probableZ,2),highZ)
         logging.info(fragment.getName()+'\tmin z: '+str(lowZ)+'\tcalc. z: '+str(round(probableZ,2))+'\tmax z: '+str(highZ))
+        self._calculatedZs.append((fragment.getName(),probableZ))
         return range(lowZ,highZ+1)
 
 
@@ -216,6 +219,10 @@ class SpectrumHandler(AbstractSpectrumHandler):
             self._searchedChargeStates[fragment.getName()] = []
             zRange = self.getChargeRange(fragment)
             self.findIon(fragment, zRange)
+        if DEVELOP:
+            print('** Calculated Charges')
+            for row in self._calculatedZs:
+                print(row[0], row[1])
 
 
     def setSearchedChargeStates(self, searchedZStates):

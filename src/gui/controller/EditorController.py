@@ -1,5 +1,7 @@
 import traceback
 from functools import partial
+
+import pandas as pd
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 
@@ -7,7 +9,7 @@ from src.Exceptions import CanceledException
 from src.resources import DEVELOP
 from src.services.DataServices import *
 from src.gui.AbstractMainWindows import SimpleMainWindow
-from src.gui.GUI_functions import createComboBox, shoot, translate
+from src.gui.GUI_functions import createComboBox, shoot, translate, getData
 from src.gui.dialogs.SimpleDialogs import OpenDialog
 
 
@@ -67,7 +69,7 @@ class AbstractSimpleEditorController(ABC):
         :param (list[int]) boolVals: indizes of columns with boolean values
         :return: tableWidget
         '''
-        headerKeys = list(headers.keys())
+        self._headers = list(headers.keys())
         tableWidget.setRowCount(len(data))
         #tableWidget.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         tableWidget.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
@@ -84,7 +86,7 @@ class AbstractSimpleEditorController(ABC):
                     newItem = QtWidgets.QTableWidgetItem(str(item))
                     tableWidget.setItem(i, j, newItem)
                 #tableWidget.setItem(i, j, newitem)
-                newItem.setToolTip(headers[headerKeys[j]])
+                newItem.setToolTip(headers[self._headers[j]])
         if len(data) < 2:
             for i in range(2-len(data)):
                 self.insertRow(tableWidget, boolVals)
@@ -142,19 +144,20 @@ class AbstractSimpleEditorController(ABC):
         if it is None:
             return
         selectedRowIndex = it.row()
-        columnCount = table.columnCount()
-        item_range = QtWidgets.QTableWidgetSelectionRange(0, selectedRowIndex, columnCount - 1, selectedRowIndex)
+        item_range = QtWidgets.QTableWidgetSelectionRange(0, selectedRowIndex, table.columnCount() - 1, selectedRowIndex)
         table.setRangeSelected(item_range, True)
         menu = QtWidgets.QMenu()
         insertRowAction = menu.addAction("Insert row")
-        copyRowAction = menu.addAction("Copy and insert row")
+        copyPasteAction = menu.addAction("Copy and insert row")
         deleteRowAction = menu.addAction("Delete row")
+        copyAction = menu.addAction("Copy table")
         action = menu.exec_(table.viewport().mapToGlobal(pos))
         if action == insertRowAction:
             self.insertRow(table, bools)
             table.resizeRowsToContents()
-        elif action == copyRowAction:
-            rowCount = table.rowCount()
+        elif action == copyPasteAction:
+            self.copyPaste(table, bools, selectedRowIndex)
+            """rowCount = table.rowCount()
             emptyRow = rowCount
             for rowNr in range(rowCount):
                 if table.item(rowNr, 0) == None or table.item(rowNr, 0).text() == "":
@@ -162,22 +165,50 @@ class AbstractSimpleEditorController(ABC):
                     break
             if emptyRow == rowCount:
                 #self.insertRow(table, bools)
-                table.insertRow(rowCount)
+                self.insertRow(table, bools)
             for j in range(columnCount):
+                print(rowCount)
                 item = table.item(rowCount, j)
                 if not table.item(selectedRowIndex, j) is None:
+                    print(item, type(item), isinstance(item,QtWidgets.QComboBox))
                     if isinstance(item,QtWidgets.QComboBox):
+                        print('ok')
                         item.setCurrentText(table.item(selectedRowIndex, j).currentText())
                     else:
                         table.setItem(emptyRow, j, QtWidgets.QTableWidgetItem(table.item(selectedRowIndex, j).text()))
+
+                        print('not ok')
                         if j in bools:
                             #print('bool',emptyRow, j)
                             table.item(emptyRow, j).setCheckState(table.item(selectedRowIndex, j).checkState())
-
+"""
             table.resizeRowsToContents()
-        if action == deleteRowAction:
+        elif action == deleteRowAction:
             table.removeRow(selectedRowIndex)
+        elif action == copyAction:
+            data = self.readTable(table, bools)
+            QtWidgets.QTableWidget().horizontalHeader()
+            df = pd.DataFrame(data=data, columns=self._headers)
+            df.to_clipboard(index=False, header=True)
 
+    def copyPaste(self, table, bools, selectedRowIndex):
+        newRow = self.getEmptyRow(table)
+        rowCount = table.rowCount()
+        table.insertRow(newRow)
+        for j in range(table.columnCount()):
+            if not table.item(selectedRowIndex, j) is None:
+                table.setItem(rowCount, j, QtWidgets.QTableWidgetItem(table.item(selectedRowIndex, j).text()))
+                if j in bools:
+                    # print('bool',emptyRow, j)
+                    table.item(newRow, j).setCheckState(table.item(selectedRowIndex, j).checkState())
+        table.resizeRowsToContents()
+
+    def getEmptyRow(self, table):
+        rowCount = table.rowCount()
+        for rowNr in range(rowCount):
+            if table.item(rowNr, 0) == None or table.item(rowNr, 0).text() == "":
+                return rowNr
+        return rowCount
 
     def insertRow(self, table, bools):
         '''
@@ -445,16 +476,25 @@ class SequenceEditorController(AbstractSimpleEditorController):
         self._verticalLayout.addWidget(self._table)   #ToDo
         self._mainWindow.show()
 
+    def copyPaste(self, table, bools, selectedRowIndex):
+        newRow = self.getEmptyRow(table)
+        self.insertRow(table, table.item(selectedRowIndex, 2).text())
+        for j in range(table.columnCount()-1):
+            if not table.item(selectedRowIndex, j) is None:
+                table.setItem(newRow, j, QtWidgets.QTableWidgetItem(table.item(selectedRowIndex, j).text()))
+        table.resizeRowsToContents()
 
-    def insertRow(self, table, bools):
+    def insertRow(self, table, text=False):
         '''
         Inserts a row at the end of the table
         :param table:
         :param bools:
         :return:
         '''
-        super().insertRow(table, bools)
+        super().insertRow(table, [])
         comboBox = createComboBox(table,self._moleculeService.getAllPatternNames())
+        if text:
+            comboBox.setCurrentText(text)
         table.setCellWidget(table.rowCount()-1, table.columnCount()-1, comboBox)
 
     def save(self):
@@ -489,7 +529,6 @@ class SequenceEditorController(AbstractSimpleEditorController):
             tableWidget.setCellWidget(i, lastCol, comboBox)
         tableWidget.horizontalHeader().setMaximumSectionSize(1500)
         return tableWidget
-
 
 
 

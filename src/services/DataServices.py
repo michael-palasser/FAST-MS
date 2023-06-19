@@ -284,12 +284,12 @@ class MoleculeService(AbstractServiceForPatterns):
         super(MoleculeService, self).__init__(MoleculeRepository(), (0,2))
 
     def makeNew(self):
-        return Macromolecule("", "", "", 10 * [["", "", "",0., 0.]], None)
+        return Macromolecule("", "", "", 10 * [["", "", ""]], None)
 
     def getFormula(self, item):
         '''
         Returns the molecular formula of a building block
-        :param (tuple[str, str, float, float]) item: corresponding building block
+        :param (tuple[str, str, str]) item: corresponding building block
         :return: (MolecularFormula) formula
         '''
         return BuildingBlock(item).getFormula()
@@ -307,6 +307,7 @@ class MoleculeService(AbstractServiceForPatterns):
                 raise InvalidInputException(pattern.getName(), "Element: " + key + " unknown")
         [self.checkName(bb[0]) for bb in pattern.getItems()]
         self.checkFormatOfItems(pattern.getItems(), elements, self._repository.getIntegers())
+        pattern.setItems([bb+[1,1] for bb in pattern.getItems()])
         pattern = super(MoleculeService, self).save(pattern)
         elementRep.close()
         return pattern
@@ -339,6 +340,9 @@ class MoleculeService(AbstractServiceForPatterns):
                 if molecule.getName()[0:3] == "Pro":
                     if name in aadict.keys():
                         bb.setTranslation(aadict[name])
+                """if bb.getP_pos()>20:
+                    bb.setP_pos(1)
+                    bb.setP_neg(1)"""
             molecule.setItems(bbs)
             return molecule
 
@@ -356,7 +360,7 @@ class MoleculeService(AbstractServiceForPatterns):
         items = molecule.getItems()
         if type(items[0][2]) == float:
             molecule = self._repository.addNewColumn(name)
-        bbs = molecule.getItems()
+        bbs = [bb[:3] for bb in molecule.getItems()]
         for i,bb in enumerate(bbs):
             name = bb[0]
             if molecule.getName().startswith("RN"):
@@ -365,6 +369,10 @@ class MoleculeService(AbstractServiceForPatterns):
             if molecule.getName().startswith("Pro"):
                 if name in aadict.keys():
                     bbs[i][1]=aadict[name]
+
+            """if bb[3] > 20:
+                bbs[i][3]=1
+                bbs[i][4]=1"""
         molecule.setItems(bbs)
         return molecule
 

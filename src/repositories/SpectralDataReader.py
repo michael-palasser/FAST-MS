@@ -60,7 +60,6 @@ class SpectralDataReader(object):
         #print(path)
         #print(rawData)
         for line in rawData[1:]:
-            print(line)
             if len(line)>1:
                 data.append(tuple([line[indizes[mandatoryHeader]] for mandatoryHeader in mandatoryHeaders]))
         #print(data)

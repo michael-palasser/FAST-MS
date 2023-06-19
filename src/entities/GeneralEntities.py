@@ -22,7 +22,7 @@ class Macromolecule(PatternWithItems):
         '''
         bbs = [list(bb) for bb in buildingBlocks]
         if len(buildingBlocks[0])<5:
-            bbs = [[bb[0],bb[1],bb[2],bb[3]] for bb in buildingBlocks]
+            bbs = [[bb[0],bb[1],bb[2]] for bb in buildingBlocks]
         super(Macromolecule, self).__init__(name, bbs, id)
         self.__gain = moleculeGain
         self.__loss = moleculeLoss
@@ -75,13 +75,13 @@ class BuildingBlock(AbstractItem1):
         #if len(item)==5:
             #raise NotImplementedError("Building Block Table not updated")
             #self.__translation = ""
-            #self.__gbP = item[2]
-            #self.__gbN = item[3]
+            #self.__p_pos = item[2]
+            #self.__p_neg = item[3]
         #else:
         self.__translation = item[1]
         self.__formulaString = item[2]
-        self.__gbP = item[3]
-        self.__gbN = item[4]
+        """self.__p_pos = item[3]
+        self.__p_neg = item[4]"""
 
     def getFormulaString(self):
         return self.__formulaString
@@ -94,16 +94,20 @@ class BuildingBlock(AbstractItem1):
     def setTranslation(self, translation):
         self.__translation = translation
 
-    def getGbP(self):
-        return self.__gbP
+    """def getP_pos(self):
+        return self.__p_pos
+    def getP_neg(self):
+        return self.__p_neg
 
-    def getGbN(self):
-        return self.__gbN
+    def setP_pos(self, p_pos):
+        self.__p_pos = p_pos
+    def setP_neg(self, p_neg):
+        self.__p_neg = p_neg
 
-    def getGB(self, mode):
-        if mode == 1:
-            return self.__gbP
-        return self.__gbN
+    def getP_charged(self, mode):
+        if mode> 0:
+            return self.__p_pos
+        return self.__p_neg"""
 
 
 class Element(PatternWithItems):

@@ -495,7 +495,7 @@ class TD_MainController(AbstractMainController):
             mainWindow, centralWidget, layout = self.getMainWindow('Charges State Analysis (I/z)')
         else:
             mainWindow, centralWidget, layout = self.getMainWindow('Charges State Analysis')
-        plotFactory1 = PlotFactory(centralWidget)
+        plotFactory = PlotFactory(centralWidget)
         #plotFactory2 = PlotFactory(self._mainWindow)
         forwardVals = self._propStorage.filterByDir(chargeDict,1)
         backwardVals = self._propStorage.filterByDir(chargeDict,-1)
@@ -505,7 +505,7 @@ class TD_MainController(AbstractMainController):
                                        list(chargeDict.keys()), 'Av. Charge per Fragment', 1)
         chargeView.sortBy(1)
         layout.addWidget(chargeView,2)
-        layout.addWidget(plotFactory1.showChargePlot(self._propStorage.getSequenceList(), forwardVals,
+        layout.addWidget(plotFactory.showChargePlot(self._propStorage.getSequenceList(), forwardVals,
                                     backwardVals, self._spectrumHandler.getCharge(), forwardLimits, backwardLimits),3)
         mainWindow.show()
         #self._openWindows.append(chargeView)

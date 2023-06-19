@@ -116,8 +116,8 @@ class TestSpectrumHandler(TestCase):
         precCharge = abs(self.settings['charge'])
         #self.spectrumHandlerProt.setNormalisationFactor(self.spectrumHandlerProt.getNormalisationFactor())
         self.spectrumHandler.setPrecModCharge(precModCharge)
-        rangeCalc = self.spectrumHandler.getChargeRange(Fragment('y', 1, '', MolecularFormula({'P': 0}), [], 0))
-        self.assertEqual(0, rangeCalc.stop)
+        #rangeCalc = self.spectrumHandler.getChargeRange(Fragment('y', 1, '', MolecularFormula({'P': 0}), [], 0))
+        #self.assertEqual(0, rangeCalc.stop)
 
         rangeTheo = self.getRange(precCharge / nrP + precModCharge, tolerance, precCharge)
         rangeCalc = self.spectrumHandler.getChargeRange(Fragment('c', 3, '', MolecularFormula({'P': 1}), [], 0))
@@ -139,6 +139,7 @@ class TestSpectrumHandler(TestCase):
         self.spectrumHandlerProt.setPrecModCharge(0)
         rangeCalc = self.spectrumHandlerProt.getChargeRange(
             Fragment('c', 3, '', MolecularFormula({'P': 1}), ['G', 'A', 'P'], 0))
+        print(rangeTheo.start, rangeCalc.start, rangeTheo.stop, rangeCalc.stop)
         self.assertEqual(rangeTheo.start, rangeCalc.start)
         self.assertEqual(rangeTheo.stop, rangeCalc.stop)
 

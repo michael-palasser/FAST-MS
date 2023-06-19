@@ -228,7 +228,7 @@ class AbstractSpectrumHandler(ABC):
         logging.info('Final upper m/z limit: '+ str(currentMz))
         self._upperBound = currentMz
         self._noiseLevel = np.average(np.array([tup[1] for tup in noiseList if tup[0]<currentMz]))
-        logging.info('Final upper m/z limit: '+ str(self._noiseLevel))
+        logging.info('Noise level: '+ str(self._noiseLevel))
         return currentMz
 
     def calculateNoise(self, point, windowSize, currentWindow=None):

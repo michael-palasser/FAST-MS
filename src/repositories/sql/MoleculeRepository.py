@@ -37,10 +37,12 @@ class MoleculeRepository(AbstractRepositoryWithItems):
         '''
         return {'name':'Enter the short name of the building block. The first letter must be uppercase, all other letters must be lowercase',
                 'translation': 'Enter the long name (e.g. in HELM or 3-letter code)',
-                'formula':'molecular formula of the building block',
-                'gb+':'Enter the gas phase basicity (kJ/mol) of the building block in positive mode',
-                'gb-':'Enter the gas phase basicity (kJ/mol) of the (deprotonated) building block in negative mode\n'
-                      '(not relevant for nucleic acids)'}
+                'formula':'Molecular formula of the building block'}
+                #'p(+)':'Empirically derived factor that indicates the propabilty that a building block is positively charged in positive ion mode',
+                #'p(-)':'Empirically derived factor that indicates the propabilty that a building block is negatively charged in negatively ion mode'}
+                #'gb+':'Enter the gas phase basicity (kJ/mol) of the building block in positive mode',
+                #'gb-':'Enter the gas phase basicity (kJ/mol) of the (deprotonated) building block in negative mode\n'
+                #      '(not relevant for nucleic acids)'
 
     def getPattern(self, name):
         '''

@@ -40,8 +40,8 @@ class SearchSettings(object):
     def getMolecule(self):
         return self.__molecule
 
-    def getGPBsOfBBs(self, mode):
-        return {name:bb.getGB(mode) for name,bb in self.__molecule.getBBDict().items()}
+    def getP_chargedOfBBs(self, mode):
+        return {name:bb.getP_charged(mode) for name,bb in self.__molecule.getBBDict().items()}
 
     def getChargedModifications(self):
         '''

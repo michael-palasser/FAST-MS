@@ -30,7 +30,7 @@ class AbstractSpectrumView(QtWidgets.QWidget):
     '''
     QWidget which shows a part of the spectrum. Superclass of SpectrumView and TheoSpectrumView.
     '''
-    def __init__(self, parent, peaks, ions, minRange, maxRange, maxY, lblSize, ionMode, noise=None):
+    def __init__(self, parent, peaks, ions, minRange, maxRange, maxY, lblSize, ionMode, noise=None, focused=False):
         super(AbstractSpectrumView, self).__init__(parent)
         self._peaks = peaks
         self._ions = ions
@@ -42,6 +42,7 @@ class AbstractSpectrumView(QtWidgets.QWidget):
         self._noise = noise
         if self._noise is None:
             self._noise = self.getNoiseArray()
+        self._focused = focused
         self._layout = QtWidgets.QVBoxLayout(self)
         self._translate = translate
         width = 0.02
@@ -154,7 +155,7 @@ class AbstractSpectrumView(QtWidgets.QWidget):
         #self._cursorLabel = QtWidgets.QLabel(self)
         #self._cursorLabel.setGeometry(QRect(70, 40, 200, 26))
 
-    def plot(self, width, new=True):
+    def plot(self, width,focused, new=True):
         if new:
             self._peakBars = pg.BarGraphItem(x=self._peaks['m/z'], height=self._peaks['I'], width=width, brush='k')
             self._graphWidget.addItem(self._peakBars)
@@ -173,9 +174,18 @@ class AbstractSpectrumView(QtWidgets.QWidget):
                     markerIndex += 1
                     if markerIndex == len(markers):
                         markerIndex = 0"""
+                if self._focused and ion.getHash()==self._focused:
+                    symbol='o'
+                    colour = (34,139,34)
+                else:
+                    symbol=markers[marker_index]
+                    colour = colours[coulour_index]
+                    coulour_index += 1
+                    marker_index+=1
+
                 scatter = pg.ScatterPlotItem(x=ion.getIsotopePattern()['m/z'], y=ion.getIsotopePattern()['calcInt'],
-                                             symbol=markers[marker_index],
-                                             pen =pg.mkPen(color=colours[coulour_index], width=2),
+                                             symbol=symbol,
+                                             pen =pg.mkPen(color=colour, width=2),
                                              brush=(50,50,200,50), size=10, pxMode=True) #Todo resize"""
                 self._items.append(scatter)
                 #maxMz = np.sort(ion.getIsotopePattern(), order='calcInt')[::-1]['m/z'][0]
@@ -183,8 +193,6 @@ class AbstractSpectrumView(QtWidgets.QWidget):
                 self._graphWidget.addItem(scatter)
                 text = ion.getName(True)+"<sup>"+str(ion.getCharge())+self._ionMode+"</sup>"
                 self._legend.addItem(scatter, text)#ion.getId())
-                coulour_index += 1
-                marker_index+=1                
                 if coulour_index == maxIndizes[0]:
                     coulour_index = 0
                 if marker_index == maxIndizes[1]:
@@ -227,8 +235,8 @@ class SpectrumView(AbstractSpectrumView):
      modelled intensities are shown as scatter plots.
     Used in top-down search.
     '''
-    def __init__(self, parent, peaks, ions, minRange, maxRange, maxY, ionMode, noise=None):
-        super(SpectrumView, self).__init__(parent, peaks, ions, minRange-1, maxRange+1, maxY, '12pt', ionMode, noise)
+    def __init__(self, parent, peaks, ions, minRange, maxRange, maxY, ionMode, noise=None, focused=False):
+        super(SpectrumView, self).__init__(parent, peaks, ions, minRange-1, maxRange+1, maxY, '12pt', ionMode, noise, focused)
         self._spinBox.valueChanged.connect(self.changeWidth)
         self.resize(700,400)
 

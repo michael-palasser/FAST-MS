@@ -74,16 +74,16 @@ class OpenSpectralDataDlg(AbstractDialog):
     Dialog to select the correct spectral data file (if an old top-down search/analysis is loaded)
     '''
     def __init__(self, parent):
-        super(OpenSpectralDataDlg, self).__init__(parent,'Spectral Data not found!')
+        super(OpenSpectralDataDlg, self).__init__(parent,'Select File Location')
         formLayout = self.makeFormLayout(self)
-        label = QtWidgets.QLabel(self)
-        label.setText(self._translate(self.objectName(), 'Select the location of the file.'))
-        formLayout.setWidget(0, QtWidgets.QFormLayout.SpanningRole, label)
+        #label = QtWidgets.QLabel(self)
+        #label.setText(self._translate(self.objectName(), 'Select the location of the file.'))
+        #formLayout.setWidget(0, QtWidgets.QFormLayout.LabelRole, label)
         self._fileWidget = OpenFileWidget(parent, 1, join(path, 'Spectral_data', 'top-down'), "Open File",
                                            "Plain Text Files (*txt);;Comma Separated Values (*csv);;All Files (*)")
         self.fill(self, formLayout, ("File name:",), {'spectralData':(self._fileWidget,
                                   'Name of the file with spectral peaks (txt or csv format)')})
-        formLayout.setWidget(2, QtWidgets.QFormLayout.SpanningRole, self._buttonBox)
+        formLayout.setWidget(2, QtWidgets.QFormLayout.FieldRole, self._buttonBox)
         self.show()
 
     def getValue(self):
@@ -167,7 +167,7 @@ class SaveSearchDialog(AbstractDialog):
     Dialog to save the results of a top-down search/analysis
     '''
     def __init__(self, text):
-        super(SaveSearchDialog, self).__init__(parent=None,title='Save Analysis')
+        super(SaveSearchDialog, self).__init__(None,title='Save Analysis')
         formLayout = self.makeFormLayout(self)
         self._lineEdit = QtWidgets.QLineEdit(self)
         self._lineEdit.setText(text)
@@ -177,3 +177,4 @@ class SaveSearchDialog(AbstractDialog):
 
     def getText(self):
         return self._lineEdit.text()
+

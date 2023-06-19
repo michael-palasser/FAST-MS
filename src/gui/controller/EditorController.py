@@ -557,18 +557,19 @@ class ModificationEditorController(AbstractEditorControllerWithTabs):
         self._tab1.setToolTip("For every fragment, the corresponding modified fragment will be included")
         self._tab2.setToolTip("These modifications will be excluded from ion search")
         self._table2.setColumnWidth(0, 200)
-        self._table1.itemChanged.connect(self.tableChanged)
+        self._table1.itemChanged.connect(self.updateModBox)
         self._mainWindow.show()
 
     def getNames(self, data):
         return [row[0] for row in data if row[7]]
 
-    def tableChanged(self):
+    def updateModBox(self):
         names = self.getNames(self.readTable(self._table1, self._service.getBoolVals()[0]))
         if names!=self._modNames:
             self._modNames= names
-            self._widgets["modification"].clear()
-            self._widgets["modification"].addItems([""]+self._modNames)
+            """self._widgets["modification"].clear()
+            self._widgets["modification"].addItems([""]+self._modNames)"""
+            self._mainWindow.updateComboBox(self._widgets['precursor'], names, True)
 
 
     def openAgain(self, title='Open'):

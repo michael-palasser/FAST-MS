@@ -7,7 +7,7 @@ from src.services.assign_services.AbstractSpectrumHandler import calculateError,
 from src.services.assign_services.Finders import TD_Finder
 from src.services.library_services.FragmentLibraryBuilder import FragmentLibraryBuilder
 from src.top_down.PeakMatcher import PeakMatcher
-from src.top_down.SpectralDataReader import SpectralDataReader
+from src.repositories.SpectralDataReader import SpectralDataReader
 from src.top_down.EvaluationWriter import *
 
 

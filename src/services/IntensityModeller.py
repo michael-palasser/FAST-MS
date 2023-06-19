@@ -608,7 +608,7 @@ class IntensityModeller(object):
         self._correctedIons[ionHash].addComment('reset')
         return self._correctedIons[ionHash]
 
-    def getAdjacentIons(self, ionHash, distance=100):
+    def getAdjacentIons(self, ionHash, distance=50):
         '''
         Returns all neighbouring ions (max 20) to a given ion within a max m/z range of 100 in the spectrum:
         :param (tuple[str,int]) ionHash: hash of the corresponding ion
@@ -622,12 +622,12 @@ class IntensityModeller(object):
         median = ion.getIsotopePattern()['m/z'][0]
         while True:
             monoisotopics = monoisotopics[np.where(abs(monoisotopics - median) < distance)]
-            if len(monoisotopics) < 20:
+            if len(monoisotopics) < 10:
                 adjacentIons = [ion for ion in self._correctedIons.values() if abs(ion.getIsotopePattern()['m/z'][0] - median)<distance]
                 if flag == 1:
                     adjacentIons.append(ion)
                 return sorted(adjacentIons, key=lambda obj:obj.getIsotopePattern()['m/z'][0]), median-distance, median+distance
-            elif len(monoisotopics) < 30:
+            elif len(monoisotopics) < 15:
                 distance /= 1.5
             else:
                 distance /= 2

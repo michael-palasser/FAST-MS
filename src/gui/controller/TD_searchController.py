@@ -223,8 +223,11 @@ class TD_MainController(AbstractMainController):
             return 1
         #spectralFile = os.path.join(path, 'Spectral_data','top-down', self._settings['spectralData'])
         print("\n********** Importing spectral pattern from:", self._settings['spectralData'], "**********")
-        self._spectrumHandler = SpectrumHandler(self._propStorage, self._libraryBuilder.getPrecursor(), self._settings,
-                                                self._configs)
+        try:
+            self._spectrumHandler = SpectrumHandler(self._propStorage, self._libraryBuilder.getPrecursor(),
+                                                    self._settings, self._configs)
+        except Exception as e:
+            raise InvalidInputException('Problem in file ' + self._settings['spectralData'] + ':<br>', e.__str__())
         self._info.spectrumProcessed(self._spectrumHandler.getUpperBound(), self._spectrumHandler.getNoiseLevel())
         #try:
         if self._settings['calibration']:
@@ -410,6 +413,8 @@ class TD_MainController(AbstractMainController):
         headers= list(fragPerSite.keys())
         fragmentationView = FragmentationTable([(type,val) for type,val in fragmentation.items()],
                                                table, headers)
+        if DEVELOP:
+            shoot(fragmentationView)
         self._openWindows.append(fragmentationView)
         plotBars(self._propStorage.getSequenceList(), np.array(table)[:,2:-2].astype(float), headers, '')
 

@@ -12,6 +12,7 @@ from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 
 from src.gui.GUI_functions import setIcon, translate
+from src.gui.widgets.Widgets import ShowFormulaWidget
 from src.resources import path, DEVELOP
 from src.gui.controller.IsotopePatternView import AddIonView
 from src.gui.dialogs.CalibrationView import CalibrationView
@@ -207,16 +208,25 @@ class AbstractMainController(ABC):
             spectrumView = SpectrumView(None, peaks, ajacentIons, minMz,
                                         maxMz, np.max(selectedIon.getIsotopePattern()['I']),
                                         self._spectrumHandler.getSprayMode(),
-                                        self._spectrumHandler.getNoise((np.min(peaks['m/z']),np.max(peaks['m/z']))))
+                                        self._spectrumHandler.getNoise((np.min(peaks['m/z']),np.max(peaks['m/z']))),
+                                        selectedHash)
             self._openWindows.append(spectrumView)
         elif action == peakAction:
             #global peakview
             peakView = PeakView(self._mainWindow, selectedIon, self._intensityModeller.remodelSingleIon, self.saveSingleIon)
             self._openWindows.append(peakView)
         elif action == formulaAction:
-            text = 'Ion:\t' + selectedIon.getName()+\
-                   '\n\nFormula:\t'+selectedIon.getFormula().toString()
-            QtWidgets.QMessageBox.information(self._mainWindow, selectedIon.getName(), text, QtWidgets.QMessageBox.Ok)
+            #self._openWindows.append(ShowFormulaWidget(selectedIon))
+
+            dlg = QtWidgets.QWidget(None)
+            dlg.setWindowTitle(selectedIon.getName())
+            # self.setWindowTitle(ion.getName())
+            layout = QtWidgets.QVBoxLayout(dlg)
+            label = QtWidgets.QLabel(selectedIon.getFormula().toString())
+            label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+            layout.addWidget(label)
+            dlg.show()
+            self._openWindows.append(dlg)
         elif action == copyRowAction:
             df=pd.DataFrame(data=[table.model().getRow(selectedRow)], columns=table.model().getHeaders())
             df.to_clipboard(index=False,header=True)
@@ -412,20 +422,21 @@ class AbstractMainController(ABC):
             minMz,maxMz = np.min(selectedIon.getIsotopePattern()['m/z']), np.max(selectedIon.getIsotopePattern()['m/z'])
             view = SpectrumView(None, peaks, [selectedIon]+ajacentIons, minMz,maxMz,
                                 np.max(selectedIon.getIsotopePattern()['I']), self._spectrumHandler.getSprayMode(),
-                                (np.min(peaks['m/z']),np.max(peaks['m/z'])))
+                                (np.min(peaks['m/z']),np.max(peaks['m/z'])),selectedHash)
             self._openWindows.append(view)
         elif action == peakAction:
             global peakview
             peakview = SimplePeakView(None, selectedIon)
             self._openWindows.append(peakview)
         elif action == formulaAction:
-            text = 'Ion:\t' + selectedIon.getName()+\
-                   '\n\nFormula:\t'+selectedIon.getFormula().toString()
-            #QtWidgets.QMessageBox.information(self._mainWindow, selectedIon.getName(), text, QtWidgets.QMessageBox.Ok)
-            box=QtWidgets.QMessageBox(parent=self._mainWindow,title =selectedIon.getName(),
-                                              text=text, buttons=QtWidgets.QMessageBox.Ok)
-            box.setTextInteractionFlags(Qt.TextSelectableByMouse)
-            box.exec_()
+            dlg = QtWidgets.QWidget(self._mainWindow)
+            dlg.setWindowTitle(selectedIon.getName())
+            # self.setWindowTitle(ion.getName())
+            layout = QtWidgets.QVBoxLayout(dlg)
+            label = QtWidgets.QLabel(selectedIon.getFormula().toString())
+            label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+            layout.addWidget(label)
+            dlg.show()
         elif action == copyRowAction:
             df=pd.DataFrame(data=[table.model().getRow(selectedRow)], columns=table.model().getHeaders())
             df.to_clipboard(index=False,header=True)

@@ -1,6 +1,7 @@
 import sys
 
 from PyQt5 import QtWidgets, QtGui, QtCore
+from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QFileDialog, QApplication
 
 from src.gui.GUI_functions import createComboBox
@@ -208,3 +209,20 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     gui =LoadingWidget(100, True)
     sys.exit(app.exec_())
+
+
+class ShowFormulaWidget(QtWidgets.QWidget):
+    '''
+
+    '''
+    def __int__(self, ion):
+        super(ShowFormulaWidget, self).__init__(None)
+        self.setWindowTitle(ion.getName())
+        layout = QtWidgets.QVBoxLayout(self)
+        label = QtWidgets.QLabel(ion.getFormula().toString())
+        label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        layout.addWidget(label)
+        """buttonBox = QtWidgets.QDialogButtonBox(self)
+        buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Ok)
+        layout.addWidget(buttonBox)"""
+        self.show()

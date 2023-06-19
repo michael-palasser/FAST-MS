@@ -117,8 +117,9 @@ class AbstractSpectrumHandler(ABC):
         if filePath[-4:] == '.csv':
             self._spectrum = self.addSpectrumFromCsv(filePath)
         else:
+            print('starting')
             self._spectrum = self.addSpectrumFromTxt(filePath)
-        
+            print(self._spectrum)
         self.resizeSpectrum()
 
     def addSpectrumFromCsv(self, filePath):
@@ -146,7 +147,8 @@ class AbstractSpectrumHandler(ABC):
         :param (str) filePath: path of text-file
         :return: (ndarray(dtype=float, ndim=2)) [(m/z, int)]
         '''
-        return SpectralDataReader().openTxtFile(filePath, self._dType, csv)
+        reader=SpectralDataReader()
+        return reader.openTxtFile(filePath, self._dType, csv)
         """spectralList = list()
         delimiter = ','
         with open(filePath, mode='r', encoding='utf_8_sig') as f:

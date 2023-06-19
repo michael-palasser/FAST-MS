@@ -18,7 +18,8 @@ configurations = {'lowerBound': 300, 'minUpperBound': 1200, 'upperBoundTolerance
                   'errorLimitCalib': 50, 'maxStd': 1.5, 'overwrite': False, 'zTolerance': 0.8, 'k': 4.5, 'd': 0.5,
                   'errorTolerance': 2.5, 'noiseWindowSize': 4.0, 'thresholdFactor': 0.45, 'maxIso': 0.996,
                   'approxIso': 20, 'outlierLimit': 1.6, 'manualDeletion': 3, 'overlapThreshold': 0.8, 'shapeDel': 0.6,
-                  'shapeMarked': 0.25, 'scoreMarked': 2.5, 'SNR': 2.0, 'useAb': True, 'interestingIons': ['c', 'y']}
+                  'shapeMarked': 0.25, 'scoreMarked': 2.5, 'SNR': 2.0, 'useAb': True, 'interestingIons': ['c', 'y'],
+                  '# ions displayed':10}
 top_down_export = {'columns': ['m/z', 'z', 'intensity', 'fragment', 'error /ppm', 'S/N', 'quality', 'formula', 'score', 'comment'],
                    'analysis': ['occupancies', 'reduced charges'], 'dir': join(path,'Spectral_data','top-down')}
 intact_export = {'columns': ['m/z', 'z', 'intensity', 'fragment', 'error /ppm', 'S/N', 'quality', 'formula', 'score', 'comment'],

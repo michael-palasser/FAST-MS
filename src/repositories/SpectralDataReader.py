@@ -32,17 +32,17 @@ class SpectralDataReader(object):
                 except:
                     raise InvalidInputException("Problem in data file: <br>line " + str(i), line)
         indizes = {}
-        skipZ = False
+        """skipZ = False
         if len(rawData[0])>len(rawData[1]):
-            skipZ = True
-        correction = 0
+            skipZ = True"""
+        #correction = 0
         #counter = 0
         for i, header in enumerate(rawData[0]):
             #print(header)
             if header in self._dict.keys():
-                if skipZ and self._dict[header] == 'z':
-                    correction = 1
-                indizes[self._dict[header]] = i-correction
+                """if skipZ and self._dict[header] == 'z':
+                    correction = 1"""
+                indizes[self._dict[header]] = i#-correction
 
 
             '''if header != 'Factor':
@@ -52,7 +52,7 @@ class SpectralDataReader(object):
             if header not in indizes.keys():
                 print(header, indizes.keys())
                 missingHeader = {val:key for key,val in self._dict.items()}[header]
-                raise InvalidInputException('Problem in file <br>'+path+':', 'Header "' + missingHeader + '" is not included')
+                raise InvalidInputException('Problem in file '+path+':<br>', 'Header "' + missingHeader + '" is not included')
         data = []
         if 'z' in mandatoryHeaders:
             for line in rawData[1:]:
@@ -60,6 +60,7 @@ class SpectralDataReader(object):
         #print(path)
         #print(rawData)
         for line in rawData[1:]:
+            print(line)
             if len(line)>1:
                 data.append(tuple([line[indizes[mandatoryHeader]] for mandatoryHeader in mandatoryHeaders]))
         #print(data)

@@ -118,7 +118,7 @@ class PlotFactory(object):
         '''
         Formats the plot if it's an occupancy plot
         '''
-        self._plot1.setWindowTitle('Occupancies ' +modification)
+        self._plot1.setWindowTitle('Localise ' +modification)
         #yLabel = '% '+modification + ' ('
         yLabel = modification + ' ('
         styles = {"black": "#f00", "font-size": "12pt"}
@@ -151,7 +151,7 @@ class PlotFactory(object):
         '''
         i=0
         for key, vals in currentDict.items():
-            name = key + '-ions'
+            name = key + ' fragments'
             if parent!=self._plot1:
                 vals = [self._maxY-val for val in vals]
             newXVals, newVals = self.removeNANVals(xVals,vals)
@@ -325,8 +325,9 @@ def plotBars(sequence, values, headers, title, occup=False):
     plt.grid(axis = 'y',linestyle = '--', linewidth = 0.4)
     ax.set_title(title)
     ax.legend()
-
+    print(np.max(np.sum(values,axis=1)), values)
     ax.set_xlim([0, nrRows+1])
+    ax.set_ylim([0, np.max(np.sum(values,axis=1))*1.05])
     plt.show()
 
 #Test

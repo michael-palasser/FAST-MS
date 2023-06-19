@@ -22,8 +22,8 @@ class SimpleMainWindow(QtWidgets.QMainWindow):
         self.setCentralWidget(self._centralwidget)
         self.setWindowIcon(QIcon(os.path.join(path, 'icon.ico')))
 
-    def updateComboBox(self, comboBox, newOptions):
-        optionLength = len(newOptions)
+    def updateComboBox(self, comboBox, newOptions,empty=False):
+        """optionLength = len(newOptions)
         toAdjust = comboBox.count() - optionLength
         if toAdjust > 0:
             [comboBox.removeItem(optionLength) for i in range(optionLength, optionLength + toAdjust)]
@@ -31,7 +31,11 @@ class SimpleMainWindow(QtWidgets.QMainWindow):
             [comboBox.addItem("") for i in range(-1 * toAdjust)]
         print(comboBox.count())
         for i, option in enumerate(newOptions):
-            comboBox.setItemText(i, self._translate(self.objectName(), option))
+            comboBox.setItemText(i, self._translate(self.objectName(), option))"""
+        comboBox.clear()
+        if empty:
+            newOptions=[""] + newOptions
+        comboBox.addItems(newOptions)
 
     def createMenuBar(self):
         self._menubar = QtWidgets.QMenuBar(self)

@@ -79,7 +79,10 @@ class IntactMainController(AbstractMainController):
         """Importing spectral pattern"""
         #spectralFile = os.path.join(path, 'Spectral_data','top-down', self._settings['spectralData'])
         print("\n********** Importing spectral pattern from:", self._settings['spectralData'], "**********")
-        self._spectrumHandler = IntactSpectrumHandler(self._settings, self._configs)
+        try:
+            self._spectrumHandler = IntactSpectrumHandler(self._settings, self._configs)
+        except Exception as e:
+            raise InvalidInputException('Problem in file ' + self._settings['spectralData'] + ':<br>', e.__str__())
         self._info.spectrumProcessed(self._spectrumHandler.getUpperBound(), self._spectrumHandler.getNoiseLevel())
         if self._settings['calibration']:
             allSettings = dict(self._settings)

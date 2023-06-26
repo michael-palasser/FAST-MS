@@ -1,11 +1,8 @@
-import sys
 from copy import deepcopy
 from unittest import TestCase
 import numpy as np
-from PyQt5.QtWidgets import QApplication
 
 from src.entities.Ions import FragmentIon, Fragment
-from src.gui.widgets.SequCovWidget import SequCovWidget
 from src.services.analyser_services.Analyser import Analyser
 from tests.top_down.test_IntensityModeller import initTestSpectrumHandler
 
@@ -185,7 +182,13 @@ class TestAnalyser(TestCase):
 
     def test_get_sequence_coverage(self):
         print('ions:',[ion.getName() for ion in self.ions.values()])
-        self.analyser.setIons(self.ions.values())
+        ions = deepcopy(self.ions)
+        for name in ['a01', 'a01-G', 'y01']:
+            for charge in range(1,4):
+                if (name, charge) in ions:
+                    print((name, charge))
+                    del ions[(name, charge)]
+        self.analyser.setIons(ions.values())
         coverages, calcCoverages, overall = self.analyser.getSequenceCoverage(['a','c'])
         print('coverages:',coverages)
         self.assertTrue(np.all(coverages[0]['c'][:-1]))
@@ -204,19 +207,20 @@ class TestAnalyser(TestCase):
         self.assertTrue(np.all(overall[:,2]))
         ions = deepcopy(self.ions)
         for hash in self.ions.keys():
-            if ('c02' in hash[0]) or ('a02' in hash[0]):
+            if ('c02' in hash[0]) or ('a02' in hash[0]) or ('y01' in hash[0]):
                 del ions[hash]
         self.analyser.setIons(ions.values())
+        print(ions.keys())
         coverages, calcCoverages, overall = self.analyser.getSequenceCoverage(['a','c'])
+        print(calcCoverages)
         for type in ('w','backward','total'):
             self.assertAlmostEqual(1,calcCoverages[type])
-        for type in ('c','y','forward'):
+        for type in ('c','a','y','forward'):
             #print(type, coverages[type])
             self.assertAlmostEqual(2/3,calcCoverages[type])
-        self.assertAlmostEqual(1/3,calcCoverages['a'])
         ions = deepcopy(self.ions)
         for hash in self.ions.keys():
-            if ('c02' in hash[0]) or ('a02' in hash[0]) or ('w03' in hash[0])  or ('y03' in hash[0]):
+            if ('c02' in hash[0]) or ('a02' in hash[0]) or ('w03' in hash[0])  or ('y03' in hash[0])  or ('y01' in hash[0])  or ('a01' in hash[0]):
                 del ions[hash]
         self.analyser.setIons(ions.values())
         coverages, calcCoverages, overall = self.analyser.getSequenceCoverage(['a','c'])

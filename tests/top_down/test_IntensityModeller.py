@@ -2,7 +2,7 @@ from copy import deepcopy
 from unittest import TestCase
 import numpy as np
 
-from src.MolecularFormula import MolecularFormula
+from src.services.MolecularFormula import MolecularFormula
 from src.entities.Ions import FragmentIon, Fragment
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from tests.test_Calibrator import getCalibratedSpectrum

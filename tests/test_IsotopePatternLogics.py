@@ -4,7 +4,7 @@ import numpy as np
 
 from src.Exceptions import InvalidInputException
 from src.services.IsotopePatternLogics import IsotopePatternLogics
-from src.MolecularFormula import MolecularFormula
+from src.services.MolecularFormula import MolecularFormula
 from src.entities.SearchSettings import SearchSettings
 from src.resources import processTemplateName
 from src.services.library_services.FragmentLibraryBuilder import FragmentLibraryBuilder

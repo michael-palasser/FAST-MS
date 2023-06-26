@@ -5,7 +5,7 @@ import os
 
 from src.resources import path
 from src.Exceptions import InvalidIsotopePatternException
-from src.MolecularFormula import MolecularFormula
+from src.services.MolecularFormula import MolecularFormula
 from src.services.DataServices import SequenceService
 from src.entities.GeneralEntities import Sequence
 from src.entities.Ions import Fragment

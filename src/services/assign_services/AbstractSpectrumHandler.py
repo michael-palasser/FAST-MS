@@ -4,8 +4,8 @@ from abc import ABC
 
 import numpy as np
 
-from src.FormulaFunctions import protMass, eMass
-from src.MolecularFormula import MolecularFormula
+from src.services.FormulaFunctions import protMass, eMass
+from src.services.MolecularFormula import MolecularFormula
 from src.repositories.SpectralDataReader import SpectralDataReader
 
 
@@ -272,7 +272,7 @@ class AbstractSpectrumHandler(ABC):
             noisy = 5
             if density>noisy:
                 factor= density/(noisy*0.5+density)
-                print('density',density, factor)
+                #print('density',density, factor)
             meanPeakInt *= factor #used to be 0.6
             if meanPeakInt > noise:#*0.67:
                 noise = meanPeakInt

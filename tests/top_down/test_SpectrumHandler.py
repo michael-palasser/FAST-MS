@@ -5,8 +5,8 @@ import numpy as np
 from numpy.random import randint
 
 from src.resources import path
-from src.FormulaFunctions import eMass
-from src.MolecularFormula import MolecularFormula
+from src.services.FormulaFunctions import eMass
+from src.services.MolecularFormula import MolecularFormula
 from src.entities.Ions import Fragment
 from src.entities.SearchSettings import SearchSettings
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
@@ -21,6 +21,7 @@ theoPeakType = np.dtype([('m/z', np.float64), ('calcInt', np.float64)])
 def initTestLibraryBuilder(charge=-3, modif='CMCT'):
     initTestSequences()
     configs = ConfigurationHandlerFactory.getConfigHandler().getAll()
+    configs['zTolerance']=0.5
     filePath = os.path.join(path, 'tests', 'test_files', 'dummySpectrum.txt')
     settings = {'sequName': 'dummyRNA', 'charge': charge, 'fragmentation': 'RNA_CAD', 'modifications': modif,
                 'nrMod': 1, 'spectralData': filePath, 'noiseLimit': 10 ** 6, 'fragLib': ''}
@@ -54,7 +55,19 @@ class TestSpectrumHandler(TestCase):
         self.builderProt.createFragmentLibrary()
         self.spectrumHandlerProt = SpectrumHandler(self.propsProt, self.builderProt.getPrecursor(), self.settingsProt,
                                                    self.configs)
-        self.spectrumHandler.setNormalisationFactor(self.spectrumHandler.getNormalisationFactor())
+        self.spectrumHandlerProt.setNormalisationFactor(self.spectrumHandlerProt.getNormalisationFactor())
+
+
+        self.settingsProt2 = {'sequName': 'dummyProt', 'charge': 4, 'fragmentation': 'Protein_ECD', 'modifications': '-',
+                             'nrMod': 0, 'spectralData': os.path.join(path, 'tests', 'test_files', 'dummySpectrum.txt'),
+                             'noiseLimit': 10 ** 5, 'fragLib': ''}
+        self.propsProt2 = SearchSettings(self.settingsProt2['sequName'], self.settingsProt2['fragmentation'],
+                                        self.settingsProt2['modifications'])
+        self.builderProt2 = FragmentLibraryBuilder(self.propsProt2, 0)
+        self.builderProt2.createFragmentLibrary()
+        self.spectrumHandlerProt2 = SpectrumHandler(self.propsProt2, self.builderProt2.getPrecursor(), self.settingsProt2,
+                                                   self.configs)
+        self.spectrumHandlerProt2.setNormalisationFactor(self.spectrumHandlerProt2.getNormalisationFactor())
         '''builder2 = FragmentLibraryBuilder(self.props,2)
         builder2.createFragmentLibrary()
         settings2 = self.settings
@@ -113,6 +126,7 @@ class TestSpectrumHandler(TestCase):
         precModCharge = self.spectrumHandler.getModCharge(Fragment('c', 3, '+CMCT', '', [], 0))
         #self.spectrumHandler.setNormalisationFactor(self.spectrumHandler.getNormalisationFactor())
         tolerance = self.configs['zTolerance']
+        print(tolerance)
         precCharge = abs(self.settings['charge'])
         #self.spectrumHandlerProt.setNormalisationFactor(self.spectrumHandlerProt.getNormalisationFactor())
         self.spectrumHandler.setPrecModCharge(precModCharge)
@@ -139,13 +153,19 @@ class TestSpectrumHandler(TestCase):
         self.spectrumHandlerProt.setPrecModCharge(0)
         rangeCalc = self.spectrumHandlerProt.getChargeRange(
             Fragment('c', 3, '', MolecularFormula({'P': 1}), ['G', 'A', 'P'], 0))
-        print(rangeTheo.start, rangeCalc.start, rangeTheo.stop, rangeCalc.stop)
         self.assertEqual(rangeTheo.start, rangeCalc.start)
         self.assertEqual(rangeTheo.stop, rangeCalc.stop)
 
-        rangeTheo = self.getRange(abs(self.settingsProt['charge'] * 3) / len(self.propsProt.getSequenceList()) - 1,
+        rangeTheo = self.getRange(abs(self.settingsProt['charge'] * 3) / len(self.propsProt.getSequenceList()),
                                   tolerance, self.settingsProt['charge'])
         rangeCalc = self.spectrumHandlerProt.getChargeRange(
+            Fragment('c', 3, '', MolecularFormula({'P': 1}), ['G', 'A', 'P'], 1))
+        self.assertEqual(rangeTheo.start, rangeCalc.start)
+        self.assertEqual(rangeTheo.stop, rangeCalc.stop)
+
+        rangeTheo = self.getRange(abs((self.settingsProt['charge']-1) * 3) / len(self.propsProt.getSequenceList()),
+                                  tolerance, self.settingsProt['charge'])
+        rangeCalc = self.spectrumHandlerProt2.getChargeRange(
             Fragment('c', 3, '', MolecularFormula({'P': 1}), ['G', 'A', 'P'], 1))
         self.assertEqual(rangeTheo.start, rangeCalc.start)
         self.assertEqual(rangeTheo.stop, rangeCalc.stop)

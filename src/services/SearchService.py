@@ -1,8 +1,8 @@
 from copy import deepcopy
 from datetime import datetime
 
-from src.MolecularFormula import MolecularFormula
-from src.FormulaFunctions import stringToFormula2
+from src.services.MolecularFormula import MolecularFormula
+from src.services.FormulaFunctions import stringToFormula2
 from src.entities.Search import Search
 from src.repositories.sql.SearchRepository import SearchRepository
 from src.services.IntensityModeller import calcScore

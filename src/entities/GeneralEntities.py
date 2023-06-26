@@ -21,8 +21,8 @@ class Macromolecule(PatternWithItems):
         :param (int | None) id: id of macromolecule
         '''
         bbs = [list(bb) for bb in buildingBlocks]
-        if len(buildingBlocks[0])<5:
-            bbs = [[bb[0],bb[1],bb[2]] for bb in buildingBlocks]
+        #if len(buildingBlocks[0])<5:
+        bbs = [[bb[0],bb[1],bb[2]] for bb in buildingBlocks]
         super(Macromolecule, self).__init__(name, bbs, id)
         self.__gain = moleculeGain
         self.__loss = moleculeLoss

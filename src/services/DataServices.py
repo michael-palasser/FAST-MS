@@ -1,4 +1,3 @@
-import re
 from abc import ABC
 
 from src.Exceptions import InvalidInputException
@@ -307,7 +306,8 @@ class MoleculeService(AbstractServiceForPatterns):
                 raise InvalidInputException(pattern.getName(), "Element: " + key + " unknown")
         [self.checkName(bb[0]) for bb in pattern.getItems()]
         self.checkFormatOfItems(pattern.getItems(), elements, self._repository.getIntegers())
-        pattern.setItems([bb+[1,1] for bb in pattern.getItems()])
+        if len(pattern.getItems()[0])!=5:
+            pattern.setItems([bb+[1,1] for bb in pattern.getItems()])
         pattern = super(MoleculeService, self).save(pattern)
         elementRep.close()
         return pattern
@@ -456,6 +456,7 @@ class SequenceService(AbstractService):
         :return (Sequence): sequence
         '''
         sequName, sequString, moleculeName = item[0], item[1], item[2]
+        #print('hey', item)
         molecules  = args[0].keys()
         if sequName == '' or sequName == '-':
             raise InvalidInputException(sequName,"Name incorrect")

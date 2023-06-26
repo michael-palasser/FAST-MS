@@ -1,7 +1,7 @@
 import copy
 
-from src.FormulaFunctions import stringToFormula
-from src.fastFunctions import *
+from src.services.FormulaFunctions import stringToFormula
+from src.services.fastFunctions import *
 #import src.simpleFunctions as sf
 from src.services.DataServices import PeriodicTableService
 from scipy.fft import fft, ifft

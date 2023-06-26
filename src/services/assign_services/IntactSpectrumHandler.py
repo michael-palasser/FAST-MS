@@ -2,7 +2,7 @@ import logging
 
 import numpy as np
 
-from src.MolecularFormula import MolecularFormula
+from src.services.MolecularFormula import MolecularFormula
 from src.entities.Ions import IntactIon
 from src.services.assign_services.AbstractSpectrumHandler import AbstractSpectrumHandler
 

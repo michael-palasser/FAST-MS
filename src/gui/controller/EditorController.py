@@ -9,7 +9,7 @@ from src.Exceptions import CanceledException
 from src.resources import DEVELOP
 from src.services.DataServices import *
 from src.gui.AbstractMainWindows import SimpleMainWindow
-from src.gui.GUI_functions import createComboBox, shoot, translate, getData
+from src.gui.GUI_functions import createComboBox, shoot, translate
 from src.gui.dialogs.SimpleDialogs import OpenDialog
 
 
@@ -114,6 +114,8 @@ class AbstractSimpleEditorController(ABC):
             rowData = []
             for col in range(table.columnCount()):
                 widgetItem = table.item(row, col)
+                print(row, col)
+                print(isinstance(widgetItem, QtWidgets.QComboBox))
                 if col in boolVals:
                     try:
                         rowData.append(int(widgetItem.checkState()/2))
@@ -123,13 +125,16 @@ class AbstractSimpleEditorController(ABC):
                         table.setItem(row,col, newItem)
                         rowData.append(1)
                         raise Warning(e.__str__())
-                elif isinstance(widgetItem, QtWidgets.QComboBox):
-                    rowData.append(widgetItem.currentText())
+                    """elif isinstance(widgetItem, QtWidgets.QComboBox):
+                        rowData.append(widgetItem.currentText())"""
                 elif widgetItem and widgetItem.text():
                     rowData.append(widgetItem.text())
                 else:
-                    rowData.append("")
+                    #QtWidgets.QTableWidget().cellWidget()
+                    widgetItem = table.cellWidget(row, col)
+                    rowData.append(widgetItem.currentText())
             itemList.append(rowData)
+        print('itemlist',itemList)
         return itemList
 
     def editRow(self, table, bools, pos):

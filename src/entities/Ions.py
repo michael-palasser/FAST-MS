@@ -6,7 +6,7 @@ Created on 3 Jul 2020
 from abc import ABC
 import numpy as np
 #from numpy import array, dtype
-from src.FormulaFunctions import eMass, protMass
+from src.services.FormulaFunctions import eMass, protMass
 
 
 class Ion(ABC):

@@ -5,11 +5,10 @@ Created on 21 Jul 2020
 '''
 from multiprocessing import Pool
 import logging
-from numpy import sort
 #from tqdm import tqdm
 
 from src.Exceptions import InvalidInputException
-from src.MolecularFormula import MolecularFormula
+from src.services.MolecularFormula import MolecularFormula
 from src.entities.Ions import Fragment
 from src.resources import processTemplateName
 

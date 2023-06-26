@@ -1,9 +1,9 @@
 from unittest import TestCase
 import numpy as np
 from random import randint
-from src.fastFunctions import getByIndex, calculatePeptFineStructure, calculateFineStructure, calculateNuclFineStructure
+from src.services.fastFunctions import getByIndex
 
-from src.MolecularFormula import MolecularFormula
+from src.services.MolecularFormula import MolecularFormula
 from src.services.DataServices import PeriodicTableService
 from src.services.assign_services.AbstractSpectrumHandler import calculateError
 

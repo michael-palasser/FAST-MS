@@ -68,8 +68,7 @@ class TestCalibrator(TestCase):
                                                                'CMCT').createLibrary(),
                        configHandlerRNA.getAll())
 
-    def test_init(self):
-        pass
+
 
     def test_calibrate_peaks(self):
         configs, settings, props, builder = initTestLibraryBuilder()
@@ -126,6 +125,8 @@ class TestCalibrator(TestCase):
             deviation = calculateError(autoCalIons[key].getMonoisotopic(),manCalIons[key].getMonoisotopic())
             '''if abs(deviation)> 0.1:
                 print(deviation, autoCalIons[key].getMonoisotopic(), autoCalIons[key].getName())'''
+            if abs(deviation)>1:
+                print(key, autoCalIons[key].getMonoisotopic(),manCalIons[key].getMonoisotopic(), deviation)
             self.assertLess(abs(deviation),1)
             autoError = calculateError(autoCalIons[key].getMonoisotopic(),autoCalIons[key].getTheoMz())
             manError = calculateError(manCalIons[key].getMonoisotopic(),manCalIons[key].getTheoMz())

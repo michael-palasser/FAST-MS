@@ -61,18 +61,22 @@ class TestMoleculeService(TestCase):
 
     def test_save(self):
         name = 'Xeo'
+        if name in self.service.getAllPatternNames():
+            self.service.delete(name)
+            #assert False
         assert name not in self.service.getAllPatternNames()
-        pattern = Macromolecule(name,'','-',[('Gm','', 'CH5N2O', '', ''),('Am','', 'C13H5N2OP', '', '')],None)
-        self.service.save(pattern)
+        pattern = Macromolecule(name,'','-',[('Gm','', 'CH5N2O'),('Am','', 'C13H5N2OP')],None)
+        self.service.save(deepcopy(pattern))
         savedPattern = self.service.get(pattern.getName())
+        print(savedPattern.getItems(),pattern.getItems())
         self.assertEqual(name,savedPattern.getName())
         self.assertEqual(pattern.getItems(),savedPattern.getItems())
         self.service.delete(name)
         self.assertNotIn(name, self.service.getAllPatternNames())
         with self.assertRaises(InvalidInputException):
-            pattern = Macromolecule(name, '', '-', [('gm','', 'CH5N2O', '', ''), ('Am', 'C13H5N2OP', '', '')], None)
+            pattern = Macromolecule(name, '', '-', [('gm','', 'CH5N2O', '', ''), ('Am', '', 'C13H5N2OP', '', '')], None)
             self.service.save(pattern)
-            pattern = Macromolecule(name, '', '-', [('Gm','', 'CH5N2Ox', '', ''), ('Am', 'C13H5N2OP', '', '')], None)
+            pattern = Macromolecule(name, '', '-', [('Gm','', 'CH5N2Ox', '', ''), ('Am', '', 'C13H5N2OP', '', '')], None)
             self.service.save(pattern)
         assert name not in self.service.getAllPatternNames()
 

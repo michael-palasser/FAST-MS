@@ -3,9 +3,9 @@ from unittest import TestCase
 import numpy as np
 import math
 
-import src.fastFunctions as f
-from scipy.stats import binom, multinomial, poisson
-from src.MolecularFormula import MolecularFormula
+import src.services.fastFunctions as f
+from scipy.stats import binom, multinomial
+from src.services.MolecularFormula import MolecularFormula
 
 '''G = stringToFormula('C5H5N5O',{},1)
 uni_table = np.empty((5,6))

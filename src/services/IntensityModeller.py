@@ -587,8 +587,12 @@ class IntensityModeller(object):
             counter=0
             returnedHash=None
             for ionString in ionStrings:
-                vals = ionString.split('/')
-                ionHash = (vals[0], int(vals[1]))
+                try:
+                    vals = ionString.split('/')
+                    ionHash = (vals[0], int(vals[1]))
+                except IndexError:
+                    vals = ionString.split('_')
+                    ionHash = (vals[0], int(vals[1]))
                 if ionHash in self._correctedIons.keys():
                     counter+=1
                     returnedHash=ionHash

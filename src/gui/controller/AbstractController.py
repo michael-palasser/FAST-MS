@@ -12,7 +12,6 @@ from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 
 from src.gui.GUI_functions import setIcon, translate
-from src.gui.widgets.Widgets import ShowFormulaWidget
 from src.resources import path, DEVELOP
 from src.gui.controller.IsotopePatternView import AddIonView
 from src.gui.dialogs.CalibrationView import CalibrationView

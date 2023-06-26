@@ -1,7 +1,6 @@
 import os
 from copy import deepcopy
 
-import numpy as np
 from unittest import TestCase
 
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory

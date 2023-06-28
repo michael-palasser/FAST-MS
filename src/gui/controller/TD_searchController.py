@@ -35,6 +35,7 @@ from src.gui.widgets.SequencePlots import PlotFactory, plotBars
 from src.gui.dialogs.SimpleDialogs import ExportDialog, SelectSearchDlg, OpenSpectralDataDlg, SaveSearchDialog
 #from src.gui.ParameterDialogs import TDStartDialog
 from src.gui.dialogs.StartDialogs import TDStartDialog
+from src.gui.GUI_functions import shoot
 
 """def sortIonsByName(ionList):
     #return sorted(ionList,key=lambda obj:(obj.type ,obj.number))

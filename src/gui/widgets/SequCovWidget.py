@@ -66,7 +66,7 @@ class SequCovTableModel(AbstractTableModel):
     TableModel for a QTableView in SequCovWidget which shows the sequence coverage for each fragment type
     '''
     def __init__(self, data):
-        super(SequCovTableModel, self).__init__(data, (), ('fragm. type', 'coverage /%'))
+        super(SequCovTableModel, self).__init__(data, (), ('type', 'coverage /%'))
 
     def data(self, index, role):
         '''
@@ -127,7 +127,7 @@ class SequCovWidget(QtWidgets.QWidget):
         self._lineWidth.setMaximum(999)
         updateBtn = QtWidgets.QPushButton()
         updateBtn.setText('Update')
-        widg, _ = makeLabelInputWidget(self, 'nr. of res. per line:', self._lineWidth, updateBtn)
+        widg, _ = makeLabelInputWidget(self, 'res. per line:', self._lineWidth, updateBtn)
         verticalLayout.addWidget(widg)
 
         self._inputWidget = QtWidgets.QWidget(self)

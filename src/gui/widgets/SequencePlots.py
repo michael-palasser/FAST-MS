@@ -7,6 +7,8 @@ from PyQt5 import QtGui
 import pyqtgraph as pg
 from matplotlib.ticker import MultipleLocator
 
+from src.resources import DEVELOP
+
 
 class PlotFactory(object):
     '''
@@ -15,6 +17,10 @@ class PlotFactory(object):
     def __init__(self, parent):
         self._parent = parent
         self._colours = ['r', 'm', 'y', 'c', 'g', 'b']
+        if DEVELOP:
+            self._fontsize = 10
+        else:
+            self._fontsize = 12
 
     def showOccupancyPlot(self, sequence, forwardVals, backwardVals, maxY, modification):
         self.initiatePlot(sequence, forwardVals, backwardVals, maxY, lambda: self.formatForOccupancies(modification))
@@ -26,6 +32,8 @@ class PlotFactory(object):
         self.plotMinMaxVals(forwardVals2, backwardVals2)
         return self._plot1
 
+    def getFontSizeString(self):
+        return str(self._fontsize)+'pt'
 
     def initiatePlot(self, sequence, forwardVals, backwardVals, maxY, func):
         '''
@@ -43,7 +51,7 @@ class PlotFactory(object):
         self._sequence = sequence
         self._maxY = maxY
         self._plot1 = pg.plot()
-        self._plot1.addLegend(labelTextSize='12pt')
+        self._plot1.addLegend(labelTextSize=self.getFontSizeString())
         self._plot1.setBackground('w')
         self._plot1.showAxis('right')
         self._plot2 = pg.ViewBox()
@@ -51,7 +59,7 @@ class PlotFactory(object):
         self._plot1.getAxis('right').linkToView(self._plot2)
         self._plot2.setXLink(self._plot1)
         self._plot2.setYLink(self._plot1)
-        styles = {"black": "#f00", "font-size": "12pt"}
+        styles = {"black": "#f00", "font-size": self.getFontSizeString()}
         self._plot1.setLabel('bottom', 'cleavage site', **styles)
 
         for axisName in ("left", "bottom", "right"):
@@ -61,7 +69,7 @@ class PlotFactory(object):
             axis.setStyle(tickFont=font)
             axis.setTextPen("k")
         yRange = [-self._maxY*0.05,self._maxY*1.05]
-        self._plot1.setXRange(0.02, len(self._sequence) + 0.02)
+        self._plot1.setXRange(0, len(self._sequence),padding=0)
         self._plot1.plotItem.vb.setLimits(xMin=0, xMax=len(self._sequence) + 0.01, yMin=yRange[0], yMax=yRange[1])
         self._plot2.setLimits(xMin=0, xMax=len(self._sequence) + 0.01, yMin=yRange[0], yMax=yRange[1])
         self._plot1.setRange(yRange=yRange, padding=0)
@@ -70,7 +78,11 @@ class PlotFactory(object):
         self.addSequence(self._plot1)
         func()
         self.plot()
-        self._plot1.resize(len(sequence) * 20 + 150, 400)
+        if DEVELOP:
+            factor = self._fontsize/10
+            self._plot1.resize(int(700*factor), int(350*factor))
+        else:
+            self._plot1.resize(len(sequence) * 20 + 150, 400)
         self._plot2.resize(2000, 1000) #if too small the second graph will dissapear when scaling up
 
     def addSequence(self, plot):
@@ -85,7 +97,7 @@ class PlotFactory(object):
                 sequMarkers[bb] = self.makeCustomMarker(bb)
         for i, bb in enumerate(self._sequence):
             scatter = pg.ScatterPlotItem(x=(i+0.5,),y=(0,), symbol=sequMarkers[bb],
-                                         pen=pg.mkPen(color='k', width=0.1), size=12, pxMode=True)
+                                         pen=pg.mkPen(color='k', width=0.1), size=self._fontsize*1.4, pxMode=True)
             plot.addItem(scatter)
 
 
@@ -110,7 +122,7 @@ class PlotFactory(object):
         '''
         self._plot1.setWindowTitle('Charge Distribution')
         yLabel = 'average charge '
-        styles = {"black": "#f00", "font-size": "12pt"}
+        styles = {"black": "#f00", "font-size": self.getFontSizeString()}
         self._plot1.setLabel('left', yLabel + ','.join(self._forwardVals.keys()), **styles)
         self._plot1.setLabel('right', yLabel + ','.join(self._backwardVals.keys()), **styles)
 
@@ -121,7 +133,7 @@ class PlotFactory(object):
         self._plot1.setWindowTitle('Localise ' +modification)
         #yLabel = '% '+modification + ' ('
         yLabel = modification + ' ('
-        styles = {"black": "#f00", "font-size": "12pt"}
+        styles = {"black": "#f00", "font-size": self.getFontSizeString()}
         self._plot1.setLabel('left', yLabel + ','.join(self._forwardVals.keys()) + ')', **styles)
         self._plot1.setLabel('right', yLabel + ','.join(self._backwardVals.keys()) + ')', **styles)
 
@@ -154,15 +166,17 @@ class PlotFactory(object):
             name = key + ' fragments'
             if parent!=self._plot1:
                 vals = [self._maxY-val for val in vals]
-            newXVals, newVals = self.removeNANVals(xVals,vals)
+            #newXVals, newVals, connected = self.removeNANVals(xVals,vals)
+            connected = self.removeNANVals(xVals,vals)
             #curve = pg.PlotCurveItem(x=newXVals,y=newVals,pen=pg.mkPen(color=colours[i], width=2))
             """scatter = pg.ScatterPlotItem(x=newXVals, y=newVals, symbol=markers[i],
                                          pen =pg.mkPen(color=colours[i], width=2),
                                          brush=(0,0,0,0), size=10, pxMode=True, name = name)"""
-            plotData = pg.PlotDataItem(x=newXVals, y=newVals, symbol=markers[i],
+            plotData = pg.PlotDataItem(x=xVals, y=vals, symbol=markers[i],
                                        pen =pg.mkPen(color=colours[i], width=2),
                                        symbolPen=pg.mkPen(color=colours[i], width=2),
-                                       symbolBrush=(0,0,0,0), symbolSize=10, pxMode=True, name = name)
+                                       symbolBrush=(0,0,0,0), symbolSize=10, pxMode=True, name = name,
+                                       connect=connected)
             #newXVals, newVals = self.removeNANVals(xVals,vals)
             self._plot1.addItem(plotData)
             #self._plot1.addItem(scatter)
@@ -172,12 +186,18 @@ class PlotFactory(object):
         '''
         PlotCurveItem does not like nan values
         '''
-        newXVals, newVals = [],[]
+        connected = []
+        #newXVals, newVals, connected = [],[],[]
         for xVal,val in zip(xVals,vals):
             if not np.isnan(val):
-                newXVals.append(xVal)
-                newVals.append(val)
-        return newXVals, newVals
+                #newXVals.append(xVal)
+                #newVals.append(val)
+                connected.append(1)
+            else:
+                #newXVals.append(xVal)
+                #newVals.append(val)
+                connected.append(0)
+        return np.array(connected)#newXVals, newVals, np.array(connected)
 
 
     def plotMinMaxVals(self, forwardVals, backwardVals):
@@ -289,7 +309,12 @@ def plotBars(sequence, values, headers, title, occup=False):
     :return:
     '''
     #sequLength = len(sequence)
-    colours = ['tab:red','royalblue','tab:green', 'tab:orange', 'tab:purple', 'tab:cyan', 'tab:brown', 'tab:olive', 'tab:gray', 'm','gold','darkred','limegreen','gold']
+    if DEVELOP:
+        plt.rcParams.update({'font.size': 10})
+    else:
+        plt.rcParams.update({'font.size': 12})
+    colours = ['tab:red','royalblue','tab:green', 'tab:orange', 'tab:purple', 'tab:cyan', 'tab:brown', 'tab:olive',
+               'tab:gray', 'm','gold','darkred','limegreen','gold']
     nrCols = len(headers)
     nrRows = len(values)
     xVals = np.arange(1,nrRows+1)
@@ -297,7 +322,14 @@ def plotBars(sequence, values, headers, title, occup=False):
 
     fig, ax = plt.subplots()#figsize=(50,nrRows*10+50))
     bottom=np.zeros(nrRows)
-    
+
+    size =nrRows/5+4, 4
+    if DEVELOP:
+        toInch = 2.54/2
+        size = 7/toInch, 3.8/toInch
+    fig.set_figwidth(size[0])
+    fig.set_figheight(size[1])
+
     for i in range(nrCols):
         #index=nrCols-i-1
         if occup:
@@ -314,20 +346,19 @@ def plotBars(sequence, values, headers, title, occup=False):
     '''if occup:
         sequColour = 'saddlebrown'''
     for i,bb in enumerate(sequence):
-        plt.text(x=i+0.5, y=0, s=bb, fontsize=13, c=sequColour, ha='center')
-    plt.rcParams['figure.figsize'] = nrRows/5+4, 4
-    ax.set_ylabel('rel. abundances /a.u.')
+        plt.text(x=i+0.5, y=0, s=bb, fontsize=10, c=sequColour, ha='center')
+    ax.set_ylabel('rel. abundance /a.u.')
     ax.set_xlabel('cleavage site')
     ax.xaxis.set_major_locator(MultipleLocator(5))
     #ax.xaxis.set_major_formatter('{x:.0f}')
     ax.xaxis.set_minor_locator(MultipleLocator(1))
-
+    ax.ticklabel_format(axis="y", style="sci", scilimits=(0,0))
     plt.grid(axis = 'y',linestyle = '--', linewidth = 0.4)
     ax.set_title(title)
     ax.legend()
-    print(np.max(np.sum(values,axis=1)), values)
     ax.set_xlim([0, nrRows+1])
-    ax.set_ylim([0, np.max(np.sum(values,axis=1))*1.05])
+    ax.set_ylim([0, np.max(np.sum(values,axis=1))*1.1])
+    plt.tight_layout(pad=0.8)
     plt.show()
 
 #Test
@@ -337,7 +368,7 @@ if __name__ == '__main__':
         for j in range(2):
             arr[i,j] = np.random.randint(100000)
     sequ = list('GGCUGCUUGUCCUUUAAUGGUCCAGUC')
-    #plotBars(sequ, arr, ['c','y'], 'hey')
+    #plotBars(sequ, arr, ['c','y'], '')
     arr = np.zeros((26,4))
     for i in range(26):
         for j in range(4):
@@ -348,14 +379,16 @@ if __name__ == '__main__':
     plotFactory = PlotFactory(None)
     forwardVals = {'c':np.random.rand(len(sequ))}
     backwardVals =  {'y':np.random.rand(len(sequ))}
+
     #plotFactory.showOccupancyPlot(sequ, forwardVals, backwardVals,1, 'CMCT')
     sequ = sequ[:15]
-    forwardVals={'c': np.array([np.nan, 0.62842433, 0.55673973, 0.56883476, 0.52191535,
+    forwardVals={'c': np.array([np.nan, 0.62842433, 0.55673973, np.nan, 0.52191535,
                  0.81935084, 0.69020276, 0.75760611, 1., 1.,
                  0.68116389, 1., 1., 0.5610877, np.nan])}
     backwardVals= {'y': np.array([np.nan, 0., 0., 0., 0.,
                  0., 0., 0., 0., 0.,
                  0., 0.08697064, 0.09865665, 0., np.nan])}
     plot = plotFactory.showOccupancyPlot(sequ, forwardVals, backwardVals,1, 'CMCT')
+    plotBars(sequ, arr, ['c','y'], '')
 
     sys.exit(app.exec_())

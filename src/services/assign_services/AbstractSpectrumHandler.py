@@ -117,9 +117,9 @@ class AbstractSpectrumHandler(ABC):
         if filePath[-4:] == '.csv':
             self._spectrum = self.addSpectrumFromCsv(filePath)
         else:
-            print('starting')
+            #print('starting')
             self._spectrum = self.addSpectrumFromTxt(filePath)
-            print(self._spectrum)
+            #print(self._spectrum)
         self.resizeSpectrum()
 
     def addSpectrumFromCsv(self, filePath):

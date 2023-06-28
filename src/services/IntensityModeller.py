@@ -133,8 +133,8 @@ class IntensityModeller(object):
         #print('int',outlier_index,gValueInt,calcIntensities)
         if len(outlier_index[0]) == 0 and nonZeroLength>1:
             outlier_index = np.where((gValueErr>self.calculateCriticalVal(nonZeroLength,0.01)) & (errors != 0))
-            if len(outlier_index[0])>0:
-                print(outlier_index,errors, gValueErr, 'error out')
+            #if len(outlier_index[0])>0:
+            #    print(outlier_index,errors, gValueErr, 'error out')
         return solution, mzArray[outlier_index].tolist()
 
     @staticmethod
@@ -152,7 +152,7 @@ class IntensityModeller(object):
 
     def calcQuality(self, sumSquare, intensity):
         if sumSquare**(0.5) / intensity is None:
-            print("Achtung", sumSquare**(0.5) / intensity, sumSquare, intensity)
+            print("Attention:", sumSquare**(0.5) / intensity, sumSquare, intensity)
         return sumSquare**(0.5) / intensity
 
 

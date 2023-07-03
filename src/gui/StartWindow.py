@@ -3,6 +3,7 @@ Created on 20 Oct 2020
 
 @author: michael
 '''
+import os
 import sys
 
 from PyQt5 import QtCore
@@ -18,12 +19,13 @@ from src.top_down.OccupancyRecalculator import run as occupancyRecalculator
 from src.top_down.SpectrumComparator import run as spectrumComparator
 from src.intact.Main import run as IntactIonsSearch
 from src.gui.controller.TD_searchController import TD_MainController
-from src.MSMS_Developer.services.TD_Assigner import TD_Assigner
-from src.resources import INTERN
+from src.resources import INTERN, path
+
 if INTERN:
     from src.MSMS_Developer.gui.MD_MainController import MD_MainController
     from src.MSMS_Developer.gui.Dialog_MD import MDStartDialog
     from src.MSMS_Developer.gui.SequenceTranslater import SequenceTranslaterWindow
+    from src.MSMS_Developer.services.TD_Assigner import TD_Assigner
 
 
 
@@ -67,12 +69,14 @@ class Window(SimpleMainWindow):
                              (self.compareSpectra, 'Compares the ion lists of multiple spectra', None)},None)
         if INTERN:
             self.createMenu('4 BACHEM',
-                            {'Simple MS/MS Method Development':
-                                (self.startSimpleMD, 'Calculates occupancies of a given (fragment) ion list', None),
+                            {#'Simple MS/MS Method Development':
+                             #   (self.startSimpleMD, 'Calculates occupancies of a given (fragment) ion list', None),"""
                             'MS/MS Method Development':
                                 (self.startFullMD, 'Calculates occupancies of a given (fragment) ion list', None),
                             'SequenceTranslater':
-                                (self.openTranslater, 'Translates a sequence in HELM or 3-letter code to FAST MS sequence', None),}, None)
+                                (self.openTranslater, 'Translates a sequence in HELM or 3-letter code to FAST MS sequence', None),},
+                            None)
+
         self.createMenu('Edit',
                         {'Configurations':(self.editTopDownConfig, 'Edit configurations', None),
                          'Elements': (lambda: self.editData(ElementEditorController), 'Edit element table', None),

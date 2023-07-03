@@ -42,7 +42,7 @@ class SimpleMainWindow(QtWidgets.QMainWindow):
         self.setMenuBar(self._menubar)
         self._menubar.setGeometry(QtCore.QRect(0, 0, 340, 22))
 
-    def createMenu(self, name, options, separatorPosition):
+    def createMenu(self, name, options, separatorPosition, icon=None):
         '''
         Makes a QMenu
         :param name: name of the menu
@@ -54,13 +54,15 @@ class SimpleMainWindow(QtWidgets.QMainWindow):
         menu.setToolTipsVisible(True)
         menuActions = dict()
         pos = len(options)
+        if icon is not None:
+            menu.setIcon(icon)
         for option, vals in options.items():
             function, tooltip, shortcut = vals
             if separatorPosition != None and pos == separatorPosition:
                 menu.addSeparator()
             action = QtWidgets.QAction(self)
             action.setText(self._translate(self.objectName(),option))
-            if tooltip != None:
+            if tooltip is not None:
                 action.setToolTip(tooltip)
             if shortcut != None:
                 action.setShortcut(shortcut)

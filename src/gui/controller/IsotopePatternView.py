@@ -310,7 +310,7 @@ class IsotopePatternView(SimpleMainWindow):
         except InvalidInputException as e:
             QtWidgets.QMessageBox.warning(self, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
             return
-        self.renderView(self._ion, self._logics.getNeutralMass(), self._logics.getAvMass())
+        self.renderView(self._ion, self._logics.getNeutralMass(), self._logics.getAvMass(), int(self._charge.text()))
 
     def showOptions(self, table, pos):
         '''
@@ -346,11 +346,12 @@ class AddIonView(IsotopePatternView):
     '''
     QMainWindow which is used to add new ions to ion list in top-down search
     '''
-    def __init__(self, parent, mode, sequence, charge, fragmentation, modification, fun):
+    def __init__(self, parent, mode, sequence, sequenceName, charge, fragmentation, modification, fun):
         super(AddIonView, self).__init__(parent)
         self.setWindowTitle(self._translate(self.objectName(),'New Ion'))
         self.setBox(self._modeBox,mode)
         self._inputForm.setText(sequence)
+        self._sequenceName = sequenceName
         self.setChargeRange(charge)
         self.setBox(self._options['fragmentation'],fragmentation)
         self.setBox(self._options['modPattern'],modification)
@@ -370,6 +371,8 @@ class AddIonView(IsotopePatternView):
         box.setEnabled(False)
 
     def getIon(self):
+        if "Prec" in self._ion.getName():
+            self._ion.setType(self._sequenceName)
         return self._ion
 
     def accept(self):
@@ -388,3 +391,15 @@ class AddIonView(IsotopePatternView):
         else:
             self._signal(self)
 
+
+    def getIonVals(self, ion, neutralMass, avMass):
+        if ion is None:
+            return ()
+        self.correctName(ion)
+        return (ion.getIsotopePattern()['m/z'][0], abs(ion.getCharge()), self._intensity, ion.getName(),
+                ion.getQuality(),ion.getFormula().toString(), neutralMass, avMass)
+
+    def correctName(self, ion):
+        type = ion.getType()
+        if "Prec" in type:
+            ion.setType(self._sequenceName+type[4:])

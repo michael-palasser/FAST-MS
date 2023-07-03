@@ -169,6 +169,7 @@ class AbstractSpectrumView(QtWidgets.QWidget):
             self._legend.setParentItem(self._graphWidget.graphicsItem())
             #maxRow =0
             for ion in self._ions:
+                #print(ion.getHash())
                 """if colourIndex == len(colours):
                     colourIndex = 0
                     markerIndex += 1
@@ -176,17 +177,21 @@ class AbstractSpectrumView(QtWidgets.QWidget):
                         markerIndex = 0"""
                 if self._focused and ion.getHash()==self._focused:
                     symbol='o'
-                    colour = (34,139,34)
+                    #colour = (34,139,34)
+                    colour = (255, 165, 0)
+                    size=12
+                    brush = (255,255,0,50)
                 else:
                     symbol=markers[marker_index]
                     colour = colours[coulour_index]
                     coulour_index += 1
                     marker_index+=1
-
+                    size=10
+                    brush = (50,50,200,50)
                 scatter = pg.ScatterPlotItem(x=ion.getIsotopePattern()['m/z'], y=ion.getIsotopePattern()['calcInt'],
                                              symbol=symbol,
                                              pen =pg.mkPen(color=colour, width=2),
-                                             brush=(50,50,200,50), size=10, pxMode=True) #Todo resize"""
+                                             brush=brush, size=size, pxMode=True) #Todo resize"""
                 self._items.append(scatter)
                 #maxMz = np.sort(ion.getIsotopePattern(), order='calcInt')[::-1]['m/z'][0]
                 #noise.append((maxMz, ion.getNoise()))
@@ -209,9 +214,15 @@ class AbstractSpectrumView(QtWidgets.QWidget):
                     marker_index=0"""
             if len(self._noise)>0:
                 #self._noise = np.array(noise)
-                noiseLine = self._graphWidget.plot(self._noise['m/z'], self._noise['I'], pen='r')
+                if len(self._noise['m/z'])==1 or np.all(np.isclose(self._noise['m/z'], self._noise['m/z'][0], atol=10**-3)):
+                    mz = self._noise['m/z'][0]
+                    noise=self._noise['I'][0]
+                    noiseLine = self._graphWidget.plot([mz-1,mz,mz+1], [noise, noise,noise], pen='r')
+                else:
+                    noiseLine = self._graphWidget.plot(self._noise['m/z'], self._noise['I'], pen='r')
                 self._legend.addItem(noiseLine, 'noise')
                 self._items.append(noiseLine)
+
         else:
             self._graphWidget.removeItem(self._peakBars)
             del self._peakBars
@@ -240,13 +251,14 @@ class SpectrumView(AbstractSpectrumView):
         self._spinBox.valueChanged.connect(self.changeWidth)
         self.resize(700,400)
 
-    def updateView(self, peaks, ions, minRange, maxRange, maxY, noise):
+    def updateView(self, peaks, ions, minRange, maxRange, maxY, noise, focused=False):
         self._peaks = peaks
         self._ions = ions
         self._items = []
         self._noise = noise
         if self._noise is None:
             self._noise = self.getNoiseArray()
+        self._focused = focused
         #self._layout = QtWidgets.QVBoxLayout(self)
         #self._translate = translate
         width = 0.02

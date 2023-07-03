@@ -132,7 +132,10 @@ class AbstractSimpleEditorController(ABC):
                 else:
                     #QtWidgets.QTableWidget().cellWidget()
                     widgetItem = table.cellWidget(row, col)
-                    rowData.append(widgetItem.currentText())
+                    if widgetItem is None:
+                        rowData.append("")
+                    else:
+                        rowData.append(widgetItem.currentText())
             itemList.append(rowData)
         print('itemlist',itemList)
         return itemList

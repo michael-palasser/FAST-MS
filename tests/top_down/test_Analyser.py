@@ -220,7 +220,7 @@ class TestAnalyser(TestCase):
             self.assertAlmostEqual(2/3,calcCoverages[type])
         ions = deepcopy(self.ions)
         for hash in self.ions.keys():
-            if ('c02' in hash[0]) or ('a02' in hash[0]) or ('w03' in hash[0])  or ('y03' in hash[0])  or ('y01' in hash[0])  or ('a01' in hash[0]):
+            if ('c02' in hash[0]) or ('a02' in hash[0]) or ('w02' in hash[0])  or ('y02' in hash[0])  or ('y01' in hash[0])  or ('a01' in hash[0]):
                 del ions[hash]
         self.analyser.setIons(ions.values())
         coverages, calcCoverages, overall = self.analyser.getSequenceCoverage(['a','c'])
@@ -230,7 +230,7 @@ class TestAnalyser(TestCase):
         for type in ('a', 'y'):
             # print(type, coverages[type])
             self.assertAlmostEqual(1 / 3, calcCoverages[type])
-        self.assertAlmostEqual(3/4,calcCoverages['total'])
+        self.assertAlmostEqual(2/3,calcCoverages['total'])
 
 
     def test_get_correct_value(self):

@@ -86,13 +86,15 @@ class AbstractMainController(ABC):
         actionDict.update(actions)
         _, actions = self._mainWindow.createMenu("Show",
                                                  {'Results': (
-                                                 self._mainWindow.show, 'Show lists of observed and deleted ions',
+                                                 self._mainWindow.show, 'Shows lists of observed and deleted ions',
                                                  None),
                                                   'Original Values': (
-                                                  self.showRemodelledIons, 'Show original values of overlapping ions',
+                                                  self.showRemodelledIons, 'Shows original values of overlapping ions',
                                                   None),
-                                                  'Protocol': (self._infoView.show, 'Show protocol', None),
-                                                 'Spectrum': (self.showAllInSpectrum, 'Show the entire spectrum', None)},
+                                                  'Protocol': (self._infoView.show, 'Shows protocol', None),
+                                                 'Spectrum': (self.showAllInSpectrum, 'Shows the entire spectrum', None),
+                                                 'Ion Evaluation View': (self.makeEvaluationView, 'Displays the '
+                                                                                                  'currently selected ion', None)},
                                                  None)
         actionDict.update(actions)
         return actionDict
@@ -292,8 +294,9 @@ class AbstractMainController(ABC):
         Starts an AddIonView to create a new ion (which was not found by the main search)
         '''
         addIonView = AddIonView(self._mainWindow, self._propStorage.getMolecule().getName(),
-                                ''.join(self._propStorage.getSequenceList()), self._settings['charge'],
-                                self._settings['fragmentation'], self._settings['modifications'], self.addNewIon)
+                                ''.join(self._propStorage.getSequenceList()), self._settings['sequName'],
+                                self._settings['charge'], self._settings['fragmentation'],
+                                self._settings['modifications'], self.addNewIon)
         self._openWindows.append(addIonView)
 
     def addNewIon(self, addIonView):
@@ -457,3 +460,48 @@ class AbstractMainController(ABC):
         if DEVELOP:
             for vals in self._spectrumHandler.getNoise():
                 print(vals[0], vals[1])
+
+
+
+
+    def makeEvaluationView(self):
+        self._evaluationView = SpectrumView(None, self._spectrumHandler.getSpectrum(), [],0,0,0,
+                                    self._spectrumHandler.getSprayMode())
+        self._openWindows.append(self._evaluationView)
+        #self._tables[0].clicked.connect(self.connectTableToView)
+        self._tables[0].selectionModel().currentChanged.connect(self.connectTableToView)
+        self._evaluationView.show()
+        #self._tables[1].clicked.connect(self.connectTableToView)
+
+    def connectTableToView(self, item):
+        self.viewIsotopePeaks(None, self._tables[0], item.row(), self._evaluationView)
+
+    def viewIsotopePeaks(self, widget, table, selectedRow, view = None):
+        selectedHash = table.model().getHashOfRow(selectedRow)
+        if selectedHash[0] == "":
+            if view == None:
+                return SpectrumView(widget, self._spectrumHandler.getSpectrum(), [],0,0,0,
+                                    self._spectrumHandler.getSprayMode())
+            else:
+                return view
+        selectedIon = self._intensityModeller.getIon(selectedHash)
+        ajacentIons, minLimit, maxLimit  = self._intensityModeller.getAdjacentIons(selectedHash,5)
+        #minWindow, maxWindow, maxY = self._intensityModeller.getLimits(ajacentIons)
+        peaks = self._spectrumHandler.getSpectrum(minLimit, maxLimit)
+        broadenWindow = 0.2
+        if view is None:
+            spectrumView = SpectrumView(widget, peaks, ajacentIons, min(selectedIon.getIsotopePattern()['m/z'])-broadenWindow,
+                                max(selectedIon.getIsotopePattern()['m/z'])+broadenWindow,
+                                        max(selectedIon.getIsotopePattern()['I']),
+                                        self._spectrumHandler.getSprayMode(),
+                                        self._spectrumHandler.getNoise((min(peaks['m/z']),max(peaks['m/z']))),
+                                        selectedHash)
+            #spectrumView.setMaximumWidth(50)
+            #spectrumView.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+            return spectrumView
+        else:
+            return view.updateView(peaks, ajacentIons, min(selectedIon.getIsotopePattern()['m/z'])-broadenWindow,
+                                   max(selectedIon.getIsotopePattern()['m/z'])+broadenWindow,
+                                   max(selectedIon.getIsotopePattern()['I']),
+                                   self._spectrumHandler.getNoise((min(peaks['m/z']),max(peaks['m/z']))),
+                                   selectedHash)

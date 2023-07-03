@@ -230,6 +230,8 @@ class Fragment(object):
                 return "["+self._type + "<sub>"+str(self._number)+"</sub>" + self._modification+"]"
         return self._type + format(self._number, "02d") + self._modification  # + "-" + self.loss
 
+    def setType(self, type):
+        self._type = type
 
     def toString(self):
         return self.getName() + "\t\t" + self._formula.toString()

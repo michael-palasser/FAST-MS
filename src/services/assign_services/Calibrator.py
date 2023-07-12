@@ -23,8 +23,8 @@ class Calibrator(object):
             self._finder = TD_Finder(theoValues, settings, getChargeRange)
         #self._ionData = self._finder.readFile(settings['calIons'])[0]
         self._settings = settings
-        self._ionData = SpectralDataReader().openTxtFile(self._settings['calIons'],
-                                     dtype([('m/z', float), ('z', uint8), ('I', float)]))
+        self._ionData = SpectralDataReader().openFile(self._settings['calIons'],
+                                                      dtype([('m/z', float), ('z', uint8), ('I', float)]))
         errorLimit = settings['errorLimitCalib']
         self._assignedIons = self._finder.findIonsInSpectrum(0, errorLimit, self._ionData)
         self._calibrationValues, self._errors, self._quality, self._usedIons = \
@@ -74,7 +74,8 @@ class Calibrator(object):
         peaks['m/z'] = self._finder.calibrate(peaks['m/z'], self._calibrationValues)
         return peaks
 
-    def writePeaks(self, peaks, fileName):
+    @staticmethod
+    def writePeaks(peaks, fileName):
         '''
         Writes a calibrated peak list to a file
         :param (ndarray[float,float]) peaks: array with columns m/z, int

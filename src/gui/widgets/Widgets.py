@@ -25,7 +25,7 @@ class OpenFileWidget(QtWidgets.QWidget):
 
         self._horizontalLayout.addWidget(self._lineEdit)
         self._pushButton = QtWidgets.QPushButton(self)
-        self._pushButton.setIcon(QtGui.QIcon(os.path.join(path, 'src','gui','widgets','open.png')))
+        self._pushButton.setIcon(QtGui.QIcon(os.path.join(path, 'open.png')))
         self._pushButton.setIconSize(QtCore.QSize(32, 32))
         self._pushButton.setMaximumSize(32, 32)
         #self._pushButton.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum))
@@ -216,7 +216,7 @@ class ShowFormulaWidget(QtWidgets.QWidget):
     '''
 
     '''
-    def __int__(self, ion):
+    def __init__(self, ion):
         super(ShowFormulaWidget, self).__init__(None)
         self.setWindowTitle(ion.getName())
         layout = QtWidgets.QVBoxLayout(self)

@@ -114,12 +114,14 @@ class AbstractSpectrumHandler(ABC):
         Add spectrum from file
         :param (str) filePath: path of txt or csv file
         '''
+        """csv=False
         if filePath[-4:] == '.csv':
-            self._spectrum = self.addSpectrumFromCsv(filePath)
-        else:
-            #print('starting')
-            self._spectrum = self.addSpectrumFromTxt(filePath)
-            #print(self._spectrum)
+            csv=True"""
+            #self._spectrum = self.addSpectrumFromCsv(filePath)
+            #else:
+            #self._spectrum = self.addSpectrumFromTxt(filePath)
+        self._spectrum = SpectralDataReader().openFile(filePath, self._dType)
+        self.resizeSpectrum()
         self.resizeSpectrum()
 
     def addSpectrumFromCsv(self, filePath):
@@ -128,7 +130,7 @@ class AbstractSpectrumHandler(ABC):
         :return: (ndarray(dtype=float, ndim=2)) [(m/z, int)]
         '''
         with open(filePath, mode='r', encoding='utf_8_sig') as f:
-            try:
+            """try:
                 #print(np.loadtxt(lines[1:], delimiter=',', skiprows=1, usecols=[0, 1]))
                 #return np.loadtxt(lines, delimiter=',', skiprows=skip, usecols=[0, 2])
                 #return np.loadtxt(file, delimiter=',', skiprows=1, usecols=[0, 1])
@@ -136,11 +138,11 @@ class AbstractSpectrumHandler(ABC):
             except IndexError:
                 #return np.loadtxt(lines, delimiter=';', skiprows=skip, usecols=[0, 2])
                 return np.loadtxt(f, delimiter=';', usecols=[0, 1], dtype=self._dType)
-            except ValueError:
-                return self.addSpectrumFromTxt(filePath, True)
-                '''except ValueError:
-                    print([line for line in file])
-                    raise InvalidInputException('Incorrect Format of spectral data', '\nThe format must be "m/z,int" or "m/z;int"')'''
+            except ValueError:"""
+            return self.addSpectrumFromTxt(filePath, True)
+            '''except ValueError:
+                print([line for line in file])
+                raise InvalidInputException('Incorrect Format of spectral data', '\nThe format must be "m/z,int" or "m/z;int"')'''
 
     def addSpectrumFromTxt(self, filePath, csv=False):
         '''
@@ -148,7 +150,7 @@ class AbstractSpectrumHandler(ABC):
         :return: (ndarray(dtype=float, ndim=2)) [(m/z, int)]
         '''
         reader=SpectralDataReader()
-        return reader.openTxtFile(filePath, self._dType, csv)
+        return reader.openFile(filePath, self._dType, csv)
         """spectralList = list()
         delimiter = ','
         with open(filePath, mode='r', encoding='utf_8_sig') as f:

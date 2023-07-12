@@ -45,7 +45,7 @@ class AbstractSpectrumView(QtWidgets.QWidget):
         self._focused = focused
         self._layout = QtWidgets.QVBoxLayout(self)
         self._translate = translate
-        width = 0.02
+        width = self.getWidth()
         styles = {"black": "#f00", "font-size": lblSize}
         self._graphWidget = pg.PlotWidget(self)
         self._graphWidget.setLabel('left', 'signal', **styles)
@@ -81,6 +81,9 @@ class AbstractSpectrumView(QtWidgets.QWidget):
         setIcon(self)
         self.show()
 
+    def getWidth(self):
+        return 0.02
+
     def getNoiseArray(self):
         noise = []
         for ion in self._ions:
@@ -92,8 +95,14 @@ class AbstractSpectrumView(QtWidgets.QWidget):
     def setWindow(self, minRange, maxRange,maxY):
         self._mzRange = range(int(min(self._peaks['m/z'])), int(max(self._peaks['m/z']))+1)
         maxInt = np.max(self._peaks["I"])     #total maximum
-        self._vb.setLimits(xMin=np.min(self._peaks["m/z"]), xMax=np.max(self._peaks["m/z"]), yMin=-0.005*maxInt, yMax=maxInt*1.4)
-        self._graphWidget.setXRange(minRange-1, maxRange+1, padding=0)
+        vbMin, vbMax = np.min(self._peaks["m/z"]), np.max(self._peaks["m/z"])
+        self._vb.setLimits(xMin=vbMin, xMax=vbMax, yMin=-0.005*maxInt, yMax=maxInt*1.4)
+        padding=1
+        if minRange-padding<vbMin:
+            padding = minRange-vbMin
+        if maxRange+padding>vbMax:
+            padding = vbMax-maxRange
+        self._graphWidget.setXRange(minRange-padding, maxRange+padding, padding=0)
         self._graphWidget.setYRange(0, maxY * 1.1, padding=0)
 
     def mouseMoved(self, evt):
@@ -155,7 +164,7 @@ class AbstractSpectrumView(QtWidgets.QWidget):
         #self._cursorLabel = QtWidgets.QLabel(self)
         #self._cursorLabel.setGeometry(QRect(70, 40, 200, 26))
 
-    def plot(self, width,focused, new=True):
+    def plot(self, width:float,focused:bool, new=True):
         if new:
             self._peakBars = pg.BarGraphItem(x=self._peaks['m/z'], height=self._peaks['I'], width=width, brush='k')
             self._graphWidget.addItem(self._peakBars)
@@ -175,7 +184,7 @@ class AbstractSpectrumView(QtWidgets.QWidget):
                     markerIndex += 1
                     if markerIndex == len(markers):
                         markerIndex = 0"""
-                if self._focused and ion.getHash()==self._focused:
+                if focused and ion.getHash()==self._focused:
                     symbol='o'
                     #colour = (34,139,34)
                     colour = (255, 165, 0)
@@ -254,7 +263,6 @@ class SpectrumView(AbstractSpectrumView):
     def updateView(self, peaks, ions, minRange, maxRange, maxY, noise, focused=False):
         self._peaks = peaks
         self._ions = ions
-        self._items = []
         self._noise = noise
         if self._noise is None:
             self._noise = self.getNoiseArray()
@@ -304,6 +312,19 @@ class SpectrumView(AbstractSpectrumView):
 
         #self._noise = None
 
+class ProfileSpectrumView(SpectrumView):
+    def __int__(self, parent, peaks, ions, minRange, maxRange, maxY, ionMode, profileSpec, noise=None, focused=False):
+        super(ProfileSpectrumView, self).__init__(self, parent, peaks, ions, minRange, maxRange, maxY, ionMode, noise, focused)
+        profile = pg.PlotCurveItem(x=profileSpec['m/z'], y=profileSpec['I'], pen=pg.mkPen(color='k', width=0.2))
+        profile.setZValue(5)
+        self._graphWidget.addItem(profile)
+        #self._graphWidget.plot(profileSpec['m/z'], profileSpec['I'], pen='r', z)
+        self.show()
+
+    def getWidth(self):
+        return 0.002
+
+
 class TheoSpectrumView(AbstractSpectrumView):
     '''
     QWidget which shows a modelled peaks as red bars. Spectral intensities of this peaks are indicated by grey stars.
@@ -337,3 +358,11 @@ class TheoSpectrumView(AbstractSpectrumView):
         self._vb.setLimits(xMin=minRange-0.5, xMax=maxRange+0.5, yMin=-0.005*maxInt, yMax=maxInt*1.4)
         self._graphWidget.setXRange(minRange-1, maxRange+1, padding=0)
         self._graphWidget.setYRange(0, maxY * 1.1, padding=0)
+
+
+
+if __name__ == '__main__':
+    pass
+    #plot =  ProfileSpectrumView(parent, peaks, ions, minRange, maxRange, maxY, ionMode, profileSpec, noise=None, focused=False):
+
+

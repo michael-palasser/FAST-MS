@@ -287,10 +287,10 @@ class Analyser(object):
             row = ion.getNumber()-1
             if type not in forwTypes:
                 row = redSequLength-ion.getNumber()
-            print(ion.getName(),row)
+            #print(ion.getName(),row)
             coverages[type][row] = 1
         #overall = np.zeros(sequLength)
-        print(coverages)
+        #print(coverages)
         for type,val in coverages.items():
             calcCoverages[type] = np.sum(val)/(redSequLength)
         overall[:,0] = np.any([val.astype(bool) for type,val in coverages.items() if type in forwTypes], axis=0)

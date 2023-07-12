@@ -30,8 +30,8 @@ class TD_Assigner(object):
 
         print("\n********** Search for ions **********")
         reader = SpectralDataReader()
-        ionData = reader.openTxtFile(self._allSettings['snapData'],
-                                     np.dtype([('m/z', float), ('z', np.uint8), ('I', float), ('S/N', float),
+        ionData = reader.openFile(self._allSettings['snapData'],
+                                  np.dtype([('m/z', float), ('z', np.uint8), ('I', float), ('S/N', float),
                                                ('qual', float)]))
         finder = TD_Finder(libraryBuilder.getFragmentLibrary(), self._allSettings, self.getChargeRange)
         assignedIons = finder.findIonsInSpectrum(0, self._allSettings['errorlimit'], ionData)
@@ -40,7 +40,7 @@ class TD_Assigner(object):
         if peakSearch:
             print("\n********** Matching with Peak Data **********")
             peakDtype = np.dtype([('m/z', float), ('I', float), ('S/N', float)])
-            peakData = reader.openTxtFile(self._allSettings['peakData'], peakDtype)
+            peakData = reader.openFile(self._allSettings['peakData'], peakDtype)
             peakMatcher = PeakMatcher(self._allSettings['errorlimit'], peakDtype)
             assignedIons, overlapList = peakMatcher.matchPeaks(assignedIons, peakData)
             ionArray = self.makeArray(assignedIons)

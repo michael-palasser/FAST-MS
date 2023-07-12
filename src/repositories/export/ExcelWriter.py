@@ -112,10 +112,10 @@ class BasicExcelWriter(object):
             fragType= self.getFragType(key)
             for i in range(len(sequence)):
                 if fragType in backFrags:
-                    print(fragType,key, "back")
+                    #print(fragType,key, "back")
                     val = valueDict[key][len(sequence) - i - 2]
                 elif fragType in forwFrags:
-                    print(fragType,key, "forward")
+                    #print(fragType,key, "forward")
                     val = valueDict[key][i]
                 else:
                     raise Exception("Unknown Direction of Fragment:",key)

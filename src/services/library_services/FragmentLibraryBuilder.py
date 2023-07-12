@@ -49,6 +49,8 @@ class FragmentLibraryBuilder(object):
         return self.__fragmentLibrary
 
     def getPrecursor(self):
+        if self.__precursor.getIsotopePattern() is None:
+            self.__precursor.setIsotopePattern(self.__precursor.getFormula().calculateIsotopePatternFFT(self._maxIso, 5))
         return self.__precursor
 
     def setFragmentLibrary(self, patternReader):
@@ -268,6 +270,7 @@ class FragmentLibraryBuilder(object):
             p = Pool()
             updatedFragmentLibrary = p.map(self.calculateParallel, self.__fragmentLibrary)
             self.__fragmentLibrary = sorted(updatedFragmentLibrary, key=lambda obj:(obj.getType() , obj.getNumber()))
+
         return self.__fragmentLibrary
 
 

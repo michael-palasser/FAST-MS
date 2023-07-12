@@ -254,7 +254,7 @@ class AbstractFinder(ABC):
         return solution[0] * x ** 2 + solution[1] * x + solution[2] -y
 
     def calibrate(self, uncalibrated, solution):
-        return self.fun_parabola(uncalibrated, solution[0],solution[1],solution[2])
+        return np.around(self.fun_parabola(uncalibrated, solution[0],solution[1],solution[2]),5)
 
 
 class IntactFinder(AbstractFinder):

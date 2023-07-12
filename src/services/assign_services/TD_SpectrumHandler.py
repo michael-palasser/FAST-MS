@@ -9,7 +9,7 @@ import numpy as np
 
 from src.entities.Ions import FragmentIon
 from src.resources import DEVELOP
-from src.services.assign_services.AbstractSpectrumHandler import AbstractSpectrumHandler, getMz
+from src.services.assign_services.AbstractSpectrumHandler import AbstractSpectrumHandler, getMz, calculateError
 
 logging.basicConfig(level=logging.INFO)
 logging.basicConfig(filename='logfile_SpectrumHandler.log',level=logging.INFO)
@@ -268,11 +268,31 @@ class SpectrumHandler(AbstractSpectrumHandler):
         super(MDSpectrumHandler, self).__init__(properties, precursor, settings, configs)
         self._dType = np.dtype([('m/z', float), ('I', float), ('S/N', float)])
 
-    def addSpectrumFromTxt(self, filePath, csv=False):
-            '''
-            :param (str) filePath: path of text-file
-            :return: (ndarray(dtype=float, ndim=2)) [(m/z, int)]
-            '''
-            return SpectralDataReader().openTxtFile(filePath, np.dtype([('m/z', float), ('I', float), ('S/N', float)]))"""
+    def getCorrectPeak(self, foundIsotopePeaks, theoPeak):
+        '''
+        Selects the correct peak in spectrum for a theoretical isotope peak
+        Correct is the peak with the lowest ppm error
+        :param (ndArray (dtype=float)) foundIsotopePeaks:
+        :param (ndArray (dtype=[float,float]) theoPeak: calculated peak (structured array [m/z,calcInt])
+        :return: (Tuple[float, int, float, float, bool]) m/z, z, int, error, used
+        '''
+        if len(foundIsotopePeaks) == 0:
+            return (theoPeak['m/z'], 0, theoPeak['calcInt'], 0, True,0)  # passt mir noch nicht
+        elif len(foundIsotopePeaks) == 1:
+            return (foundIsotopePeaks[0]['m/z'], foundIsotopePeaks[0]['I'], theoPeak['calcInt'],
+                    calculateError(foundIsotopePeaks[0]['m/z'], theoPeak['m/z']), True)
+        else:
+            lowestError = 100
+            logging.debug('More than one peak found: ' + str(len(foundIsotopePeaks)))
+            for peak in foundIsotopePeaks:  # ToDo
+                logging.debug(str(peak['m/z']), str(peak[1]))
+                error = calculateError(peak['m/z'], theoPeak[0])
+                if abs(error) < abs(lowestError):
+                    lowestError = error
+                    lowestErrorPeak = peak
+            logging.debug(
+                'Selected Peak: ' + '\t' + str(lowestErrorPeak['m/z']) + '\t' + str(lowestErrorPeak['I']) + '\t' +
+                str(theoPeak['calcInt']) + '\t' + str(lowestError))
+            return (lowestErrorPeak['m/z'], lowestErrorPeak['I'], theoPeak['calcInt'], lowestError, True)"""
 
 

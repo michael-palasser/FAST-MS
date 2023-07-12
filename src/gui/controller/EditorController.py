@@ -264,7 +264,7 @@ class AbstractEditorController(AbstractSimpleEditorController, ABC):
         :param widgets: dict of {name:widget}
         :return: (int) number of widgets
         """
-        maxWidth = 0
+        maxWidth = 0 #ToDo: Was macht maxWidth?
         for i, labelName in enumerate(labels):
             label = QtWidgets.QLabel(parent)
             width = len(labelName)*10
@@ -486,7 +486,7 @@ class SequenceEditorController(AbstractSimpleEditorController):
 
     def copyPaste(self, table, bools, selectedRowIndex):
         newRow = self.getEmptyRow(table)
-        self.insertRow(table, table.item(selectedRowIndex, 2).text())
+        self.insertRow(table, table.cellWidget(selectedRowIndex, 2).currentText())
         for j in range(table.columnCount()-1):
             if not table.item(selectedRowIndex, j) is None:
                 table.setItem(newRow, j, QtWidgets.QTableWidgetItem(table.item(selectedRowIndex, j).text()))

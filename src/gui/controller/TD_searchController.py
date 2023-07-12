@@ -77,7 +77,11 @@ class TD_MainController(AbstractMainController):
                 traceback.print_exc()
                 QtWidgets.QMessageBox.warning(None, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
         else:
-            self.loadSearch(parent)
+            try:
+                self.loadSearch(parent)
+            except IndexError as e:
+                QtWidgets.QMessageBox.warning(None, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
+
             """searchService = SearchService()
             #self._search =
             dialog = SelectSearchDlg(parent, searchService.getAllSearchNames(),self.deleteSearch, searchService)
@@ -219,11 +223,11 @@ class TD_MainController(AbstractMainController):
             patternReader.saveIsotopePattern(self._libraryBuilder.addNewIsotopePattern())#ld.progress))
             print("\ndone\nexecution time: ", round((time.time() - start) / 60, 2), "min\n")
 
-        """Importing spectral pattern"""
+        """Importing spectral data"""
         if self._settings['spectralData'] == '':
             return 1
         #spectralFile = os.path.join(path, 'Spectral_data','top-down', self._settings['spectralData'])
-        print("\n********** Importing spectral pattern from:", self._settings['spectralData'], "**********")
+        print("\n********** Importing peak data from:", self._settings['spectralData'], "**********")
         try:
             self._spectrumHandler = SpectrumHandler(self._propStorage, self._libraryBuilder.getPrecursor(),
                                                     self._settings, self._configs)

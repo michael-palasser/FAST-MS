@@ -3,7 +3,6 @@ Created on 20 Oct 2020
 
 @author: michael
 '''
-import os
 import sys
 
 from PyQt5 import QtCore
@@ -19,13 +18,13 @@ from src.top_down.OccupancyRecalculator import run as occupancyRecalculator
 from src.top_down.SpectrumComparator import run as spectrumComparator
 from src.intact.Main import run as IntactIonsSearch
 from src.gui.controller.TD_searchController import TD_MainController
-from src.resources import INTERN, path
+from src.resources import INTERN
 
 if INTERN:
-    from src.MSMS_Developer.gui.MD_MainController import MD_MainController
-    from src.MSMS_Developer.gui.Dialog_MD import MDStartDialog
-    from src.MSMS_Developer.gui.SequenceTranslater import SequenceTranslaterWindow
-    from src.MSMS_Developer.services.TD_Assigner import TD_Assigner
+    from src.BACHEM_extension.gui.MD_MainController import MD_MainController
+    from src.BACHEM_extension.gui.Dialog_MD import MDStartDialog
+    from src.BACHEM_extension.gui.SequenceTranslater import SequenceTranslaterWindow
+    from src.BACHEM_extension.services.TD_Assigner import TD_Assigner
 
 
 
@@ -64,7 +63,7 @@ class Window(SimpleMainWindow):
                          lambda: self.editData(IntactIonEditorController), 'Edit Intact Ions', None)}, None)
         self.createMenu('Other Tools',
                         {'Model Ion':
-                             (lambda: IsotopePatternView(None), 'Calculates the isotope pattern of an ion', None),
+                             (self.openIonModeller, 'Calculates the isotope pattern of an ion', None),
                          'Compare Ion Lists':
                              (self.compareSpectra, 'Compares the ion lists of multiple spectra', None)},None)
         if INTERN:
@@ -88,6 +87,7 @@ class Window(SimpleMainWindow):
         # self.setWindowIcon(QIcon('pic.png'))
         self._lastSearch = None
         self.showButtons()
+        self._openWindows=[]
 
     def showButtons(self):
         xPos = self.makeButton('Analyse Top-Down\nSpectrum', 'Starts analysis of top-down spectrum', 40,
@@ -127,6 +127,8 @@ class Window(SimpleMainWindow):
                 traceback.print_exc()
                 QtWidgets.QMessageBox.warning(self, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
 
+    def openIonModeller(self):
+        self._openWindows.append(IsotopePatternView(None))
 
     def compareSpectra(self):
         try:
@@ -134,6 +136,7 @@ class Window(SimpleMainWindow):
         except InvalidInputException as e:
             traceback.print_exc()
             QtWidgets.QMessageBox.warning(self, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
+
 
     def close_application(self):
         print('exit')
@@ -145,7 +148,7 @@ class Window(SimpleMainWindow):
 
     def editData(self, controller):
         try:
-            controller()
+            self._openWindows.append(controller())
         except CanceledException:
             pass
         except InvalidInputException as e:

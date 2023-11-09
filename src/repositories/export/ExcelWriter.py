@@ -396,16 +396,16 @@ class ExcelWriter(BasicExcelWriter):
             row = self.writeIon(worksheet,row,ion)
         lengthIonList = str(len(ionList))
         highlighted = self._workbook.add_format({'bold': True, 'font_color': 'red'})
-        conditons = {'m/z' : {'type': 'cell', 'criteria': 'between',  'minimum': precursorArea[0],
+        conditions = {'m/z' : {'type': 'cell', 'criteria': 'between',  'minimum': precursorArea[0],
                             'maximum': precursorArea[1], 'format': highlighted},
                      'quality': {'type': 'cell', 'criteria': 'greater than', 'value': self._configs['shapeMarked'],
                                  'format': highlighted},
                      'score':{'type': 'cell', 'criteria': 'greater than', 'value': self._configs['scoreMarked'],
                               'format': highlighted}}
         for char, header in zip(ascii_uppercase,self._options['columns']):
-            if header in conditons.keys():
+            if header in conditions.keys():
                 column = char+str(2)+":"+char+lengthIonList
-                worksheet.conditional_format(column, conditons[header])
+                worksheet.conditional_format(column, conditions[header])
         '''worksheet.conditional_format('A2:A'+lengthIonList, {'type': 'cell',
                                                'criteria': 'between',
                                                'minimum': precursorArea[0],
@@ -470,7 +470,10 @@ class ExcelWriter(BasicExcelWriter):
         '''
         #self._worksheet7.write(0, 0, "Configurations:")
         for i, line in enumerate(info.split('\n')):
-            col = 0
-            if line.startswith('\t'):
-                col =1
-            self._worksheet7.write(i, col, line)
+            #col = 0
+            """if line.startswith('\t'):
+                col =1"""
+            if '\t' in line:
+                self._worksheet7.write_row(i, 0, line.split("\t"))
+            else:
+                self._worksheet7.write(i, 0, line)

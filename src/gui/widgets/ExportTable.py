@@ -1,6 +1,8 @@
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 
+from src.gui.widgets.IonTableWidgets import TickIonTableWidget
+
 
 class ExportTable(QtWidgets.QTableWidget):
     '''
@@ -85,3 +87,31 @@ class ExportTable(QtWidgets.QTableWidget):
             if int(self.item(row, 1).checkState()/2)==1:
                 options.append(self.item(row, 0).text())
         return options
+
+
+class ExportIonTableWidget(TickIonTableWidget):
+    '''
+    Interactive ion table table for selecting.
+    '''
+    def __init__(self, parent, data):
+        #self._headers = ['m/z', 'z', 'I', 'fragment', 'error /ppm', 'S/N', 'qual.']
+        super(ExportIonTableWidget, self).__init__(parent, data, 0)
+
+
+    def fill(self, row, ion):
+        '''
+        Fills a row with data of an ion
+        :param (int) row: index of the row
+        :param (FragmentIon) ion:
+        '''
+        super(TickIonTableWidget, self).fill(row, ion)
+        checkItem = QtWidgets.QTableWidgetItem()
+        checkItem.setCheckState(Qt.Checked)  # QtCore.Qt.Unchecked
+        self.setItem(row, len(self.getHeaders())-1, checkItem)
+        #print(ion)
+        self.checkBoxes.append((checkItem, ion))
+        #self.resizeColumnsToContents()
+        #self.resizeRowsToContents()
+
+    def getHeaders(self):
+        return super(TickIonTableWidget, self).getHeaders()[:-1] + ['show?']

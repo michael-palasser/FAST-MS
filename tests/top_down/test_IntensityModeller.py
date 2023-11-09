@@ -48,16 +48,15 @@ class TestIntensityModeller(TestCase):
             theoIntensities = np.random.rand(6)
             spectralIntensities = theoIntensities*10**(7+i)
             for j in range(6):
-                spectralIntensities[j] = spectralIntensities[j]*(1+0.02*(-1)**j)
-            solution, outliers = self.intensityModeller.modelDistribution(spectralIntensities,theoIntensities, np.arange(6),
-                                                                          np.zeros(6))
+                spectralIntensities[j] = spectralIntensities[j]*(1+0.02*(-1)**(j+1))
+            solution, outliers = self.intensityModeller.modelDistribution(spectralIntensities,theoIntensities,
+                                                                          np.arange(6), np.zeros(6))
             self.assertAlmostEqual(1,solution.x/10**(7+i), delta=10e-2)
             errors = np.random.rand(6)
             errors[-1]=-6
             if len(outliers)==0:
                 solution, outliers = self.intensityModeller.modelDistribution(spectralIntensities, theoIntensities,
-                                                                          np.arange(6),
-                                                                          errors)
+                                                                          np.arange(6), errors)
                 self.assertIn(5,outliers)
         for i in range(2,4):
             theoIntensities = np.random.rand(i)
@@ -309,7 +308,7 @@ class TestIntensityModeller(TestCase):
         d['spectrumHandler'].findIons(d['libraryBuilder'].getNeutralLibrary())
         self._intensityModeller = IntensityModeller(ConfigurationHandlerFactory.getConfigHandler().getAll(), d['spectrumHandler'].getNoiseLevel())
         for ion in d['spectrumHandler'].getFoundIons():
-            self._intensityModeller.processIons(ion)
+            self._intensityModeller.processIon(ion)
         for ion in d['spectrumHandler']._ionsInNoise:
             self._intensityModeller.processNoiseIons(ion)
         sameMonoisotopics = self._intensityModeller.findSameMonoisotopics()

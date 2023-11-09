@@ -116,7 +116,7 @@ class SpectrumHandler(AbstractSpectrumHandler):
         Calculates factor to normalise charge to number of precursor charges
         :return: (float) normalisation factor
         '''
-        if self._moleculeName in ['RNA', 'DNA'] and self._sprayMode == -1:
+        if 'NA' in self._moleculeName and self._sprayMode == -1:
             return self._charge / self._precursor.getFormula().getFormulaDict()['P']
             #return self._charge / len(self._sequList)
         #elif self._moleculeName == 'Protein' and self._sprayMode == 1:
@@ -164,7 +164,7 @@ class SpectrumHandler(AbstractSpectrumHandler):
         :type fragment: Fragment
         :return: (generator) range between lowest possible z and highest possible z
         '''
-        if self._moleculeName in ['RNA','DNA'] and self._sprayMode == -1:
+        if ('NA' in self._moleculeName) and self._sprayMode == -1:
             #probableZ = (fragment.number-1) * self._normalisationFactor
             """formula = fragment.getFormula().getFormulaDict()
             if ('P' not in formula.keys()) or (fragment.getFormula().getFormulaDict()['P'] == 0):
@@ -179,6 +179,7 @@ class SpectrumHandler(AbstractSpectrumHandler):
         else:
             #probableZ = self.getChargeScore(fragment.getSequence()) * self._normalisationFactor
             probableZ = len(fragment.getSequence()) * self._normalisationFactor
+        #print("first", probableZ, fragment.getName())
         #print('hey',probableZ,fragment.getRadicals(),self._precursor.getRadicals(),self._charge)
         #probableZ -= (fragment.getRadicals()-self._precursor.getRadicals())
         tolerance = self._configs['zTolerance']
@@ -188,11 +189,15 @@ class SpectrumHandler(AbstractSpectrumHandler):
         zEffect = (self.getModCharge(fragment)-self._precModCharge) * self._sprayMode
         #print(1,fragment.getName(),probableZ)
         probableZ += zEffect
+        #print("second", probableZ, zEffect)
+
         #print(2,fragment.getName(),probableZ)
         if (probableZ-tolerance)> lowZ:
             lowZ = round(probableZ-tolerance)
         if (probableZ+tolerance)< highZ:
             highZ = round(probableZ + tolerance)
+            if highZ<lowZ:
+                highZ=lowZ
         #print(fragment.getName(),lowZ,round(probableZ,2),highZ)
         logging.info(fragment.getName()+'\tmin z: '+str(lowZ)+'\tcalc. z: '+str(round(probableZ,2))+'\tmax z: '+str(highZ))
         self._calculatedZs.append((fragment.getName(),probableZ))

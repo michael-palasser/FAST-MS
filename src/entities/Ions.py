@@ -92,7 +92,12 @@ class Ion(ABC):
 
     def getSignalToNoise(self):
         if self._noise != 0:
-            return self._intensity / self._noise
+            """signal = 0
+            for val in self._isotopePattern['calcInt']:
+                if val> self._noise:
+                    signal += val-self._noise
+            return signal / self._noise"""
+            return self._intensity / (self._noise*len(self._isotopePattern))
         else:
             print(self.getName(), self._intensity, self._noise)
             return np.nan

@@ -564,8 +564,9 @@ class ModificationService(AbstractServiceForPatterns):
         self.checkFormatOfItems(pattern.getItems(), elements, self._repository.getIntegers()[0])
         checkedItems = []
         mod = pattern.getModification()
-        if mod[0] not in ['+', '-']:
-            pattern.setModification('+'+mod)
+        if len(mod)>0:
+            if mod[0] not in ['+', '-']:
+                pattern.setModification('+'+mod)
         for item in pattern.getItems():
             checkedItem = item
             if item[0][0] not in ['+','-']:
@@ -574,8 +575,9 @@ class ModificationService(AbstractServiceForPatterns):
 
         pattern.setItems(checkedItems)
         modification = pattern.getModification()
-        if modification[0] not in ['+','-']:
-            pattern.setModification('+'+modification)
+        if len(modification)>0:
+            if modification[0] not in ['+','-']:
+                pattern.setModification('+'+modification)
         if modification not in [item[0] for item in pattern.getItems()]:
             raise InvalidInputException(modification,'Precursor modification must be included in the modification templates')
         pattern = super(ModificationService, self).save(pattern)

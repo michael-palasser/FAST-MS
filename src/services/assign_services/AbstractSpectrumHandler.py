@@ -61,7 +61,10 @@ class AbstractSpectrumHandler(ABC):
         self._foundIons = list()
         self._ionsInNoise = list()
         self._searchedChargeStates = dict()
-        # self.expectedChargeStates = dict()
+        self._profileSpectrum=None
+        if 'profile' in self._settings.keys() and self._settings['profile'] != "":
+            self.setProfileSpectrum(self._settings["profile"])
+            # self.expectedChargeStates = dict()
 
     def getNoiseLevel(self):
         return self._noiseLevel
@@ -102,8 +105,19 @@ class AbstractSpectrumHandler(ABC):
 
     def getSearchedChargeStates(self):
         return self._searchedChargeStates
+
     def getDtype(self):
         return self._dType
+
+
+    def getProfileSpectrum(self, limits=None):
+        if (limits is None) or (self._profileSpectrum is None):
+            return self._profileSpectrum
+        return self._profileSpectrum[np.where((limits[0] < self._profileSpectrum['m/z']) &
+                                              (self._profileSpectrum['m/z'] < limits[1]))]
+
+    def setProfileSpectrum(self, fileName):
+        self._profileSpectrum = SpectralDataReader().openXYFile(fileName, self._upperBound)
 
     def emptyLists(self):
         self._foundIons = None
@@ -121,7 +135,7 @@ class AbstractSpectrumHandler(ABC):
             #else:
             #self._spectrum = self.addSpectrumFromTxt(filePath)
         self._spectrum = SpectralDataReader().openFile(filePath, self._dType)
-        self.resizeSpectrum()
+        #self.resizeSpectrum()
         self.resizeSpectrum()
 
     def addSpectrumFromCsv(self, filePath):
@@ -150,7 +164,7 @@ class AbstractSpectrumHandler(ABC):
         :return: (ndarray(dtype=float, ndim=2)) [(m/z, int)]
         '''
         reader=SpectralDataReader()
-        return reader.openFile(filePath, self._dType, csv)
+        return reader.openFile(filePath, self._dType)
         """spectralList = list()
         delimiter = ','
         with open(filePath, mode='r', encoding='utf_8_sig') as f:

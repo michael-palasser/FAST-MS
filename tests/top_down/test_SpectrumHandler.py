@@ -78,6 +78,8 @@ class TestSpectrumHandler(TestCase):
         self.assertEqual(5, self.spectrumHandler.calcPrecCharge(6, 1))
         self.assertEqual(5, self.spectrumHandler.calcPrecCharge(-6, 1))
 
+
+    #Todo: Change
     def test_add_spectrum_from_csv_and_txt(self):
         #with open(os.path.join(path, 'tests', 'test_files', 'dummySpectrum.csv'), 'r') as f:
         fromCsv = self.spectrumHandler.addSpectrumFromCsv(os.path.join(path, 'tests', 'test_files', 'dummySpectrum.csv'))

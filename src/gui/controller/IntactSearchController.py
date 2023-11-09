@@ -101,7 +101,7 @@ class IntactMainController(AbstractMainController):
         start = time.time()
         print("\n********** Calculating relative abundances **********")
         for ion in self._spectrumHandler.getFoundIons():
-            self._intensityModeller.processIons(ion)
+            self._intensityModeller.processIon(ion)
         for ion in self._spectrumHandler._ionsInNoise:
             self._intensityModeller.processNoiseIons(ion)
         self._spectrumHandler.emptyLists()

@@ -28,6 +28,8 @@ class InvalidInputException(Exception):
     def __str__(self):
         return(repr("Invalid Input: " + self.element + " <br>" + self.message))
 
+    def getMessage(self):
+        return self.message
 
 
 class InvalidIsotopePatternException(Exception):

@@ -22,9 +22,10 @@ from src.resources import INTERN
 
 if INTERN:
     from src.BACHEM_extension.gui.MD_MainController import MD_MainController
-    from src.BACHEM_extension.gui.Dialog_MD import MDStartDialog
+    from src.BACHEM_extension.gui.Dialogs_extension import MDStartDialog
     from src.BACHEM_extension.gui.SequenceTranslater import SequenceTranslaterWindow
     from src.BACHEM_extension.services.TD_Assigner import TD_Assigner
+    from src.BACHEM_extension.gui.MD_MainController import BACHEM_MainController as TD_MainController
 
 
 
@@ -174,6 +175,10 @@ class Window(SimpleMainWindow):
             MD_MainController(self, True, self._lastSearch)
         else:
             pass
+
+    def loadMD(self):
+        pass
+
 
     def openTranslater(self):
         if INTERN:

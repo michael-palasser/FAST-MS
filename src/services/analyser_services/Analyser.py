@@ -299,11 +299,11 @@ class Analyser(object):
         calcCoverages['backward'] = np.sum(overall[:,1])/redSequLength
         overall[:,2] = np.any((overall[:,0],overall[:,1]), axis=0)
         calcCoverages['total'] = np.sum(overall[:,2])/redSequLength
-        for type in coverages.keys():
+        """for type in coverages.keys():
             if type in forwTypes:
                 coverages[type][-1] = np.nan
             else:
-                coverages[type][0] = np.nan
+                coverages[type][0] = np.nan"""
         #overall[-1,0] = np.nan
         #overall[0,1] = np.nan
         coveragesForw, coveragesBack = {},{}

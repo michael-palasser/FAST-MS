@@ -26,7 +26,7 @@ intact_export = {'columns': ['m/z', 'z', 'intensity', 'fragment', 'error /ppm', 
                  'analysis': [], 'dir': join(path,'Spectral_data','intact')}
                  
 md = {'sequName': '', 'charge': 1, 'fragmentation': '', 'modifications': '', 'nrMod': 0,
-                   'spectralData': '', 'snapData': "","output":""}
+                   'spectralData': '', 'snapData': "", 'profile': "","output":""}
 
 
 scoreDict = {'pen_S/N':-10,'pen_error':-3,'pen_prec':-5,
@@ -67,7 +67,7 @@ class ConfigHandler(object):
             try:
                 return self.__parameters[key]
             except:
-                if key == 'calIons':
+                if key in ('calIons', 'spectralData', 'snapData', 'profile'):
                     return ''
                 return 0
         raise Exception("Parameter",key, "does not exist")

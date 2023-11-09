@@ -11,7 +11,10 @@ import pandas as pd
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 
+from src.BACHEM_extension.services.TD_Assigner import peakDtype, snapDtype
 from src.gui.GUI_functions import setIcon, translate
+from src.gui.widgets.Widgets import ShowFormulaWidget
+from src.repositories.SpectralDataReader import SpectralDataReader
 from src.resources import path, DEVELOP
 from src.gui.controller.IsotopePatternView import AddIonView
 from src.gui.dialogs.CalibrationView import CalibrationView
@@ -20,7 +23,6 @@ from src.gui.widgets.InfoView import InfoView
 from src.gui.tableviews.TableModels import IonTableModel
 from src.gui.tableviews.ShowPeaksViews import PeakView, SimplePeakView
 from src.gui.widgets.SpectrumView import SpectrumView
-
 
 
 class AbstractMainController(ABC):
@@ -40,6 +42,23 @@ class AbstractMainController(ABC):
         dlg = CalibrationView(self._calibrator)
         dlg.exec_()
         if dlg and not dlg.canceled():
+            reader = SpectralDataReader()
+            self._calibrator.calibratePeaks(self._spectrumHandler.getSpectrum())
+            self.calibrateAndWrite(reader.openFile(self._settings['spectralData'], peakDtype),
+                                   self._settings['spectralData'], reader)
+            self.calibrateAndWrite(reader.openFile(self._settings['calIons'], snapDtype), self._settings['calIons'],
+                                   reader)
+            if 'profile' in self._settings.keys() and self._settings['profile'] != "":
+                self.calibrateAndWrite(self._spectrumHandler.getProfileSpectrum(), self._settings['profile'], reader)
+            vals = self._calibrator.getCalibrationValues()
+            self._info.calibrate(vals[0], vals[1], self._calibrator.getQuality(), self._calibrator.getUsedIons())
+            return True
+        else:
+            return False
+        """dlg = CalibrationView(self._calibrator)
+        dlg.exec_()
+        if dlg and not dlg.canceled():
+            print('calibrating')
             peaks = self._calibrator.calibratePeaks(self._spectrumHandler.getSpectrum())
             fileName = self._settings['spectralData']
             if not self._configs['overwrite']:
@@ -50,7 +69,22 @@ class AbstractMainController(ABC):
             self._info.calibrate(vals[0], vals[1], self._calibrator.getQuality(), self._calibrator.getUsedIons())
             return True
         else:
-            return False
+            return False"""
+
+    def calibrateAndWrite(self, data, fileName, reader):
+        calibrated = self._calibrator.calibratePeaks(data)
+        """if not self._configs['overwrite']:
+            fileName = fileName[:-4] + '_cal' + ".txt"  # +peakFileName[-4:]"""
+        reader.writeData(calibrated, self.getCalibratedFileName(fileName))
+
+    def getCalibratedFileName(self, oldName):
+        if self._configs['overwrite']:
+            return oldName
+        else:
+            index = -4
+            if oldName.endswith("xy"):
+                index = -3
+            return oldName[:index] + '_cal' + ".txt"  # +peakFileName[-4:]
 
     def setUpUi(self):
         '''
@@ -174,8 +208,6 @@ class AbstractMainController(ABC):
         table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)"""
         return table
 
-
-
     def showOptions(self, table, pos):
         '''
         Right-click options of an ion table
@@ -201,8 +233,8 @@ class AbstractMainController(ABC):
         selectedHash = table.model().getHashOfRow(selectedRow)
         selectedIon = self._intensityModeller.getIon(selectedHash)
         if action == showAction:
-            global spectrumView
-            ajacentIons, minLimit, maxLimit  = self._intensityModeller.getAdjacentIons(selectedHash)
+            #global spectrumView
+            """ajacentIons, minLimit, maxLimit  = self._intensityModeller.getAdjacentIons(selectedHash)
             #minWindow, maxWindow, maxY = self._intensityModeller.getLimits(ajacentIons)
             peaks = self._spectrumHandler.getSpectrum(minLimit - 1, maxLimit + 1)
             minMz,maxMz = np.min(selectedIon.getIsotopePattern()['m/z']), np.max(selectedIon.getIsotopePattern()['m/z'])
@@ -210,24 +242,23 @@ class AbstractMainController(ABC):
                                         maxMz, np.max(selectedIon.getIsotopePattern()['I']),
                                         self._spectrumHandler.getSprayMode(),
                                         self._spectrumHandler.getNoise((np.min(peaks['m/z']),np.max(peaks['m/z']))),
-                                        selectedHash)
-            self._openWindows.append(spectrumView)
+                                        selectedHash)"""
+
+            self._openWindows.append(self.getSpectrumView(None, selectedHash))
         elif action == peakAction:
             #global peakview
             peakView = PeakView(self._mainWindow, selectedIon, self._intensityModeller.remodelSingleIon, self.saveSingleIon)
             self._openWindows.append(peakView)
         elif action == formulaAction:
-            #self._openWindows.append(ShowFormulaWidget(selectedIon))
-
-            dlg = QtWidgets.QWidget(None)
+            self._openWindows.append(ShowFormulaWidget(selectedIon))
+            """dlg = QtWidgets.QWidget(None)
             dlg.setWindowTitle(selectedIon.getName())
             # self.setWindowTitle(ion.getName())
             layout = QtWidgets.QVBoxLayout(dlg)
             label = QtWidgets.QLabel(selectedIon.getFormula().toString())
             label.setTextInteractionFlags(Qt.TextSelectableByMouse)
             layout.addWidget(label)
-            dlg.show()
-            self._openWindows.append(dlg)
+            dlg.show()"""
         elif action == copyRowAction:
             df=pd.DataFrame(data=[table.model().getRow(selectedRow)], columns=table.model().getHeaders())
             df.to_clipboard(index=False,header=True)
@@ -258,6 +289,49 @@ class AbstractMainController(ABC):
                         self._tables[mode].model().updateData(ion.getMoreValues())
                 self._infoView.update()
 
+
+    def getSpectrumView(self, parent, selectedHash, empty=False, view=None, strongFocus=False):
+        """profileMode = False
+        if 'profile' in self._settings.keys() and self._settings['profile'] == "":
+            profileMode=True"""
+        if empty: #nothing selected yet (start)
+            return SpectrumView(parent, self._spectrumHandler.getSpectrum(), [], 0, 0, 0,
+                                self._spectrumHandler.getSprayMode())
+        if selectedHash is None: #Full spec
+            ajacentIons = sorted(self.getIonList(), key=lambda obj: obj.getIsotopePattern()['m/z'][0])
+            peaks = self._spectrumHandler.getSpectrum()
+            minMz_focus, maxMz_focus, maxI = np.min(peaks['m/z']), np.max(peaks['m/z']), np.max(peaks['I'])
+            minMz_total, maxMz_total = minMz_focus, maxMz_focus
+            noise = self._spectrumHandler.getNoise()
+            # minWindow, maxWindow, maxY = self._intensityModeller.getLimits(ajacentIons)
+            peaks = self._spectrumHandler.getSpectrum()
+            selectedHash = False
+        else:
+            if strongFocus:
+                ajacentIons, minMz_total, maxMz_total = self._intensityModeller.getAdjacentIons(selectedHash,5)
+            else:
+                ajacentIons, minMz_total, maxMz_total = self._intensityModeller.getAdjacentIons(selectedHash)
+            # minWindow, maxWindow, maxY = self._intensityModeller.getLimits(ajacentIons)
+            minMz_total -= 2
+            maxMz_total += 2
+            peaks = self._spectrumHandler.getSpectrum(minMz_total, maxMz_total)
+            selectedIon = self._intensityModeller.getIon(selectedHash)
+            #broadenWindow = 0.2
+            minMz_focus = min(selectedIon.getIsotopePattern()['m/z'])#-broadenWindow
+            maxMz_focus = max(selectedIon.getIsotopePattern()['m/z'])#+broadenWindow
+            """else:
+                minMz = np.min(selectedIon.getIsotopePattern()['m/z'])
+                maxMz = np.max(selectedIon.getIsotopePattern()['m/z'])"""
+            maxI = np.max(selectedIon.getIsotopePattern()['I'])
+            noise = self._spectrumHandler.getNoise((minMz_total, maxMz_total))
+        profileSpec = None
+        if 'profile' in self._settings.keys() and self._settings['profile'] != "":
+            profileSpec = self._spectrumHandler.getProfileSpectrum((minMz_total, maxMz_total))
+        if view is None:
+            return SpectrumView(parent, peaks, ajacentIons, minMz_focus, maxMz_focus, maxI, self._spectrumHandler.getSprayMode(),
+                                noise, selectedHash,profileSpec)
+        else:
+            return view.updateView(peaks, ajacentIons, minMz_focus, maxMz_focus, maxI, noise,selectedHash, profileSpec)
 
     def saveSingleIon(self, newIon):
         '''
@@ -417,15 +491,15 @@ class AbstractMainController(ABC):
         selectedHash = table.model().getHashOfRow(selectedRow)
         selectedIon = self._intensityModeller.getRemodelledIon(selectedHash)
         if action == showAction:
-            global view
+            """global view
             ajacentIons, minLimit, maxLimit  = self._intensityModeller.getAdjacentIons(selectedHash)
             ajacentIons = [ion for ion in ajacentIons if ion.getHash()!=selectedHash]
             peaks = self._spectrumHandler.getSpectrum(minLimit - 1, maxLimit + 1)
             minMz,maxMz = np.min(selectedIon.getIsotopePattern()['m/z']), np.max(selectedIon.getIsotopePattern()['m/z'])
             view = SpectrumView(None, peaks, [selectedIon]+ajacentIons, minMz,maxMz,
                                 np.max(selectedIon.getIsotopePattern()['I']), self._spectrumHandler.getSprayMode(),
-                                (np.min(peaks['m/z']),np.max(peaks['m/z'])),selectedHash)
-            self._openWindows.append(view)
+                                (np.min(peaks['m/z']),np.max(peaks['m/z'])),selectedHash)"""
+            self._openWindows.append(self.getSpectrumView(None, selectedHash))
         elif action == peakAction:
             global peakview
             peakview = SimplePeakView(None, selectedIon)
@@ -450,23 +524,21 @@ class AbstractMainController(ABC):
         return list(self._intensityModeller.getObservedIons().values())
 
     def showAllInSpectrum(self):
-        global spectrumView
+        """global spectrumView
         ions = sorted(self.getIonList(),key=lambda obj:obj.getIsotopePattern()['m/z'][0])
         # minWindow, maxWindow, maxY = self._intensityModeller.getLimits(ajacentIons)
         peaks = self._spectrumHandler.getSpectrum()
         spectrumView = SpectrumView(None, peaks, ions, np.min(peaks['m/z']),np.max(peaks['m/z']),np.max(peaks['I']),
-                                    self._spectrumHandler.getSprayMode(), self._spectrumHandler.getNoise())
-        self._openWindows.append(spectrumView)
+                                    self._spectrumHandler.getSprayMode(), self._spectrumHandler.getNoise())"""
+        self._openWindows.append(self.getSpectrumView(None, None))
         if DEVELOP:
             for vals in self._spectrumHandler.getNoise():
                 print(vals[0], vals[1])
 
 
-
-
     def makeEvaluationView(self):
-        self._evaluationView = SpectrumView(None, self._spectrumHandler.getSpectrum(), [],0,0,0,
-                                    self._spectrumHandler.getSprayMode())
+        self._evaluationView = self.getSpectrumView(None, None, empty=True)
+        #SpectrumView(None, self._spectrumHandler.getSpectrum(), [],0,0,0,self._spectrumHandler.getSprayMode())
         self._openWindows.append(self._evaluationView)
         #self._tables[0].clicked.connect(self.connectTableToView)
         self._tables[0].selectionModel().currentChanged.connect(self.connectTableToView)
@@ -476,15 +548,16 @@ class AbstractMainController(ABC):
     def connectTableToView(self, item):
         self.viewIsotopePeaks(None, self._tables[0], item.row(), self._evaluationView)
 
-    def viewIsotopePeaks(self, widget, table, selectedRow, view = None):
+    def viewIsotopePeaks(self, parent, table, selectedRow, view=None):
         selectedHash = table.model().getHashOfRow(selectedRow)
         if selectedHash[0] == "":
-            if view == None:
-                return SpectrumView(widget, self._spectrumHandler.getSpectrum(), [],0,0,0,
-                                    self._spectrumHandler.getSprayMode())
+            if view is None:
+                return self.getSpectrumView(parent, None, True)
+                #return SpectrumView(widget, self._spectrumHandler.getSpectrum(), [],0,0,0,self._spectrumHandler.getSprayMode())
             else:
                 return view
-        selectedIon = self._intensityModeller.getIon(selectedHash)
+        return self.getSpectrumView(parent, selectedHash,empty=False, view=view,strongFocus=True)
+        """selectedIon = self._intensityModeller.getIon(selectedHash)
         ajacentIons, minLimit, maxLimit  = self._intensityModeller.getAdjacentIons(selectedHash,5)
         #minWindow, maxWindow, maxY = self._intensityModeller.getLimits(ajacentIons)
         peaks = self._spectrumHandler.getSpectrum(minLimit, maxLimit)
@@ -504,4 +577,4 @@ class AbstractMainController(ABC):
                                    max(selectedIon.getIsotopePattern()['m/z'])+broadenWindow,
                                    max(selectedIon.getIsotopePattern()['I']),
                                    self._spectrumHandler.getNoise((min(peaks['m/z']),max(peaks['m/z']))),
-                                   selectedHash)
+                                   selectedHash)"""

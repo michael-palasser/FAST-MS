@@ -47,22 +47,28 @@ class OpenFileWidget(QtWidgets.QWidget):
         #_pushButton.setObjectName(name)
         self._pushButton.clicked.connect(lambda: self.getFileNames(mode))
         #self.buttons[_pushButton.objectName()] = _pushButton
+        self._accepted = False
 
     def getFileNames(self, mode):
         #_files = self.openFileNamesDialog(self.__title, self.__formats)
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
+        startPath = os.path.split(self.text())[:-1][0]
+        if not os.path.isdir(startPath):
+            startPath = self.__startPath
         if mode == 2:
-            files, _ = QFileDialog.getOpenFileNames(self, self.__title, self.__startPath, self.__formats, options=options)
+            files, _ = QFileDialog.getOpenFileNames(self, self.__title, startPath, self.__formats, options=options)
             self._lineEdit.setText(',  '.join(files))
         elif mode == 1:
-            file, _ = QFileDialog.getOpenFileName(self, self.__title, self.__startPath, self.__formats, options=options)
+            file, _ = QFileDialog.getOpenFileName(self, self.__title, startPath, self.__formats, options=options)
             self._lineEdit.setText(file)
         else:
-            dir = QFileDialog.getExistingDirectory(self, self.__title, self.__startPath)
+            dir = QFileDialog.getExistingDirectory(self, self.__title, startPath)
             if dir:
                 dir = QtCore.QDir.toNativeSeparators(dir)
             self._lineEdit.setText(dir)
+        print("accepted")
+        self._accepted=True
         #self.__files = _files
 
     #ToDo different Versions:File/Files, title, file formats
@@ -78,6 +84,8 @@ class OpenFileWidget(QtWidgets.QWidget):
     def getFiles(self):
         return self._lineEdit.text().split(',  ')
 
+    def accepted(self):
+        return self._accepted
 
 """class BoxUpdateWidget(QtWidgets.QWidget):
     '''
@@ -206,15 +214,11 @@ class CheckableComboBox(QtWidgets.QComboBox):
                 values.append(self._options[i])
         return values
 
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    gui =LoadingWidget(100, True)
-    sys.exit(app.exec_())
 
 
 class ShowFormulaWidget(QtWidgets.QWidget):
     '''
-
+    Widget which shows the molecular formula of an ion
     '''
     def __init__(self, ion):
         super(ShowFormulaWidget, self).__init__(None)
@@ -227,3 +231,10 @@ class ShowFormulaWidget(QtWidgets.QWidget):
         buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Ok)
         layout.addWidget(buttonBox)"""
         self.show()
+
+
+
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    gui =LoadingWidget(100, True)
+    sys.exit(app.exec_())

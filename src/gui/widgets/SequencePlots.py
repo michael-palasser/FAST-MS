@@ -347,6 +347,7 @@ def plotBars(sequence, values, headers, title, occup=False):
         sequColour = 'saddlebrown'''
     for i,bb in enumerate(sequence):
         plt.text(x=i+0.5, y=0, s=bb, fontsize=10, c=sequColour, ha='center')
+        #plt.text(x=(i+0.5)/sequLength, y=0, s=bb, fontsize=10, c=sequColour, ha='center', transform = ax.transAxes)
     ax.set_ylabel('rel. abundance /a.u.')
     ax.set_xlabel('cleavage site')
     ax.xaxis.set_major_locator(MultipleLocator(5))
@@ -355,7 +356,9 @@ def plotBars(sequence, values, headers, title, occup=False):
     ax.ticklabel_format(axis="y", style="sci", scilimits=(0,0))
     plt.grid(axis = 'y',linestyle = '--', linewidth = 0.4)
     ax.set_title(title)
-    ax.legend()
+    leg = ax.legend()
+    if leg:
+        leg.set_draggable(True)
     ax.set_xlim([0, nrRows+1])
     ax.set_ylim([0, np.max(np.sum(values,axis=1))*1.1])
     plt.tight_layout(pad=0.8)

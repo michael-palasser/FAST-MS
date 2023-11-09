@@ -94,3 +94,4 @@ class Calibrator(object):
         updatedIons = [ion for ion in self._assignedIons if (ion.getName(),ion.getCharge()) in usedIons]
         self._calibrationValues, self._errors, self._quality, self._usedIons = \
             self._finder.findCalibrationFunction(updatedIons, self._settings['errorLimitCalib'], self._settings['maxStd'])
+

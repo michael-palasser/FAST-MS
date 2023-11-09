@@ -123,7 +123,8 @@ class AbstractIonView(QtWidgets.QDialog):
 
             view = SpectrumView(None, peaks, ions, minLimit, maxLimit, YLimit,
                                 self._spectrumHandler.getSprayMode(),
-                                self._spectrumHandler.getNoise((np.min(peaks['m/z']),np.max(peaks['m/z']))))
+                                self._spectrumHandler.getNoise((np.min(peaks['m/z']),np.max(peaks['m/z']))), False,
+                                self._spectrumHandler.getProfileSpectrum((np.min(peaks['m/z']), np.max(peaks['m/z']))))
         elif action == peakAction:
             global peakview
             peakview = SimplePeakView(None, table.getIon(selectedRow))

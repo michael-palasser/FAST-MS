@@ -89,7 +89,6 @@ class Info(object):
         return ',  '.join([str(val) for val in [round(ionVals[0],5), int(ionVals[1]), int(ionVals[2]), ionVals[3],
                                                 round(ionVals[4],2), round(ionVals[5],1), round(ionVals[6],2),
                                                 round(ionVals[7],1), ionVals[8]]])
-
     @staticmethod
     def formatPeak(peak):
         return ',  '.join([str(val) for val in [round(peak[0],5), int(peak[1]), int(peak[2]), round(peak[3],2), peak[4]]])

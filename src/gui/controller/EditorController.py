@@ -114,8 +114,6 @@ class AbstractSimpleEditorController(ABC):
             rowData = []
             for col in range(table.columnCount()):
                 widgetItem = table.item(row, col)
-                print(row, col)
-                print(isinstance(widgetItem, QtWidgets.QComboBox))
                 if col in boolVals:
                     try:
                         rowData.append(int(widgetItem.checkState()/2))
@@ -137,7 +135,6 @@ class AbstractSimpleEditorController(ABC):
                     else:
                         rowData.append(widgetItem.currentText())
             itemList.append(rowData)
-        print('itemlist',itemList)
         return itemList
 
     def editRow(self, table, bools, pos):
@@ -202,12 +199,12 @@ class AbstractSimpleEditorController(ABC):
     def copyPaste(self, table, bools, selectedRowIndex):
         newRow = self.getEmptyRow(table)
         rowCount = table.rowCount()
-        table.insertRow(newRow)
+        self.insertRow(table, bools)
+        #table.insertRow(newRow)
         for j in range(table.columnCount()):
             if not table.item(selectedRowIndex, j) is None:
                 table.setItem(rowCount, j, QtWidgets.QTableWidgetItem(table.item(selectedRowIndex, j).text()))
                 if j in bools:
-                    # print('bool',emptyRow, j)
                     table.item(newRow, j).setCheckState(table.item(selectedRowIndex, j).checkState())
         table.resizeRowsToContents()
 
@@ -242,12 +239,15 @@ class AbstractEditorController(AbstractSimpleEditorController, ABC):
     Abstract controller class to edit patterns with items: parent class of AbstractEditorControllerWithTabs,
     ElementEditorController, IntactIonEditorController, MoleculeEditorController
     '''
-    def __init__(self, service, title, name):
+    def __init__(self, service, title, name, patternName=None):
         self._service = service
-        pattern = self.open('Open ' + name)
-        if pattern == None:
-            self._service.close()
-            raise CanceledException("Closing")
+        if patternName is None:
+            pattern = self.open('Open ' + name)
+            if pattern == None:
+                self._service.close()
+                raise CanceledException("Closing")
+        else:
+            pattern = self._service.get(patternName)
         super(AbstractEditorController, self).__init__(pattern, title,
                    {"Open " + name: (lambda: self.openAgain('Open'), None,"Ctrl+O"), "Delete " + name: (self.delete,None,None),
                     "Save": (self.save,None,"Ctrl+S"), "Save As": (self.saveNew,None,None),
@@ -412,8 +412,8 @@ class MoleculeEditorController(AbstractEditorController):
     '''
     Controller class to edit molecules
     '''
-    def __init__(self):
-        super(MoleculeEditorController, self).__init__(MoleculeService(), "Edit Molecular Properties", "Molecule")
+    def __init__(self, patternName=None):
+        super(MoleculeEditorController, self).__init__(MoleculeService(), "Edit Molecular Properties", "Molecule", patternName)
         self.createWidgets(self._centralwidget, self._formLayout, ["Name: ", "Gain: ", "Loss: "],
                            {"name": QtWidgets.QLineEdit(self._centralwidget), 'gain': QtWidgets.QLineEdit(self._centralwidget),
                      'loss': QtWidgets.QLineEdit(self._centralwidget)},
@@ -426,6 +426,13 @@ class MoleculeEditorController(AbstractEditorController):
                                              self._service.getHeaders(), self._service.getBoolVals())
         self._formLayout.setWidget(3, QtWidgets.QFormLayout.SpanningRole, self._table)   #ToDo
         self._mainWindow.show()
+
+    def addBB(self, translation:str, formula=None):
+        newRow = self.getEmptyRow(self._table)
+        self.insertRow(self._table, [])
+        self._table.setItem(newRow, 1, QtWidgets.QTableWidgetItem(translation))
+        if formula is not None:
+            self._table.setItem(newRow, 2, QtWidgets.QTableWidgetItem(formula))
 
     def save(self, *args):
         id = self._pattern.getId()
@@ -504,6 +511,12 @@ class SequenceEditorController(AbstractSimpleEditorController):
         if text:
             comboBox.setCurrentText(text)
         table.setCellWidget(table.rowCount()-1, table.columnCount()-1, comboBox)
+
+    def addSequence(self, sequence:str, molecule:str):
+        newRow = self.getEmptyRow(self._table)
+        self.insertRow(self._table, molecule)
+        self._table.setItem(newRow, 1, QtWidgets.QTableWidgetItem(sequence))
+
 
     def save(self):
         sequences = []
@@ -616,7 +629,7 @@ class ModificationEditorController(AbstractEditorControllerWithTabs):
             self._modNames= names
             """self._widgets["modification"].clear()
             self._widgets["modification"].addItems([""]+self._modNames)"""
-            self._mainWindow.updateComboBox(self._widgets['precursor'], names, True)
+            self._mainWindow.updateComboBox(self._widgets['modification'], names, True)
 
 
     def openAgain(self, title='Open'):

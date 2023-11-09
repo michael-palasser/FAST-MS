@@ -17,22 +17,22 @@ class Test_spectral_data_reader(TestCase):
         file4 = os.path.join(path, 'tests', 'test_files', 'NNC0614_Antisense_MS010_22_0445_19V.txt')
         file5 = os.path.join(path, 'tests', 'test_files', 'MS010_22_0433_SP.txt')
         reader = SpectralDataReader()
-        data1 =reader.openTxtFile(file1,np.dtype([('m/z', float), ('z', np.uint8), ('I', float)]))[0]
+        data1 =reader.openFile(file1, np.dtype([('m/z', float), ('z', np.uint8), ('I', float)]))[0]
         vals_theo = (255.22924, 1, 17481426)
         for i, index in enumerate(('m/z', 'z', 'I')):
             self.assertAlmostEqual(vals_theo[i],data1[index])
-        data2 = reader.openTxtFile(file2,np.dtype([('m/z', float), ('I', float)]))[0]
+        data2 = reader.openFile(file2, np.dtype([('m/z', float), ('I', float)]))[0]
         vals_theo = (209.41425, 759733)
         for i, index in enumerate(('m/z', 'I')):
             self.assertAlmostEqual(vals_theo[i],data2[index])
-        reader.openTxtFile(file3,np.dtype([('m/z', float), ('z', np.uint8), ('I', float), ('S/N', float),
-                                                   ('qual', float)]))
-        reader.openTxtFile(file4,np.dtype([('m/z', float), ('I', float), ('S/N', float)]))
+        reader.openFile(file3, np.dtype([('m/z', float), ('z', np.uint8), ('I', float), ('S/N', float),
+                                         ('qual', float)]))
+        reader.openFile(file4, np.dtype([('m/z', float), ('I', float), ('S/N', float)]))
         vals_theo = (145.0403, 194,14.2)
-        data3 = reader.openTxtFile(file5,np.dtype([('m/z', float), ('I', float), ('S/N', float)]))
+        data3 = reader.openFile(file5, np.dtype([('m/z', float), ('I', float), ('S/N', float)]))
         for i, index in enumerate(('m/z', 'I','S/N')):
             self.assertAlmostEqual(vals_theo[i],data3[0][index])
-        reader.openTxtFile(file5,np.dtype([('m/z', float), ('I', float)]))
+        reader.openFile(file5, np.dtype([('m/z', float), ('I', float)]))
 
     def test_open_csv_file(self):
         assert False

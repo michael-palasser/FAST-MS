@@ -132,7 +132,7 @@ class IntensityModeller(object):
         outlier_index = np.where(gValueInt > self._configs['outlierLimit'])
         #print('int',outlier_index,gValueInt,calcIntensities)
         if len(outlier_index[0]) == 0 and nonZeroLength>1:
-            outlier_index = np.where((gValueErr>self.calculateCriticalVal(nonZeroLength,0.01)) & (errors != 0))
+            outlier_index = np.where((gValueErr>self.calculateCriticalVal(nonZeroLength,0.01)) & (errors != 0) & (gValueInt > 0))
             #if len(outlier_index[0])>0:
             #    print(outlier_index,errors, gValueErr, 'error out')
         return solution, mzArray[outlier_index].tolist()
@@ -176,6 +176,7 @@ class IntensityModeller(object):
                 noOutliers = np.isin(ion.getIsotopePattern()['m/z'],outlierList, invert=True)
                 if np.all(ion.getIsotopePattern()['I'][noOutliers] == 0):
                     print("deleted:", ion.getName(), ion.getCharge(), ion.getIntensity(), round(ion.getQuality(), 2))
+                    ion.setIsotopePatternPart("used",noOutliers)
                     if ion.getComment() != "noise,":
                         ion.addComment("qual.")
                     if ion.getHash() not in self._deletedIons.keys():
@@ -192,7 +193,9 @@ class IntensityModeller(object):
                     correctedIon.setIntensity(np.sum(isoPattern['calcInt'] * solution.x))
                     #isoPattern['calcInt'] = correctedIon.getIsotopePattern()['calcInt'] * solution.x
                     correctedIon.setIsotopePatternPart('calcInt',correctedIon.getIsotopePattern()['calcInt']*solution.x)
-            self.setQualityAndScore(correctedIon, solution)
+            correctedIon.setIsotopePatternPart("used",noOutliers)
+            self.setQualityAndScore(correctedIon, solution, len(set(outlierList)))
+            print(outlierList, noOutliers)
             '''correctedIon.setQuality(self.calcQuality(solution.fun, correctedIon.getIntensity()))
             ion.setScore(calcScore(ion.getIntensity(), ion.getQuality(), self._noiseLevel))'''
             isoPattern = ion.getIsotopePattern()
@@ -205,16 +208,23 @@ class IntensityModeller(object):
                 correctedIon.addComment("error")
                 if correctedIon.getHash() not in self._deletedIons.keys():
                     self._deletedIons[correctedIon.getHash()] = correctedIon
-            for peak in correctedIon.getIsotopePattern():
+            """for peak in correctedIon.getIsotopePattern():
                 if peak['m/z'] in outlierList:
-                    peak['used'] = False
-        
+                    peak['used'] = False"""
+        print(correctedIon.getIsotopePattern())
         return correctedIon
 
 
-    def setQualityAndScore(self, ion, solution):
+    def setQualityAndScore(self, ion, solution, numOutliers):
         intensity = ion.getIntensity()
-        quality = self.calcQuality(solution.fun, intensity)
+        numFound = len(np.where(ion.getIsotopePattern()['I']>0)[0])
+        if numFound != numOutliers:
+            correctionFactor = numFound / (numFound - numOutliers)
+            quality = self.calcQuality(solution.fun, intensity) * correctionFactor
+            print("corrected",ion.getHash(), correctionFactor, numFound, numOutliers)
+        else:
+            quality = 1.
+            print("too high")
         if quality is None:
             print("Achtung", ion.getName())
         ion.setQuality(quality)
@@ -226,7 +236,7 @@ class IntensityModeller(object):
         :type ion: FragmentIon
         :return: (FragmentIon) ion with calculated intensity, quality, ppm error, etc.
         '''
-        print(ion.getName(),ion.getIsotopePattern())
+        #print(ion.getName(),ion.getIsotopePattern())
         noOutliers = np.where(ion.getIsotopePattern()['used'])
         ion.setError(np.average(ion.getIsotopePattern()['error'][np.where(ion.getIsotopePattern()['I'][noOutliers] != 0)]))
         isoPattern = ion.getIsotopePattern()
@@ -239,12 +249,12 @@ class IntensityModeller(object):
         if ion.getIntensity() != 0:
             '''ion.setQuality(self.calcQuality(solution.fun, ion.getIntensity()))
             ion.setScore(calcScore(ion.getIntensity(), ion.getQuality(), self._noiseLevel))'''
-            self.setQualityAndScore(ion, solution)
+            self.setQualityAndScore(ion, solution, len(outliers))
         return ion, outliers
 
-    def processIons(self, ion):
+    def processIon(self, ion):
         '''
-        Processes (calculates intensities, etc.) ions which are above the noise threshold
+        Processes (calculates intensities, etc.) an ion which is above the noise threshold
         :param (FragmentIon) ion: corresponding (raw) ion
         :type ion: FragmentIon
         '''

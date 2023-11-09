@@ -3,7 +3,7 @@ import traceback
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QMessageBox
 
-from src.resources import path
+from src.resources import path, INTERN
 from os.path import join
 
 from src.Exceptions import InvalidInputException
@@ -63,30 +63,35 @@ class TDStartDialog(StartDialog):
     def getLabels(self):
         return ("Sequence Name:", "Charge:", "Fragmentation:", "Modifications:", "No. of Modifications:",
                       "Spectral Data:", "Noise Threshold (x10^6):", "Fragment Library:", 'Calibration:',
-                      'Ions for Cal.:')
+                      'Ions for Cal.:', 'Profile Spectrum:')
 
     def getWidgets(self, args):
         sequences, fragPatterns, modPatterns = args
         chargeWidget = QtWidgets.QSpinBox(self)
         chargeWidget.setMinimum(-99)
-        return {"sequName": (createComboBox(self,sequences), "Name of the sequence"),
-                   "charge": (chargeWidget, "Charge of the precursor ion"),
-                    "fragmentation": (createComboBox(self,fragPatterns), "Name of the fragmentation - pattern"),
-                    "modifications": (createComboBox(self,modPatterns), "Name of the modification/ligand - pattern"),
-                    "nrMod": (QtWidgets.QSpinBox(self), "How often is the precursor ion modified?"),
-                    "spectralData": (OpenFileWidget(self, 1, self.getDefaultDirectory("spectralData"),
-                                    "Open File","Plain Text Files (*txt);;Comma Separated Values (*csv);;All Files (*)"),
-                                "Name of the file with spectral peaks (txt or csv format)\n"
-                                 "If no file is stated, the program will just calculate the fragment library"),
-                    'noiseLimit': (QtWidgets.QDoubleSpinBox(self), "Minimal noise level"),
-                    "fragLib": (QtWidgets.QLineEdit(self), "If the fragment list has / should have a special name.\n"
-                            "If no file is stated, the program will search for the file with the standard name or create"
-                                                           " a new one with that name"),
-                 "calibration": (QtWidgets.QCheckBox(), "Spectral data will be calibrated if this option is ticked"),
-                 "calIons": (OpenFileWidget(self, 1, self.getDefaultDirectory("spectralData"), "Open Files",
-                                            "Plain Text Files (*txt);;Comma Separated Values (*csv);;All Files (*)"),
-                             "Name of the file with ions for calibration (txt format)")}
-
+        w = {"sequName": (createComboBox(self,sequences), "Name of the sequence"),
+            "charge": (chargeWidget, "Charge of the precursor ion"),
+            "fragmentation": (createComboBox(self,fragPatterns), "Name of the fragmentation - pattern"),
+            "modifications": (createComboBox(self,modPatterns), "Name of the modification/ligand - pattern"),
+            "nrMod": (QtWidgets.QSpinBox(self), "How often is the precursor ion modified?"),
+            "spectralData": (OpenFileWidget(self, 1, self.getDefaultDirectory("spectralData"),
+                            "Open File","Plain Text Files (*txt);;Comma Separated Values (*csv);;All Files (*)"),
+                        "Name of the file with spectral peaks (txt or csv format)\n"
+                         "If no file is stated, the program will just calculate the fragment library"),
+            'noiseLimit': (QtWidgets.QDoubleSpinBox(self), "Minimal noise level"),
+            "fragLib": (QtWidgets.QLineEdit(self), "If the fragment list has / should have a special name.\n"
+                    "If no file is stated, the program will search for the file with the standard name or create"
+                                                       " a new one with that name"),
+            "calibration": (QtWidgets.QCheckBox(), "Spectral data will be calibrated if this option is ticked"),
+            "calIons": (OpenFileWidget(self, 1, self.getDefaultDirectory("spectralData"), "Open Files",
+                                        "Plain Text Files (*txt);;Comma Separated Values (*csv);;All Files (*)"),
+                         "Name of the file with ions for calibration (txt format)")}
+        if INTERN:
+            w["profile"] = (OpenFileWidget(self, 1, self.getDefaultDirectory("spectralData"),
+                               "Open File",
+                               "xy File (*xy);;Plain Text Files (*txt);;Comma Separated Values (*csv);;All Files (*)"),
+                "Optional; name of the file containing the profile spectrum (xy, txt or csv format)")
+        return w
 
     def changeNrOfMods(self):
         if self._widgets['modifications'].currentText() == '-':
@@ -129,6 +134,7 @@ class TDStartDialog(StartDialog):
             raise InvalidInputException('Invalid Input','Charge must not be 0')
         if configs['calibration']:
             configs['calIons'] = self.checkSpectralDataFile('top-down', configs['calIons'])
+
         return super(TDStartDialog, self).checkValues(configs, 'top-down')
 
     """def checkSpectralDataFile(self, mode, fileName):
@@ -237,11 +243,11 @@ class IntactStartDialogFull(IntactStartDialog):
 
     def getLabels(self):
         oldLabels = super(IntactStartDialogFull, self).getLabels()
-        return oldLabels[:4] + ["Noise Threshold (x10^6):"] + oldLabels[5:8] + ['Ions for Cal.:']
+        return oldLabels[:4] + ["Noise Threshold (x10^6):"] + oldLabels[5:8] + ['Ions for Cal.:', 'Profile Spectrum:']
 
     def getWidgets(self, args):
         sequences, modPatterns =args
-        return {"sequName": (createComboBox(self, sequences), "Name of sequence"),
+        w = {"sequName": (createComboBox(self, sequences), "Name of sequence"),
                  "modifications": (createComboBox(self, modPatterns), "Name of the modification pattern"),
                  "spectralData": (
                     OpenFileWidget(self, 1, join(path, 'Spectral_data', 'intact'), "Open Files",
@@ -255,6 +261,11 @@ class IntactStartDialogFull(IntactStartDialog):
                  "calIons": (OpenFileWidget(self, 1, join(path, 'Spectral_data', 'intact'), "Open Files",
                                             "Plain Text Files (*txt);;Comma Separated Values (*csv);;All Files (*)"),
                              "Name of the file with ions for calibration (txt format)")}
+        if INTERN:
+            w["profile"] = (OpenFileWidget(self, 1, self.getDefaultDirectory("spectralData"),
+                                            "Open File","xy File (*xy);;Plain Text Files (*txt);;Comma Separated Values (*csv);;All Files (*)"),
+                             "Optional; name of the file containing the profile spectrum (xy, txt or csv format)")
+        return w
 
     def backToLast(self):
         super(IntactStartDialogFull, self).backToLast()

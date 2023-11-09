@@ -8,14 +8,15 @@ from src.Exceptions import InvalidInputException
 class SpectralDataReader(object):
     def __init__(self):
         self._dict = {'m/z':'m/z', 'z':'z', 'I':'I', 'Intensity':'I', 'S/N': 'S/N', 'Quality Factor': 'qual',
-                      'qual': 'qual'}
+                      'qual': 'qual', 'name':'name'}
 
 
-    def openFile(self, dataPath, dataDtype, headers=None):
+    def openFile(self, dataPath, dataDtype):
         '''
         Reads a text file with unassigned ion data
         :param (str) dataPath: path of the file
-        :return: (list[ndarray]) list of spectra: dtype = [('m/z', float), ('z', np.uint8), ('relAb', float)]
+        :param (dtype) dataDtype: dtype of the returned array
+        :return: (ndarray) array
         '''
         """rawData = []
         delimiter = ','
@@ -55,7 +56,8 @@ class SpectralDataReader(object):
                 """if skipZ and self._dict[header] == 'z':
                     correction = 1"""
                 indizes[self._dict[header]] = i#-correction
-
+            elif "m/z" in header and "m/z" in self._dict.keys():
+                indizes[self._dict["m/z"]] = i#-correction
 
             '''if header != 'Factor':
                 counter+=1'''
@@ -73,15 +75,14 @@ class SpectralDataReader(object):
         for line in rawData[1:]:
             if len(line)>1:
                 data.append(tuple([line[indizes[mandatoryHeader]] for mandatoryHeader in mandatoryHeaders]))
-        #print(data)
         return np.array(data, dtype=dataDtype)
 
 
-    def getRawData(self,dataPath):
+    def getRawData(self,dataPath, delimiter='\t'):
         rawData = []
-        delimiter = ','
         csv = False
         if dataPath[-4:] == '.csv':
+            delimiter = ','
             csv = True
         with open(dataPath) as file:
             for i, line in enumerate(file):
@@ -95,10 +96,7 @@ class SpectralDataReader(object):
                         delimiter = ';'
                 try:
                     # print(i,delimiter)
-                    if not csv:
-                        lineList = line.split('\t')
-                    else:
-                        lineList = line.split(delimiter)
+                    lineList = line.split(delimiter)
                     rawData.append(lineList)
                 except:
                     raise InvalidInputException("Problem in data file: <br>line " + str(i), line)
@@ -125,22 +123,24 @@ class SpectralDataReader(object):
         with open(path) as f:
             for line in f:
                 rawData.append(tuple(line.rstrip().split()))"""
-        rawData = self.getRawData(dataPath)
-        rawData = np.array(rawData, dtype=[('m/z', float), ('I', float)])
+        if dataPath[-3:] == ".xy":
+            rawData = self.getRawData(dataPath," ")
+        else:
+            rawData = self.getRawData(dataPath)[1:]
+        rawData = np.array([tuple(row) for row in rawData], dtype=[('m/z', float), ('I', float)])
         data = rawData[rawData['m/z']<max_mz]
         return data
 
-    def writePeaks(peaks, fileName):
+    """def writePeaks(peaks, fileName):
         '''
         Writes a calibrated peak list to a file
         :param (ndarray[float,float]) peaks: array with columns m/z, int
         :param (str) fileName: name of the file
         '''
         with open(fileName, 'w') as f:
-            f.write()
             f.write('m/z\tI\n')
             for peak in peaks:
-                f.write(str(peak['m/z'])+'\t'+str(peak['I'])+'\n')
+                f.write(str(peak['m/z'])+'\t'+str(peak['I'])+'\n')"""
 
 
     @staticmethod

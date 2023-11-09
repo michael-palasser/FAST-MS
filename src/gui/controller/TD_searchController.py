@@ -126,7 +126,7 @@ class TD_MainController(AbstractMainController):
     @staticmethod
     def startDialog(parent):
         return TDStartDialog(parent)
-    
+
     def loadSearch(self,parent):
         searchService = SearchService()
         #self._search =
@@ -140,18 +140,23 @@ class TD_MainController(AbstractMainController):
             self._info = Info(logFile)
             self._savedName = dialog.getName()
             peaks = None
-            if not os.path.isfile(self._settings['spectralData']):
-                choice = QtWidgets.QMessageBox.question(parent, 'Spectral Data not found!',
-                    'File with spectral data could not be found.\n'
-                    'Do you want to manually select the file? Otherwise, the analysis will be loaded without the '
-                    'spectral data.',
-                    QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-                if choice == QtWidgets.QMessageBox.Yes:
-                    dlg = OpenSpectralDataDlg(parent)
-                    if dlg.exec_() and not dlg.canceled():
-                        self._settings['spectralData'] = dlg.getValue()
-                elif choice == QtWidgets.QMessageBox.No:
-                    peaks = searchService.getAllAssignedPeaks(observedIons+delIons)
+            if 'profile' not in self._settings.keys() or self._settings['profile']=="":
+                keys = ('spectralData',)
+            else:
+                keys = ('spectralData', 'profile')
+            for key in keys:
+                if not os.path.isfile(self._settings[key]):
+                    choice = QtWidgets.QMessageBox.question(parent, 'Spectral Data not found!',
+                        'File with spectral data (' +self._settings[key]+ ') could not be found.\n'
+                        'Do you want to manually select the file? Otherwise, the analysis will be loaded without the '
+                        'spectral data.',
+                        QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+                    if choice == QtWidgets.QMessageBox.Yes:
+                        dlg = OpenSpectralDataDlg(parent)
+                        if dlg.exec_() and not dlg.canceled():
+                            self._settings['spectralData'] = dlg.getValue()
+                    elif choice == QtWidgets.QMessageBox.No:
+                        peaks = searchService.getAllAssignedPeaks(observedIons+delIons)
             self._propStorage = SearchSettings(self._settings['sequName'], self._settings['fragmentation'],
                                                 self._settings['modifications'])
             self._libraryBuilder = FragmentLibraryBuilder(self._propStorage, self._settings['nrMod'],
@@ -232,7 +237,8 @@ class TD_MainController(AbstractMainController):
             self._spectrumHandler = SpectrumHandler(self._propStorage, self._libraryBuilder.getPrecursor(),
                                                     self._settings, self._configs)
         except Exception as e:
-            raise InvalidInputException('Problem in file ' + self._settings['spectralData'] + ':<br>', e.__str__())
+            traceback.print_exc()
+            raise InvalidInputException('Problem in file ' + self._settings['spectralData'] + ':<br>', traceback.format_exc())
         self._info.spectrumProcessed(self._spectrumHandler.getUpperBound(), self._spectrumHandler.getNoiseLevel())
         #try:
         if self._settings['calibration']:
@@ -264,7 +270,7 @@ class TD_MainController(AbstractMainController):
         start = time.time()
         print("\n********** Calculating relative abundances **********")
         for ion in self._spectrumHandler.getFoundIons():
-            self._intensityModeller.processIons(ion)
+            self._intensityModeller.processIon(ion)
         for ion in self._spectrumHandler._ionsInNoise:
             self._intensityModeller.processNoiseIons(ion)
         self._spectrumHandler.emptyLists()
@@ -362,7 +368,7 @@ class TD_MainController(AbstractMainController):
                 outputPath = os.path.join(path, 'Spectral_data', 'top-down')
             output = os.path.join(outputPath, filename)
             if os.path.isfile(output):
-                choice = QtWidgets.QMessageBox.question(self._mainWindow, "Overwriting",
+                choice = QtWidgets.QMessageBox.question(self._mainWindow, "Warning",
                                                         "There is already an file with the name: " + filename + "\nDo you want to overwrite it?",
                                                         QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
                 if choice == QtWidgets.QMessageBox.No:
@@ -389,7 +395,12 @@ class TD_MainController(AbstractMainController):
                                         'reload the analysis.', QtWidgets.QMessageBox.Ok, self._mainWindow, )
                 if dlg.exec_() and dlg == QtWidgets.QMessageBox.Ok:
                     return
-
+            except Exception as e:
+                if "Permission" in e.__str__():
+                    QtWidgets.QMessageBox.warning(None, "File not closed", 'You have to close the file "'+
+                                                  filename+'" to overwrite it', QtWidgets.QMessageBox.Ok)
+                else:
+                    raise e
 
     def showFragmentation(self):
         '''
@@ -570,3 +581,11 @@ class TD_MainController(AbstractMainController):
         self._saved = True
         print('done')
         self._infoView.update()
+
+    def getMzLimits(self, bestIons):
+        mzs = [float(row[1]) for row in bestIons]
+        minMz, maxMz = min(mzs) - 50, max(mzs) + 50
+        absMin = np.min(self._spectrumHandler.getSpectrum()['m/z'])
+        if minMz < absMin:
+            minMz = absMin
+        return (int(round(minMz)), int(round(maxMz)))

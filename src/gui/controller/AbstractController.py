@@ -5,17 +5,19 @@ Created on 21 Jul 2020
 '''
 import os
 from abc import ABC
-
+from src.resources import INTERN
 import numpy as np
 import pandas as pd
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 
-from src.BACHEM_extension.services.TD_Assigner import peakDtype, snapDtype
+
+if INTERN:
+    from src.BACHEM_extension.services.TD_Assigner import peakDtype, snapDtype
 from src.gui.GUI_functions import setIcon, translate
 from src.gui.widgets.Widgets import ShowFormulaWidget
 from src.repositories.SpectralDataReader import SpectralDataReader
-from src.resources import path, DEVELOP
+from src.resources import path, DEVELOP, INTERN
 from src.gui.controller.IsotopePatternView import AddIonView
 from src.gui.dialogs.CalibrationView import CalibrationView
 from src.gui.tableviews.TableViews import TableView

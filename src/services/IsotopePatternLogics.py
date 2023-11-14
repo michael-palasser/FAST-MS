@@ -1,8 +1,8 @@
 import numpy as np
 
 from src.Exceptions import InvalidInputException
-from src.MolecularFormula import MolecularFormula
-from src.FormulaFunctions import stringToFormula, eMass, protMass
+from src.services.MolecularFormula import MolecularFormula
+from src.services.FormulaFunctions import stringToFormula, eMass, protMass
 from src.services.DataServices import MoleculeService, FragmentationService, ModificationService, PeriodicTableService
 from src.entities.GeneralEntities import Sequence
 from src.entities.Ions import Fragment, FragmentIon
@@ -26,7 +26,7 @@ class IsotopePatternLogics(object):
         self._molecules = self._moleculeService.getAllPatternNames()
         self._configs = ConfigurationHandlerFactory.getConfigHandler().getAll()
         self._intensityModeller = IntensityModeller(self._configs, 1)
-        self._peakDtype = np.dtype([('m/z', float), ('relAb', float), ('calcInt', float), ('used', np.bool_)])
+        self._peakDtype = np.dtype([('m/z', float), ('I', float), ('calcInt', float), ('used', np.bool_)])
         self._formula = None
         self._isotopePattern = None
         self._ion = None
@@ -59,7 +59,7 @@ class IsotopePatternLogics(object):
         return [fragTemplate.getName() for fragTemplate in
                 self._fragService.getPatternWithObjects(fragmentationName).getItems()],\
                [precTemplate.getName() for precTemplate in
-                self._fragService.getPatternWithObjects(fragmentationName).getItems2()][1:]
+                self._fragService.getPatternWithObjects(fragmentationName).getItems2()]
 
     def getRadicals(self, moleculeName, sequString, fragmentationName, fragTemplName, modifPatternName, modifName,
                     nrMod):
@@ -136,7 +136,6 @@ class IsotopePatternLogics(object):
                 self._isotopePattern = tempFormula.calculateIsotopePattern(self._configs['maxIso'])
             else:
                 self._isotopePattern = tempFormula.calculateIsotopePatternFFT(self._configs['maxIso'], accelerate)
-            print('logics',self._isotopePattern)
             '''else:
                 self._isotopePattern = tempFormula.calcIsotopePatternSlowly()'''
         #isotopePattern = copy.deepcopy(self._isotopePattern)
@@ -244,7 +243,7 @@ class IsotopePatternLogics(object):
             row = [val for val in peak]
             peakList.append(row[0:3]+[0.]+row[3:])'''
         peakArr = np.array(peaks, dtype=self._peakDtype)
-        if np.all(peakArr['relAb']==0):
+        if np.all(peakArr['I']==0):
             raise InvalidInputException('All Intensities = 0', '')
         isotopePattern, intensity, quality =  self._intensityModeller.modelSimply(peakArr)
         self._ion.setIsoIntQual(isotopePattern, intensity, quality)

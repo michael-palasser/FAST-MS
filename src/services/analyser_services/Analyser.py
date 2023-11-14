@@ -272,12 +272,12 @@ class Analyser(object):
                 each row index of the array represents the cleavage site -1 and the boolean values states if a fragment
                 was found at the corresponding site.
         '''
-        sequLength=len(self._sequence)
-        redSequLength = sequLength-1
+        #sequLength=len(self._sequence)
+        redSequLength = len(self._sequence)-1
         coverages = {}
         calcCoverages = dict()
-        overall = np.zeros((sequLength,3))
-        arr = np.zeros(sequLength)
+        overall = np.zeros((redSequLength,3))
+        arr = np.zeros(redSequLength)
         for ion in self._ions:
             if ion.getNumber()==0:
                 continue
@@ -286,9 +286,11 @@ class Analyser(object):
                 coverages[type]= deepcopy(arr)
             row = ion.getNumber()-1
             if type not in forwTypes:
-                row = sequLength-ion.getNumber()
+                row = redSequLength-ion.getNumber()
+            #print(ion.getName(),row)
             coverages[type][row] = 1
         #overall = np.zeros(sequLength)
+        #print(coverages)
         for type,val in coverages.items():
             calcCoverages[type] = np.sum(val)/(redSequLength)
         overall[:,0] = np.any([val.astype(bool) for type,val in coverages.items() if type in forwTypes], axis=0)
@@ -296,12 +298,12 @@ class Analyser(object):
         overall[:,1] = np.any([val.astype(bool) for type,val in coverages.items() if type not in forwTypes], axis=0)
         calcCoverages['backward'] = np.sum(overall[:,1])/redSequLength
         overall[:,2] = np.any((overall[:,0],overall[:,1]), axis=0)
-        calcCoverages['total'] = np.sum(overall[:,2])/sequLength
-        for type in coverages.keys():
+        calcCoverages['total'] = np.sum(overall[:,2])/redSequLength
+        """for type in coverages.keys():
             if type in forwTypes:
                 coverages[type][-1] = np.nan
             else:
-                coverages[type][0] = np.nan
+                coverages[type][0] = np.nan"""
         #overall[-1,0] = np.nan
         #overall[0,1] = np.nan
         coveragesForw, coveragesBack = {},{}

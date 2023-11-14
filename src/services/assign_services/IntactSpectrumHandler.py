@@ -2,7 +2,7 @@ import logging
 
 import numpy as np
 
-from src.MolecularFormula import MolecularFormula
+from src.services.MolecularFormula import MolecularFormula
 from src.entities.Ions import IntactIon
 from src.services.assign_services.AbstractSpectrumHandler import AbstractSpectrumHandler
 
@@ -27,8 +27,8 @@ class IntactSpectrumHandler(AbstractSpectrumHandler):
         :return: (generator) range between lowest possible z and highest possible z
         '''
         minMz = self._settings['minMz']
-        if np.min(self._spectrum[:,0])>minMz:
-            minMz = np.min(self._spectrum[:,0])
+        if np.min(self._spectrum['m/z'])>minMz:
+            minMz = np.min(self._spectrum['m/z'])
         maxMz = self._settings['maxMz']
         if self._upperBound<maxMz:
             maxMz = self._upperBound

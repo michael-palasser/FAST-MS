@@ -11,29 +11,38 @@ class SimpleMainWindow(QtWidgets.QMainWindow):
     '''
     Used by TD_searchController, EditorControllers; parent class of StartWindow, IsotopePatternView
     '''
-    def __init__(self, parent, title):
+    def __init__(self, parent, title, centralWidget = None):
         super(SimpleMainWindow, self).__init__(parent)
         self._translate = translate
         self.setWindowTitle(self._translate(self.objectName(), title))
-        self._centralwidget = QtWidgets.QWidget(self)
+        if centralWidget is None:
+            self._centralwidget = QtWidgets.QWidget(self)
+        else:
+            self._centralwidget = centralWidget(self)
         self.setCentralWidget(self._centralwidget)
         self.setWindowIcon(QIcon(os.path.join(path, 'icon.ico')))
 
-    def updateComboBox(self, comboBox, newOptions):
-        toAdjust = comboBox.count() - len(newOptions)
+    def updateComboBox(self, comboBox, newOptions,empty=False):
+        """optionLength = len(newOptions)
+        toAdjust = comboBox.count() - optionLength
         if toAdjust > 0:
-            [comboBox.removeItem(i) for i in range(len(newOptions), len(newOptions) + toAdjust)]
+            [comboBox.removeItem(optionLength) for i in range(optionLength, optionLength + toAdjust)]
         elif toAdjust < 0:
             [comboBox.addItem("") for i in range(-1 * toAdjust)]
+        print(comboBox.count())
         for i, option in enumerate(newOptions):
-            comboBox.setItemText(i, self._translate(self.objectName(), option))
+            comboBox.setItemText(i, self._translate(self.objectName(), option))"""
+        comboBox.clear()
+        if empty:
+            newOptions=[""] + newOptions
+        comboBox.addItems(newOptions)
 
     def createMenuBar(self):
         self._menubar = QtWidgets.QMenuBar(self)
         self.setMenuBar(self._menubar)
         self._menubar.setGeometry(QtCore.QRect(0, 0, 340, 22))
 
-    def createMenu(self, name, options, separatorPosition):
+    def createMenu(self, name, options, separatorPosition, icon=None):
         '''
         Makes a QMenu
         :param name: name of the menu
@@ -45,13 +54,15 @@ class SimpleMainWindow(QtWidgets.QMainWindow):
         menu.setToolTipsVisible(True)
         menuActions = dict()
         pos = len(options)
+        if icon is not None:
+            menu.setIcon(icon)
         for option, vals in options.items():
             function, tooltip, shortcut = vals
             if separatorPosition != None and pos == separatorPosition:
                 menu.addSeparator()
             action = QtWidgets.QAction(self)
             action.setText(self._translate(self.objectName(),option))
-            if tooltip != None:
+            if tooltip is not None:
                 action.setToolTip(tooltip)
             if shortcut != None:
                 action.setShortcut(shortcut)

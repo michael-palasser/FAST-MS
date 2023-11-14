@@ -38,7 +38,7 @@ class Info(object):
         self._infoString += '\n* Modification: ' + modification.toString()
 
     def calibrate(self, values, errors, quality, usedIons):
-        self._infoString += '\n* Spectrum calibrated: m/z_cal = a * m/z + b * m/z + c'
+        self._infoString += '\n* Spectrum calibrated: m/z_cal = a * (m/z)^2 + b * m/z + c'
         for i, var in enumerate(['a','b','c']):
             self._infoString += '\n\t'+var + ' = {} ± {}'.format(values[i], errors[i])
         self._infoString += '\n\tquality: error std.dev. = {}, av. error = {}'.format(quality[0], quality[1])
@@ -89,7 +89,6 @@ class Info(object):
         return ',  '.join([str(val) for val in [round(ionVals[0],5), int(ionVals[1]), int(ionVals[2]), ionVals[3],
                                                 round(ionVals[4],2), round(ionVals[5],1), round(ionVals[6],2),
                                                 round(ionVals[7],1), ionVals[8]]])
-
     @staticmethod
     def formatPeak(peak):
         return ',  '.join([str(val) for val in [round(peak[0],5), int(peak[1]), int(peak[2]), round(peak[3],2), peak[4]]])

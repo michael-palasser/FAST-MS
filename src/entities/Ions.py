@@ -6,7 +6,7 @@ Created on 3 Jul 2020
 from abc import ABC
 import numpy as np
 #from numpy import array, dtype
-from src.FormulaFunctions import eMass, protMass
+from src.services.FormulaFunctions import eMass, protMass
 
 
 class Ion(ABC):
@@ -41,16 +41,6 @@ class Ion(ABC):
     def setScore(self, score):
         self._score = score
 
-    '''def calcScore(self, noiseLevel):
-        if self._quality > 1.5:
-            print('warning:', round(self._quality, 2), self.getName())
-            self._score = 10 ** 6
-        else:
-            if noiseLevel != 0:
-                self._score = exp(10 * self._quality) / 20 * self._quality * self.getIntensity() / noiseLevel
-            else:
-                return 0'''
-        # return self.score
 
     def getNeutral(self, mz, mode):
         return (mz - mode *protMass) * self._charge - self._radicals*(protMass+eMass)
@@ -75,22 +65,12 @@ class Ion(ABC):
     def addComment(self, comment):
         self._comment += comment + ','
 
-    """def setRemaining(self, intensity, error, quality, score, comment):
-        '''
-        Setter method for all values which are not already set by the constructor
-        :param (float) intensity:
-        :param (float) error:
-        :param (float) quality:
-        :param (str) comment:
-        '''
-        self._intensity = int(intensity)
-        self._error = error
-        self.setQuality(quality, score)
-        self._comment = comment"""
 
     def setIsoIntQual(self, isotopePattern, intensity, quality):
         self._isotopePattern = isotopePattern
         self._intensity = int(round(intensity))
+        if quality is None:
+            quality = 1.
         self._quality = quality
 
     def toString(self):
@@ -112,8 +92,14 @@ class Ion(ABC):
 
     def getSignalToNoise(self):
         if self._noise != 0:
-            return self._intensity / self._noise
+            """signal = 0
+            for val in self._isotopePattern['calcInt']:
+                if val> self._noise:
+                    signal += val-self._noise
+            return signal / self._noise"""
+            return self._intensity / (self._noise*len(self._isotopePattern))
         else:
+            print(self.getName(), self._intensity, self._noise)
             return np.nan
 
     def getRelAbundance(self):
@@ -123,6 +109,10 @@ class Ion(ABC):
         '''
         Getter of ion values for IonTableWidget
         '''
+        if self._quality is None:
+            print("reset quality", self.getName())
+            self._quality = 1
+            
         return [round(self.getMonoisotopic(),5), self._charge, int(round(self._intensity)), self.getName(), round(self._error, 2),
                 round(self.getSignalToNoise(),1), round(self._quality, 2)]#"""
 
@@ -136,7 +126,10 @@ class Ion(ABC):
         '''
         Getter of ion values
         '''
-        return self.getValues()+[round(self.getScore(), 1), self._comment]
+        try:
+            return self.getValues()+[round(self.getScore(), 1), self._comment]
+        except TypeError:
+            return self.getValues()+[20.0, self._comment]
 
 
     def toStorage(self):
@@ -144,9 +137,6 @@ class Ion(ABC):
         To save an ion in database
         :return: list of values
         '''
-        '''return [self._type, self._number, self._modification, self._formula, self._sequence, self._radicals,
-                self._monoisotopicRaw, self._charge, int(round(self._noise)), int(round(self._intensity)),
-                float(self._error), self._quality, self._comment]'''
         return [self._type+self._modification, self._number, self._formula, self._monoisotopicRaw, self._charge,
                 int(round(self._noise)), self._quality, self._comment]
 
@@ -157,7 +147,7 @@ class Ion(ABC):
         '''
         peaks = []
         for i, peak in enumerate(self._isotopePattern):
-            peaks.append([peak['m/z'], round(peak['relAb']), round(peak['calcInt']), float(peak['error']), int(peak['used'])])
+            peaks.append([peak['m/z'], round(peak['I']), round(peak['calcInt']), float(peak['error']), int(peak['used'])])
         return peaks
 
 
@@ -235,10 +225,18 @@ class Fragment(object):
     def getRadicals(self):
         return self._radicals
 
-    def getName(self):
+    def getName(self, html=False):
         if self._number == 0:
             return self._type + self._modification
+        elif html:
+            if self._modification=="":
+                return self._type + "<sub>"+str(self._number)+"</sub>"
+            else:
+                return "["+self._type + "<sub>"+str(self._number)+"</sub>" + self._modification+"]"
         return self._type + format(self._number, "02d") + self._modification  # + "-" + self.loss
+
+    def setType(self, type):
+        self._type = type
 
     def toString(self):
         return self.getName() + "\t\t" + self._formula.toString()
@@ -258,6 +256,8 @@ class Fragment(object):
         return 1
 
     def getMonoisotopicMass(self):
+        if self._isotopePattern is None:
+            return self.getFormula().calculateMonoIsotopic()
         return self._isotopePattern['m/z'][0]
 
 class FragmentIon(Fragment, Ion):
@@ -285,7 +285,7 @@ class FragmentIon(Fragment, Ion):
         self._score = score
         if calculate:
             self._intensity= np.sum(self._isotopePattern['calcInt'])
-            self._error = np.average(self._isotopePattern['error'][np.where(self._isotopePattern['relAb'] != 0 &
+            self._error = np.average(self._isotopePattern['error'][np.where(self._isotopePattern['I'] != 0 &
                                                                             self._isotopePattern['used'])])
         else:
             self._intensity = 0
@@ -293,143 +293,9 @@ class FragmentIon(Fragment, Ion):
         self._noise = noise
         self._comment = comment
 
-    """def getCharge(self):
-        return self._charge
-    def setCharge(self, charge):
-        self._charge = charge
+    def getTheoMz(self):
+        return self._monoisotopicRaw
 
-    def getIntensity(self):
-        return self._intensity
-    def setIntensity(self, intensity):
-        self._intensity = int(round(intensity))
-
-    def getError(self):
-        return self._error
-    def setError(self, error):
-        self._error = error
-
-    def getQuality(self):
-        return self._quality
-    def setQuality(self, quality):
-        self._quality = quality
-        self.calcScore()
-
-    def getScore(self):
-        return self._score
-
-    def calcScore(self):
-        if self._quality > 1.5:
-            print('warning:', round(self._quality, 2), self.getName())
-            self._score = 10 ** 6
-        else:
-            self._score = exp(10 * self._quality) / 20 * self._quality * self.getIntensity() / noiseLimit
-        # return self.score
-
-    def getNeutral(self, mz, mode):
-        return (mz - mode *protMass) * self._charge - self._radicals*(protMass+eMass)
-
-    def getMolecularMass(self, mode):
-        return self.getNeutral(self.getMonoisotopic(),mode)
-
-    def getAverageMass(self, mode):
-        avMass = np.sum(self._isotopePattern['m/z']*self._isotopePattern['calcInt'])/np.sum(self._isotopePattern['calcInt'])
-        if np.isnan(self.getNeutral(avMass,mode)):
-            print(self._isotopePattern, avMass, self._isotopePattern['calcInt'])
-        return self.getNeutral(avMass,mode)
-
-    def getNoise(self):
-        return self._noise
-    def getComment(self):
-        return self._comment
-    def setComment(self, comment):
-        self._comment = comment
-    def addComment(self, comment):
-        self._comment += comment + ','
-
-    def setRemaining(self, intensity, error, quality, comment):
-        '''
-        Setter method for all values which are not already set by the constructor
-        :param (float) intensity:
-        :param (float) error:
-        :param (float) quality:
-        :param (str) comment:
-        '''
-        self._intensity = int(intensity)
-        self._error = error
-        self.setQuality(quality)
-        self._comment = comment
-
-    def setIsoIntQual(self, isotopePattern, intensity, quality):
-        self._isotopePattern = isotopePattern
-        self._intensity = int(round(intensity))
-        self._quality = quality
-
-    def toString(self):
-        '''
-        For printing purposes
-        :return: (str)
-        '''
-        return str(round(self.getMonoisotopic(), 5)) + "\t\t" + str(self._charge) + "\t" + str(
-            round(self._intensity)) + "\t" + '{:12}'.format(self.getName()) + "\t" + \
-               str(round(self._error, 2)) + "\t\t" + str(round(self._quality, 2)) #+ "\t" + self._comment
-
-    def getMonoisotopic(self):
-        '''
-        Calculates the (observed) monoisotopic m/z from the theoretical and the error of the ion
-        :return: (float) monoisotopic m/z
-        '''
-        #return np.min(self.isotopePattern['m/z_theo']) * (1 + self.error * 10 ** (-6))  # np.min(self.isotopePattern['m/z'])
-        return self._monoisotopicRaw * (1 + self._error * 10 ** (-6))
-
-    def getSignalToNoise(self):
-        if self._noise != 0:
-            return self._intensity / self._noise
-        else:
-            return np.nan
-
-    def getRelAbundance(self):
-        return self._intensity / self._charge
-
-    def getValues(self):
-        '''
-        Getter of ion values for IonTableWidget
-        '''
-        return [round(self.getMonoisotopic(),5), self._charge, int(round(self._intensity)), self.getName(), round(self._error, 2),
-                round(self.getSignalToNoise(),1), round(self._quality, 2)]
-
-    def getId(self):
-        return self.getName()+', '+str(self._charge)
-
-    def getHash(self):
-        return (self.getName(),self._charge)
-
-    def getMoreValues(self):
-        '''
-        Getter of ion values
-        '''
-        return self.getValues()+[round(self.getScore(), 1), self._comment]
-
-
-    def toStorage(self):
-        '''
-        To save an ion in database
-        :return: list of values
-        '''
-        '''return [self._type, self._number, self._modification, self._formula, self._sequence, self._radicals,
-                self._monoisotopicRaw, self._charge, int(round(self._noise)), int(round(self._intensity)),
-                float(self._error), self._quality, self._comment]'''
-        return [self._type+self._modification, self._number, self._formula, self._monoisotopicRaw, self._charge,
-                int(round(self._noise)), self._quality, self._comment]
-
-    def peaksToStorage(self):
-        '''
-        To save peaks in database
-        :return: 2d list of peak values
-        '''
-        peaks = []
-        for i, peak in enumerate(self._isotopePattern):
-            peaks.append([peak['m/z'], round(peak['relAb']), round(peak['calcInt']), float(peak['error']), int(peak['used'])])
-        return peaks"""
 
 
 class IntactNeutral(object):
@@ -444,7 +310,7 @@ class IntactNeutral(object):
         :param (MolecularFormula) formula: molecular formula of the species
         :param (int) radicals: no. of radicals on species
         '''
-        self._sequName = sequName
+        self._name = sequName
         self._modification = modification
         self._nrOfModifications = nrOfModifications
         self._formula = formula
@@ -452,12 +318,12 @@ class IntactNeutral(object):
         self._isotopePattern = None
         self._monoisotopicRaw = None
 
-    def getSequName(self):
-        return self._sequName
+    def getUnmodifiedName(self):
+        return self._name
     def getModification(self):
         return self._modification
     def getName(self):
-        return self._sequName + self._modification
+        return self._name + self._modification
     def getNrOfModifications(self):
         return self._nrOfModifications
     def getFormula(self):
@@ -504,15 +370,15 @@ class IntactIon(IntactNeutral, Ion):
         :param (bool) calculate: intensity, error and score are calculated if true (for loading old search) (optional)
         :param (str) comment: comment of ion (optional)
         '''
-        super(IntactIon, self).__init__(neutral.getSequName(), neutral.getModification(),
-                                            neutral.getNrOfModifications(), neutral.getFormula(), neutral.getRadicals())
+        super(IntactIon, self).__init__(neutral.getUnmodifiedName(), neutral.getModification(),
+                                        neutral.getNrOfModifications(), neutral.getFormula(), neutral.getRadicals())
         self._monoisotopicRaw = monoisotopic
         self._charge = charge
         self._isotopePattern = isotopePattern
         self._quality = quality
         if calculate:
             self._intensity= np.sum(self._isotopePattern['calcInt'])
-            self._error = np.average(self._isotopePattern['error'][np.where(self._isotopePattern['relAb'] != 0 &
+            self._error = np.average(self._isotopePattern['error'][np.where(self._isotopePattern['I'] != 0 &
                                                                             self._isotopePattern['used'])])
             self._score = score
         else:
@@ -569,7 +435,7 @@ class SimpleIon(SimpleIntactIon):
     '''
     Simplified ion for assignment in intact ion list
     '''
-    def __init__(self, neutral, mz, theoMz, z, intensity):
+    def __init__(self, neutral, mz, theoMz, z, intensity, snr, qual):
         '''
         :param (Fragment) neutral: neutral fragment
         :param (float) mz: monoisotopic m/z
@@ -582,3 +448,22 @@ class SimpleIon(SimpleIntactIon):
             name +=format(neutral.getNumber(), "02d")
         super(SimpleIon, self).__init__(name, neutral.getModification(), mz, theoMz, z, intensity,
                                         0, neutral.getRadicals())
+        self._snr = snr
+        self._qual = qual
+        self._monoPeak = None
+        self.getNumber = neutral.getNumber
+
+    def getType(self):
+        return self.getUnmodifiedName()[0]
+
+    def getSNR(self):
+        return self._snr
+
+    def getQual(self):
+        return self._qual
+
+    def getMonoPeak(self):
+        return self._monoPeak
+
+    def setMonoPeak(self, monoPeak):
+        self._monoPeak = monoPeak

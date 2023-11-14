@@ -86,15 +86,26 @@ class CalibrationView(QtWidgets.QDialog):
         styles = {"black": "#f00", "font-size": "14px"}
         self._plot1.setLabel('bottom', 'm/z (observed)', **styles)
         self._plot1.setLabel('left', 'delta m/z', **styles)
+
         usedIons = self._ionsVals[self._ionsVals['used']==True]
-        scatter = pg.ScatterPlotItem(x=usedIons['m/z'], y=usedIons['m/z']-usedIons['m/z_theo'], symbol='star',
+        notUsed = self._ionsVals[self._ionsVals['used']==False]
+        greyScatter = pg.ScatterPlotItem(x=notUsed['m/z'], y=notUsed['m/z']-notUsed['m/z_theo'], symbol='star',
+                                     pen=pg.mkPen(color=(100,100,100,50), width=2),
+                                     brush=(0, 0, 0, 0), size=8, pxMode=True)
+        yVals = usedIons['m/z']-usedIons['m/z_theo']
+        scatter = pg.ScatterPlotItem(x=usedIons['m/z'], y=yVals, symbol='star',
                                      pen=pg.mkPen(color='g', width=2),
                                      brush=(0, 0, 0, 0), size=10, pxMode=True)
         xVals = np.linspace(int(np.min(self._ionsVals['m/z']))-100, int(np.max(self._ionsVals['m/z']))+100, 1000)
-        yVals = [-(self._solution[0]*x**2+(self._solution[1]-1)*x+self._solution[2]) for x in xVals]
-        curve = pg.PlotCurveItem(x=xVals, y=yVals, pen=pg.mkPen(color='k', width=1))
+
+        calibration_fun = [-(self._solution[0]*x**2+(self._solution[1]-1)*x+self._solution[2]) for x in xVals] #Todo was wenn nur sehr wenig
+        curve = pg.PlotCurveItem(x=xVals, y=calibration_fun, pen=pg.mkPen(color='k', width=1))
         self._plot1.addItem(scatter)
         self._plot1.addItem(curve)
+        self._plot1.addItem(greyScatter)
+
+        allDeltaMz = self._ionsVals['m/z']-self._ionsVals['m/z_theo']
+        self._plot1.setRange(yRange=[np.min(allDeltaMz),np.max(allDeltaMz)], padding=0)
         self.addWidget(self._plot1)
 
 

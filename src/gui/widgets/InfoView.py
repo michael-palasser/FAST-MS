@@ -23,6 +23,7 @@ class InfoView(QtWidgets.QWidget):
         scrollArea.setWidget(self._text)
         verticalLayout2.addWidget(self._text)
         setIcon(self)
+        self.resize(700, 400)
         self.show()
 
     def update(self):

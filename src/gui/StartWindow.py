@@ -18,6 +18,14 @@ from src.top_down.OccupancyRecalculator import run as occupancyRecalculator
 from src.top_down.SpectrumComparator import run as spectrumComparator
 from src.intact.Main import run as IntactIonsSearch
 from src.gui.controller.TD_searchController import TD_MainController
+from src.resources import INTERN
+
+if INTERN:
+    from src.BACHEM_extension.gui.MD_MainController import MD_MainController
+    from src.BACHEM_extension.gui.Dialogs_extension import MDStartDialog
+    from src.BACHEM_extension.gui.SequenceTranslater import SequenceTranslaterWindow
+    from src.BACHEM_extension.services.TD_Assigner import TD_Assigner
+    from src.BACHEM_extension.gui.MD_MainController import BACHEM_MainController as TD_MainController
 
 
 
@@ -56,9 +64,19 @@ class Window(SimpleMainWindow):
                          lambda: self.editData(IntactIonEditorController), 'Edit Intact Ions', None)}, None)
         self.createMenu('Other Tools',
                         {'Model Ion':
-                             (lambda: IsotopePatternView(self), 'Calculates the isotope pattern of an ion', None),
+                             (self.openIonModeller, 'Calculates the isotope pattern of an ion', None),
                          'Compare Ion Lists':
                              (self.compareSpectra, 'Compares the ion lists of multiple spectra', None)},None)
+        if INTERN:
+            self.createMenu('4 BACHEM',
+                            {#'Simple MS/MS Method Development':
+                             #   (self.startSimpleMD, 'Calculates occupancies of a given (fragment) ion list', None),"""
+                            'MS/MS Method Development':
+                                (self.startFullMD, 'Calculates occupancies of a given (fragment) ion list', None),
+                            'SequenceTranslater':
+                                (self.openTranslater, 'Translates a sequence in HELM or 3-letter code to FAST MS sequence', None),},
+                            None)
+
         self.createMenu('Edit',
                         {'Configurations':(self.editTopDownConfig, 'Edit configurations', None),
                          'Elements': (lambda: self.editData(ElementEditorController), 'Edit element table', None),
@@ -70,6 +88,7 @@ class Window(SimpleMainWindow):
         # self.setWindowIcon(QIcon('pic.png'))
         self._lastSearch = None
         self.showButtons()
+        self._openWindows=[]
 
     def showButtons(self):
         xPos = self.makeButton('Analyse Top-Down\nSpectrum', 'Starts analysis of top-down spectrum', 40,
@@ -109,6 +128,8 @@ class Window(SimpleMainWindow):
                 traceback.print_exc()
                 QtWidgets.QMessageBox.warning(self, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
 
+    def openIonModeller(self):
+        self._openWindows.append(IsotopePatternView(None))
 
     def compareSpectra(self):
         try:
@@ -116,6 +137,7 @@ class Window(SimpleMainWindow):
         except InvalidInputException as e:
             traceback.print_exc()
             QtWidgets.QMessageBox.warning(self, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
+
 
     def close_application(self):
         print('exit')
@@ -127,15 +149,46 @@ class Window(SimpleMainWindow):
 
     def editData(self, controller):
         try:
-            controller()
+            self._openWindows.append(controller())
         except CanceledException:
             pass
         except InvalidInputException as e:
             traceback.print_exc()
             QtWidgets.QMessageBox.warning(self, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
 
+    def startSimpleMD(self):
+        if INTERN:
+            dialog = MDStartDialog(self)
+            if dialog.exec_() and dialog.ok:
+                try:
+                    assigner = TD_Assigner()
+                    assigner.search()
+                except InvalidInputException as e:
+                    traceback.print_exc()
+                    QtWidgets.QMessageBox.warning(self, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
+        else:
+            pass
+
+    def startFullMD(self):
+        if INTERN:
+            self._lastSearch = SimpleMainWindow(None, '')
+            MD_MainController(self, True, self._lastSearch)
+        else:
+            pass
+
+    def loadMD(self):
+        pass
+
+
+    def openTranslater(self):
+        if INTERN:
+            self._translater = SequenceTranslaterWindow()
+        else:
+            pass
+
 def run():
     app = QApplication(sys.argv)
+    app.setStyle(QtWidgets.QStyleFactory.create("Fusion"))
     app.setApplicationName("FAST MS")
     gui = Window()
     sys.exit(app.exec_())

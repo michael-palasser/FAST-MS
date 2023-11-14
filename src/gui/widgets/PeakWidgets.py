@@ -91,7 +91,7 @@ class GeneralPeakWidget(QtWidgets.QTableWidget):
         '''
         df = pd.DataFrame()#data=self._peaks), columns=self._headers)
         df['m/z'] = self._peaks['m/z']
-        df['int. (spectrum)'] = self._peaks['relAb']
+        df['int. (spectrum)'] = self._peaks['I']
         df['int. (calc.)'] = self._peaks['calcInt']
         df['error /ppm'] = self._peaks['error']
         df['used'] = self._peaks['used']
@@ -179,11 +179,11 @@ class IsoPatternPeakWidget(GeneralPeakWidget):
         Returns a dataframe with the peak data
         '''
         '''df = pd.DataFrame(data=self._peaks, columns=self._headers)
-        df['int. (spectrum)'] = self._peaks['relAb']
+        df['int. (spectrum)'] = self._peaks['I']
         df['int. (calc.)'] = self._peaks['calcInt']'''
         df = pd.DataFrame()#data=self._peaks), columns=self._headers)
         df['m/z'] = self._peaks['m/z']
-        df['int. (spectrum)'] = self._peaks['relAb']
+        df['int. (spectrum)'] = self._peaks['I']
         df['int. (calc.)'] = self._peaks['calcInt']
         df['used'] = self._peaks['used']
         return df"""

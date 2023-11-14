@@ -79,7 +79,10 @@ class IntactMainController(AbstractMainController):
         """Importing spectral pattern"""
         #spectralFile = os.path.join(path, 'Spectral_data','top-down', self._settings['spectralData'])
         print("\n********** Importing spectral pattern from:", self._settings['spectralData'], "**********")
-        self._spectrumHandler = IntactSpectrumHandler(self._settings, self._configs)
+        try:
+            self._spectrumHandler = IntactSpectrumHandler(self._settings, self._configs)
+        except Exception as e:
+            raise InvalidInputException('Problem in file ' + self._settings['spectralData'] + ':<br>', e.__str__())
         self._info.spectrumProcessed(self._spectrumHandler.getUpperBound(), self._spectrumHandler.getNoiseLevel())
         if self._settings['calibration']:
             allSettings = dict(self._settings)
@@ -98,7 +101,7 @@ class IntactMainController(AbstractMainController):
         start = time.time()
         print("\n********** Calculating relative abundances **********")
         for ion in self._spectrumHandler.getFoundIons():
-            self._intensityModeller.processIons(ion)
+            self._intensityModeller.processIon(ion)
         for ion in self._spectrumHandler._ionsInNoise:
             self._intensityModeller.processNoiseIons(ion)
         self._spectrumHandler.emptyLists()
@@ -109,7 +112,7 @@ class IntactMainController(AbstractMainController):
         sameMonoisotopics = self._intensityModeller.findSameMonoisotopics()
         print('mono', sameMonoisotopics)
         if len(sameMonoisotopics) > 0:
-            view = CheckMonoisotopicOverlapView(sameMonoisotopics, self._spectrumHandler.getSpectrum())
+            view = CheckMonoisotopicOverlapView(sameMonoisotopics, self._spectrumHandler)
             print("User Input requested")
             view.exec_()
             if view and not view.canceled():

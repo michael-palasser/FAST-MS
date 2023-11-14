@@ -15,7 +15,7 @@ from src.services.assign_services.AbstractSpectrumHandler import calculateError,
 #protonMass = 1.00727647
 
 
-dtype = np.dtype([('m/z', float), ('z', np.uint8), ('relAb', float)])
+dtype = np.dtype([('m/z', float), ('z', np.uint8), ('I', float)])
 
 class AbstractFinder(ABC):
     '''
@@ -41,7 +41,7 @@ class AbstractFinder(ABC):
         '''
         Reads a file with unassigned ion data
         :param (str) path: path of the file
-        :return: (list[ndarray]) list of spectra: dtype = [('m/z', float), ('z', np.uint8), ('relAb', float)]
+        :return: (list[ndarray]) list of spectra: dtype = [('m/z', float), ('z', np.uint8), ('I', float)]
         '''
         if path[-4:] == '.csv':
             return self.openCsvFile(path)
@@ -52,7 +52,7 @@ class AbstractFinder(ABC):
         '''
         Reads a text file with unassigned ion data
         :param (str) path: path of the file
-        :return: (list[ndarray]) list of spectra: dtype = [('m/z', float), ('z', np.uint8), ('relAb', float)]
+        :return: (list[ndarray]) list of spectra: dtype = [('m/z', float), ('z', np.uint8), ('I', float)]
         '''
         data = []
         spectrum = list()
@@ -84,7 +84,7 @@ class AbstractFinder(ABC):
         '''
         Reads a csv file with unassigned ion data
         :param path: path of csv file
-        :return: (list[ndarray]) list of spectra: dtype = [('m/z', float), ('z', np.uint8), ('relAb', float)]
+        :return: (list[ndarray]) list of spectra: dtype = [('m/z', float), ('z', np.uint8), ('I', float)]
         '''
         with open(path) as file:
             try:
@@ -108,7 +108,7 @@ class AbstractFinder(ABC):
         :param (float) k: slope of error threshold
         :param (float) d: intercept of error threshold
         :param (ndarray[float,float,float]) spectrum: structured array,
-            dtype=([('m/z', float), ('z', np.uint8), ('relAb', float)])
+            dtype=([('m/z', float), ('z', np.uint8), ('I', float)])
         :param (bool) flag: if set, errors in ion list in txt file (+/- 1 Da) are taken in account
         :return: (list[SimpleIntactIon]) assigned ions
         :return:
@@ -120,7 +120,6 @@ class AbstractFinder(ABC):
             for z in self.getZRange(neutral):
                 mz = getMz(mass, z * self._sprayMode, radicals)
 
-                print(neutral.getName(), mz,z)
                 errorLimit = getErrorLimit(mz,k, d)
                 mask = np.where((abs(calculateError(spectrum['m/z'], mz)) < errorLimit)
                                 & (spectrum['z'] == z))
@@ -139,7 +138,7 @@ class AbstractFinder(ABC):
                         if (len(mask[0]) == 1):
                             ions.append(self.getIon(mz, neutral, spectrum[mask][0]))
                             '''Ion(self._settings['sequName'], modif, spectrum[mask]['m/z'][0], mz,
-                                spectrum[mask]['z'][0], spectrum[mask]['relAb'][0], nrMod, radicals))'''
+                                spectrum[mask]['z'][0], spectrum[mask]['I'][0], nrMod, radicals))'''
                     if len(mask[0]) > 1:
                         # print("more than one ion within error range:",spectralFile[mask])
                         ionPicked = 0
@@ -150,14 +149,14 @@ class AbstractFinder(ABC):
                                 ions.append(self.getIon(mz, neutral, spectrum[mask][0]))
                                 #Ion(self._settings['sequName'], modif, spectrum[newMask]['m/z'][0],
                                 #    mz, spectrum[newMask]['z'][0],
-                                #   spectrum[newMask]['relAb'][0], nrMod, radicals))
+                                #   spectrum[newMask]['I'][0], nrMod, radicals))
                             elif len(newMask[0]) > 1:
                                 mask = newMask
                         if ionPicked == 0:
-                            sortedArr = np.sort(spectrum[mask], order='relAb')
+                            sortedArr = np.sort(spectrum[mask], order='I')
                             ions.append(self.getIon(mz, neutral, sortedArr[-1]))
                             #    Ion(self._settings['sequName'], modif, sortedArr[-1]['m/z'], mz,
-                            #        sortedArr[-1]['z'], sortedArr[-1]['relAb'], nrMod, radicals))
+                            #        sortedArr[-1]['z'], sortedArr[-1]['I'], nrMod, radicals))
         '''for i in ions:
             print(i.getName(), i.getModification())'''
         return ions
@@ -255,7 +254,7 @@ class AbstractFinder(ABC):
         return solution[0] * x ** 2 + solution[1] * x + solution[2] -y
 
     def calibrate(self, uncalibrated, solution):
-        return self.fun_parabola(uncalibrated, solution[0],solution[1],solution[2])
+        return np.around(self.fun_parabola(uncalibrated, solution[0],solution[1],solution[2]),5)
 
 
 class IntactFinder(AbstractFinder):
@@ -289,11 +288,11 @@ class IntactFinder(AbstractFinder):
 
     def readData(self,files):
         '''
-        Reads txt files containing ion data (format: m/z    z   relAb) and creates a 2D array (m/z, z, relAb)
+        Reads txt files containing ion data (format: m/z    z   I) and creates a 2D array (m/z, z, I)
         :param (list[str]) files: paths of txt files
         '''
         self._files = files
-        #dtype = np.dtype([('m/z', float), ('z', np.uint8), ('relAb', float)])
+        #dtype = np.dtype([('m/z', float), ('z', np.uint8), ('I', float)])
         for path in files:
             '''data = []
             spectrum = list()
@@ -366,7 +365,7 @@ class IntactFinder(AbstractFinder):
                                             & (spectrum['z'] == z))
                             if (len(mask[0]) == 1):
                                 ions.append(Ion(self._settings['sequName'], modif, spectrum[mask]['m/z'][0], self.getMonoisotopicMass(mass, z),
-                                                spectrum[mask]['z'][0], spectrum[mask]['relAb'][0], val[1]))
+                                                spectrum[mask]['z'][0], spectrum[mask]['I'][0], val[1]))
 
                             elif flag:
                                 if len(mask[0]) == 0:
@@ -381,7 +380,7 @@ class IntactFinder(AbstractFinder):
                                     if (len(mask[0]) == 1):
                                         ions.append(
                                             Ion(self._settings['sequName'], modif, spectrum[mask]['m/z'][0], self.getMonoisotopicMass(mass, z),
-                                                spectrum[mask]['z'][0], spectrum[mask]['relAb'][0], val[1]))
+                                                spectrum[mask]['z'][0], spectrum[mask]['I'][0], val[1]))
                                 if len(mask[0]) > 1:
                                     #print("more than one ion within error range:",spectralFile[mask])
                                     ionPicked = 0
@@ -392,14 +391,14 @@ class IntactFinder(AbstractFinder):
                                             ionPicked = 1
                                             ions.append(Ion(self._settings['sequName'], modif, spectrum[newMask]['m/z'][0],
                                                             self.getMonoisotopicMass(mass,z), spectrum[newMask]['z'][0],
-                                                            spectrum[newMask]['relAb'][0], val[1]))
+                                                            spectrum[newMask]['I'][0], val[1]))
                                         elif len(newMask[0]) > 1:
                                             mask = newMask
                                     if ionPicked == 0:
-                                        sortedArr = np.sort(spectrum[mask], order='relAb')
+                                        sortedArr = np.sort(spectrum[mask], order='I')
                                         ions.append(
                                             Ion(self._settings['sequName'], modif, sortedArr[-1]['m/z'], self.getMonoisotopicMass(mass, z),
-                                                sortedArr[-1]['z'], sortedArr[-1]['relAb'], val[1]))
+                                                sortedArr[-1]['z'], sortedArr[-1]['I'], val[1]))
                         z+=1'''
                 ionLists.append(self.findIonsInSpectrum(k, d, spectrum, flag))
             listOfIonLists.append(ionLists)
@@ -418,7 +417,7 @@ class IntactFinder(AbstractFinder):
         :param (float) k: slope of error threshold
         :param (float) d: intercept of error threshold
         :param (ndarray[float,float,float]) spectrum: structured array,
-            dtype=([('m/z', float), ('z', np.uint8), ('relAb', float)])
+            dtype=([('m/z', float), ('z', np.uint8), ('I', float)])
         :param (bool) flag: if set, errors in ion list in txt file (+/- 1 Da) are taken in account
         :return: (list[SimpleIntactIon]) assigned ions
         :return:
@@ -440,7 +439,7 @@ class IntactFinder(AbstractFinder):
                                     & (spectrum['z'] == z))
                     if (len(mask[0]) == 1):
                         ions.append(Ion(self._settings['sequName'], modif, spectrum[mask]['m/z'][0],
-                                        mz, spectrum[mask]['z'][0], spectrum[mask]['relAb'][0], nrMod, radicals))
+                                        mz, spectrum[mask]['z'][0], spectrum[mask]['I'][0], nrMod, radicals))
                     elif flag:
                         if len(mask[0]) == 0:
                             mask = np.where(
@@ -454,7 +453,7 @@ class IntactFinder(AbstractFinder):
                             if (len(mask[0]) == 1):
                                 ions.append(
                                     Ion(self._settings['sequName'], modif, spectrum[mask]['m/z'][0], mz,
-                                        spectrum[mask]['z'][0], spectrum[mask]['relAb'][0], nrMod, radicals))
+                                        spectrum[mask]['z'][0], spectrum[mask]['I'][0], nrMod, radicals))
                         if len(mask[0]) > 1:
                             # print("more than one ion within error range:",spectralFile[mask])
                             ionPicked = 0
@@ -465,19 +464,19 @@ class IntactFinder(AbstractFinder):
                                     ions.append(
                                         Ion(self._settings['sequName'], modif, spectrum[newMask]['m/z'][0],
                                             mz, spectrum[newMask]['z'][0],
-                                            spectrum[newMask]['relAb'][0], nrMod, radicals))
+                                            spectrum[newMask]['I'][0], nrMod, radicals))
                                 elif len(newMask[0]) > 1:
                                     mask = newMask
                             if ionPicked == 0:
-                                sortedArr = np.sort(spectrum[mask], order='relAb')
+                                sortedArr = np.sort(spectrum[mask], order='I')
                                 ions.append(
                                     Ion(self._settings['sequName'], modif, sortedArr[-1]['m/z'], mz,
-                                        sortedArr[-1]['z'], sortedArr[-1]['relAb'], nrMod, radicals))
+                                        sortedArr[-1]['z'], sortedArr[-1]['I'], nrMod, radicals))
                 z += 1
         return ions"""
 
     def getIon(self, mz, neutral, found):
-        intensity = found['relAb']
+        intensity = found['I']
         if self._abundanceInput:
             intensity *= found['z']
         return SimpleIntactIon(self._settings['sequName'], neutral.getModification(), found['m/z'], mz, found['z'],
@@ -552,7 +551,7 @@ class IntactFinder(AbstractFinder):
     """def findCalibrationFunctionManually(self,ionList):
         '''
 
-        :param (ndarray[float,float,float]) ionList: structured array, dtype=([('m/z', float), ('z', np.uint8), ('relAb', float)])
+        :param (ndarray[float,float,float]) ionList: structured array, dtype=([('m/z', float), ('z', np.uint8), ('I', float)])
         :return: ([ndArray[float], ndArray[float], tuple[float], list[SimpleIntactIon]]) calibration variables (a,b,c), 
             errors of calibration var., tuple of (av. error, std.dev. of errors), list of ions used for the calibration
         '''
@@ -587,8 +586,11 @@ class TD_Finder(AbstractFinder):
             self._sprayMode *= -1
 
 
-    def getIon(self, mz, neutral, found):
+    def getIon(self, theoMz, neutral, found):
         '''return FragmentIon(neutral, found['m/z'], found['z'], [], mz,
                                ,
-                               found['relAb'], neutral.getNrOfModifications(), neutral.getRadicals())'''
-        return SimpleIon(neutral, found['m/z'], mz, found['z'],found['relAb'])
+                               found['I'], neutral.getNrOfModifications(), neutral.getRadicals())'''
+        if len(found)==5:
+            return SimpleIon(neutral, found['m/z'], theoMz, found['z'],found['I'], found['S/N'], found['qual'])
+        else:
+            return SimpleIon(neutral, found['m/z'], theoMz, found['z'],found['I'], 0, 0)

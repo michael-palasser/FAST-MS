@@ -12,7 +12,7 @@ class AbstractIonView(QtWidgets.QDialog):
     '''
     Dialog which shows overlapping ion patterns. Superclass of CheckMonoisotopicOverlapView and CheckOverlapsView
     '''
-    def __init__(self,  patterns, title, message, widths, spectrum):
+    def __init__(self,  patterns, title, message, widths, spectrumHandler):
         super(AbstractIonView, self).__init__()
         self.setUpUi(title)
         self._patterns = []
@@ -20,7 +20,7 @@ class AbstractIonView(QtWidgets.QDialog):
             self._patterns.append({self.hash(ion): ion for ion in pattern})
         self._widths = widths
         self._tables = []
-        self._spectrum = spectrum
+        self._spectrumHandler = spectrumHandler
         label = QtWidgets.QLabel(self)
         label.setGeometry(QtCore.QRect(20, 20, 400, 16))
         label.setText(translate(self.objectName(), message))
@@ -118,10 +118,13 @@ class AbstractIonView(QtWidgets.QDialog):
         if action == showAction:
             ions = self.getIons(table)
             minLimit, maxLimit, YLimit = self.getLimits(ions)
-            peaks = self._spectrum[
-                np.where((self._spectrum[:, 0] > (minLimit - 5)) & (self._spectrum[:, 0] < (maxLimit + 5)))]
+            peaks = self._spectrumHandler.getSpectrum()[
+                np.where((self._spectrumHandler.getSpectrum()['m/z'] > (minLimit - 5)) & (self._spectrumHandler.getSpectrum()['m/z'] < (maxLimit + 5)))]
 
-            view = SpectrumView(None, peaks, ions, minLimit, maxLimit, YLimit)
+            view = SpectrumView(None, peaks, ions, minLimit, maxLimit, YLimit,
+                                self._spectrumHandler.getSprayMode(),
+                                self._spectrumHandler.getNoise((np.min(peaks['m/z']),np.max(peaks['m/z']))), False,
+                                self._spectrumHandler.getProfileSpectrum((np.min(peaks['m/z']), np.max(peaks['m/z']))))
         elif action == peakAction:
             global peakview
             peakview = SimplePeakView(None, table.getIon(selectedRow))
@@ -146,7 +149,7 @@ class AbstractIonView(QtWidgets.QDialog):
     @staticmethod
     def getLimits(ions):
         '''
-        Returns the min and max m/z value and the max relAb of the ions in a table
+        Returns the min and max m/z value and the max I of the ions in a table
         :param (list[FragmentIon]) ions:
         :return:
         '''
@@ -157,7 +160,7 @@ class AbstractIonView(QtWidgets.QDialog):
             isoPattern = ion.getIsotopePattern()
             minMz = np.min(isoPattern['m/z'])
             maxMz = np.max(isoPattern['m/z'])
-            maxY = np.max(isoPattern['relAb'])
+            maxY = np.max(isoPattern['I'])
             if minLimit > minMz:
                 minLimit = minMz
             if maxLimit < maxMz:
@@ -173,9 +176,9 @@ class CheckOverlapsView(AbstractIonView):
     Dialog which shows overlapping ion patterns in multiple TickIonTableWidgets. Ticked ions are deleted after closing
     the dialog.
     '''
-    def __init__(self, patterns, spectrum):
+    def __init__(self, patterns, spectrumHandler):
         super(CheckOverlapsView, self).__init__(patterns, "Check Overlapping Ions",
-           "Complex overlapping patterns - Select ions for deletion:", [100, 30, 120, 140, 70, 60, 60,40], spectrum)
+           "Complex overlapping patterns - Select ions for deletion:", [100, 30, 120, 140, 70, 60, 60,40], spectrumHandler)
 
     def makeTables(self, yPos):
         for i, pattern in enumerate(self._patterns):
@@ -202,11 +205,11 @@ class CheckMonoisotopicOverlapView(AbstractIonView):
     Dialog which shows overlapping ion patterns (same molecular mass and charge) in multiple IonTableWidgets.
     Correct ions are selected by the user using a QComboBox.
     '''
-    def __init__(self, patterns, spectrum):
+    def __init__(self, patterns, spectrumHandler):
         self._comboBoxes = []
         self._optionDict = dict()
         super(CheckMonoisotopicOverlapView, self).__init__(patterns, "Check Heavily Overlapping Ions",
-           "These ions have the same mass - select the ion you want to keep", [100, 30, 120, 140, 70, 60, 60], spectrum)
+           "These ions have the same mass - select the ion you want to keep", [100, 30, 120, 140, 70, 60, 60], spectrumHandler)
 
     def makeTables(self, yPos):
         for i, pattern in enumerate(self._patterns):

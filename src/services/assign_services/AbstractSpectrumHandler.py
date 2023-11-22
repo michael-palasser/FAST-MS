@@ -128,14 +128,9 @@ class AbstractSpectrumHandler(ABC):
         Add spectrum from file
         :param (str) filePath: path of txt or csv file
         '''
-        """csv=False
-        if filePath[-4:] == '.csv':
-            csv=True"""
-            #self._spectrum = self.addSpectrumFromCsv(filePath)
-            #else:
-            #self._spectrum = self.addSpectrumFromTxt(filePath)
         self._spectrum = SpectralDataReader().openFile(filePath, self._dType)
-        #self.resizeSpectrum()
+        if self._settings['noiseLimit']==0:
+            self._settings['noiseLimit'] = 1.1*np.min(self._spectrum['I'])
         self.resizeSpectrum()
 
     def addSpectrumFromCsv(self, filePath):
@@ -259,8 +254,8 @@ class AbstractSpectrumHandler(ABC):
         :return: (float) noise
         '''
         noise = self._settings['noiseLimit']
-        if noise == 0:
-            noise = 1.1*np.min(self._spectrum['I'])
+        """if noise == 0:
+            noise = 1.1*np.min(self._spectrum['I'])"""
         if currentWindow is None:
             currentWindow = self.getPeaksInWindow(self._spectrum, point, windowSize)
         if currentWindow['I'].size < 11:

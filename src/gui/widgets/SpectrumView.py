@@ -66,8 +66,8 @@ class AbstractSpectrumView(QtWidgets.QWidget):
         self._width = 0.02
 
         self.plot(focused, True) #ToDo: Correct Width (linear fct)
-        
-        self.setWindow(minRange, maxRange,maxY)
+        self._padding = 1.1
+        self.setWindow(minRange-self._padding, maxRange+self._padding,maxY)
         pg.SignalProxy(self._graphWidget.scene().sigMouseMoved, rateLimit=60, slot=self.mouseMoved)
         self._graphWidget.scene().sigMouseMoved.connect(self.mouseMoved)
         self._clicks = []
@@ -110,17 +110,17 @@ class AbstractSpectrumView(QtWidgets.QWidget):
         self._mzRange = range(int(min(self._peaks['m/z'])), int(max(self._peaks['m/z']))+1)
         maxInt = np.max(self._peaks["I"])     #total maximum
         vbMin, vbMax = np.min(self._peaks["m/z"]), np.max(self._peaks["m/z"])
+        #print(vbMin, minRange, vbMax, maxRange)
         if vbMin>minRange:
             vbMin = minRange
         if vbMax<maxRange:
             vbMax = maxRange
         self._vb.setLimits(xMin=vbMin, xMax=vbMax, yMin=-0.005*maxInt, yMax=maxInt*1.4)
-        padding=1
-        if minRange-padding<vbMin:
+        """if minRange-padding<vbMin:
             padding = minRange-vbMin
         if maxRange+padding>vbMax:
-            padding = vbMax-maxRange
-        self._graphWidget.setXRange(minRange-padding, maxRange+padding, padding=0)
+            padding = vbMax-maxRange"""
+        self._graphWidget.setXRange(minRange-self._padding, maxRange+self._padding, padding=0)
         self._graphWidget.setYRange(0, maxY * 1.1, padding=0)
 
     def mouseMoved(self, evt):
@@ -312,7 +312,7 @@ class SpectrumView(AbstractSpectrumView):
 
         #self._vb = self._graphWidget.plotItem.vb
         #print(minRange, maxRange, maxY)
-        self.setWindow(minRange, maxRange, maxY)
+        self.setWindow(minRange-self._padding, maxRange+self._padding, maxY)
         #print(np.average(self._peaks[:,0]))
         #self._cursorLabel = pg.TextItem(text='Hello' ,anchor=(0,0))
         #self._cursorLabel = QtWidgets.QLabel(self)
@@ -378,7 +378,7 @@ class TheoSpectrumView(AbstractSpectrumView):
         if maxInt<maxY:
             maxInt=maxY
         self._vb.setLimits(xMin=minRange-0.5, xMax=maxRange+0.5, yMin=-0.005*maxInt, yMax=maxInt*1.4)
-        self._graphWidget.setXRange(minRange-1.1, maxRange+1.1, padding=0)
+        self._graphWidget.setXRange(minRange-self._padding, maxRange+self._padding, padding=0)
         self._graphWidget.setYRange(0, maxY * 1.1, padding=0)
 
 

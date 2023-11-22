@@ -72,9 +72,11 @@ class Window(SimpleMainWindow):
                             {#'Simple MS/MS Method Development':
                              #   (self.startSimpleMD, 'Calculates occupancies of a given (fragment) ion list', None),"""
                             'MS/MS Method Development':
-                                (self.startFullMD, 'Calculates occupancies of a given (fragment) ion list', None),
+                                (lambda:self.startFullMD(True), 'Starts the analysis of an MS/MS spectrum for method development', None),
                             'SequenceTranslater':
-                                (self.openTranslater, 'Translates a sequence in HELM or 3-letter code to FAST MS sequence', None),},
+                                (self.openTranslater, 'Translates a sequence in HELM or 3-letter code to FAST MS sequence', None),
+                            'Load MS/MS MD':
+                                (lambda:self.startFullMD(False), 'Loads an old MS/MS method development analysis', None),},
                             None)
 
         self.createMenu('Edit',
@@ -169,10 +171,13 @@ class Window(SimpleMainWindow):
         else:
             pass
 
-    def startFullMD(self):
+    def startFullMD(self, new=True):
         if INTERN:
             self._lastSearch = SimpleMainWindow(None, '')
-            MD_MainController(self, True, self._lastSearch)
+            if new:
+                MD_MainController(self, True, self._lastSearch)
+            else:
+                MD_MainController(self, False, self._lastSearch)
         else:
             pass
 

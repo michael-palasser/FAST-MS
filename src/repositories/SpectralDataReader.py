@@ -50,9 +50,7 @@ class SpectralDataReader(object):
         #correction = 0
         #counter = 0
         #print(rawData)
-        print(dataPath, rawData[0])
         for i, header in enumerate(rawData[0]):
-            print(header)
             if header in self._dict.keys():
                 """if skipZ and self._dict[header] == 'z':
                     correction = 1"""

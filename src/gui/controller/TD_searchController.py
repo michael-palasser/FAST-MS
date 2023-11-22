@@ -581,11 +581,3 @@ class TD_MainController(AbstractMainController):
         self._saved = True
         print('done')
         self._infoView.update()
-
-    def getMzLimits(self, bestIons):
-        mzs = [float(row[1]) for row in bestIons]
-        minMz, maxMz = min(mzs) - 50, max(mzs) + 50
-        absMin = np.min(self._spectrumHandler.getSpectrum()['m/z'])
-        if minMz < absMin:
-            minMz = absMin
-        return (int(round(minMz)), int(round(maxMz)))

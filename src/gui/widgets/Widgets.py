@@ -67,7 +67,6 @@ class OpenFileWidget(QtWidgets.QWidget):
             if dir:
                 dir = QtCore.QDir.toNativeSeparators(dir)
             self._lineEdit.setText(dir)
-        print("accepted")
         self._accepted=True
         #self.__files = _files
 

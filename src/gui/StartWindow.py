@@ -5,7 +5,7 @@ Created on 20 Oct 2020
 '''
 import sys
 
-from PyQt5 import QtCore
+from PyQt5.QtCore import QSize
 from PyQt5.QtWidgets import QApplication, QPushButton
 
 from src.gui.controller.IntactSearchController import IntactMainController
@@ -13,7 +13,6 @@ from src.gui.controller.IsotopePatternView import IsotopePatternView
 from src.gui.controller.EditorController import *
 from src.gui.dialogs.ParameterDialogs import ConfigurationDialog
 from src.gui.dialogs.StartDialogs import IntactStartDialog
-#from src.top_down.ModellingTool import main as modellingTool
 from src.top_down.OccupancyRecalculator import run as occupancyRecalculator
 from src.top_down.SpectrumComparator import run as spectrumComparator
 from src.intact.Main import run as IntactIonsSearch
@@ -36,6 +35,8 @@ class Window(SimpleMainWindow):
     '''
     def __init__(self):
         super(Window, self).__init__(None, 'FAST MS')
+        self._layout = QtWidgets.QHBoxLayout(self._centralwidget)
+        self._layout.setContentsMargins(40,25,40,40)
         self.createMenuBar()
         self.createMenu('Top-Down',
                         {'Analyse Spectrum':
@@ -93,11 +94,14 @@ class Window(SimpleMainWindow):
         self._openWindows=[]
 
     def showButtons(self):
-        xPos = self.makeButton('Analyse Top-Down\nSpectrum', 'Starts analysis of top-down spectrum', 40,
-                               lambda:self.startTopDown(True))
-        xPos = self.makeButton('Assign\nIntact Ions', 'Starts assignment and analysis of lists with unfragmented ions',
-                               xPos, self.startIntactIonSearch)
-        self.setGeometry(50, 50, xPos+40, 230)
+        btn = self.makeButton('Analyse Top-Down\nSpectrum', 'Starts analysis of top-down spectrum',
+                              lambda:self.startTopDown(True))
+        self._layout.addWidget(btn)
+        self._layout.setSpacing(30)
+        btn = self.makeButton('Assign\nIntact Ions', 'Starts assignment and analysis of lists with unfragmented ions',
+                              self.startIntactIonSearch)
+        self._layout.addWidget(btn)
+        #self.setGeometry(50, 50, xPos+40, 230)
         self.show()
 
     def startTopDown(self, new):
@@ -112,13 +116,12 @@ class Window(SimpleMainWindow):
         if self._lastSearch is not None:
             self._lastSearch.show()
 
-    def makeButton(self, name, toolTip, xPos, fun):
-        width = 200
-        btn = QPushButton(name, self)
+    def makeButton(self, name, toolTip, fun):
+        btn = QPushButton(name, self._centralwidget)
         btn.setToolTip(toolTip)
         btn.clicked.connect(fun)
-        btn.setGeometry(QtCore.QRect(xPos, 40, width, 150))
-        return xPos+width+40
+        btn.setMinimumSize(QSize(200, 150))
+        return btn
 
 
     def startIntactIonSearch(self):

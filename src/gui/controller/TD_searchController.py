@@ -6,7 +6,6 @@ Created on 21 Jul 2020
 
 import traceback
 import os
-
 import numpy as np
 import time
 from PyQt5 import QtWidgets
@@ -21,11 +20,11 @@ from src.gui.widgets.OccupancyWidget import OccupancyWidget
 from src.gui.widgets.SequCovWidget import SequCovWidget
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.repositories.IsotopePatternRepository import IsotopePatternRepository
+from src.services.StoredAnalysesService import StoredAnalysesService
 from src.services.analyser_services.Analyser import Analyser
 from src.entities.SearchSettings import SearchSettings
 from src.services.assign_services.Calibrator import Calibrator
 from src.services.library_services.FragmentLibraryBuilder import FragmentLibraryBuilder
-from src.services.SearchService import SearchService
 from src.services.assign_services.TD_SpectrumHandler import SpectrumHandler
 from src.services.IntensityModeller import IntensityModeller
 from src.repositories.export.ExcelWriter import ExcelWriter
@@ -33,7 +32,6 @@ from src.gui.dialogs.CheckIonView import CheckMonoisotopicOverlapView, CheckOver
 from src.gui.tableviews.PlotTables import PlotTableView
 from src.gui.widgets.SequencePlots import PlotFactory, plotBars
 from src.gui.dialogs.SimpleDialogs import ExportDialog, SelectSearchDlg, OpenSpectralDataDlg, SaveSearchDialog
-#from src.gui.ParameterDialogs import TDStartDialog
 from src.gui.dialogs.StartDialogs import TDStartDialog
 from src.gui.GUI_functions import shoot
 
@@ -128,16 +126,16 @@ class TD_MainController(AbstractMainController):
         return TDStartDialog(parent)
 
     def loadSearch(self,parent):
-        searchService = SearchService()
+        searchService = StoredAnalysesService()
         #self._search =
         dialog = SelectSearchDlg(parent, searchService.getAllSearchNames(),self.deleteSearch, searchService)
         if dialog.exec_() and not dialog.canceled():
-            self._configs = ConfigurationHandlerFactory.getConfigHandler().getAll()
+            #self._configs = ConfigurationHandlerFactory.getConfigHandler().getAll()
             start=time.time()
-            self._settings, noiseLevel, observedIons, delIons, remIons, searchedZStates, logFile = \
+            self._settings, self._configs, noiseLevel, observedIons, delIons, searchedZStates, logs = \
                 searchService.getSearch(dialog.getName())
             print('time:', time.time()-start)
-            self._info = Info(logFile)
+            self._info = Info(logs)
             self._savedName = dialog.getName()
             peaks = None
             if 'profile' not in self._settings.keys() or self._settings['profile']=="":
@@ -159,8 +157,7 @@ class TD_MainController(AbstractMainController):
                         peaks = searchService.getAllAssignedPeaks(observedIons+delIons)
             self._propStorage = SearchSettings(self._settings['sequName'], self._settings['fragmentation'],
                                                 self._settings['modifications'])
-            self._libraryBuilder = FragmentLibraryBuilder(self._propStorage, self._settings['nrMod'],
-                                                            self._configs['maxIso'], self._configs['approxIso'])
+            self._libraryBuilder = self.constructLibraryBuilder()
             self._libraryBuilder.createFragmentLibrary()
             noise = []
             for ion in observedIons+delIons:
@@ -170,7 +167,7 @@ class TD_MainController(AbstractMainController):
                                                     self._settings, self._configs, peaks, noise)
             self._spectrumHandler.setSearchedChargeStates(searchedZStates)
             self._intensityModeller = IntensityModeller(self._configs, noiseLevel)
-            self._intensityModeller.setIonLists(observedIons, delIons, remIons)
+            self._intensityModeller.setIonLists(observedIons, delIons, [])
             
             types = self._propStorage.getFragmentsByDir(1)
             types.update(self._propStorage.getFragmentsByDir(-1))
@@ -184,6 +181,9 @@ class TD_MainController(AbstractMainController):
             self._saved = True
             self.setUpUi()
 
+    def constructLibraryBuilder(self):
+        return FragmentLibraryBuilder(self._propStorage, self._settings['nrMod'], self._configs['maxIso'],
+                                      self._configs['approxIso'])
 
     @staticmethod
     def deleteSearch(name, searchService):
@@ -196,8 +196,7 @@ class TD_MainController(AbstractMainController):
         models intensities, fixes problems by overlapping ions (2 user inputs possible for deleting ions)
         '''
         print("\n********** Creating fragment library **********")
-        self._libraryBuilder = FragmentLibraryBuilder(self._propStorage, self._settings['nrMod'],
-                                                      self._configs['maxIso'], self._configs['approxIso'])
+        self._libraryBuilder = self.constructLibraryBuilder()
         self._libraryBuilder.createFragmentLibrary()
 
         """read existing ion-list file or create new one"""
@@ -553,7 +552,7 @@ class TD_MainController(AbstractMainController):
         '''
         Saves the results to the "search" - database
         '''
-        searchService = SearchService()
+        searchService = StoredAnalysesService()
         names = searchService.getAllSearchNames()
         while True:
             dlg = SaveSearchDialog(self._savedName)
@@ -572,12 +571,12 @@ class TD_MainController(AbstractMainController):
                 return
         print('Saving analysis', self._savedName)
         self._info.save()
-        start=time.time()
-        searchService.saveSearch(self._savedName, self._spectrumHandler.getNoiseLevel(), self._settings,
+        #start=time.time()
+        searchService.saveSearch(self._savedName, self._spectrumHandler.getNoiseLevel(), self._settings, self._configs,
                                  self._intensityModeller.getObservedIons().values(),
                                  self._intensityModeller.getDeletedIons().values(),
-                                 self._intensityModeller.getRemodelledIons(),
                                  self._spectrumHandler.getSearchedChargeStates(), self._info.toString())
         self._saved = True
         print('done')
         self._infoView.update()
+        return self._savedName

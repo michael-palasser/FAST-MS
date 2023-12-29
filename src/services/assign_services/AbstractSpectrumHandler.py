@@ -49,6 +49,8 @@ class AbstractSpectrumHandler(ABC):
         #self._searchedChargeStates = dict()
         self._noiseLevel = 0
         self._noise = []
+        if type(self._settings['noiseLimit']) == str:
+            self._settings['noiseLimit'] = 0
         if noise is not None:
             self._noise = noise
         if peaks is None:
@@ -63,7 +65,7 @@ class AbstractSpectrumHandler(ABC):
         self._searchedChargeStates = dict()
         self._profileSpectrum=None
         if 'profile' in self._settings.keys() and self._settings['profile'] != "":
-            self.setProfileSpectrum(self._settings["profile"])
+            self.addProfileSpectrum(self._settings["profile"])
             # self.expectedChargeStates = dict()
 
     def getNoiseLevel(self):
@@ -116,8 +118,11 @@ class AbstractSpectrumHandler(ABC):
         return self._profileSpectrum[np.where((limits[0] < self._profileSpectrum['m/z']) &
                                               (self._profileSpectrum['m/z'] < limits[1]))]
 
-    def setProfileSpectrum(self, fileName):
+    def addProfileSpectrum(self, fileName):
         self._profileSpectrum = SpectralDataReader().openXYFile(fileName, self._upperBound)
+
+    def setProfileSpectrum(self, profileSpec):
+        self._profileSpectrum = profileSpec
 
     def emptyLists(self):
         self._foundIons = None

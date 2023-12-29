@@ -20,6 +20,8 @@ def getRelativePath(relativePath, data=True):
     parent = pathlib.Path(__file__).resolve().parent
     if data:
         relPath = pathlib.Path('data') / relativePath
+        if DEVELOP:
+            relPath = pathlib.Path('data_meins') / relativePath
     else:
         relPath = pathlib.Path(relativePath)
     basePath = getattr(sys, '_MEIPASS', parent)

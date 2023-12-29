@@ -2,10 +2,11 @@ import os
 import platform
 import shutil
 from copy import deepcopy
+from datetime import datetime
 
 from src.repositories.ConfigurationHandler import ConfigHandler
 from src.repositories.sql.AnalysisRepository import AnalysisRepository
-from src.resources import path
+from src.resources import path, DEVELOP
 from src.services.MolecularFormula import MolecularFormula
 from src.services.FormulaFunctions import stringToFormula2
 from src.services.IntensityModeller import calcScore
@@ -17,6 +18,8 @@ class StoredAnalysesService(object):
     '''
     def __init__(self):
         self._dir = os.path.join(path, "Saved Analyses")
+        if DEVELOP:
+            self._dir = os.path.join(path, "Saved Analyses_meins")
         self._search = None
 
     def getAllSearchNames(self):
@@ -24,21 +27,12 @@ class StoredAnalysesService(object):
         for savedDir in os.listdir(self._dir):
             if savedDir == "Archive":
                 continue
-            fullPath = os.path.join(self._dir, savedDir)
-            if platform.system() == 'Windows':
-                time = os.path.getctime(fullPath)
-            else:
-                stat = os.stat(fullPath)
-                try:
-                    time = stat.st_birthtime
-                except AttributeError:
-                    # We're probably on Linux. No easy way to get creation dates here,
-                    # so we'll settle for when its content was last modified.
-                    time = stat.st_mtime
+            with open(os.path.join(self._dir, savedDir, savedDir+"_infos.txt")) as f:
+                firstLine = f.readline().strip('\n')
+                time = datetime.strptime(firstLine[10:], '%d/%m/%Y %H:%M')
             allAnalyses.append((savedDir,time))
         return [tup[0] for tup in sorted(allAnalyses, key=lambda tup:tup[1])]
 
-    #ToDo
     def getSearch(self, name):
         '''
         Returns the values of a stored analysis
@@ -61,7 +55,7 @@ class StoredAnalysesService(object):
         searchedZStates = {frag: zsString.split(',') for frag, zsString in searchedZStates.items()}
         return settings, configurations, noiseLevel, ions, deletedIons, searchedZStates, log
 
-    """def getSettingsAndConfigs(self, log):
+    def getSettingsAndConfigs(self, log):
         limits = ("Settings:\n", "* Configurations:\n", "* Sequence:\n",
                   "* Fragmentation:	Name	Gain	Loss	BB	Rad.	Dir.	Enabled\n",
                   "Modification: \n	Name	Gain	Loss	BB	Rad.	z-Eff.	Calc.occ.	Enabled",
@@ -72,7 +66,21 @@ class StoredAnalysesService(object):
             # print(remaining[remaining.find(limits[i])+len(limits[i]): remaining.find(limits[i+1])])
             allConfigs.append(remaining[remaining.find(limits[i]) + len(limits[i]): remaining.find(limits[i + 1])])
             remaining = remaining[remaining.find(limits[i + 1]):]
-        return allConfigs"""
+        configList = allConfigs[1].split("\n")
+        configs = {}
+        for l in configList[:-1]:
+            key,val = l.replace("\t","").split(":")
+            if val.replace(".", "").replace(" ","").isnumeric():
+                if "." in val:
+                    val = float(val)
+                else:
+                    val = int(val)
+            elif val == "True":
+                val=True
+            elif val == "False":
+                val=False
+            configs[key]=val
+        return configs
 
 
     def saveSearch(self, name, noiseLevel, settings, configurations, ions, deletedIons, searchedZStates, info):

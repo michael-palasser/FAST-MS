@@ -85,9 +85,16 @@ class MolecularFormula(object):
         checks if one value of formulaDict is negative
         :return: (bool)
         '''
+        if len(self._formulaDict)==0:
+            return True
+        allZero = True
         for val in self._formulaDict.values():
             if val < 0:
                 return True
+            elif val>0:
+                allZero=False
+        if allZero:
+            return True
         return False
 
 

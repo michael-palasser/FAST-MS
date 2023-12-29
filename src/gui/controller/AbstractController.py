@@ -44,12 +44,14 @@ class AbstractMainController(ABC):
         if dlg and not dlg.canceled():
             reader = SpectralDataReader()
             self._calibrator.calibratePeaks(self._spectrumHandler.getSpectrum())
-            self.calibrateAndWrite(reader.openFile(self._settings['spectralData'], peakDtype),
-                                   self._settings['spectralData'], reader)
+            peaks = self.calibrateAndWrite(reader.openFile(self._settings['spectralData'], peakDtype),
+                                           self._settings['spectralData'], reader)
+            self._spectrumHandler.setSpectrum(peaks)
             self.calibrateAndWrite(reader.openFile(self._settings['calIons'], snapDtype), self._settings['calIons'],
                                    reader)
             if 'profile' in self._settings.keys() and self._settings['profile'] != "":
-                self.calibrateAndWrite(self._spectrumHandler.getProfileSpectrum(), self._settings['profile'], reader)
+                profile = self.calibrateAndWrite(self._spectrumHandler.getProfileSpectrum(), self._settings['profile'], reader)
+                self._spectrumHandler.setProfileSpectrum(profile)
             vals = self._calibrator.getCalibrationValues()
             self._info.calibrate(vals[0], vals[1], self._calibrator.getQuality(), self._calibrator.getUsedIons())
             return True
@@ -76,6 +78,7 @@ class AbstractMainController(ABC):
         """if not self._configs['overwrite']:
             fileName = fileName[:-4] + '_cal' + ".txt"  # +peakFileName[-4:]"""
         reader.writeData(calibrated, self.getCalibratedFileName(fileName))
+        return calibrated
 
     def getCalibratedFileName(self, oldName):
         if self._configs['overwrite']:

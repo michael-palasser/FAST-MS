@@ -310,6 +310,9 @@ class IntensityModeller(object):
                 if sameMonoisotopic not in sameMonoisotopics:
                     self.commentIonsInPatterns(([ion.getHash() for ion in sameMonoisotopic],), True)
                     sameMonoisotopics.append(sameMonoisotopic)
+        print("* These ions have the same mass:")
+        for ions in sameMonoisotopics:
+            print(", ".join([ion.getName() for ion in ions]))
         return sameMonoisotopics
 
     def deleteSameMonoisotopics(self, ions):

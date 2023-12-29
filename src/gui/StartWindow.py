@@ -20,11 +20,11 @@ from src.gui.controller.TD_searchController import TD_MainController
 from src.resources import INTERN
 
 if INTERN:
-    from src.BACHEM_extension.gui.MD_MainController import MD_MainController
+    from src.BACHEM_extension.gui.MainController_extension import MD_MainController
     from src.BACHEM_extension.gui.Dialogs_extension import MDStartDialog
     from src.BACHEM_extension.gui.SequenceTranslater import SequenceTranslaterWindow
     from src.BACHEM_extension.services.TD_Assigner import TD_Assigner
-    from src.BACHEM_extension.gui.MD_MainController import BACHEM_MainController as TD_MainController
+    from src.BACHEM_extension.gui.MainController_extension import BACHEM_MainController as TD_MainController
 
 
 

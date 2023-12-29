@@ -99,8 +99,8 @@ class AbstractRepository(ABC):
             return cur.fetchall()[0]
         except IndexError:
             print(sql)
-            raise IndexError("value " + value + " in " + self._mainTable + " not found<br>Add the entry to the database"
-                                                                           "if you want to proceed.")
+            raise IndexError('Could not find the entry "' + value + '" in ' + self._mainTable +
+                             "<br>Add it to the database if you want to proceed.")
 
 
     def getItemColumns(self):

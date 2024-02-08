@@ -60,6 +60,8 @@ class MolecularFormula(object):
         :return: (MolecularFormula) new formula
         '''
         newFormula = copy.deepcopy(self._formulaDict)
+        if isinstance(args[0], MolecularFormula):
+            args = [arg.getFormulaDict() for arg in args]
         for addedFormula in args:
             for element, number in addedFormula.items():
                 if element in newFormula.keys():

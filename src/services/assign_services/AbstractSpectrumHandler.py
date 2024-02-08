@@ -135,7 +135,10 @@ class AbstractSpectrumHandler(ABC):
         '''
         self._spectrum = SpectralDataReader().openFile(filePath, self._dType)
         if self._settings['noiseLimit']==0:
-            self._settings['noiseLimit'] = 1.1*np.min(self._spectrum['I'])
+            #smallest noise is mean of smallest 20% of peak intensities
+            self._settings['noiseLimit'] = round(np.mean(np.sort(self._spectrum['I'])[:int(len(self._spectrum)/5)]))
+            #print('noise', self._settings['noiseLimit'], np.min(self._spectrum['I']))
+            #self._settings['noiseLimit'] = 1.1*np.min(self._spectrum['I'])
         self.resizeSpectrum()
 
     def addSpectrumFromCsv(self, filePath):
@@ -259,6 +262,7 @@ class AbstractSpectrumHandler(ABC):
         :return: (float) noise
         '''
         noise = self._settings['noiseLimit']
+        #print("noise", noise)
         """if noise == 0:
             noise = 1.1*np.min(self._spectrum['I'])"""
         if currentWindow is None:
@@ -271,16 +275,16 @@ class AbstractSpectrumHandler(ABC):
             #stdDevPeakInt = np.std(peakInt)
             while True:
                 meanPeakInt0 = meanPeakInt
-                lowAbundendantPeaks = peakInt[np.where(peakInt < (meanPeakInt +noise))]# 2* 10**6))]#2 * stdDevPeakInt))] #ToDo parameter
+                lowAbundendantPeaks = peakInt[np.where(peakInt < (meanPeakInt*1.5 +noise))]# 2* 10**6))]#2 * stdDevPeakInt))] #ToDo parameter
                 meanPeakInt = np.mean(lowAbundendantPeaks)
                 if (len(lowAbundendantPeaks) == 1) or (meanPeakInt - meanPeakInt0 == 0):
                     #print(meanPeakInt,stdDevPeakInt)
                     #print('exit 1')
                     #return meanPeakInt * 0.67
                     break
-                '''if meanPeakInt - meanPeakInt0 == 0:
+                """if (meanPeakInt - meanPeakInt0 == 0):
                     #print('exit 2')
-                    break'''
+                    break"""
                 #else:
                     #stdDevPeakInt = np.std(lowAbundendantPeaks)
             factor =0.67
@@ -342,7 +346,7 @@ class AbstractSpectrumHandler(ABC):
             logging.debug('* z'+str(z))
             print(neutral.getName(), z)
             theoreticalPeaks = copy.deepcopy(sortedPattern)
-            theoreticalPeaks['m/z'] = getMz(theoreticalPeaks['m/z'], z * self._sprayMode, radicals)
+            theoreticalPeaks['m/z'] = self.getMz(theoreticalPeaks['m/z'], z, radicals)
             theoreticalPeaks = self.getChargedIsotopePattern(sortedPattern, z, radicals)
             if (self._configs['lowerBound'] < theoreticalPeaks[0]['m/z'] < self._upperBound):
                 self._searchedChargeStates[neutral.getName()].append(z)
@@ -392,7 +396,8 @@ class AbstractSpectrumHandler(ABC):
                         print('deleting: '+neutral.getName()+", "+str(z))
                         self.addToDeletedIons(neutral, foundMainPeaks, noise, np.min(theoreticalPeaks['m/z']), z,'noise')
 
-
+    def getMz(self, monoisotopicMass, z, radicals):
+        return getMz(monoisotopicMass, z * self._sprayMode, radicals)
 
 
     def getProtonIsotopePatterns(self):
@@ -419,7 +424,7 @@ class AbstractSpectrumHandler(ABC):
                 structured numpy-array: [m/z, intensity, m/z_theo, calcInt, error (ppm), used (for modelling)]
         '''
         theoreticalPeaks = copy.deepcopy(neutralPattern)
-        theoreticalPeaks['m/z'] = getMz(theoreticalPeaks['m/z'], z * self._sprayMode, radicals)
+        theoreticalPeaks['m/z'] = self.getMz(theoreticalPeaks['m/z'], z, radicals)
         theoreticalPeaks['calcInt'][0] *= self._protonIsoPatterns[z-1][0] ** self._sprayMode
         if self._sprayMode == 1:
             regressionVals = neutralPattern['calcInt']

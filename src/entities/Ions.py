@@ -5,7 +5,6 @@ Created on 3 Jul 2020
 '''
 from abc import ABC
 import numpy as np
-#from numpy import array, dtype
 from src.services.FormulaFunctions import eMass, protMass
 
 
@@ -171,6 +170,7 @@ class Fragment(object):
         :param (str) modification: +modification, +ligands and -loss
         :param (MolecularFormula) formula: MolecularFormula
         :param (list [str]) sequence: list of building blocks
+        :param (int) radicals: no. of radicals
         '''
         self._type = type
         self._number = number
@@ -257,7 +257,10 @@ class Fragment(object):
 
     def getMonoisotopicMass(self):
         if self._isotopePattern is None:
-            return self.getFormula().calculateMonoIsotopic()
+            self._isotopePattern = self.getFormula().calculateMonoIsotopic()
+            return self._isotopePattern
+        elif isinstance(self._isotopePattern, float):
+            return self._isotopePattern
         return self._isotopePattern['m/z'][0]
 
 class FragmentIon(Fragment, Ion):
@@ -389,7 +392,7 @@ class IntactIon(IntactNeutral, Ion):
         self._comment = comment
 
 
-class SimpleIntactIon(IntactNeutral):
+class SimpleIntactIon(IntactNeutral, Ion):
     '''
     Simplified ion for assignment in intact ion list
     '''
@@ -417,10 +420,7 @@ class SimpleIntactIon(IntactNeutral):
         return self._mz
     def getTheoMz(self):
         return self._theoMz
-    def getCharge(self):
-        return self._charge
-    def getIntensity(self):
-        return self._intensity
+
     def getRelAbundance(self):
         return self._intensity/self._charge
 
@@ -449,21 +449,19 @@ class SimpleIon(SimpleIntactIon):
         super(SimpleIon, self).__init__(name, neutral.getModification(), mz, theoMz, z, intensity,
                                         0, neutral.getRadicals())
         self._snr = snr
-        self._qual = qual
+        self._quality = qual
         self._monoPeak = None
         self.getNumber = neutral.getNumber
 
     def getType(self):
         return self.getUnmodifiedName()[0]
 
-    def getSNR(self):
+    def getSignalToNoise(self):
         return self._snr
-
-    def getQual(self):
-        return self._qual
 
     def getMonoPeak(self):
         return self._monoPeak
 
     def setMonoPeak(self, monoPeak):
         self._monoPeak = monoPeak
+

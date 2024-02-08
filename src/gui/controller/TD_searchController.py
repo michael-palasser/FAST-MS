@@ -163,8 +163,9 @@ class TD_MainController(AbstractMainController):
             for ion in observedIons+delIons:
                 mostAb = np.sort(ion.getIsotopePattern(),order='I')[::-1][0]['m/z']
                 noise.append((mostAb, ion.getNoise()))
-            self._spectrumHandler = SpectrumHandler(self._propStorage, self._libraryBuilder.getPrecursor(),
-                                                    self._settings, self._configs, peaks, noise)
+            constructor = self.getSpectrumHandlerConstructor()
+            self._spectrumHandler = constructor(self._propStorage, self._libraryBuilder.getPrecursor(),self._settings,
+                                                self._configs, peaks, noise)
             self._spectrumHandler.setSearchedChargeStates(searchedZStates)
             self._intensityModeller = IntensityModeller(self._configs, noiseLevel)
             self._intensityModeller.setIonLists(observedIons, delIons, [])
@@ -233,8 +234,9 @@ class TD_MainController(AbstractMainController):
         #spectralFile = os.path.join(path, 'Spectral_data','top-down', self._settings['spectralData'])
         print("\n********** Importing peak data from:", self._settings['spectralData'], "**********")
         try:
-            self._spectrumHandler = SpectrumHandler(self._propStorage, self._libraryBuilder.getPrecursor(),
-                                                    self._settings, self._configs)
+            constructor = self.getSpectrumHandlerConstructor()
+            self._spectrumHandler = constructor(self._propStorage, self._libraryBuilder.getPrecursor(),self._settings,
+                                                self._configs)
         except Exception as e:
             traceback.print_exc()
             raise InvalidInputException('Problem in file ' + self._settings['spectralData'] + ':<br>', traceback.format_exc())
@@ -308,6 +310,9 @@ class TD_MainController(AbstractMainController):
         self._info.searchFinished(self._spectrumHandler.getUpperBound())
         print("done")
         return 0
+
+    def getSpectrumHandlerConstructor(self):
+        return SpectrumHandler
 
 
     def createMenuBar(self):

@@ -9,7 +9,7 @@ import numpy as np
 
 from src.entities.Ions import FragmentIon
 from src.resources import DEVELOP
-from src.services.assign_services.AbstractSpectrumHandler import AbstractSpectrumHandler, getMz, calculateError
+from src.services.assign_services.AbstractSpectrumHandler import AbstractSpectrumHandler
 
 logging.basicConfig(level=logging.INFO)
 logging.basicConfig(filename='logfile_SpectrumHandler.log',level=logging.INFO)
@@ -253,7 +253,7 @@ class SpectrumHandler(AbstractSpectrumHandler):
             for z in zRange:
                 logging.debug('* z'+str(z))
                 monoisotopic = np.sort(fragment.getIsotopePattern(), order='m/z')[0]
-                monoisotopic['m/z'] = getMz(monoisotopic['m/z'], z * self._sprayMode, radicals)
+                monoisotopic['m/z'] = self.getMz(monoisotopic['m/z'], z, radicals)
                 if (self._configs['lowerBound'] < monoisotopic['m/z'] < self._upperBound):
                     spectralPeak = self.findPeak(monoisotopic)
                     if spectralPeak[1] != 0:

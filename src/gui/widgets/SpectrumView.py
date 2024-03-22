@@ -83,6 +83,10 @@ class AbstractSpectrumView(QtWidgets.QWidget):
         #self._graphWidget.addItem(self._cursorLabel)
         #self._graphWidget.getAxis('left').setTickSpacing(0.1,0.05)
         setIcon(self)
+        title = "Spectrum View"
+        if focused:
+            title += ": " + self._focused[0] +str(self._focused[1])
+        self.setWindowTitle(title)
         self.show()
 
     def getGraphWidget(self,legend=True):

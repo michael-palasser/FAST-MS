@@ -353,7 +353,8 @@ class IntensityModeller(object):
         :param (int) maxOverlaps: threshold for pattern to be complex
         :return: (tuple[list[list[FragmentIon]]], list[list[FragmentIon]]]) simple patterns, complex patterns
         '''
-        self.usedPeaks = dict()
+        self.usedPeaks, overlappingPeaks = self.findOverlappingPeaks()
+        """self.usedPeaks = dict()
         overlappingPeaks = list()
         for ion in self._correctedIons.values():
             for peak in ion.getIsotopePattern():
@@ -361,7 +362,7 @@ class IntensityModeller(object):
                     overlappingPeaks.append(peak['m/z'])
                     self.usedPeaks.get(peak['m/z']).append(ion.getHash())
                 else:
-                    self.usedPeaks[peak['m/z']] = [ion.getHash()]
+                    self.usedPeaks[peak['m/z']] = [ion.getHash()]"""
         overlappingPeaks.sort()
         revisedIons = list()
         simplePatterns = []
@@ -386,7 +387,21 @@ class IntensityModeller(object):
                     simplePatterns.append(pattern)
         return simplePatterns,complexPatterns
 
-
+    def findOverlappingPeaks(self):
+        '''
+        Processes all assigned isotope peaks and returns those which overlap with each other
+        :return: (dict[float,list[tuple[str,int]]], list[float]) dict of
+        '''
+        usedPeaks = dict()
+        overlappingPeaks = list()
+        for ion in self._correctedIons.values():
+            for peak in ion.getIsotopePattern():
+                if peak['m/z'] in usedPeaks.keys():
+                    overlappingPeaks.append(peak['m/z'])
+                    usedPeaks.get(peak['m/z']).append(ion.getHash())
+                else:
+                    usedPeaks[peak['m/z']] = [ion.getHash()]
+        return usedPeaks, overlappingPeaks
 
     def commentIonsInPatterns(self, patterns, mono=False):
         '''
@@ -732,3 +747,5 @@ class IntensityModeller(object):
         self._correctedIons = {ion.getHash():ion for ion in observedIons}
         self._deletedIons = {ion.getHash():ion for ion in deletedIons}
         self._remodelledIons = remIons
+
+

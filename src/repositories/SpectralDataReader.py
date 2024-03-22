@@ -11,7 +11,7 @@ class SpectralDataReader(object):
                       'qual': 'qual', 'name':'name'}
 
 
-    def openFile(self, dataPath, dataDtype):
+    def openFile(self, dataPath, dataDtype, optional=()):
         '''
         Reads a text file with unassigned ion data
         :param (str) dataPath: path of the file
@@ -51,7 +51,9 @@ class SpectralDataReader(object):
         #counter = 0
         #print(rawData)
         for i, header in enumerate(rawData[0]):
-            if header in self._dict.keys():
+            if "m/z" in header:
+                header= "m/z"
+            if header in self._dict.keys() or header in optional:
                 """if skipZ and self._dict[header] == 'z':
                     correction = 1"""
                 indizes[self._dict[header]] = i#-correction
@@ -82,6 +84,7 @@ class SpectralDataReader(object):
         if dataPath[-4:] == '.csv':
             delimiter = ','
             csv = True
+
         with open(dataPath) as file:
             for i, line in enumerate(file):
                 line = line.rstrip()

@@ -152,7 +152,7 @@ class TD_MainController(AbstractMainController):
                     if choice == QtWidgets.QMessageBox.Yes:
                         dlg = OpenSpectralDataDlg(parent)
                         if dlg.exec_() and not dlg.canceled():
-                            self._settings['spectralData'] = dlg.getValue()
+                            self._settings[key] = dlg.getValue()
                     elif choice == QtWidgets.QMessageBox.No:
                         peaks = searchService.getAllAssignedPeaks(observedIons+delIons)
             self._propStorage = SearchSettings(self._settings['sequName'], self._settings['fragmentation'],

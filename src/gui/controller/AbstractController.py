@@ -12,6 +12,7 @@ from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 
 from src.BACHEM_extension.services.TD_Assigner import peakDtype, snapDtype
+from src.Exceptions import InvalidInputException
 from src.gui.GUI_functions import setIcon, translate
 from src.gui.widgets.Widgets import ShowFormulaWidget
 from src.repositories.SpectralDataReader import SpectralDataReader
@@ -44,11 +45,21 @@ class AbstractMainController(ABC):
         if dlg and not dlg.canceled():
             reader = SpectralDataReader()
             self._calibrator.calibratePeaks(self._spectrumHandler.getSpectrum())
-            peaks = self.calibrateAndWrite(reader.openFile(self._settings['spectralData'], peakDtype),
-                                           self._settings['spectralData'], reader)
+            try:
+                peaks = self.calibrateAndWrite(reader.openFile(self._settings['spectralData'], peakDtype),
+                                               self._settings['spectralData'], reader)
+            except InvalidInputException:
+                alternativeDtype = np.dtype([('m/z', float), ('I', np.int64)])
+                peaks = self.calibrateAndWrite(reader.openFile(self._settings['spectralData'], alternativeDtype),
+                                               self._settings['spectralData'], reader)
             self._spectrumHandler.setSpectrum(peaks)
-            self.calibrateAndWrite(reader.openFile(self._settings['calIons'], snapDtype), self._settings['calIons'],
-                                   reader)
+            try:
+                self.calibrateAndWrite(reader.openFile(self._settings['calIons'], snapDtype), self._settings['calIons'],
+                                       reader)
+            except InvalidInputException:
+                alternativeDtype = np.dtype([('m/z', float), ('z', np.uint8), ('I', np.int64)])
+                self.calibrateAndWrite(reader.openFile(self._settings['calIons'], alternativeDtype), self._settings['calIons'],
+                                       reader)
             if 'profile' in self._settings.keys() and self._settings['profile'] != "":
                 profile = self.calibrateAndWrite(self._spectrumHandler.getProfileSpectrum(), self._settings['profile'], reader)
                 self._spectrumHandler.setProfileSpectrum(profile)

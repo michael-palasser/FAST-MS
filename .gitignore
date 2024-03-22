@@ -8,8 +8,15 @@
 /Spectral_data/debug_incorrect.csv
 /Spectral_data/model_input.txt
 /Spectral_data/model_output.txt
-/dist/
-/Fragment_lists/
-/venv/
-/build/
-/Data/
+/dist/*
+/Fragment_lists/*
+/src/data/*
+/src/data/intact.db
+/src/data/search.db
+/src/data/shared.db
+/src/data/top_down.db
+/venv/*
+/build/*
+/Data/*
+/.idea/*
+/Saved Analyses/*

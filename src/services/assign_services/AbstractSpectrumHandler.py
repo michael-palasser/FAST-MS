@@ -275,18 +275,10 @@ class AbstractSpectrumHandler(ABC):
             #stdDevPeakInt = np.std(peakInt)
             while True:
                 meanPeakInt0 = meanPeakInt
-                lowAbundendantPeaks = peakInt[np.where(peakInt < (meanPeakInt*1.5 +noise))]# 2* 10**6))]#2 * stdDevPeakInt))] #ToDo parameter
+                lowAbundendantPeaks = peakInt[np.where(peakInt < (meanPeakInt*1.33 +noise))]# 2* 10**6))]#2 * stdDevPeakInt))] #ToDo parameter
                 meanPeakInt = np.mean(lowAbundendantPeaks)
                 if (len(lowAbundendantPeaks) == 1) or (meanPeakInt - meanPeakInt0 == 0):
-                    #print(meanPeakInt,stdDevPeakInt)
-                    #print('exit 1')
-                    #return meanPeakInt * 0.67
                     break
-                """if (meanPeakInt - meanPeakInt0 == 0):
-                    #print('exit 2')
-                    break"""
-                #else:
-                    #stdDevPeakInt = np.std(lowAbundendantPeaks)
             factor =0.67
             density = len(lowAbundendantPeaks)/windowSize
             noisy = 5

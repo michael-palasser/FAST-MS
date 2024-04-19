@@ -351,6 +351,7 @@ class TD_MainController(AbstractMainController):
         '''
         exportConfigHandler = ConfigurationHandlerFactory.getExportHandler()
         lastOptions= exportConfigHandler.getAll()
+        lastOptions['dir'] = os.path.dirname(self._settings['spectralData'])
         if len(self._propStorage.getModifPattern().getItems()) != 0:
             options = ('occupancies','charge states (int.)','charge states (int./z)')
         else:

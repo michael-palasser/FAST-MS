@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 
 from src.Exceptions import InvalidInputException
@@ -75,7 +77,20 @@ class SpectralDataReader(object):
         for line in rawData[1:]:
             if len(line)>1:
                 data.append(tuple([line[indizes[mandatoryHeader]] for mandatoryHeader in mandatoryHeaders]))
-        return np.array(data, dtype=dataDtype)
+        try:
+            return np.array(data, dtype=dataDtype)
+        except ValueError:
+            correctedData = []
+            for i, row in enumerate(data):
+                checked = True
+                for val in row:
+                    if val=="":
+                        checked=False
+                if checked:
+                    correctedData.append(row)
+                else:
+                    logging.info("Invalid value in " + dataPath + " (entry "+str(i+1)+"): "+",".join(row))
+            return np.array(correctedData, dtype=dataDtype)
 
 
     def getRawData(self,dataPath, delimiter='\t'):

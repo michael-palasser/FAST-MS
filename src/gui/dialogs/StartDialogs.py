@@ -62,8 +62,8 @@ class TDStartDialog(StartDialog):
 
     def getLabels(self):
         return ("Sequence Name:", "Charge:", "Fragmentation:", "Modifications:", "No. of Modifications:",
-                      "Spectral Data:", "Noise Threshold (x10^6):", "Fragment Library:", 'Calibration:',
-                      'Ions for Cal.:', 'Profile Spectrum:')
+                      "Spectral Data:", "Noise Threshold (x10^6):", 'Calibration:',
+                      'Ions for Cal.:', 'Profile Spectrum:') # "Fragment Library:",
 
     def getWidgets(self, args):
         sequences, fragPatterns, modPatterns = args
@@ -79,9 +79,7 @@ class TDStartDialog(StartDialog):
                             "Name of the file with spectral peaks (txt or csv format)\n"
                              "If no file is stated, the program will just calculate the fragment library"),
                 'noiseLimit': (QtWidgets.QDoubleSpinBox(self), "Minimal noise level"),
-                "fragLib": (QtWidgets.QLineEdit(self), "If the fragment list has / should have a special name.\n"
-                        "If no file is stated, the program will search for the file with the standard name or create"
-                                                           " a new one with that name"),
+
                 "calibration": (QtWidgets.QCheckBox(), "Spectral data will be calibrated if this option is ticked"),
                 "calIons": (OpenFileWidget(self, 1, self.getDefaultDirectory("spectralData"), "Open Files",
                                             "Plain Text Files (*txt);;Comma Separated Values (*csv);;All Files (*)"),
@@ -90,6 +88,9 @@ class TDStartDialog(StartDialog):
                                            "Open File","xy File (*xy);;Plain Text Files (*txt);;Comma Separated Values (*csv);;All Files (*)"),
                            "Optional; name of the file containing the profile spectrum (xy, txt or csv format)")}
 
+    """"fragLib": (QtWidgets.QLineEdit(self), "If the fragment list has / should have a special name.\n"
+                                           "If no file is stated, the program will search for the file with the standard name or create"
+                                           " a new one with that name"),"""
 
     def changeNrOfMods(self):
         if self._widgets['modifications'].currentText() == '-':
@@ -116,6 +117,7 @@ class TDStartDialog(StartDialog):
 
     def getNewSettings(self):
         newSettings = self.makeDictToWrite()
+        newSettings["fragLib"] = ""
         if (newSettings['spectralData'][-4:] != '.txt') and (newSettings['spectralData'][-4:] != '.csv') and (newSettings['spectralData']!=""):
             newSettings['spectralData'] += '.txt'
         try:

@@ -83,15 +83,12 @@ class BasicExcelWriter(object):
         '''
         write = self.writeVal
         if mode == 0:
-            title = 'Occupancies: '+ self._modification +' /%'
-            plotTitle = 'Occupancies: '+ self._modification
+            title = 'Localising: '+ self._modification +' /%'
             write = self.writePercentage
         elif mode == 1:
             title = 'Av. Charge per Fragment (intensities):'
-            plotTitle = 'Av. Charge (int.)'
         else:
             title = 'Av. Charge per Fragment (I/z):'
-            plotTitle = 'Av. Charge (ab.)'
         self._worksheet1.write(row, 0, title)
         row+=1
         self._worksheet1.write(row, 0, "building block")
@@ -125,7 +122,7 @@ class BasicExcelWriter(object):
             col+=1
         self._worksheet1.write(row, col, "#3'/C-term.")
         self._worksheet1.write_column(row + 1, col, reversed(list(range(1, len(sequence)))))
-        self.addChart(plotTitle, row, valueDict, sequence, backFrags, maxVal, mode == 0)
+        self.addChart(title, row, valueDict, sequence, backFrags, maxVal, mode == 0)
         return row+len(sequence)
 
 
@@ -144,8 +141,8 @@ class BasicExcelWriter(object):
         '''
         if occupancy:
             format = '0%'
-            yAxis1 = "O (5'/N-term.) /%"
-            yAxis2 = "O (3'/C-term.) /%"
+            yAxis1 = "% modified (5'/N-term.)"
+            yAxis2 = "% modified (3'/C-term.)"
         else:
             format = '0.0'
             yAxis1 = "av. charge (5'-/N-term.)"

@@ -359,7 +359,6 @@ class TD_MainController(AbstractMainController):
         dlg = ExportDialog(self._mainWindow, options, lastOptions) #'sequence coverage'), lastOptions)
         dlg.exec_()
         if dlg and not dlg.canceled():
-            self._info.export()
             newOptions = dlg.getOptions()
             exportConfigHandler.write(newOptions)
             filename = dlg.getFilename()
@@ -385,6 +384,7 @@ class TD_MainController(AbstractMainController):
                 excelWriter.toExcel(self._analyser, self._intensityModeller, self._propStorage,
                                     self._libraryBuilder.getFragmentLibrary(), self._settings, self._spectrumHandler,
                                     self._info.toString())
+                self._info.export(output)
                 print("********** saved in:", output, "**********\n")
                 try:
                     autoStart(output)
@@ -576,12 +576,12 @@ class TD_MainController(AbstractMainController):
             else:
                 return
         print('Saving analysis', self._savedName)
-        self._info.save()
         #start=time.time()
         searchService.saveSearch(self._savedName, self._spectrumHandler.getNoiseLevel(), self._settings, self._configs,
                                  self._intensityModeller.getObservedIons().values(),
                                  self._intensityModeller.getDeletedIons().values(),
                                  self._spectrumHandler.getSearchedChargeStates(), self._info.toString())
+        self._info.save(self._savedName)
         self._saved = True
         print('done')
         self._infoView.update()

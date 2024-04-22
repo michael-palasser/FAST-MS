@@ -114,11 +114,11 @@ class Info(object):
     def resetIon(self, ion):
         self._infoString += '\n* reset ' + self.ionToString(ion)
 
-    def export(self):
-        self._infoString += '\n* Exported to Excel: ' + datetime.now().strftime("%d/%m/%Y %H:%M")
+    def export(self, filename):
+        self._infoString += '\n* Exported to: ' + filename  + " at " + datetime.now().strftime("%d/%m/%Y %H:%M")
 
-    def save(self):
-        self._infoString += '\n* Saved Analysis: ' + datetime.now().strftime("%d/%m/%Y %H:%M")
+    def save(self, analysisname):
+        self._infoString += '\n* Saved Analysis to: '+ analysisname  + " at " + datetime.now().strftime("%d/%m/%Y %H:%M")
 
     def load(self):
         self._infoString += '\n\n* Load Analysis: ' + datetime.now().strftime("%d/%m/%Y %H:%M")

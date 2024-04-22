@@ -427,12 +427,12 @@ class MoleculeEditorController(AbstractEditorController):
         self._formLayout.setWidget(3, QtWidgets.QFormLayout.SpanningRole, self._table)   #ToDo
         self._mainWindow.show()
 
-    def addBB(self, translation:str, formula=None):
+    def addBB(self, translations:list[str], formulas:list[str]):
         newRow = self.getEmptyRow(self._table)
-        self.insertRow(self._table, [])
-        self._table.setItem(newRow, 1, QtWidgets.QTableWidgetItem(translation))
-        if formula is not None:
-            self._table.setItem(newRow, 2, QtWidgets.QTableWidgetItem(formula))
+        for i in range(len(translations)):
+            self.insertRow(self._table, [])
+            self._table.setItem(newRow+i, 1, QtWidgets.QTableWidgetItem(translations[i]))
+            self._table.setItem(newRow+i, 2, QtWidgets.QTableWidgetItem(formulas[i]))
 
     def save(self, *args):
         id = self._pattern.getId()

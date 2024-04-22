@@ -153,7 +153,6 @@ class IntactMainController(AbstractMainController):
         dlg = ExportDialog(self._mainWindow, (), exportConfigHandler.getAll())
         dlg.exec_()
         if dlg and not dlg.canceled():
-            self._info.export()
             newOptions = dlg.getOptions()
             exportConfigHandler.write(newOptions)
             filename = dlg.getFilename()
@@ -182,6 +181,7 @@ class IntactMainController(AbstractMainController):
             try:
                 excelWriter.toExcel(analyser, self._intensityModeller, self._libraryBuilder.getNeutralLibrary(),
                                     self._settings, self._spectrumHandler, self._info.toString())
+                self._info.export(output)
                 print("********** saved in:", output, "**********\n")
                 try:
                     autoStart(output)

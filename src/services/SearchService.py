@@ -93,3 +93,9 @@ class SearchService(object):
         for ion in ions:
             peaks.update({(peak['m/z'],peak['I']) for peak in ion.getIsotopePattern() if peak['I']!=0})
         return peaks
+
+    def getDatabasePath(self):
+        return self._rep.getDatabasePath()
+
+    def close(self):
+        self._rep.close()

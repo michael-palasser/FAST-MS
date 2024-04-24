@@ -27,8 +27,6 @@ if INTERN:
     from src.BACHEM_extension.gui.MainController_extension import BACHEM_MainController as TD_MainController
 
 
-
-
 class Window(SimpleMainWindow):
     '''
     Main window which pops up when SAUSAGE is started

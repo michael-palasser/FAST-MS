@@ -1,3 +1,5 @@
+import os
+
 from src.services.SearchService import SearchService
 from src.services.StoredAnalysesService import StoredAnalysesService
 
@@ -5,6 +7,8 @@ from src.services.StoredAnalysesService import StoredAnalysesService
 class DataBaseConverter(object):
     def __init__(self):
         oldService = SearchService()
+        oldPath = oldService.getDatabasePath()
+        print("**Converting",oldPath)
         newService = StoredAnalysesService()
         newNames = newService.getAllSearchNames()
         oldNames = oldService.getAllSearchNames()
@@ -27,4 +31,9 @@ class DataBaseConverter(object):
             configs = newService.getSettingsAndConfigs(info)
             newService.saveSearch(name, noiseLevel, settings, configs, ions, deletedIons, searchedZStates, info)
 
-DataBaseConverter()
+        oldService.close()
+        os.rename(oldPath, oldPath[:-3]+"_old.db")
+        print("done",oldPath)
+
+
+#DataBaseConverter()

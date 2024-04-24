@@ -235,6 +235,11 @@ class SearchRepository(AbstractRepository):
         #id = super(AbstractRepositoryWith2Items, self).delete(name)
         self.deleteDependentTables(super(SearchRepository, self).delete(searchName))
 
+    def getDatabasePath(self):
+        cur = self._conn.cursor()
+        cur.execute("PRAGMA database_list")
+        rows = cur.fetchall()
+        return rows[0][2]
 
 '''if __name__ == '__main__':
     string = ""

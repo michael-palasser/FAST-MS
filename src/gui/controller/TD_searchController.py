@@ -10,7 +10,7 @@ import numpy as np
 import time
 from PyQt5 import QtWidgets
 
-from src.resources import path, autoStart, DEVELOP
+from src.resources import path, autoStart, DEVELOP, getRelativePath
 from src.Exceptions import InvalidIsotopePatternException, InvalidInputException
 from src.entities.Info import Info
 from src.gui.AbstractMainWindows import SimpleMainWindow
@@ -20,6 +20,7 @@ from src.gui.widgets.OccupancyWidget import OccupancyWidget
 from src.gui.widgets.SequCovWidget import SequCovWidget
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.repositories.IsotopePatternRepository import IsotopePatternRepository
+from src.services.DataBaseConverter import DataBaseConverter
 from src.services.StoredAnalysesService import StoredAnalysesService
 from src.services.analyser_services.Analyser import Analyser
 from src.entities.SearchSettings import SearchSettings
@@ -128,6 +129,7 @@ class TD_MainController(AbstractMainController):
     def loadSearch(self,parent):
         searchService = StoredAnalysesService()
         #self._search =
+        self.checkOldDatabase()
         dialog = SelectSearchDlg(parent, searchService.getAllSearchNames(),self.deleteSearch, searchService)
         if dialog.exec_() and not dialog.canceled():
             #self._configs = ConfigurationHandlerFactory.getConfigHandler().getAll()
@@ -181,6 +183,14 @@ class TD_MainController(AbstractMainController):
                                         self._propStorage.getModificationName(), self._configs['useAb'])
             self._saved = True
             self.setUpUi()
+
+    def checkOldDatabase(self):
+        if os.path.isfile(getRelativePath("search.db")):
+            choice = QtWidgets.QMessageBox.question(None, "Convert Database","A database containing stored analyses in a deprecated format was found.<br>"
+                                                    +"Should the data be converted? Depending on the number of stored analyses, this step can take some time.",
+                                                    QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+            if choice == QtWidgets.QMessageBox.Yes:
+                DataBaseConverter()
 
     def constructLibraryBuilder(self):
         return FragmentLibraryBuilder(self._propStorage, self._settings['nrMod'], self._configs['maxIso'],

@@ -8,7 +8,7 @@ from PyQt5.QtCore import Qt
 from src.Exceptions import CanceledException
 from src.resources import DEVELOP
 from src.services.DataServices import *
-from src.gui.AbstractMainWindows import SimpleMainWindow
+from src.gui.MainWindows.AbstractMainWindows import SimpleMainWindow
 from src.gui.GUI_functions import createComboBox, shoot, translate
 from src.gui.dialogs.SimpleDialogs import OpenDialog
 

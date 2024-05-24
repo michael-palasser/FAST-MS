@@ -36,4 +36,11 @@ class DataBaseConverter(object):
         print("done",oldPath)
 
 
-#DataBaseConverter()
+"""def checkConfigs():
+    newService = StoredAnalysesService()
+    newService.checkConfigs()
+
+
+if __name__ == '__main__':
+    #DataBaseConverter()
+    checkConfigs()"""

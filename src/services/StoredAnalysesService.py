@@ -29,7 +29,11 @@ class StoredAnalysesService(object):
                 continue
             with open(os.path.join(self._dir, savedDir, savedDir+"_infos.txt")) as f:
                 firstLine = f.readline().strip('\n')
-                time = datetime.strptime(firstLine[10:], '%d/%m/%Y %H:%M')
+                #print("a",firstLine[10:26],"e")
+                #try:
+                time = datetime.strptime(firstLine[10:26], '%d/%m/%Y %H:%M')
+                #except ValueError:
+                #    time = datetime.strptime(firstLine[10:27], '%d/%m/%Y %H:%M')
             allAnalyses.append((savedDir,time))
         return [tup[0] for tup in sorted(allAnalyses, key=lambda tup:tup[1])]
 
@@ -156,3 +160,15 @@ class StoredAnalysesService(object):
         return peaks
 
 
+    def checkConfigs(self):
+        allNames = self.getAllSearchNames()
+        correct = ConfigHandler(self.getFileNames(allNames[-1])[2], []).getAll()
+        for name in allNames:
+            #print(name,self.getFileNames(name))
+            filePath = self.getFileNames(name)[2]
+            configurations = ConfigHandler(filePath, []).getAll()
+            for key in correct.keys():
+                if key not in configurations.keys():
+                    print(filePath, key,"added")
+                    configurations[key] = correct[key]
+                    ConfigHandler(filePath, []).write(configurations)

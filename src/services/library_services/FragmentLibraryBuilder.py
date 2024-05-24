@@ -256,24 +256,18 @@ class FragmentLibraryBuilder(object):
             criticalLength = 60
         #criticalLength=10000
         if len(self._sequence.getSequenceList())<criticalLength: #flag == 0:
-            #self._bar = tqdm(total=len(self.__fragmentLibrary))
             logging.debug('Normal calculation')
             for fragment in self._fragmentLibrary:
-                #fragment.setIsotopePattern(fragment.getFormula().calculateIsotopePattern(self._maxIso))
-                fragment.setIsotopePattern(fragment.getFormula().calculateIsotopePatternFFT(self._maxIso,self._accelerate))
-                #print(fragment.getName())
-                logging.info('\t'+fragment.getName())
-                #self._bar.update(1)
-                #self._fun()
+                self.setIsotopePattern(fragment)
         else:
             logging.debug('Parallel calculation')
             p = Pool()
-            updatedFragmentLibrary = p.map(self.calculateParallel, self._fragmentLibrary)
+            updatedFragmentLibrary = p.map(self.setIsotopePattern, self._fragmentLibrary)
             self._fragmentLibrary = sorted(updatedFragmentLibrary, key=lambda obj:(obj.getType() , obj.getNumber()))
         return self._fragmentLibrary
 
 
-    def calculateParallel(self, fragment):
+    def setIsotopePattern(self, fragment):
         '''
         Calculates the isotope pattern
         :type fragment: Fragment

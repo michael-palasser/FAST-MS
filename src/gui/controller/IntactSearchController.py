@@ -100,16 +100,12 @@ class IntactMainController(AbstractMainController):
         self._intensityModeller = IntensityModeller(self._configs, self._spectrumHandler.getNoiseLevel())
         start = time.time()
         print("\n********** Calculating relative abundances **********")
-        for ion in self._spectrumHandler.getFoundIons():
-            self._intensityModeller.processIon(ion)
-        for ion in self._spectrumHandler._ionsInNoise:
-            self._intensityModeller.processNoiseIons(ion)
-        self._spectrumHandler.emptyLists()
+        self.processIons()
         print("\ndone\nexecution time: ", round((time.time() - start) / 60, 3), "min\n")
 
         """Handle ions with same monoisotopic peak and charge"""
         print("\n********** Handling overlaps **********")
-        sameMonoisotopics = self._intensityModeller.findSameMonoisotopics()
+        sameMonoisotopics = self._intensityModeller.findIsomers()
         print('mono', sameMonoisotopics)
         if len(sameMonoisotopics) > 0:
             view = CheckMonoisotopicOverlapView(sameMonoisotopics, self._spectrumHandler)
@@ -118,7 +114,7 @@ class IntactMainController(AbstractMainController):
             if view and not view.canceled():
                 dumpList = view.getDumplist()
                 [self._info.deleteMonoisotopic(ion) for ion in dumpList]
-                self._intensityModeller.deleteSameMonoisotopics(dumpList)
+                self._intensityModeller.deleteIsomers(dumpList)
             else:
                 return 1
 

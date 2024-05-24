@@ -178,12 +178,12 @@ class AbstractSpectrumView(QtWidgets.QWidget):
         if new:
             if self._profileSpec is not None:
                 self._width = 0.002
-                profile = pg.PlotCurveItem(x=self._profileSpec['m/z'], y=self._profileSpec['I'],
+                self._profile = pg.PlotCurveItem(x=self._profileSpec['m/z'], y=self._profileSpec['I'],
                                            pen=pg.mkPen(color='k', width=0.5))
                 # send to back
                 #profile.setZValue(-1)
-                self._graphWidget.addItem(profile)
-                self._items.append(profile)
+                self._graphWidget.addItem(self._profile)
+                self._items.append(self._profile)
             self._peakBars = pg.BarGraphItem(x=self._peaks['m/z'], height=self._peaks['I'], width=self._width, brush='k')
             self._graphWidget.addItem(self._peakBars)
             colours = ['b','r','g', 'c', 'm', 'y',]
@@ -195,7 +195,7 @@ class AbstractSpectrumView(QtWidgets.QWidget):
             self._legend = pg.LegendItem(offset=(0., .5), labelTextSize='10pt')
             self._legend.setParentItem(self._graphWidget.graphicsItem())
             if self._profileSpec is not None:
-                self._legend.addItem(profile, "")#ion.getId())
+                self._legend.addItem(self._profile, "")#ion.getId())
                 self._legend.addItem(self._peakBars, "peaks")#ion.getId())
                 self._peakBars.hide()
             #maxRow =0
@@ -219,20 +219,20 @@ class AbstractSpectrumView(QtWidgets.QWidget):
                     marker_index+=1
                     size=10
                     brush = (50,50,200,50)
-                scatter = pg.ScatterPlotItem(x=ion.getIsotopePattern()['m/z'], y=ion.getIsotopePattern()['calcInt'],
+                self._scatter = pg.ScatterPlotItem(x=ion.getIsotopePattern()['m/z'], y=ion.getIsotopePattern()['calcInt'],
                                              symbol=symbol,
                                              pen =pg.mkPen(color=colour, width=2),
                                              brush=brush, size=size, pxMode=True) #Todo resize"""
-                self._items.append(scatter)
+                self._items.append(self._scatter)
                 #maxMz = np.sort(ion.getIsotopePattern(), order='calcInt')[::-1]['m/z'][0]
                 #noise.append((maxMz, ion.getNoise()))
-                self._graphWidget.addItem(scatter)
+                self._graphWidget.addItem(self._scatter)
                 if ion.getCharge() ==1:
                     charge=""
                 else:
                     charge = str(ion.getCharge())
                 text = ion.getName(True)+"<sup>"+charge+self._ionMode+"</sup>"
-                self._legend.addItem(scatter, text)#ion.getId())
+                self._legend.addItem(self._scatter, text)#ion.getId())
                 if coulour_index == maxIndizes[0]:
                     coulour_index = 0
                 if marker_index == maxIndizes[1]:
@@ -252,11 +252,11 @@ class AbstractSpectrumView(QtWidgets.QWidget):
                 if len(self._noise['m/z'])==1 or np.all(np.isclose(self._noise['m/z'], self._noise['m/z'][0], atol=10**-3)):
                     mz = self._noise['m/z'][0]
                     noise=self._noise['I'][0]
-                    noiseLine = self._graphWidget.plot([mz-1,mz,mz+1], [noise, noise,noise], pen='r')
+                    self._noiseLine = self._graphWidget.plot([mz-1,mz,mz+1], [noise, noise,noise], pen='r')
                 else:
-                    noiseLine = self._graphWidget.plot(self._noise['m/z'], self._noise['I'], pen='r')
-                self._legend.addItem(noiseLine, 'noise')
-                self._items.append(noiseLine)
+                    self._noiseLine = self._graphWidget.plot(self._noise['m/z'], self._noise['I'], pen='r')
+                self._legend.addItem(self._noiseLine, 'noise')
+                self._items.append(self._noiseLine)
         else:
             self._graphWidget.removeItem(self._peakBars)
             del self._peakBars

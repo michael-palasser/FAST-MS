@@ -154,7 +154,6 @@ class TDStartDialog(StartDialog):
             raise InvalidInputException('Invalid Input','Charge must not be 0')
         if configs['calibration']:
             configs['calIons'] = self.checkSpectralDataFile('top-down', configs['calIons'])
-
         return super(TDStartDialog, self).checkValues(configs, 'top-down')
 
     """def checkSpectralDataFile(self, mode, fileName):

@@ -13,7 +13,7 @@ from PyQt5 import QtWidgets
 from src.resources import path, autoStart, DEVELOP, getRelativePath
 from src.Exceptions import InvalidIsotopePatternException, InvalidInputException
 from src.entities.Info import Info
-from src.gui.AbstractMainWindows import SimpleMainWindow
+from src.gui.MainWindows.AbstractMainWindows import SimpleMainWindow
 from src.gui.controller.AbstractController import AbstractMainController
 from src.gui.tableviews.FragmentationTable import FragmentationTable
 from src.gui.widgets.OccupancyWidget import OccupancyWidget
@@ -47,7 +47,7 @@ class TD_MainController(AbstractMainController):
     '''
     Controller class for starting, saving, exporting and loading a top-down search/analysis
     '''
-    def __init__(self, parent, new, window):
+    def __init__(self, parent, new, window, special=None):
         '''
         Starts either the search or loads a search from the database. Afterwards, result windows are shown.
         :param parent:
@@ -77,7 +77,7 @@ class TD_MainController(AbstractMainController):
                 QtWidgets.QMessageBox.warning(None, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
         else:
             try:
-                self.loadSearch(parent)
+                self.loadSearch(parent,special)
             except IndexError as e:
                 QtWidgets.QMessageBox.warning(None, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
 
@@ -126,63 +126,71 @@ class TD_MainController(AbstractMainController):
     def startDialog(parent):
         return TDStartDialog(parent)
 
-    def loadSearch(self,parent):
+    def loadSearch(self,parent, special):
         searchService = StoredAnalysesService()
-        #self._search =
-        self.checkOldDatabase()
-        dialog = SelectSearchDlg(parent, searchService.getAllSearchNames(),self.deleteSearch, searchService)
-        if dialog.exec_() and not dialog.canceled():
-            #self._configs = ConfigurationHandlerFactory.getConfigHandler().getAll()
-            start=time.time()
-            self._settings, self._configs, noiseLevel, observedIons, delIons, searchedZStates, logs = \
-                searchService.getSearch(dialog.getName())
-            print('time:', time.time()-start)
-            self._info = Info(logs)
-            self._savedName = dialog.getName()
-            peaks = None
-            if 'profile' not in self._settings.keys() or self._settings['profile']=="":
-                keys = ('spectralData',)
-            else:
-                keys = ('spectralData', 'profile')
-            for key in keys:
-                if not os.path.isfile(self._settings[key]):
-                    choice = QtWidgets.QMessageBox.question(parent, 'Spectral Data not found!',
-                        'File with spectral data (' +self._settings[key]+ ') could not be found.\n'
-                        'Do you want to manually select the file? Otherwise, the analysis will be loaded without the '
-                        'spectral data.',
-                        QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-                    if choice == QtWidgets.QMessageBox.Yes:
-                        dlg = OpenSpectralDataDlg(parent)
-                        if dlg.exec_() and not dlg.canceled():
-                            self._settings[key] = dlg.getValue()
-                    elif choice == QtWidgets.QMessageBox.No:
-                        peaks = searchService.getAllAssignedPeaks(observedIons+delIons)
-            self._propStorage = SearchSettings(self._settings['sequName'], self._settings['fragmentation'],
-                                                self._settings['modifications'])
-            self._libraryBuilder = self.constructLibraryBuilder()
-            self._libraryBuilder.createFragmentLibrary()
-            noise = []
-            for ion in observedIons+delIons:
-                mostAb = np.sort(ion.getIsotopePattern(),order='I')[::-1][0]['m/z']
-                noise.append((mostAb, ion.getNoise()))
-            constructor = self.getSpectrumHandlerConstructor()
-            self._spectrumHandler = constructor(self._propStorage, self._libraryBuilder.getPrecursor(),self._settings,
-                                                self._configs, peaks, noise)
-            self._spectrumHandler.setSearchedChargeStates(searchedZStates)
-            self._intensityModeller = IntensityModeller(self._configs, noiseLevel)
-            self._intensityModeller.setIonLists(observedIons, delIons, [])
-            
-            types = self._propStorage.getFragmentsByDir(1)
-            types.update(self._propStorage.getFragmentsByDir(-1))
-            types.add(self._settings['sequName'])
-            for key in {ion.getType() for ion in self._intensityModeller.getObservedIons().values()}:
-                if key not in types:
-                    QtWidgets.QMessageBox.warning(None, "Fragment type not found", '"'+ key + '" was not found in fragmentation template list. Add the template to "' 
-                                                  + self._propStorage.getFragmentation().getName() + '" to ensure correct behaviour', QtWidgets.QMessageBox.Ok)
-            self._analyser = Analyser(None, self._propStorage.getSequenceList(), self._settings['charge'],
-                                        self._propStorage.getModificationName(), self._configs['useAb'])
-            self._saved = True
-            self.setUpUi()
+        if special is None:
+            self.checkOldDatabase()
+            dialog = SelectSearchDlg(parent, searchService.getAllSearchNames(),self.deleteSearch, searchService)
+            if dialog.exec_() and not dialog.canceled():
+                self.load(dialog.getName(), searchService)
+        else:
+            self.load(special, searchService)
+
+
+    def load(self, analysisName, searchService):
+        start=time.time()
+        self._settings, self._configs, noiseLevel, observedIons, delIons, searchedZStates, logs = \
+            searchService.getSearch(analysisName)
+        print('time:', time.time()-start)
+
+        self._info = Info(logs)
+        self._savedName = analysisName
+        peaks = None
+        if 'profile' not in self._settings.keys() or self._settings['profile']=="":
+            keys = ('spectralData',)
+        else:
+            keys = ('spectralData', 'profile')
+        for key in keys:
+            if not os.path.isfile(self._settings[key]):
+                choice = QtWidgets.QMessageBox.question(None, 'Spectral Data not found!',
+                    'File with spectral data (' +self._settings[key]+ ') could not be found.\n'
+                    'Do you want to manually select the file? Otherwise, the analysis will be loaded without the '
+                    'spectral data.',
+                    QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+                if choice == QtWidgets.QMessageBox.Yes:
+                    dlg = OpenSpectralDataDlg(None)
+                    if dlg.exec_() and not dlg.canceled():
+                        self._settings[key] = dlg.getValue()
+                elif choice == QtWidgets.QMessageBox.No:
+                    peaks = searchService.getAllAssignedPeaks(observedIons+delIons)
+        self._propStorage = SearchSettings(self._settings['sequName'], self._settings['fragmentation'],
+                                            self._settings['modifications'])
+        self._libraryBuilder = self.constructLibraryBuilder()
+        self._libraryBuilder.createFragmentLibrary()
+        noise = []
+        for ion in observedIons+delIons:
+            mostAb = np.sort(ion.getIsotopePattern(),order='I')[::-1][0]['m/z']
+            noise.append((mostAb, ion.getNoise()))
+        constructor = self.getSpectrumHandlerConstructor()
+        self._spectrumHandler = constructor(self._propStorage, self._libraryBuilder.getPrecursor(),self._settings,
+                                            self._configs, peaks, noise)
+        self._spectrumHandler.setSearchedChargeStates(searchedZStates)
+        self._intensityModeller = IntensityModeller(self._configs, noiseLevel)
+        self._intensityModeller.setIonLists(observedIons, delIons, [])
+        self._intensityModeller.setMonoisotopicList()
+
+        types = self._propStorage.getFragmentsByDir(1)
+        types.update(self._propStorage.getFragmentsByDir(-1))
+        types.add(self._settings['sequName'])
+        for key in {ion.getType() for ion in self._intensityModeller.getObservedIons().values()}:
+            if key not in types:
+                QtWidgets.QMessageBox.warning(None, "Fragment type not found", '"'+ key + '" was not found in fragmentation template list. Add the template to "'
+                                              + self._propStorage.getFragmentation().getName() + '" to ensure correct behaviour', QtWidgets.QMessageBox.Ok)
+        self._analyser = Analyser(None, self._propStorage.getSequenceList(), self._settings['charge'],
+                                    self._propStorage.getModificationName(), self._configs['useAb'])
+        self._saved = True
+        self.setUpUi()
+
 
     def checkOldDatabase(self):
         if os.path.isfile(getRelativePath("search.db")):
@@ -280,16 +288,12 @@ class TD_MainController(AbstractMainController):
         self._intensityModeller = IntensityModeller(self._configs, self._spectrumHandler.getNoiseLevel())
         start = time.time()
         print("\n********** Calculating relative abundances **********")
-        for ion in self._spectrumHandler.getFoundIons():
-            self._intensityModeller.processIon(ion)
-        for ion in self._spectrumHandler._ionsInNoise:
-            self._intensityModeller.processNoiseIons(ion)
-        self._spectrumHandler.emptyLists()
+        self.processIons()
         print("\ndone\nexecution time: ", round((time.time() - start) / 60, 3), "min\n")
 
         """Handle ions with same monoisotopic peak and charge"""
         print("\n********** Handling overlaps **********")
-        sameMonoisotopics = self._intensityModeller.findSameMonoisotopics()
+        sameMonoisotopics = self._intensityModeller.findIsomers()
         if len(sameMonoisotopics) > 0:
             view = CheckMonoisotopicOverlapView(sameMonoisotopics, self._spectrumHandler)
             print("User Input requested")
@@ -297,7 +301,7 @@ class TD_MainController(AbstractMainController):
             if view and not view.canceled():
                 dumpList = view.getDumplist()
                 [self._info.deleteMonoisotopic(ion) for ion in dumpList]
-                self._intensityModeller.deleteSameMonoisotopics(dumpList)
+                self._intensityModeller.deleteIsomers(dumpList)
             else:
                 return 1
 
@@ -320,6 +324,7 @@ class TD_MainController(AbstractMainController):
         self._info.searchFinished(self._spectrumHandler.getUpperBound())
         print("done")
         return 0
+
 
     def getSpectrumHandlerConstructor(self):
         return SpectrumHandler

@@ -100,6 +100,14 @@ class AbstractMainController(ABC):
                 index = -3
             return oldName[:index] + '_cal' + ".txt"  # +peakFileName[-4:]
 
+
+    def processIons(self):
+        for ion in self._spectrumHandler.getFoundIons():
+            self._intensityModeller.processIon(ion)
+        for ion in self._spectrumHandler.getIonsInNoise():
+            self._intensityModeller.processNoiseIons(ion)
+        self._spectrumHandler.emptyLists()
+
     def setUpUi(self):
         '''
         Opens a SimpleMainWindow with the ion lists and a InfoView with the protocol
@@ -342,8 +350,9 @@ class AbstractMainController(ABC):
         if 'profile' in self._settings.keys() and self._settings['profile'] != "":
             profileSpec = self._spectrumHandler.getProfileSpectrum((minMz_total, maxMz_total))
         if view is None:
-            return SpectrumView(parent, peaks, ajacentIons, minMz_focus, maxMz_focus, maxI, self._spectrumHandler.getSprayMode(),
+            specView = SpectrumView(parent, peaks, ajacentIons, minMz_focus, maxMz_focus, maxI, self._spectrumHandler.getSprayMode(),
                                 noise, selectedHash,profileSpec)
+            return specView
         else:
             return view.updateView(peaks, ajacentIons, minMz_focus, maxMz_focus, maxI, noise,selectedHash, profileSpec)
 
@@ -435,6 +444,8 @@ class AbstractMainController(ABC):
         '''
         self._info.repeatModelling()
         self._saved = False
+        self._intensityModeller.setMonoisotopicList()
+        self._intensityModeller.findIsomers()
         self._intensityModeller.remodelOverlaps(True)
         self.verticalLayout.removeWidget(self._tabWidget)
         self._tabWidget.hide()

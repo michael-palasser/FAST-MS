@@ -4,7 +4,7 @@ from pandas import DataFrame
 from src.resources import DEVELOP
 from src.services.IsotopePatternLogics import IsotopePatternLogics
 from src.services.DataServices import *
-from src.gui.AbstractMainWindows import SimpleMainWindow
+from src.gui.MainWindows.AbstractMainWindows import SimpleMainWindow
 from src.gui.GUI_functions import makeFormLayout, shoot, connectTable
 from src.gui.widgets.IonTableWidgets import IsoPatternIon
 from src.gui.widgets.PeakWidgets import IsoPatternPeakWidget

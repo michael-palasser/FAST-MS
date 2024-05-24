@@ -223,7 +223,9 @@ class StartDialog(AbstractDialog):
 
     def checkValues(self, configs, *args):
         configs['spectralData'] = self.checkSpectralDataFile(args[0], configs['spectralData'])
-        if configs['profile'] != "":
+        if 'profile' not in configs.keys():
+            configs['profile'] = ""
+        elif configs['profile'] != "":
             configs['profile'] = self.checkSpectralDataFile(args[0], configs['profile'])
         if configs['sequName'] not in SequenceService().getAllSequenceNames():
             raise InvalidInputException(configs['sequName'], "not found")

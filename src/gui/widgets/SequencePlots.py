@@ -7,7 +7,7 @@ from PyQt5 import QtGui
 import pyqtgraph as pg
 from matplotlib.ticker import MultipleLocator
 
-from src.resources import DEVELOP
+from src.resources import DEVELOP, INTERN
 
 
 class PlotFactory(object):
@@ -17,6 +17,14 @@ class PlotFactory(object):
     def __init__(self, parent):
         self._parent = parent
         self._colours = ['r', 'm', 'y', 'c', 'g', 'b']
+        if INTERN:
+            self._colours = list({'tab:red':'#d62728', 'tab:orange':'#ff7f0e',
+                             'tab:purple':'#9467bd', 'tab:brown':'#8c564b',
+                             'gold':'#dbb40c', 'm':'m', 'darkred':'#840000',
+                             'limegreen':'#aaff32','tab:gray':'#7f7f7f',
+                             'tab:olive':'#bcbd22', 'tab:cyan':'#17becf',
+                             'tab:green':'#2ca02c', 'royalblue':'#0504aa'}.values())
+            print(self._colours)
         if DEVELOP:
             self._fontsize = 10
         else:

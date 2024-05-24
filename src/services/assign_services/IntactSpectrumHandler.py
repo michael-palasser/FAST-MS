@@ -17,8 +17,14 @@ class IntactSpectrumHandler(AbstractSpectrumHandler):
         mode = 1
         if settings['sprayMode'] == 'negative':
             mode *= -1
-        super(IntactSpectrumHandler, self).__init__(settings, configs, mode, IntactIon, peaks)
+        super(IntactSpectrumHandler, self).__init__(settings, configs, mode, peaks)
 
+    @staticmethod
+    def getIonClass():
+        '''
+        Returns the constructor for an IntactIon
+        '''
+        return IntactIon
 
     def getChargeRange(self, mass):
         '''
@@ -53,7 +59,7 @@ class IntactSpectrumHandler(AbstractSpectrumHandler):
             # neutralPatternFFT = formula.calculateIsotopePatternFFT(1, )
             logging.info(neutral.getName())
             self._searchedChargeStates[neutral.getName()] = []
-            self.findIon(neutral, zRange)
+            self.findChargeStates(neutral, zRange)
 
 
     def getProtonIsotopePatterns(self):

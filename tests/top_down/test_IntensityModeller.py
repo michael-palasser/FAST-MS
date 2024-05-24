@@ -180,7 +180,7 @@ class TestIntensityModeller(TestCase):
         monoisotopicList = [np.array([(ion.getName(), ion.getCharge(), ion.getMonoisotopic())],
                 dtype=[('name','U32'),('charge', np.uint8),('mono',np.float64)]) for ion in observedIons]
         self.intensityModeller.setMonoisotopicList(monoisotopicList)
-        sameMonos = self.intensityModeller.findSameMonoisotopics()
+        sameMonos = self.intensityModeller.findIsomers()
         self.assertEqual(1, len(sameMonos))
         self.assertEqual(2, len(sameMonos[0]))
         names = [ion.getName() for ion in sameMonos[0]]
@@ -312,7 +312,7 @@ class TestIntensityModeller(TestCase):
             self._intensityModeller.processIons(ion)
         for ion in d['spectrumHandler']._ionsInNoise:
             self._intensityModeller.processNoiseIons(ion)
-        sameMonoisotopics = self._intensityModeller.findSameMonoisotopics()
+        sameMonoisotopics = self._intensityModeller.findIsomers()
         if len(sameMonoisotopics) == 0:
             complexPatterns = self._intensityModeller.remodelOverlaps()
             self._intensityModeller.remodelComplexPatterns(complexPatterns, [])

@@ -5,7 +5,7 @@ from platform import system
 from re import search as reSearch
 from subprocess import call
 
-DEVELOP = True
+DEVELOP = False
 INTERN = False
 
 if getattr(sys, 'frozen', False):
@@ -13,8 +13,12 @@ if getattr(sys, 'frozen', False):
     pos = path.find('FAST MS')
     if pos != -1:
         path = path[:pos+len('FAST MS')]
+    if DEVELOP:
+        print("1",path)
 else:
     path = pathlib.Path(__file__).resolve().parent.parent
+    if DEVELOP:
+        print("2",path)
 
 def getRelativePath(relativePath, data=True):
     parent = pathlib.Path(__file__).resolve().parent

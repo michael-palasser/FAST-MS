@@ -4,6 +4,7 @@ Created on 6 Aug 2020
 @author: michael
 '''
 import logging
+import re
 from math import exp
 from re import findall
 import numpy as np
@@ -73,8 +74,16 @@ class IntensityModeller(object):
         ion.setIsotopePattern(np.array(newPattern, dtype=peaksArrType))
         self._correctedIons[ion.getHash()] = ion
 
-    def setMonoisotopicList(self, monoisotopicList):
-        self._monoisotopicList = monoisotopicList
+    def setMonoisotopicList(self, monoisotopicList=None):
+        if monoisotopicList is None:
+            for ion in self._correctedIons.values():
+                self._monoisotopicList.append(np.array([(ion.getName(), ion.getCharge(), ion.getMonoisotopic())],
+                    dtype=[('name','U32'),('charge', np.uint8),('mono',float)]))
+        else:
+            self._monoisotopicList = monoisotopicList
+
+    def getMonoisotopicList(self):
+        return self._monoisotopicList
 
     '''@staticmethod
     def calculateError(value, theoValue):
@@ -264,7 +273,7 @@ class IntensityModeller(object):
         if correctedIon.getQuality() is None:
             correctedIon.addComment("qual._None")
             correctedIon.setQuality(1.)
-        elif (correctedIon.getQuality() > self._configs['shapeDel']) :
+        if (correctedIon.getQuality() > self._configs['shapeDel']) :
             correctedIon.addComment("qual.")
             self._deletedIons[correctedIon.getHash()] = correctedIon
         elif (correctedIon.getSignalToNoise() < self._configs['SNR']) :
@@ -289,35 +298,35 @@ class IntensityModeller(object):
         if correctedIon.getHash() not in self._deletedIons.keys():
             self._deletedIons[correctedIon.getHash()]=correctedIon
 
-    def findSameMonoisotopics(self):
+    def findIsomers(self):
         '''
         Returns ions which show the same charge and monoistopic m/z
         :return: (list of list[FragmentIon]) list of list of ions with same charge and monoistopic m/z
         '''
-        sameMonoisotopics = list()
-        self._monoisotopicList = np.array(self._monoisotopicList,
+        isomers = list()
+        monoisotopicArr = np.array(self._monoisotopicList,
                                           dtype=[('name','U32'),('charge', np.uint8),('mono',float)])
-        for elem in self._monoisotopicList:
-            same_mono_index = np.where((abs(calculateError(self._monoisotopicList['mono'], elem['mono']))
+        for elem in monoisotopicArr:
+            same_mono_index = np.where((abs(calculateError(monoisotopicArr['mono'], elem['mono']))
                  < getErrorLimit(elem['mono'], self._configs['k'], self._configs['d'])) & \
-                                       (self._monoisotopicList['name'] != elem['name']) &
-                                       (self._monoisotopicList['charge'] == elem['charge']))
-            if len(self._monoisotopicList[same_mono_index]) > 0:    #direkte elemente von corrected spectrum uebernehmen
+                                       (monoisotopicArr['name'] != elem['name']) &
+                                       (monoisotopicArr['charge'] == elem['charge']))
+            if len(monoisotopicArr[same_mono_index]) > 0:    #direkte elemente von corrected spectrum uebernehmen
                 sameMonoisotopic = [self._correctedIons[(elem['name'][0], elem['charge'][0])]]
-                for elem2 in self._monoisotopicList[same_mono_index]:
+                for elem2 in monoisotopicArr[same_mono_index]:
                     sameMonoisotopic.append(self._correctedIons[(elem2['name'], elem2['charge'])])
                 sameMonoisotopic.sort(key=lambda obj:(abs(obj.getError()),obj.getName()))
-                if sameMonoisotopic not in sameMonoisotopics:
+                if sameMonoisotopic not in isomers:
                     self.commentIonsInPatterns(([ion.getHash() for ion in sameMonoisotopic],), True)
-                    sameMonoisotopics.append(sameMonoisotopic)
+                    isomers.append(sameMonoisotopic)
         print("* These ions have the same mass:")
-        for ions in sameMonoisotopics:
+        for ions in isomers:
             print(", ".join([ion.getName() for ion in ions]))
-        return sameMonoisotopics
+        return isomers
 
-    def deleteSameMonoisotopics(self, ions):
+    def deleteIsomers(self, ions):
         for ion in ions:
-            self.deleteIon(ion.getHash(), "mono.")
+            self.deleteIon(ion.getHash(), "iso.")
 
     def deleteIon(self, ionHash, comment):
         if ionHash in self._correctedIons.keys():
@@ -334,6 +343,7 @@ class IntensityModeller(object):
         :param (bool) allAuto: if true the threshold is set to 100
         :return: (list of list[FragmentIon]) all overlap patterns with more overlapping ions than the threshold
         '''
+        print("...", self._monoisotopicList)
         maxOverlaps = 100
         if not allAuto:
             maxOverlaps = self._configs['manualDeletion']
@@ -409,15 +419,33 @@ class IntensityModeller(object):
         :param (list of list[FragmentIon]) patterns: overlapping patterns
         '''
         for pattern in patterns:
-            for ion1 in pattern:
+            for ionHash1 in pattern:
                 if mono:
-                    comment = "mono.:["
+                    newComment = "iso.:["
                 else:
-                    comment = "ov.:["
-                for ion2 in pattern:
-                    if ion2 != ion1:
-                        comment += (str(ion2[0]) +"/"+ str(ion2[1]) + ",")
-                self._correctedIons[ion1].addComment(comment[:-1] + "]")
+                    newComment = "ov.:["
+                alreadyIncluded = []
+                oldComment = self._correctedIons[ionHash1].getComment()
+                oldStart = oldComment
+                oldEnd = ""
+                if newComment in oldComment:
+                    search = re.search(newComment[:-1] + '\[(.*?)],', oldComment)
+                    if search is not None:
+                        oldComment += search.group(1)+","
+                        alreadyIncluded = search.group(1).split(",")
+                        oldStart = oldComment[:search.start()]
+                        oldEnd = oldComment[search.end():]
+                for ionHash2 in pattern:
+                    if ionHash2 != ionHash1:
+                        if mono:
+                            newEntry = ionHash2[0]
+                        else:
+                            newEntry = ionHash2[0] +"/"+ str(ionHash2[1])
+                        if newEntry not in alreadyIncluded:
+                            newComment += newEntry + ","
+                if newComment[-1] == ',':
+                    newComment = newComment[:-1]
+                self._correctedIons[ionHash1].setComment(oldStart+newComment + "]," + oldEnd)
 
 
     """for remodelling"""

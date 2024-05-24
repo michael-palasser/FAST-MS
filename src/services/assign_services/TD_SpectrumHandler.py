@@ -15,50 +15,6 @@ logging.basicConfig(level=logging.INFO)
 logging.basicConfig(filename='logfile_SpectrumHandler.log',level=logging.INFO)
 
 
-"""# ToDo: Test SearchParameters, Proteins!, Parameters
-def getFragmentChargeRange(molecule, sprayMode, normalisationFactor, fragment, precModCharge, fragModCharge, precCharge,
-                           tolerance):
-    '''
-    Calculates the most probable charge (z) for a given fragment and returns a range of this z +/- a tolerance
-    The charge is calculated using the number of phosphates (RNA/DNA) or using the length of the sequence (proteins)
-    :param (str) molecule: name of molecule
-    :param (int) sprayMode: +1 for positive, -1 for negative
-    :param (float) normalisationFactor:
-    :param fragment: corresponding fragment
-    :type fragment: Fragment
-    :param (float) precModCharge: charge effect of precursor modification
-    :param (float) fragModCharge: charge effect of fragment modification
-    :param (int) precCharge: (absolute) charge of precursor
-    :param (float) tolerance: the higher the larger the charge range
-    :return: (generator, int) tuple of:
-            range between lowest possible z and highest possible z,
-            most probable z
-    '''
-    if molecule in ['RNA', 'DNA'] and sprayMode == -1:
-        formula = fragment.getFormula().getFormulaDict()
-        if ('P' not in formula.keys()) or (fragment.getFormula().getFormulaDict()['P'] == 0):
-            return range(0, 0), 0
-        probableZ = fragment.getFormula().getFormulaDict()['P'] * normalisationFactor
-    elif molecule == 'Protein':
-        probableZ = len(fragment.getSequence()) * normalisationFactor
-    elif molecule in ['RNA', 'DNA'] and sprayMode == 1:
-        probableZ = len(fragment.getSequence()) * normalisationFactor
-    else:
-        probableZ = len(fragment.getSequence()) * normalisationFactor
-    probableZ -= fragment.getRadicals()
-    lowZ, highZ = 1, precCharge
-    zEffect = (fragModCharge - precModCharge) * sprayMode
-    # print(1,fragment.getName(),probableZ)
-    probableZ += zEffect
-    # print(2,fragment.getName(),probableZ)
-    if (probableZ - tolerance) > lowZ:
-        lowZ = round(probableZ - tolerance)
-    if (probableZ + tolerance) < highZ:
-        highZ = round(probableZ + tolerance)
-    # print(fragment.getName(),lowZ,round(probableZ,2),highZ)
-    return range(lowZ, highZ + 1), probableZ"""
-
-
 class SpectrumHandler(AbstractSpectrumHandler):
     '''
     Reads a top-down spectrum (peak list), calculates noise and finds peaks in the spectrum
@@ -77,12 +33,14 @@ class SpectrumHandler(AbstractSpectrumHandler):
         :param precursor: precursor Fragment
         :type precursor: Fragment
         :param (dict[str,Any]) settings: search settings
+        :param (dict[str,Any]) configs: configurations
         :param (set[tuple[float]] | None) peaks: set of peak tuples (m/z, I)
+        :param (list | ndArray) noise: noise
         '''
         sprayMode = 1
         if settings['charge'] < 0:
             sprayMode = -1
-        super(SpectrumHandler, self).__init__(settings, configs, sprayMode, FragmentIon, peaks, noise)
+        super(SpectrumHandler, self).__init__(settings, configs, sprayMode, peaks, noise)
         self._sequList = properties.getSequenceList()
         self._properties = properties
         '''
@@ -98,6 +56,13 @@ class SpectrumHandler(AbstractSpectrumHandler):
         self._normalisationFactor = self.getNormalisationFactor()
         self._precModCharge = self.getModCharge(self._precursor)
         self._calculatedZs = []
+
+    @staticmethod
+    def getIonClass(*args):
+        '''
+        Returns the constructor for a FragmentIon
+        '''
+        return FragmentIon
 
     def setPrecModCharge(self, precModCharge):
         self._precModCharge = precModCharge
@@ -223,7 +188,7 @@ class SpectrumHandler(AbstractSpectrumHandler):
             logging.info(fragment.getName())
             self._searchedChargeStates[fragment.getName()] = []
             zRange = self.getChargeRange(fragment)
-            self.findIon(fragment, zRange)
+            self.findChargeStates(fragment, zRange)
         if DEVELOP:
             print('** Calculated Charges')
             for row in self._calculatedZs:
@@ -266,38 +231,5 @@ class SpectrumHandler(AbstractSpectrumHandler):
             return np.array(found, dtype=np.dtype([('m/z', float), ('z', int), ('I', np.int64), ('name', 'U32'), ('m/z_theo', float), ('error', float), ('S/N', float)]))
 
 
-
-
-"""class MDSpectrumHandler(SpectrumHandler):
-    def __init__(self, properties, precursor, settings, configs):
-        super(MDSpectrumHandler, self).__init__(properties, precursor, settings, configs)
-        self._dType = np.dtype([('m/z', float), ('I', float), ('S/N', float)])
-
-    def getCorrectPeak(self, foundIsotopePeaks, theoPeak):
-        '''
-        Selects the correct peak in spectrum for a theoretical isotope peak
-        Correct is the peak with the lowest ppm error
-        :param (ndArray (dtype=float)) foundIsotopePeaks:
-        :param (ndArray (dtype=[float,float]) theoPeak: calculated peak (structured array [m/z,calcInt])
-        :return: (Tuple[float, int, float, float, bool]) m/z, z, int, error, used
-        '''
-        if len(foundIsotopePeaks) == 0:
-            return (theoPeak['m/z'], 0, theoPeak['calcInt'], 0, True,0)  # passt mir noch nicht
-        elif len(foundIsotopePeaks) == 1:
-            return (foundIsotopePeaks[0]['m/z'], foundIsotopePeaks[0]['I'], theoPeak['calcInt'],
-                    calculateError(foundIsotopePeaks[0]['m/z'], theoPeak['m/z']), True)
-        else:
-            lowestError = 100
-            logging.debug('More than one peak found: ' + str(len(foundIsotopePeaks)))
-            for peak in foundIsotopePeaks:  # ToDo
-                logging.debug(str(peak['m/z']), str(peak[1]))
-                error = calculateError(peak['m/z'], theoPeak[0])
-                if abs(error) < abs(lowestError):
-                    lowestError = error
-                    lowestErrorPeak = peak
-            logging.debug(
-                'Selected Peak: ' + '\t' + str(lowestErrorPeak['m/z']) + '\t' + str(lowestErrorPeak['I']) + '\t' +
-                str(theoPeak['calcInt']) + '\t' + str(lowestError))
-            return (lowestErrorPeak['m/z'], lowestErrorPeak['I'], theoPeak['calcInt'], lowestError, True)"""
 
 

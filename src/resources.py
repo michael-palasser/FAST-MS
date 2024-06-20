@@ -20,6 +20,11 @@ else:
     path = pathlib.Path(__file__).resolve().parent.parent
     #if DEVELOP:
     #print("2",path)
+for directory in ("Saved Analyses",'Fragment_lists'):
+    dirPath = os.path.join(path, directory)
+    if not os.path.isdir(dirPath):
+        os.mkdir(dirPath)
+
 
 def getRelativePath(relativePath, data=True):
     parent = pathlib.Path(__file__).resolve().parent

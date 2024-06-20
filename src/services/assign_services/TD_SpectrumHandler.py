@@ -230,6 +230,3 @@ class SpectrumHandler(AbstractSpectrumHandler):
         except OverflowError:
             return np.array(found, dtype=np.dtype([('m/z', float), ('z', int), ('I', np.int64), ('name', 'U32'), ('m/z_theo', float), ('error', float), ('S/N', float)]))
 
-
-
-

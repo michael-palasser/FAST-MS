@@ -118,6 +118,7 @@ class AbstractServiceForPatterns(AbstractService, ABC):
         elements = args[0]
         numericals = args[1]
         names = []
+        print(items)
         for item in items:
             name = item[0]
             if name in names:

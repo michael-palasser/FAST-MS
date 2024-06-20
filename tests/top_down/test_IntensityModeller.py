@@ -5,6 +5,7 @@ import numpy as np
 from src.MolecularFormula import MolecularFormula
 from src.entities.Ions import FragmentIon, Fragment
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
+from src.services.assign_services.AbstractSpectrumHandler import peaksArrType
 from tests.test_Calibrator import getCalibratedSpectrum
 from tests.top_down.test_SpectrumHandler import initTestLibraryBuilder
 from src.services.assign_services.TD_SpectrumHandler import SpectrumHandler
@@ -53,12 +54,23 @@ class TestIntensityModeller(TestCase):
                                                                           np.zeros(6))
             self.assertAlmostEqual(1,solution.x/10**(7+i), delta=10e-2)
             errors = np.random.rand(6)
-            errors[-1]=-6
+            errors[-2]=-6
+            print(errors)
             if len(outliers)==0:
                 solution, outliers = self.intensityModeller.modelDistribution(spectralIntensities, theoIntensities,
                                                                           np.arange(6),
                                                                           errors)
-                self.assertIn(5,outliers)
+                print("outliers", outliers)
+                self.assertIn(4,outliers)
+            errors = np.random.rand(6)
+            errors[-1]=-6
+            print(errors)
+            if len(outliers)==0:
+                solution, outliers = self.intensityModeller.modelDistribution(spectralIntensities, theoIntensities,
+                                                                          np.arange(6),
+                                                                          errors)
+                print("outliers", outliers)
+                self.assertNotIn(5,outliers)#Not included if int lower than expected
         for i in range(2,4):
             theoIntensities = np.random.rand(i)
             spectralIntensities = theoIntensities * 10 ** (7)
@@ -104,8 +116,6 @@ class TestIntensityModeller(TestCase):
         self.fail()'''
 
     def test_calculate_intensity(self):
-        peaksArrType = np.dtype([('m/z', np.float64), ('relAb', np.float64),
-                                       ('calcInt', np.float64), ('error', np.float32), ('used', np.bool_)])
         for fragment in self.builder.getFragmentLibrary():
             #isotopePattern = fragment.getIsotopePattern() *10**7
             isotopePattern = deepcopy(fragment.getIsotopePattern())
@@ -130,7 +140,7 @@ class TestIntensityModeller(TestCase):
             newIsotopePattern = deepcopy(finIsoPattern)
             outlierIndex = int(np.random.randint(1,len(isotopePattern)-1))
             print(newIsotopePattern)
-            newIsotopePattern['relAb'][outlierIndex] *= 10
+            newIsotopePattern['I'][outlierIndex] *= 10
             print(newIsotopePattern,outlierIndex)
             outlierIon.setIsotopePattern(newIsotopePattern)
 
@@ -205,8 +215,7 @@ class TestIntensityModeller(TestCase):
         ions = {}
         i = 1
         allPeaks = {}
-        dtype = np.dtype([('m/z', np.float64), ('relAb', np.float64),('calcInt', np.float64), ('error', np.float32),
-                          ('used', np.bool_)])
+
         for formulaStr, type in zip(['C200H300NOP', 'C200H302NOP', 'C200H304NOP'],
                                     ['a', 'b', 'c', 'd']):
             formula = MolecularFormula(formulaStr)
@@ -218,7 +227,7 @@ class TestIntensityModeller(TestCase):
                     allPeaks[mz] += intensity
                 else:
                     allPeaks[mz] = intensity
-            theoIsotopePattern = np.array(theoIsotopePattern, dtype=dtype)
+            theoIsotopePattern = np.array(theoIsotopePattern, dtype=peaksArrType)
             ion = FragmentIon(Fragment(type, 12, '', '', [], 0), formula.calculateMonoIsotopic(), 2, theoIsotopePattern,
                               1)
             ions[ion.getHash()] = self.intensityModeller.calculateIntensity(ion)
@@ -228,9 +237,9 @@ class TestIntensityModeller(TestCase):
             isotopePattern = []
             for peak in theoIon.getIsotopePattern():
                 intensity = allPeaks[peak['m/z']]
-                print('hey', peak['relAb'],intensity)
+                print('hey', peak['I'],intensity)
                 isotopePattern.append((peak['m/z'], intensity, peak['calcInt'], 0., True))
-            isotopePattern = np.array(isotopePattern, dtype=dtype)
+            isotopePattern = np.array(isotopePattern, dtype=peaksArrType)
             ion = deepcopy(theoIon)
             ion.setIsotopePattern(isotopePattern)
             observedIons[key] = self.intensityModeller.calculateIntensity(ion)
@@ -240,7 +249,7 @@ class TestIntensityModeller(TestCase):
         for peak in formula.calculateIsotopePattern(0.996):
             mz, intensity = round(peak['m/z'] / 2, 2), peak['calcInt'] * 10 ** 7
             isotopePattern.append((mz, intensity, peak['calcInt'], 0., True))
-        isotopePattern = np.array(isotopePattern, dtype=dtype)
+        isotopePattern = np.array(isotopePattern, dtype=peaksArrType)
         ion = FragmentIon(Fragment('a', 13, '', '', [], 0), formula.calculateMonoIsotopic(), 2, isotopePattern,1)
         observedIons[ion.getHash()]=ion
         return ions,observedIons
@@ -309,9 +318,9 @@ class TestIntensityModeller(TestCase):
         d['spectrumHandler'].findIons(d['libraryBuilder'].getNeutralLibrary())
         self._intensityModeller = IntensityModeller(ConfigurationHandlerFactory.getConfigHandler().getAll(), d['spectrumHandler'].getNoiseLevel())
         for ion in d['spectrumHandler'].getFoundIons():
-            self._intensityModeller.processIons(ion)
+            self._intensityModeller.processIon(ion)
         for ion in d['spectrumHandler']._ionsInNoise:
-            self._intensityModeller.processNoiseIons(ion)
+            self._intensityModeller.processNoiseIon(ion)
         sameMonoisotopics = self._intensityModeller.findIsomers()
         if len(sameMonoisotopics) == 0:
             complexPatterns = self._intensityModeller.remodelOverlaps()

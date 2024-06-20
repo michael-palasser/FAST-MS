@@ -24,14 +24,13 @@ class PlotFactory(object):
                              'limegreen':'#aaff32','tab:gray':'#7f7f7f',
                              'tab:olive':'#bcbd22', 'tab:cyan':'#17becf',
                              'tab:green':'#2ca02c', 'royalblue':'#0504aa'}.values())
-            print(self._colours)
         if DEVELOP:
             self._fontsize = 10
         else:
             self._fontsize = 12
 
     def showOccupancyPlot(self, sequence, forwardVals, backwardVals, maxY, modification):
-        self.initiatePlot(sequence, forwardVals, backwardVals, maxY, lambda: self.formatForOccupancies(modification))
+        self.initiatePlot(sequence, forwardVals, backwardVals, maxY, lambda: self.formatForOccupancies(modification, maxY))
         #self.initiateAbsPlot(sequence, absVals, maxY, 'Abs. Occupancies '+modification)
         return self._plot1
 
@@ -59,7 +58,7 @@ class PlotFactory(object):
         self._sequence = sequence
         self._maxY = maxY
         self._plot1 = pg.plot()
-        self._plot1.addLegend(labelTextSize=self.getFontSizeString())
+        self._plot1.addLegend(labelTextSize=self.getFontSizeString(), labelTextColor="k")
         self._plot1.setBackground('w')
         self._plot1.showAxis('right')
         self._plot2 = pg.ViewBox()
@@ -75,7 +74,13 @@ class PlotFactory(object):
             font.setPointSize(10)
             axis = self._plot1.getAxis(axisName)
             axis.setStyle(tickFont=font)
-            axis.setTextPen("k")
+            axis.setPen(pg.mkPen(color="k", width=0.5))
+            axis.setTextPen('k')
+            if axisName=="bottom":
+                major=2
+                if len(sequence)>30:
+                    major = 5
+                axis.setTickSpacing(major=major, minor=1)
         yRange = [-self._maxY*0.05,self._maxY*1.05]
         self._plot1.setXRange(0, len(self._sequence),padding=0)
         self._plot1.plotItem.vb.setLimits(xMin=0, xMax=len(self._sequence) + 0.01, yMin=yRange[0], yMax=yRange[1])
@@ -134,7 +139,7 @@ class PlotFactory(object):
         self._plot1.setLabel('left', yLabel + ','.join(self._forwardVals.keys()), **styles)
         self._plot1.setLabel('right', yLabel + ','.join(self._backwardVals.keys()), **styles)
 
-    def formatForOccupancies(self, modification):
+    def formatForOccupancies(self, modification, maxY):
         '''
         Formats the plot if it's an occupancy plot
         '''
@@ -144,6 +149,14 @@ class PlotFactory(object):
         styles = {"black": "#f00", "font-size": self.getFontSizeString()}
         self._plot1.setLabel('left', yLabel + ','.join(self._forwardVals.keys()) + ')', **styles)
         self._plot1.setLabel('right', yLabel + ','.join(self._backwardVals.keys()) + ')', **styles)
+        for axisName in ("left", "right"):
+            font=QtGui.QFont()
+            font.setPointSize(10)
+            axis = self._plot1.getAxis(axisName)
+            major = 0.2
+            if maxY > 1:
+                major = 0.5
+            axis.setTickSpacing(major=major, minor=major / 2)
 
 
     def plot(self):

@@ -1,7 +1,11 @@
 import copy
 
-from src.FormulaFunctions import stringToFormula
-from src.fastFunctions import *
+from src.resources import COMPILATION
+from src.services.FormulaFunctions import stringToFormula
+if COMPILATION:
+    from src.slowFunctions import *
+else:
+    from src.fastFunctions import *
 #import src.simpleFunctions as sf
 from src.services.DataServices import PeriodicTableService
 from scipy.fft import fft, ifft
@@ -13,7 +17,7 @@ Created on 3 Jul 2020
 '''
 
 periodicTableService = PeriodicTableService()
-isoTableDtype= np.dtype([('index', float), ('nr', float), ('nrIso', float),('relAb',float), ('mass',float), ('M+',float)])
+isoTableDtype= np.dtype([('index', float), ('nr', float), ('nrIso', float),('I',float), ('mass',float), ('M+',float)])
 isoPatternDtype = np.dtype([('m/z',float),('calcInt', float)])
 #MIN_SUM = 0.996
 
@@ -60,6 +64,8 @@ class MolecularFormula(object):
         :return: (MolecularFormula) new formula
         '''
         newFormula = copy.deepcopy(self._formulaDict)
+        if isinstance(args[0], MolecularFormula):
+            args = [arg.getFormulaDict() for arg in args]
         for addedFormula in args:
             for element, number in addedFormula.items():
                 if element in newFormula.keys():
@@ -85,9 +91,16 @@ class MolecularFormula(object):
         checks if one value of formulaDict is negative
         :return: (bool)
         '''
+        if len(self._formulaDict)==0:
+            return True
+        allZero = True
         for val in self._formulaDict.values():
             if val < 0:
                 return True
+            elif val>0:
+                allZero=False
+        if allZero:
+            return True
         return False
 
 
@@ -158,12 +171,12 @@ class MolecularFormula(object):
         while(sumInt < minSum and isoPeak != maxIso):
             setIsotopeTable(isotopeTable)
             ultrafineStruct = np.array(calculate(isoPeak, isotopeTable))
-            #print(isoPeak,len(ultrafineStruct))
-            prop = np.sum(ultrafineStruct[:,1])
-            M_iso = np.sum(ultrafineStruct[:,0]*ultrafineStruct[:,1])/prop
-            isotope_pattern.append((M_iso,prop))
+            if len(ultrafineStruct)>0:
+                prop = np.sum(ultrafineStruct[:,1])
+                M_iso = np.sum(ultrafineStruct[:,0]*ultrafineStruct[:,1])/prop
+                isotope_pattern.append((M_iso,prop))
+                sumInt += prop
             isoPeak += 1
-            sumInt += prop
             #if prop > mostAbundant:
                 #mostAbundant = prop
             """if args and args[0]:
@@ -217,6 +230,7 @@ class MolecularFormula(object):
         #for index, elem in enumerate(sorted(list(self._periodicTable.keys()))):
         for index, elem in enumerate(sorted(elements)):
             mono = self._periodicTable[elem][0][0]
+            #lightest = sorted(self._periodicTable[elem][0][0]
             for isotope in self._periodicTable[elem]:
                 #if self._formulaDict[elem] != 0:
                 isotopeTable.append((index, self._formulaDict[elem], 0, isotope[2], isotope[1], isotope[0] - mono))
@@ -224,7 +238,7 @@ class MolecularFormula(object):
                                 , dtype=isoTableDtype)
         """isotopeTable = np.array(isotopeTable
                                 , dtype=[('index', np.float64), ('nr', np.float64), ('nrIso', np.float64),
-                                         ('relAb', np.float64), ('mass', np.float64), ('M+', np.float64)])"""
+                                         ('I', np.float64), ('mass', np.float64), ('M+', np.float64)])"""
         if len(getByIndex(isotopeTable, isotopeTable['index'][0])) != 2:
             isotopeTable = self.reorderTable(isotopeTable)
         return isotopeTable

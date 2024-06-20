@@ -1,7 +1,7 @@
 import numpy as np
 
 from src.Exceptions import InvalidInputException
-from src.services.MolecularFormula import MolecularFormula
+from src.MolecularFormula import MolecularFormula
 from src.services.FormulaFunctions import stringToFormula, eMass, protMass
 from src.services.DataServices import MoleculeService, FragmentationService, ModificationService, PeriodicTableService
 from src.entities.GeneralEntities import Sequence

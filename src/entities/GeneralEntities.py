@@ -28,8 +28,6 @@ class Macromolecule(PatternWithItems):
         self.__loss = moleculeLoss
 
 
-            
-
     def setItems(self, items):
         self._items = items
 

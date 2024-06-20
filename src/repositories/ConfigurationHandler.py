@@ -108,6 +108,11 @@ class ConfigurationHandlerFactory(object):
         return ConfigHandler(getRelativePath("settings_top_down.json"), top_down_search)
 
     @staticmethod
+    def getPersonalTD_SettingHandler():
+        return ConfigHandler("C:/temp/settings_top_down.json",
+                             ConfigurationHandlerFactory.getTD_SettingHandler().getAll())
+
+    @staticmethod
     def getConfigHandler():
         return ConfigHandler(getRelativePath("configurations.json"), configurations)
 
@@ -130,7 +135,9 @@ class ConfigurationHandlerFactory(object):
 
     @staticmethod
     def getMDHandler():
-        return ConfigHandler(getRelativePath("settings_MD.json"), md)
+        #return ConfigHandler(getRelativePath("settings_MD.json"), md)
+        return ConfigHandler("C:/temp/settings_MD.json",
+                             ConfigHandler(getRelativePath("settings_MD.json"), md).getAll())
 
     @staticmethod
     def getMDScoresHandler():

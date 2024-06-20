@@ -55,8 +55,11 @@ class AbstractSpectrumView(QtWidgets.QWidget):
             font=QFont()
             font.setPointSize(10)
             axis = self._graphWidget.getAxis(axisName)
-            axis.setTextPen('k')
             axis.setStyle(tickFont=font)
+            axis.setTextPen('k')
+            axis.setPen(pg.mkPen(color="k", width=0.5))
+            if axisName=="left":
+                axis.setTickSpacing(minor=None)
         self._graphWidget.setBackground('w')
 
         self._vb = self._graphWidget.plotItem.vb
@@ -192,7 +195,7 @@ class AbstractSpectrumView(QtWidgets.QWidget):
             maxIndizes = (len(colours), len(markers))
             coulour_index=0
             marker_index=0
-            self._legend = pg.LegendItem(offset=(0., .5), labelTextSize='10pt')
+            self._legend = pg.LegendItem(offset=(0., .5), labelTextSize='10pt', labelTextColor="k")
             self._legend.setParentItem(self._graphWidget.graphicsItem())
             if self._profileSpec is not None:
                 self._legend.addItem(self._profile, "")#ion.getId())

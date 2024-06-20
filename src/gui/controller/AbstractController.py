@@ -105,7 +105,7 @@ class AbstractMainController(ABC):
         for ion in self._spectrumHandler.getFoundIons():
             self._intensityModeller.processIon(ion)
         for ion in self._spectrumHandler.getIonsInNoise():
-            self._intensityModeller.processNoiseIons(ion)
+            self._intensityModeller.processNoiseIon(ion)
         self._spectrumHandler.emptyLists()
 
     def setUpUi(self):

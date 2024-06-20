@@ -193,6 +193,7 @@ class TD_MainController(AbstractMainController):
 
 
     def checkOldDatabase(self):
+        #print("os.path.isfile(getRelativePath(",os.path.isfile(getRelativePath("search.db")),getRelativePath("search.db"))
         if os.path.isfile(getRelativePath("search.db")):
             choice = QtWidgets.QMessageBox.question(None, "Convert Database","A database containing stored analyses in a deprecated format was found.<br>"
                                                     +"Should the data be converted? Depending on the number of stored analyses, this step can take some time.",

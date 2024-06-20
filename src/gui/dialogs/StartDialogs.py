@@ -19,10 +19,13 @@ class TDStartDialog(StartDialog):
     '''
     Dialog which pops up when top-down analysis is started. Values are stored in settings_top_down.json
     '''
-    def __init__(self, parent):
+    def __init__(self, parent, personal=False):
         super().__init__(parent, "Settings")
         #self._formLayout = self.makeFormLayout(self)
-        self._configHandler = ConfigurationHandlerFactory.getTD_SettingHandler()
+        if not personal:
+            self._configHandler = ConfigurationHandlerFactory.getTD_SettingHandler()
+        else:
+            self._configHandler = ConfigurationHandlerFactory.getPersonalTD_SettingHandler()
         self.setupUi()
         shoot(self)
 

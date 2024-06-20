@@ -1,4 +1,5 @@
 import logging
+import traceback
 
 import numpy as np
 
@@ -20,30 +21,6 @@ class SpectralDataReader(object):
         :param (dtype) dataDtype: dtype of the returned array
         :return: (ndarray) array
         '''
-        """rawData = []
-        delimiter = ','
-        csv=False
-        if dataPath[-4:] == '.csv':
-            csv=True
-        with open(dataPath) as file:
-            for i,line in enumerate(file):
-                line = line.rstrip()
-                if csv and (i == 0):
-                    if (', ' in line):
-                        delimiter = ', '
-                    elif ('; ' in line):
-                        delimiter = '; '
-                    elif (';' in line):
-                        delimiter = ';'
-                try:
-                    #print(i,delimiter)
-                    if not csv:
-                        lineList = line.split('\t')
-                    else:
-                        lineList = line.split(delimiter)
-                    rawData.append(lineList)
-                except:
-                    raise InvalidInputException("Problem in data file: <br>line " + str(i), line)"""
         rawData = self.getRawData(dataPath)
         indizes = {}
         """skipZ = False
@@ -51,7 +28,17 @@ class SpectralDataReader(object):
             skipZ = True"""
         #correction = 0
         #counter = 0
-        #print(rawData)
+        #print("dataPath", dataPath)
+        #print("rawData", rawData)
+        #print("rawData[0]", rawData[0])
+        """print(len(rawData[0])==2,rawData[0], (rawData[0][0].isnumeric()) , (rawData[0][1].isnumeric()))
+        if (len(rawData[0])==2) and (rawData[0][1].isnumeric()):
+            print("hey")
+            indizes['m/z'] = 0
+            indizes['I'] = 1
+            start=0
+        else:
+        start=1"""
         for i, header in enumerate(rawData[0]):
             if "m/z" in header:
                 header= "m/z"
@@ -59,10 +46,8 @@ class SpectralDataReader(object):
                 """if skipZ and self._dict[header] == 'z':
                     correction = 1"""
                 indizes[self._dict[header]] = i#-correction
-
-
-            '''if header != 'Factor':
-                counter+=1'''
+        '''if header != 'Factor':
+            counter+=1'''
         mandatoryHeaders = dataDtype.names
         for header in mandatoryHeaders:
             if header not in indizes.keys():
@@ -79,7 +64,8 @@ class SpectralDataReader(object):
                 data.append(tuple([line[indizes[mandatoryHeader]] for mandatoryHeader in mandatoryHeaders]))
         try:
             return np.array(data, dtype=dataDtype)
-        except ValueError:
+        except (ValueError,IndexError):
+            traceback.print_exc()
             correctedData = []
             for i, row in enumerate(data):
                 checked = True

@@ -6,7 +6,7 @@ import numpy as np
 
 from src.entities.Ions import Fragment
 from src.services.FormulaFunctions import protMass, eMass
-from src.services.MolecularFormula import MolecularFormula
+from src.MolecularFormula import MolecularFormula
 from src.repositories.SpectralDataReader import SpectralDataReader
 
 
@@ -160,25 +160,25 @@ class AbstractSpectrumHandler(abc.ABC):
             # self._settings['noiseLimit'] = 1.1*np.min(self._spectrum['I'])
         self.resizeSpectrum()
 
-    def addSpectrumFromCsv(self, filePath):
+        """def addSpectrumFromCsv(self, filePath):
         '''
         :param (str) filePath: path of csv-file
         :return: (ndarray(dtype=float, ndim=2)) [(m/z, int)]
         '''
-        with open(filePath, mode='r', encoding='utf_8_sig') as f:
-            """try:
-                #print(np.loadtxt(lines[1:], delimiter=',', skiprows=1, usecols=[0, 1]))
-                #return np.loadtxt(lines, delimiter=',', skiprows=skip, usecols=[0, 2])
-                #return np.loadtxt(file, delimiter=',', skiprows=1, usecols=[0, 1])
-                return np.loadtxt(f, delimiter=',', usecols=[0, 1], dtype=self._dType) #ToDo
-            except IndexError:
-                #return np.loadtxt(lines, delimiter=';', skiprows=skip, usecols=[0, 2])
-                return np.loadtxt(f, delimiter=';', usecols=[0, 1], dtype=self._dType)
-            except ValueError:"""
-            return self.addSpectrumFromTxt(filePath, True)
-            '''except ValueError:
-                print([line for line in file])
-                raise InvalidInputException('Incorrect Format of spectral data', '\nThe format must be "m/z,int" or "m/z;int"')'''
+        with open(filePath, mode='r', encoding='utf_8_sig') as f:"""
+        '''try:
+            #print(np.loadtxt(lines[1:], delimiter=',', skiprows=1, usecols=[0, 1]))
+            #return np.loadtxt(lines, delimiter=',', skiprows=skip, usecols=[0, 2])
+            #return np.loadtxt(file, delimiter=',', skiprows=1, usecols=[0, 1])
+            return np.loadtxt(f, delimiter=',', usecols=[0, 1], dtype=self._dType) #ToDo
+        except IndexError:
+            #return np.loadtxt(lines, delimiter=';', skiprows=skip, usecols=[0, 2])
+            return np.loadtxt(f, delimiter=';', usecols=[0, 1], dtype=self._dType)
+        except ValueError:'''
+        #return self.addSpectrumFromTxt(filePath, True)
+        '''except ValueError:
+            print([line for line in file])
+            raise InvalidInputException('Incorrect Format of spectral data', '\nThe format must be "m/z,int" or "m/z;int"')'''
 
     def addSpectrumFromTxt(self, filePath, csv=False):
         '''
@@ -404,7 +404,7 @@ class AbstractSpectrumHandler(abc.ABC):
                               theoreticalPeaks[notInNoise]]
                 # find other isotope Peaks
                 foundPeaksArr = np.sort(np.array(foundPeaks, dtype=peaksArrType), order=['m/z'])
-                foundIon = self.getIonClass(neutral)(neutral, np.min(theoreticalPeaks['m/z']), z, foundPeaksArr, noise)
+                foundIon = self.getIonClass()(neutral, np.min(theoreticalPeaks['m/z']), z, foundPeaksArr, noise)
                 if not np.all(foundPeaksArr['I'] == 0):
                     self._foundIons.append(foundIon)
                     [print("\t", np.around(peak['m/z'], 4), "\t", peak['I']) for peak in foundPeaksArr if
@@ -414,18 +414,21 @@ class AbstractSpectrumHandler(abc.ABC):
                             peak['I'])) for peak in foundPeaksArr if peak['I'] > 0]
                 else:
                     self.addToDeletedIons(foundIon, 'noise')
-            elif theoreticalPeaks[notInNoise].size > 0:
+            else:
                 foundMainPeaksArr = np.sort(np.array(foundMainPeaks, dtype=peaksArrType), order=['m/z'])
                 foundIon = self.getIonClass()(neutral, np.min(theoreticalPeaks['m/z']), z, foundMainPeaksArr, noise)
-                self._foundIons.append(foundIon)
-                [print("\t", np.around(peak['m/z'], 4), "\t", peak['I']) for peak in foundMainPeaksArr if
-                 peak['I'] > 0]
-                [logging.info(neutral.getName() + "\t" + str(z) + "\t" + str(np.around(peak['m/z'], 4)) + "\t" +
-                              str(peak['I'])) for peak in foundMainPeaksArr if peak['I'] > 0]
-            else:
-                print('deleting: ' + neutral.getName() + ", " + str(z))
-                foundIon = self.getIonClass(neutral)(neutral, np.min(theoreticalPeaks['m/z']), z, foundMainPeaks, noise)
-                self.addToDeletedIons(foundIon, 'noise')
+                if theoreticalPeaks[notInNoise].size > 0:
+                    """foundMainPeaksArr = np.sort(np.array(foundMainPeaks, dtype=peaksArrType), order=['m/z'])
+                    foundIon = self.getIonClass()(neutral, np.min(theoreticalPeaks['m/z']), z, foundMainPeaksArr, noise)"""
+                    self._foundIons.append(foundIon)
+                    [print("\t", np.around(peak['m/z'], 4), "\t", peak['I']) for peak in foundMainPeaksArr if
+                     peak['I'] > 0]
+                    [logging.info(neutral.getName() + "\t" + str(z) + "\t" + str(np.around(peak['m/z'], 4)) + "\t" +
+                                  str(peak['I'])) for peak in foundMainPeaksArr if peak['I'] > 0]
+                else:
+                    print('deleting: ' + neutral.getName() + ", " + str(z))
+                    #foundIon = self.getIonClass(neutral)(neutral, np.min(theoreticalPeaks['m/z']), z, foundMainPeaks, noise)
+                    self.addToDeletedIons(foundIon, 'noise')
             return foundIon
 
     def getMz(self, monoisotopicMass, z, radicals):

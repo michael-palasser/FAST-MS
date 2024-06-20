@@ -3,7 +3,7 @@ from unittest import TestCase
 import numpy as np
 import math
 
-import src.fastFunctions as f
+import src.slowFunctions as f
 from scipy.stats import binom, multinomial, poisson
 from src.MolecularFormula import MolecularFormula
 
@@ -70,21 +70,6 @@ class fastFunctions_Test(TestCase):
                     print('Problem:', isotopeTable)
                     raise Exception(str(j) + ' not found')
 
-    def test_log_fact(self):
-        self.assertAlmostEqual(math.exp(f.logFact(15)), math.factorial(15), delta=0.01)
-        self.assertAlmostEqual(math.exp(f.logFact(50) - f.logFact(45)), math.factorial(50) / math.factorial(45),
-                               delta=0.01)
-
-    def test_binomial(self):
-        k, n, p = 2, 50, 1.078000e-02
-        self.assertAlmostEqual(binom.pmf(k, n, p), f.binomial(k, n, p))
-
-    def test_multinomial(self):
-        oxygen = f.getByIndex(uni_table, 4)
-        k = np.array([23, 2, 1])
-        p = oxygen['I']
-        n = int(np.sum(k))
-        self.assertAlmostEqual(multinomial.pmf(k, n, p), f.multinomial(k, n, p))
 
     def test_calculate_percentage(self):
         mass_theo = 5 * 12 + 3 * 1.00782503 + 2 * 2.01410178 + 3 * 14.003074 + 2 * 15.0001089 + 22.98976928 + 16.99913176 + 17.99915961

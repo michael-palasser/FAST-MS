@@ -89,7 +89,7 @@ def calculateSpecies(isotopeTable):
             if len(isotopes) == 1:
                 mass += isotope['nr'] * isotope['mass']
             elif len(isotopes) == 2:
-                abundance *= binomial(isotopes[1]['nrIso'], isotope['nr'], isotopes[1]['relAb'])
+                abundance *= binomial(isotopes[1]['nrIso'], isotope['nr'], isotopes[1]['I'])
                 mass += (isotopes[0]['mass']*(isotope['nr']-isotopes[1]['nrIso'])
                           +isotopes[1]['mass']*isotopes[1]['nrIso'])
                 x=isotopes               #array changed otherwise for unkown reasons
@@ -97,8 +97,8 @@ def calculateSpecies(isotopeTable):
                 abundance *= multinomial(k=np.array([isotope['nr'] - np.sum(isotopes['nrIso']),
                                           isotopes[1]['nrIso'], isotopes[2]['nrIso']]),
                                          n=isotope['nr'],
-                                         p=np.array([isotopes[0]['relAb'], isotopes[1]['relAb'],
-                                            isotopes[2]['relAb']]))
+                                         p=np.array([isotopes[0]['I'], isotopes[1]['I'],
+                                            isotopes[2]['I']]))
                 mass += (isotopes[0]['mass'] * (isotope['nr'] - np.sum(isotopes['nrIso']))
                           + isotopes[1]['mass'] * (isotopes[1]['nrIso'])
                           + isotopes[2]['mass'] * (isotopes[2]['nrIso']))
@@ -108,15 +108,15 @@ def calculateSpecies(isotopeTable):
                 '''k_arr = np.empty(len(isotopes), dtype=np.int16)
                 p_arr = np.empty(len(isotopes), dtype=np.float32)
                 k_arr[0] = isotope['nr'] - np.sum(isotopes['nrIso'])
-                p_arr[0] = isotopes[0]['relAb']'''
+                p_arr[0] = isotopes[0]['I']'''
                 kList = [isotope['nr'] - np.sum(isotopes['nrIso'])]
-                pList = [isotopes[0]['relAb']]
+                pList = [isotopes[0]['I']]
                 for i in range(1, len(isotopes)):
                     mass += isotopes[i]['mass'] * (isotopes[i]['nrIso'])
                     kList.append(isotopes[i]['nrIso'])
-                    pList.append(isotopes[i]['relAb'])
+                    pList.append(isotopes[i]['I'])
                     '''k_arr[i] = isotopes[i]['nrIso']
-                    p_arr[i] = isotopes[i]['relAb']'''
+                    p_arr[i] = isotopes[i]['I']'''
                 abundance *= multinomial(k=np.array(kList), n=isotope['nr'], p=np.array(pList))
                 #abundance *= multinomial(k=k_arr, n=isotope['nr'], p=p_arr)
                 x = isotopes  # array changed otherwise for unkown reasons

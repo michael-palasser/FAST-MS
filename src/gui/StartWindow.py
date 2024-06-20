@@ -8,6 +8,7 @@ import sys
 from PyQt5.QtCore import QSize
 from PyQt5.QtWidgets import QApplication, QPushButton
 
+from src.gui.GUI_functions import setIcon
 from src.gui.controller.IntactSearchController import IntactMainController
 from src.gui.controller.IsotopePatternView import IsotopePatternView
 from src.gui.controller.EditorController import *
@@ -196,6 +197,7 @@ def run():
     app = QApplication(sys.argv)
     app.setStyle(QtWidgets.QStyleFactory.create("Fusion"))
     app.setApplicationName("FAST MS")
+    setIcon(app)
     gui = Window()
     sys.exit(app.exec_())
 

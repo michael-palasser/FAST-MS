@@ -140,8 +140,11 @@ class IntensityModeller(object):
             #print(gValue, solution.fun, spectralIntensities,calcIntensities )
         outlier_index = np.where(gValueInt > self._configs['outlierLimit'])
         #print('int',outlier_index,gValueInt,calcIntensities)
+        #print("1", len(outlier_index[0]) == 0,  nonZeroLength>1, gValueErr)
         if len(outlier_index[0]) == 0 and nonZeroLength>1:
+            #print(gValueErr>self.calculateCriticalVal(nonZeroLength,0.01),self.calculateCriticalVal(nonZeroLength,0.01), (errors != 0), (gValueInt > 0))
             outlier_index = np.where((gValueErr>self.calculateCriticalVal(nonZeroLength,0.01)) & (errors != 0) & (gValueInt > 0))
+            #print(outlier_index)
             #if len(outlier_index[0])>0:
             #    print(outlier_index,errors, gValueErr, 'error out')
         return solution, mzArray[outlier_index].tolist()
@@ -204,7 +207,7 @@ class IntensityModeller(object):
                     correctedIon.setIsotopePatternPart('calcInt',correctedIon.getIsotopePattern()['calcInt']*solution.x)
             correctedIon.setIsotopePatternPart("used",noOutliers)
             self.setQualityAndScore(correctedIon, solution, len(set(outlierList)))
-            print(outlierList, noOutliers)
+            #print(outlierList, noOutliers)
             '''correctedIon.setQuality(self.calcQuality(solution.fun, correctedIon.getIntensity()))
             ion.setScore(calcScore(ion.getIntensity(), ion.getQuality(), self._noiseLevel))'''
             isoPattern = ion.getIsotopePattern()
@@ -230,12 +233,12 @@ class IntensityModeller(object):
         if numFound != numOutliers:
             correctionFactor = numFound / (numFound - numOutliers)
             quality = self.calcQuality(solution.fun, intensity) * correctionFactor
-            print("corrected",ion.getHash(), correctionFactor, numFound, numOutliers)
+            #print("corrected",ion.getHash(), correctionFactor, numFound, numOutliers)
         else:
             quality = 1.
-            print("too high")
+            #print("too high")
         if quality is None:
-            print("Achtung", ion.getName())
+            print("Warning", ion.getName())
         ion.setQuality(quality)
         ion.setScore(calcScore(intensity, quality, self._noiseLevel))
 
@@ -288,7 +291,7 @@ class IntensityModeller(object):
                 (correctedIon.getName(), correctedIon.getCharge(), ion.getMonoisotopic()))'''
             print('\tqual',correctedIon.getQuality())
 
-    def processNoiseIons(self, ion):
+    def processNoiseIon(self, ion):
         '''
         Processes (calculates intensities, etc.) ions which are below the noise threshold
         :param (FragmentIon) ion: corresponding (raw) ion
@@ -343,7 +346,7 @@ class IntensityModeller(object):
         :param (bool) allAuto: if true the threshold is set to 100
         :return: (list of list[FragmentIon]) all overlap patterns with more overlapping ions than the threshold
         '''
-        print("...", self._monoisotopicList)
+        #print("...", self._monoisotopicList)
         maxOverlaps = 100
         if not allAuto:
             maxOverlaps = self._configs['manualDeletion']
@@ -637,7 +640,7 @@ class IntensityModeller(object):
         :param (FragmentIon) ion: corresponding ion
         :return: (str) hash of overlapping ion
         '''
-        overlappingIons = findall('\[(.*?)\]', ion.getComment())
+        overlappingIons = findall('ov.:\[(.*?)\]', ion.getComment())
         if len(overlappingIons)>0:
             ionStrings = overlappingIons[-1].split(',')
             counter=0

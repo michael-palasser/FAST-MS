@@ -1,5 +1,4 @@
 import os
-import platform
 import shutil
 from copy import deepcopy
 from datetime import datetime
@@ -7,7 +6,7 @@ from datetime import datetime
 from src.repositories.ConfigurationHandler import ConfigHandler
 from src.repositories.sql.AnalysisRepository import AnalysisRepository
 from src.resources import path, DEVELOP
-from src.services.MolecularFormula import MolecularFormula
+from src.MolecularFormula import MolecularFormula
 from src.services.FormulaFunctions import stringToFormula2
 from src.services.IntensityModeller import calcScore
 

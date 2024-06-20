@@ -5,7 +5,7 @@ Created on 21 Jul 2020
 '''
 from multiprocessing import Pool
 
-from src.services.MolecularFormula import MolecularFormula
+from src.MolecularFormula import MolecularFormula
 from src.services.DataServices import IntactIonService, MoleculeService
 from src.entities.IonTemplates import IntactModification
 from src.entities.Ions import IntactNeutral

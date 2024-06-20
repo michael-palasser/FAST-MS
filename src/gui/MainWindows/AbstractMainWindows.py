@@ -1,9 +1,7 @@
 import os
-
 from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtGui import QIcon
 
-from src.gui.GUI_functions import translate
+from src.gui.GUI_functions import translate, setIcon
 from src.resources import autoStart, path
 
 
@@ -20,7 +18,8 @@ class SimpleMainWindow(QtWidgets.QMainWindow):
         else:
             self._centralwidget = centralWidget(self)
         self.setCentralWidget(self._centralwidget)
-        self.setWindowIcon(QIcon(os.path.join(path, 'icon.ico')))
+        setIcon(self)
+        #self.setWindowIcon(QIcon(os.path.join(path, 'icon.ico')))
 
     def updateComboBox(self, comboBox, newOptions,empty=False):
         """optionLength = len(newOptions)

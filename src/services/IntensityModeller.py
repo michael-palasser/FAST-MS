@@ -4,6 +4,7 @@ Created on 6 Aug 2020
 @author: michael
 '''
 import logging
+import re
 from math import exp
 from re import findall
 import numpy as np
@@ -73,8 +74,16 @@ class IntensityModeller(object):
         ion.setIsotopePattern(np.array(newPattern, dtype=peaksArrType))
         self._correctedIons[ion.getHash()] = ion
 
-    def setMonoisotopicList(self, monoisotopicList):
-        self._monoisotopicList = monoisotopicList
+    def setMonoisotopicList(self, monoisotopicList=None):
+        if monoisotopicList is None:
+            for ion in self._correctedIons.values():
+                self._monoisotopicList.append(np.array([(ion.getName(), ion.getCharge(), ion.getMonoisotopic())],
+                    dtype=[('name','U32'),('charge', np.uint8),('mono',float)]))
+        else:
+            self._monoisotopicList = monoisotopicList
+
+    def getMonoisotopicList(self):
+        return self._monoisotopicList
 
     '''@staticmethod
     def calculateError(value, theoValue):
@@ -131,10 +140,13 @@ class IntensityModeller(object):
             #print(gValue, solution.fun, spectralIntensities,calcIntensities )
         outlier_index = np.where(gValueInt > self._configs['outlierLimit'])
         #print('int',outlier_index,gValueInt,calcIntensities)
+        #print("1", len(outlier_index[0]) == 0,  nonZeroLength>1, gValueErr)
         if len(outlier_index[0]) == 0 and nonZeroLength>1:
-            outlier_index = np.where((gValueErr>self.calculateCriticalVal(nonZeroLength,0.01)) & (errors != 0))
-            if len(outlier_index[0])>0:
-                print(outlier_index,errors, gValueErr, 'error out')
+            #print(gValueErr>self.calculateCriticalVal(nonZeroLength,0.01),self.calculateCriticalVal(nonZeroLength,0.01), (errors != 0), (gValueInt > 0))
+            outlier_index = np.where((gValueErr>self.calculateCriticalVal(nonZeroLength,0.01)) & (errors != 0) & (gValueInt > 0))
+            #print(outlier_index)
+            #if len(outlier_index[0])>0:
+            #    print(outlier_index,errors, gValueErr, 'error out')
         return solution, mzArray[outlier_index].tolist()
 
     @staticmethod
@@ -151,6 +163,8 @@ class IntensityModeller(object):
 
 
     def calcQuality(self, sumSquare, intensity):
+        if sumSquare**(0.5) / intensity is None:
+            print("Attention:", sumSquare**(0.5) / intensity, sumSquare, intensity)
         return sumSquare**(0.5) / intensity
 
 
@@ -172,8 +186,9 @@ class IntensityModeller(object):
                 outlierList += outliers
                 print("outlier: ",outliers)
                 noOutliers = np.isin(ion.getIsotopePattern()['m/z'],outlierList, invert=True)
-                if np.all(ion.getIsotopePattern()['relAb'][noOutliers] == 0):
+                if np.all(ion.getIsotopePattern()['I'][noOutliers] == 0):
                     print("deleted:", ion.getName(), ion.getCharge(), ion.getIntensity(), round(ion.getQuality(), 2))
+                    ion.setIsotopePatternPart("used",noOutliers)
                     if ion.getComment() != "noise,":
                         ion.addComment("qual.")
                     if ion.getHash() not in self._deletedIons.keys():
@@ -183,35 +198,47 @@ class IntensityModeller(object):
                         return ion
                 else:
                     isoPattern = correctedIon.getIsotopePattern()
-                    solution, outliers = self.modelDistribution(isoPattern['relAb'][noOutliers],
+                    solution, outliers = self.modelDistribution(isoPattern['I'][noOutliers],
                                                                 isoPattern['calcInt'][noOutliers],
                                                                 isoPattern['m/z'][noOutliers],
                                                                 isoPattern['error'][noOutliers])
                     correctedIon.setIntensity(np.sum(isoPattern['calcInt'] * solution.x))
                     #isoPattern['calcInt'] = correctedIon.getIsotopePattern()['calcInt'] * solution.x
                     correctedIon.setIsotopePatternPart('calcInt',correctedIon.getIsotopePattern()['calcInt']*solution.x)
-            self.setQualityAndScore(correctedIon, solution)
+            correctedIon.setIsotopePatternPart("used",noOutliers)
+            self.setQualityAndScore(correctedIon, solution, len(set(outlierList)))
+            #print(outlierList, noOutliers)
             '''correctedIon.setQuality(self.calcQuality(solution.fun, correctedIon.getIntensity()))
             ion.setScore(calcScore(ion.getIntensity(), ion.getQuality(), self._noiseLevel))'''
             isoPattern = ion.getIsotopePattern()
             correctedIon.setError(np.average(isoPattern['error'][noOutliers]
-                                            [np.where(ion.getIsotopePattern()['relAb'][noOutliers] != 0)]))
+                                            [np.where(ion.getIsotopePattern()['I'][noOutliers] != 0)]))
             absError = np.average(np.abs(isoPattern['error'][noOutliers]
-                                            [np.where(ion.getIsotopePattern()['relAb'][noOutliers] != 0)]))
+                                            [np.where(ion.getIsotopePattern()['I'][noOutliers] != 0)]))
             if absError> getErrorLimit(isoPattern['m/z'][0], self._configs['k'], self._configs['d']):
                 print('deleting: ' + correctedIon.getId(), ' Errors:', correctedIon.getIsotopePattern()['error'][noOutliers])
                 correctedIon.addComment("error")
                 if correctedIon.getHash() not in self._deletedIons.keys():
                     self._deletedIons[correctedIon.getHash()] = correctedIon
-            for peak in correctedIon.getIsotopePattern():
+            """for peak in correctedIon.getIsotopePattern():
                 if peak['m/z'] in outlierList:
-                    peak['used'] = False
+                    peak['used'] = False"""
+        print(correctedIon.getIsotopePattern())
         return correctedIon
 
 
-    def setQualityAndScore(self, ion, solution):
+    def setQualityAndScore(self, ion, solution, numOutliers):
         intensity = ion.getIntensity()
-        quality = self.calcQuality(solution.fun, intensity)
+        numFound = len(np.where(ion.getIsotopePattern()['I']>0)[0])
+        if numFound != numOutliers:
+            correctionFactor = numFound / (numFound - numOutliers)
+            quality = self.calcQuality(solution.fun, intensity) * correctionFactor
+            #print("corrected",ion.getHash(), correctionFactor, numFound, numOutliers)
+        else:
+            quality = 1.
+            #print("too high")
+        if quality is None:
+            print("Warning", ion.getName())
         ion.setQuality(quality)
         ion.setScore(calcScore(intensity, quality, self._noiseLevel))
 
@@ -221,12 +248,12 @@ class IntensityModeller(object):
         :type ion: FragmentIon
         :return: (FragmentIon) ion with calculated intensity, quality, ppm error, etc.
         '''
-        print(ion.getName(),ion.getIsotopePattern())
+        #print(ion.getName(),ion.getIsotopePattern())
         noOutliers = np.where(ion.getIsotopePattern()['used'])
-        ion.setError(np.average(ion.getIsotopePattern()['error'][np.where(ion.getIsotopePattern()['relAb'][noOutliers] != 0)]))
+        ion.setError(np.average(ion.getIsotopePattern()['error'][np.where(ion.getIsotopePattern()['I'][noOutliers] != 0)]))
         isoPattern = ion.getIsotopePattern()
         solution, outliers = \
-            self.modelDistribution(isoPattern['relAb'][noOutliers], isoPattern['calcInt'][noOutliers],
+            self.modelDistribution(isoPattern['I'][noOutliers], isoPattern['calcInt'][noOutliers],
                                    isoPattern['m/z'][noOutliers], isoPattern['error'][noOutliers])
         ion.setIntensity(np.sum(ion.getIsotopePattern()['calcInt'] * solution.x))
         #ion.isotopePattern['calcInt'] = ion.isotopePattern['calcInt'] * solution.x
@@ -234,18 +261,21 @@ class IntensityModeller(object):
         if ion.getIntensity() != 0:
             '''ion.setQuality(self.calcQuality(solution.fun, ion.getIntensity()))
             ion.setScore(calcScore(ion.getIntensity(), ion.getQuality(), self._noiseLevel))'''
-            self.setQualityAndScore(ion, solution)
+            self.setQualityAndScore(ion, solution, len(outliers))
         return ion, outliers
 
-    def processIons(self, ion):
+    def processIon(self, ion):
         '''
-        Processes (calculates intensities, etc.) ions which are above the noise threshold
+        Processes (calculates intensities, etc.) an ion which is above the noise threshold
         :param (FragmentIon) ion: corresponding (raw) ion
         :type ion: FragmentIon
         '''
         correctedIon = self.calculateIntensity(ion)
         if correctedIon.getHash() in self._deletedIons.keys():
             return
+        if correctedIon.getQuality() is None:
+            correctedIon.addComment("qual._None")
+            correctedIon.setQuality(1.)
         if (correctedIon.getQuality() > self._configs['shapeDel']) :
             correctedIon.addComment("qual.")
             self._deletedIons[correctedIon.getHash()] = correctedIon
@@ -261,7 +291,7 @@ class IntensityModeller(object):
                 (correctedIon.getName(), correctedIon.getCharge(), ion.getMonoisotopic()))'''
             print('\tqual',correctedIon.getQuality())
 
-    def processNoiseIons(self, ion):
+    def processNoiseIon(self, ion):
         '''
         Processes (calculates intensities, etc.) ions which are below the noise threshold
         :param (FragmentIon) ion: corresponding (raw) ion
@@ -271,32 +301,35 @@ class IntensityModeller(object):
         if correctedIon.getHash() not in self._deletedIons.keys():
             self._deletedIons[correctedIon.getHash()]=correctedIon
 
-    def findSameMonoisotopics(self):
+    def findIsomers(self):
         '''
         Returns ions which show the same charge and monoistopic m/z
         :return: (list of list[FragmentIon]) list of list of ions with same charge and monoistopic m/z
         '''
-        sameMonoisotopics = list()
-        self._monoisotopicList = np.array(self._monoisotopicList,
+        isomers = list()
+        monoisotopicArr = np.array(self._monoisotopicList,
                                           dtype=[('name','U32'),('charge', np.uint8),('mono',float)])
-        for elem in self._monoisotopicList:
-            same_mono_index = np.where((abs(calculateError(self._monoisotopicList['mono'], elem['mono']))
+        for elem in monoisotopicArr:
+            same_mono_index = np.where((abs(calculateError(monoisotopicArr['mono'], elem['mono']))
                  < getErrorLimit(elem['mono'], self._configs['k'], self._configs['d'])) & \
-                                       (self._monoisotopicList['name'] != elem['name']) &
-                                       (self._monoisotopicList['charge'] == elem['charge']))
-            if len(self._monoisotopicList[same_mono_index]) > 0:    #direkte elemente von corrected spectrum uebernehmen
+                                       (monoisotopicArr['name'] != elem['name']) &
+                                       (monoisotopicArr['charge'] == elem['charge']))
+            if len(monoisotopicArr[same_mono_index]) > 0:    #direkte elemente von corrected spectrum uebernehmen
                 sameMonoisotopic = [self._correctedIons[(elem['name'][0], elem['charge'][0])]]
-                for elem2 in self._monoisotopicList[same_mono_index]:
+                for elem2 in monoisotopicArr[same_mono_index]:
                     sameMonoisotopic.append(self._correctedIons[(elem2['name'], elem2['charge'])])
                 sameMonoisotopic.sort(key=lambda obj:(abs(obj.getError()),obj.getName()))
-                if sameMonoisotopic not in sameMonoisotopics:
-                    self.commentIonsInPatterns(([ion.getHash() for ion in sameMonoisotopic],))
-                    sameMonoisotopics.append(sameMonoisotopic)
-        return sameMonoisotopics
+                if sameMonoisotopic not in isomers:
+                    self.commentIonsInPatterns(([ion.getHash() for ion in sameMonoisotopic],), True)
+                    isomers.append(sameMonoisotopic)
+        print("* These ions have the same mass:")
+        for ions in isomers:
+            print(", ".join([ion.getName() for ion in ions]))
+        return isomers
 
-    def deleteSameMonoisotopics(self, ions):
+    def deleteIsomers(self, ions):
         for ion in ions:
-            self.deleteIon(ion.getHash(), "mono.")
+            self.deleteIon(ion.getHash(), "iso.")
 
     def deleteIon(self, ionHash, comment):
         if ionHash in self._correctedIons.keys():
@@ -313,6 +346,7 @@ class IntensityModeller(object):
         :param (bool) allAuto: if true the threshold is set to 100
         :return: (list of list[FragmentIon]) all overlap patterns with more overlapping ions than the threshold
         '''
+        #print("...", self._monoisotopicList)
         maxOverlaps = 100
         if not allAuto:
             maxOverlaps = self._configs['manualDeletion']
@@ -332,7 +366,8 @@ class IntensityModeller(object):
         :param (int) maxOverlaps: threshold for pattern to be complex
         :return: (tuple[list[list[FragmentIon]]], list[list[FragmentIon]]]) simple patterns, complex patterns
         '''
-        self.usedPeaks = dict()
+        self.usedPeaks, overlappingPeaks = self.findOverlappingPeaks()
+        """self.usedPeaks = dict()
         overlappingPeaks = list()
         for ion in self._correctedIons.values():
             for peak in ion.getIsotopePattern():
@@ -340,7 +375,7 @@ class IntensityModeller(object):
                     overlappingPeaks.append(peak['m/z'])
                     self.usedPeaks.get(peak['m/z']).append(ion.getHash())
                 else:
-                    self.usedPeaks[peak['m/z']] = [ion.getHash()]
+                    self.usedPeaks[peak['m/z']] = [ion.getHash()]"""
         overlappingPeaks.sort()
         revisedIons = list()
         simplePatterns = []
@@ -365,20 +400,55 @@ class IntensityModeller(object):
                     simplePatterns.append(pattern)
         return simplePatterns,complexPatterns
 
+    def findOverlappingPeaks(self):
+        '''
+        Processes all assigned isotope peaks and returns those which overlap with each other
+        :return: (dict[float,list[tuple[str,int]]], list[float]) dict of
+        '''
+        usedPeaks = dict()
+        overlappingPeaks = list()
+        for ion in self._correctedIons.values():
+            for peak in ion.getIsotopePattern():
+                if peak['m/z'] in usedPeaks.keys():
+                    overlappingPeaks.append(peak['m/z'])
+                    usedPeaks.get(peak['m/z']).append(ion.getHash())
+                else:
+                    usedPeaks[peak['m/z']] = [ion.getHash()]
+        return usedPeaks, overlappingPeaks
 
-
-    def commentIonsInPatterns(self, patterns):
+    def commentIonsInPatterns(self, patterns, mono=False):
         '''
         Adds comments to to overlapping ions
         :param (list of list[FragmentIon]) patterns: overlapping patterns
         '''
         for pattern in patterns:
-            for ion1 in pattern:
-                comment = "ov.:["
-                for ion2 in pattern:
-                    if ion2 != ion1:
-                        comment += (str(ion2[0]) +"_"+ str(ion2[1]) + ",")
-                self._correctedIons[ion1].addComment(comment[:-1] + "]")
+            for ionHash1 in pattern:
+                if mono:
+                    newComment = "iso.:["
+                else:
+                    newComment = "ov.:["
+                alreadyIncluded = []
+                oldComment = self._correctedIons[ionHash1].getComment()
+                oldStart = oldComment
+                oldEnd = ""
+                if newComment in oldComment:
+                    search = re.search(newComment[:-1] + '\[(.*?)],', oldComment)
+                    if search is not None:
+                        oldComment += search.group(1)+","
+                        alreadyIncluded = search.group(1).split(",")
+                        oldStart = oldComment[:search.start()]
+                        oldEnd = oldComment[search.end():]
+                for ionHash2 in pattern:
+                    if ionHash2 != ionHash1:
+                        if mono:
+                            newEntry = ionHash2[0]
+                        else:
+                            newEntry = ionHash2[0] +"/"+ str(ionHash2[1])
+                        if newEntry not in alreadyIncluded:
+                            newComment += newEntry + ","
+                if newComment[-1] == ',':
+                    newComment = newComment[:-1]
+                self._correctedIons[ionHash1].setComment(oldStart+newComment + "]," + oldEnd)
 
 
     """for remodelling"""
@@ -475,8 +545,8 @@ class IntensityModeller(object):
                     print(ionHash, 'deleted by user')
                     continue
                 for peak in self._correctedIons[ionHash].getIsotopePattern():  # spectral list
-                    if (peak['m/z'], peak['relAb']) not in spectr_peaks:
-                        spectr_peaks.append((peak['m/z'], peak['relAb']))
+                    if (peak['m/z'], peak['I']) not in spectr_peaks:
+                        spectr_peaks.append((peak['m/z'], peak['I']))
             spectr_peaks = np.array(sorted(spectr_peaks, key=lambda tup: tup[0]))
             if len(spectr_peaks)==0:
                 continue
@@ -528,6 +598,8 @@ class IntensityModeller(object):
                         sum_int += self._correctedIons[ionHash].getIntensity()  #for error calc
                     for ionHash in undeletedIons:
                         quality = self.calcQuality(solution.fun, sum_int)
+                        if quality is None:
+                            quality =1
                         self._correctedIons[ionHash].setQuality(quality)
                         self._correctedIons[ionHash].setScore(calcScore(sum_int, quality, self._noiseLevel))
                         if self._correctedIons[ionHash].getSignalToNoise() < self._configs['SNR']:
@@ -568,14 +640,18 @@ class IntensityModeller(object):
         :param (FragmentIon) ion: corresponding ion
         :return: (str) hash of overlapping ion
         '''
-        overlappingIons = findall('\[(.*?)\]', ion.getComment())
+        overlappingIons = findall('ov.:\[(.*?)\]', ion.getComment())
         if len(overlappingIons)>0:
             ionStrings = overlappingIons[-1].split(',')
             counter=0
             returnedHash=None
             for ionString in ionStrings:
-                vals = ionString.split('_')
-                ionHash = (vals[0], int(vals[1]))
+                try:
+                    vals = ionString.split('/')
+                    ionHash = (vals[0], int(vals[1]))
+                except IndexError:
+                    vals = ionString.split('_')
+                    ionHash = (vals[0], int(vals[1]))
                 if ionHash in self._correctedIons.keys():
                     counter+=1
                     returnedHash=ionHash
@@ -595,14 +671,13 @@ class IntensityModeller(object):
         self._correctedIons[ionHash].addComment('reset')
         return self._correctedIons[ionHash]
 
-    def getAdjacentIons(self, ionHash):
+    def getAdjacentIons(self, ionHash, distance=50):
         '''
         Returns all neighbouring ions (max 20) to a given ion within a max m/z range of 100 in the spectrum:
         :param (tuple[str,int]) ionHash: hash of the corresponding ion
         '''
         #sortedIons = sorted(list(self._correctedIons.values()), key=lambda ion: ion.isotopePattern['m/z'][0])
         monoisotopics = np.array([ion.getIsotopePattern()['m/z'][0] for ion in self._correctedIons.values()])
-        distance = 100
         flag = 0
         if ionHash not in self._correctedIons.keys():
             flag = 1
@@ -610,12 +685,12 @@ class IntensityModeller(object):
         median = ion.getIsotopePattern()['m/z'][0]
         while True:
             monoisotopics = monoisotopics[np.where(abs(monoisotopics - median) < distance)]
-            if len(monoisotopics) < 20:
+            if len(monoisotopics) < 10:
                 adjacentIons = [ion for ion in self._correctedIons.values() if abs(ion.getIsotopePattern()['m/z'][0] - median)<distance]
                 if flag == 1:
                     adjacentIons.append(ion)
                 return sorted(adjacentIons, key=lambda obj:obj.getIsotopePattern()['m/z'][0]), median-distance, median+distance
-            elif len(monoisotopics) < 30:
+            elif len(monoisotopics) < 15:
                 distance /= 1.5
             else:
                 distance /= 2
@@ -645,7 +720,7 @@ class IntensityModeller(object):
         :return: tuple[float,float,float] lowest m/z, highest m/z, intensity of the highest (spectral) isotope peak
         '''
         limits = np.array([(np.min(ion.getIsotopePattern()['m/z']), np.max(ion.getIsotopePattern()['m/z']),
-                            np.max(ion.getIsotopePattern()['relAb'])) for ion in ions])
+                            np.max(ion.getIsotopePattern()['I'])) for ion in ions])
         return np.min(limits[:,0]), np.max(limits[:,1]), np.max(limits[:,2])
 
 
@@ -674,21 +749,21 @@ class IntensityModeller(object):
         :return: (float) modelled intensity of the ion
         '''
         values = np.array(values)
-        ion.setIsotopePatternPart('relAb', values[:,0])
+        ion.setIsotopePatternPart('I', values[:,0])
         ion.setIsotopePatternPart('used', values[:,1])
         return self.modelIon(ion)[0]
 
     def modelSimply(self, peakArray):
         '''
         Models a theroretical isotope pattern to a given peak list
-        :param (ndarray, dtype = [float, float, float, bool]) peakArray: input array (m/z, relAb (spectral),
+        :param (ndarray, dtype = [float, float, float, bool]) peakArray: input array (m/z, I (spectral),
             calcInt (theo.), used)
         :return: (tuple[ndarray(dtype=[float, float, float, bool]), float, float]) output array (with modelled calcInt),
             summed intensity, quality of the fit
         '''
         noOutliers = np.where(peakArray['used'])
         solution, outliers = \
-            self.modelDistribution(peakArray['relAb'][noOutliers], peakArray['calcInt'][noOutliers],
+            self.modelDistribution(peakArray['I'][noOutliers], peakArray['calcInt'][noOutliers],
                                    peakArray['m/z'][noOutliers],np.zeros(len(peakArray[noOutliers])))
         peakArray['calcInt'] = np.around(peakArray['calcInt'] * solution.x)
         intensity = np.sum(peakArray['calcInt'])
@@ -703,3 +778,5 @@ class IntensityModeller(object):
         self._correctedIons = {ion.getHash():ion for ion in observedIons}
         self._deletedIons = {ion.getHash():ion for ion in deletedIons}
         self._remodelledIons = remIons
+
+

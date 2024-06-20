@@ -4,6 +4,7 @@ import pandas as pd
 
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QPushButton
 
 from src.resources import path, DEVELOP
 
@@ -84,3 +85,10 @@ def shoot(widget):
 
 def setIcon(widget):
     widget.setWindowIcon(QIcon(os.path.join(path, 'icon.ico')))
+
+
+def makeButton(parent, name, toolTip, fun):
+    btn = QPushButton(name, parent)
+    btn.setToolTip(toolTip)
+    btn.clicked.connect(fun)
+    return btn

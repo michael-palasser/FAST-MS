@@ -83,15 +83,12 @@ class BasicExcelWriter(object):
         '''
         write = self.writeVal
         if mode == 0:
-            title = 'Occupancies: '+ self._modification +' /%'
-            plotTitle = 'Occupancies: '+ self._modification
+            title = 'Localising: '+ self._modification +' /%'
             write = self.writePercentage
         elif mode == 1:
             title = 'Av. Charge per Fragment (intensities):'
-            plotTitle = 'Av. Charge (int.)'
         else:
             title = 'Av. Charge per Fragment (I/z):'
-            plotTitle = 'Av. Charge (ab.)'
         self._worksheet1.write(row, 0, title)
         row+=1
         self._worksheet1.write(row, 0, "building block")
@@ -109,10 +106,13 @@ class BasicExcelWriter(object):
             currentRow = row
             self._worksheet1.write(currentRow, col, key)
             currentRow += 1
+            fragType= self.getFragType(key)
             for i in range(len(sequence)):
-                if key in backFrags:
+                if fragType in backFrags:
+                    #print(fragType,key, "back")
                     val = valueDict[key][len(sequence) - i - 2]
-                elif key in forwFrags:
+                elif fragType in forwFrags:
+                    #print(fragType,key, "forward")
                     val = valueDict[key][i]
                 else:
                     raise Exception("Unknown Direction of Fragment:",key)
@@ -122,7 +122,7 @@ class BasicExcelWriter(object):
             col+=1
         self._worksheet1.write(row, col, "#3'/C-term.")
         self._worksheet1.write_column(row + 1, col, reversed(list(range(1, len(sequence)))))
-        self.addChart(plotTitle, row, valueDict, sequence, backFrags, maxVal, mode == 0)
+        self.addChart(title, row, valueDict, sequence, backFrags, maxVal, mode == 0)
         return row+len(sequence)
 
 
@@ -141,8 +141,8 @@ class BasicExcelWriter(object):
         '''
         if occupancy:
             format = '0%'
-            yAxis1 = "O (5'/N-term.) /%"
-            yAxis2 = "O (3'/C-term.) /%"
+            yAxis1 = "% modified (5'/N-term.)"
+            yAxis2 = "% modified (3'/C-term.)"
         else:
             format = '0.0'
             yAxis1 = "av. charge (5'-/N-term.)"
@@ -156,7 +156,8 @@ class BasicExcelWriter(object):
         else:
             backwardFrags = ['w', 'x', 'y', 'z']'''
         for key in sorted(list(valueDict.keys())):
-            if key in backwardFrags:
+            fragType= self.getFragType(key)
+            if fragType in backwardFrags:
                 chart.add_series({
                     'name': ['analysis', row, col],
                     'categories': ['analysis', row+1, 1, lastRow, 1],
@@ -198,6 +199,11 @@ class BasicExcelWriter(object):
         chart.set_style(10)
         # Insert the chart into the worksheet (with an offset).
         self._worksheet1.insert_chart(row, len(valueDict) + 4, chart, {'x_offset': 25, 'y_offset': 10})
+
+    def getFragType(self, key):
+        if len(key)>1:
+            return key[0]
+        return key
 
 
     def closeWorkbook(self):
@@ -387,16 +393,16 @@ class ExcelWriter(BasicExcelWriter):
             row = self.writeIon(worksheet,row,ion)
         lengthIonList = str(len(ionList))
         highlighted = self._workbook.add_format({'bold': True, 'font_color': 'red'})
-        conditons = {'m/z' : {'type': 'cell', 'criteria': 'between',  'minimum': precursorArea[0],
+        conditions = {'m/z' : {'type': 'cell', 'criteria': 'between',  'minimum': precursorArea[0],
                             'maximum': precursorArea[1], 'format': highlighted},
                      'quality': {'type': 'cell', 'criteria': 'greater than', 'value': self._configs['shapeMarked'],
                                  'format': highlighted},
                      'score':{'type': 'cell', 'criteria': 'greater than', 'value': self._configs['scoreMarked'],
                               'format': highlighted}}
         for char, header in zip(ascii_uppercase,self._options['columns']):
-            if header in conditons.keys():
+            if header in conditions.keys():
                 column = char+str(2)+":"+char+lengthIonList
-                worksheet.conditional_format(column, conditons[header])
+                worksheet.conditional_format(column, conditions[header])
         '''worksheet.conditional_format('A2:A'+lengthIonList, {'type': 'cell',
                                                'criteria': 'between',
                                                'minimum': precursorArea[0],
@@ -461,7 +467,10 @@ class ExcelWriter(BasicExcelWriter):
         '''
         #self._worksheet7.write(0, 0, "Configurations:")
         for i, line in enumerate(info.split('\n')):
-            col = 0
-            if line.startswith('\t'):
-                col =1
-            self._worksheet7.write(i, col, line)
+            #col = 0
+            """if line.startswith('\t'):
+                col =1"""
+            if '\t' in line:
+                self._worksheet7.write_row(i, 0, line.split("\t"))
+            else:
+                self._worksheet7.write(i, 0, line)

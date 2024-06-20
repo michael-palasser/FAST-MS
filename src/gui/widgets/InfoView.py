@@ -11,7 +11,7 @@ class InfoView(QtWidgets.QWidget):
         super(InfoView, self).__init__(parent)
         self._info = info
         self._translate = translate
-        self.setWindowTitle(self._translate(self.objectName(), 'Protocol'))
+        self.setWindowTitle(self._translate(self.objectName(), 'Audit Trail'))
         verticalLayout1 = QtWidgets.QVBoxLayout(self)
         scrollArea = QtWidgets.QScrollArea(self)
         verticalLayout1.addWidget(scrollArea)
@@ -23,6 +23,7 @@ class InfoView(QtWidgets.QWidget):
         scrollArea.setWidget(self._text)
         verticalLayout2.addWidget(self._text)
         setIcon(self)
+        self.resize(700, 400)
         self.show()
 
     def update(self):

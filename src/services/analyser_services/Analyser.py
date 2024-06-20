@@ -4,8 +4,9 @@ Created on 10 Aug 2020
 @author: michael
 '''
 from copy import deepcopy
-
 import numpy as np
+
+from src.resources import INTERN
 
 class Analyser(object):
     '''
@@ -54,13 +55,20 @@ class Analyser(object):
                 totalSum += relAb
             else:
                 #relAb /= 2
-                if ion.getType() not in relAbundanceOfSpecies.keys():
-                    relAbundanceOfSpecies[ion.getType()] = np.zeros(len(self._sequence))
-                relAbundanceOfSpecies[ion.getType()][ion.getNumber()-1] += relAb
+                ionType = self.getIonType(ion)
+                if ionType not in relAbundanceOfSpecies.keys():
+                    relAbundanceOfSpecies[ionType] = np.zeros(len(self._sequence))
+                relAbundanceOfSpecies[ionType][ion.getNumber()-1] += relAb
                 totalSum += relAb/2
         totalDict = {precName:precAb/totalSum}
         totalDict.update({type: np.sum(val)/(2*totalSum) for type, val in relAbundanceOfSpecies.items()})
         return totalDict, relAbundanceOfSpecies
+
+    @staticmethod
+    def getIonType(ion):
+        if INTERN:
+            return ion.getType()[0]
+        return ion.getType()
 
     def getPrecursorModification(self):
         '''
@@ -107,23 +115,24 @@ class Analyser(object):
         absValues = dict()
         absIntensities = {}
         for ion in self._ions:
-            if ion.getType() in interestingIons:
+            ionType = self.getIonType(ion)
+            if ionType in interestingIons:
                 if unImportantMods is not None:
                     if len([mod for mod in unImportantMods if mod in ion.getModification()])>0:
                         #print('not', ion.getName())
                         continue
-                if ion.getType() not in absValues.keys():
-                    absValues[ion.getType()] = np.zeros((sequLength, 3))
-                    absIntensities[ion.getType()] = np.zeros(sequLength)
+                if ionType not in absValues.keys():
+                    absValues[ionType] = np.zeros((sequLength, 3))
+                    absIntensities[ionType] = np.zeros(sequLength)
                 currentMod = ion.getModification()
-                absIntensities[ion.getType()][ion.getNumber() - 1] += ion.getIntensity()
+                absIntensities[ionType][ion.getNumber() - 1] += ion.getIntensity()
                 #print(modification[1:] in currentMod,modification[1:], currentMod)
                 if modification[1:] in currentMod:
-                    absValues[ion.getType()][ion.getNumber() - 1] += \
+                    absValues[ionType][ion.getNumber() - 1] += \
                         np.array([self.getCorrectValue(ion),
                                   self.getCorrectValue(ion) * self.getNrOfModifications(currentMod, modification), 0])
                 else:
-                    absValues[ion.getType()][ion.getNumber() - 1] += \
+                    absValues[ionType][ion.getNumber() - 1] += \
                         np.array([self.getCorrectValue(ion), 0, 0])
         print('\n\n***** intensities:')
         for key,vals in absIntensities.items():
@@ -207,19 +216,20 @@ class Analyser(object):
         #redTemp = dict()
         chargeDict = dict()
         for ion in self._ions:
-            if ion.getType() in interestingIons:
-                if ion.getType() not in temp.keys():
-                    temp[ion.getType()] = np.zeros((len(self._sequence), 3))
+            ionType = self.getIonType(ion)
+            if ionType in interestingIons:
+                if ionType not in temp.keys():
+                    temp[ionType] = np.zeros((len(self._sequence), 3))
                     #chargeDict[ion.type] = len(self._sequence)*[[]]
-                    chargeDict[ion.getType()] = [[] for i in range(len(self._sequence))]
+                    chargeDict[ionType] = [[] for i in range(len(self._sequence))]
                     #redTemp[ion.type] = np.zeros((len(self._sequence), 3))
                 charge = ion.getCharge()
-                chargeDict[ion.getType()][ion.getNumber() - 1].append(charge)
+                chargeDict[ionType][ion.getNumber() - 1].append(charge)
                 if reduced:
-                    temp[ion.getType()][ion.getNumber() - 1] += \
+                    temp[ionType][ion.getNumber() - 1] += \
                                         np.array([ion.getRelAbundance(),ion.getRelAbundance() * charge, 0])
                 else:
-                    temp[ion.getType()][ion.getNumber() - 1] += np.array([ion.getIntensity(), ion.getIntensity() * charge, 0])
+                    temp[ionType][ion.getNumber() - 1] += np.array([ion.getIntensity(), ion.getIntensity() * charge, 0])
         avCharges = self.calculateProportions(temp)
         minMaxChargeDict = dict()
         for key,vals in chargeDict.items():
@@ -272,23 +282,25 @@ class Analyser(object):
                 each row index of the array represents the cleavage site -1 and the boolean values states if a fragment
                 was found at the corresponding site.
         '''
-        sequLength=len(self._sequence)
-        redSequLength = sequLength-1
+        #sequLength=len(self._sequence)
+        redSequLength = len(self._sequence)-1
         coverages = {}
         calcCoverages = dict()
-        overall = np.zeros((sequLength,3))
-        arr = np.zeros(sequLength)
+        overall = np.zeros((redSequLength,3))
+        arr = np.zeros(redSequLength)
         for ion in self._ions:
             if ion.getNumber()==0:
                 continue
-            type = ion.getType()
+            type = self.getIonType(ion)
             if type not in coverages.keys():
                 coverages[type]= deepcopy(arr)
             row = ion.getNumber()-1
             if type not in forwTypes:
-                row = sequLength-ion.getNumber()
+                row = redSequLength-ion.getNumber()
+            #print(ion.getName(),row)
             coverages[type][row] = 1
         #overall = np.zeros(sequLength)
+        #print(coverages)
         for type,val in coverages.items():
             calcCoverages[type] = np.sum(val)/(redSequLength)
         overall[:,0] = np.any([val.astype(bool) for type,val in coverages.items() if type in forwTypes], axis=0)
@@ -296,12 +308,12 @@ class Analyser(object):
         overall[:,1] = np.any([val.astype(bool) for type,val in coverages.items() if type not in forwTypes], axis=0)
         calcCoverages['backward'] = np.sum(overall[:,1])/redSequLength
         overall[:,2] = np.any((overall[:,0],overall[:,1]), axis=0)
-        calcCoverages['total'] = np.sum(overall[:,2])/sequLength
-        for type in coverages.keys():
+        calcCoverages['total'] = np.sum(overall[:,2])/redSequLength
+        """for type in coverages.keys():
             if type in forwTypes:
                 coverages[type][-1] = np.nan
             else:
-                coverages[type][0] = np.nan
+                coverages[type][0] = np.nan"""
         #overall[-1,0] = np.nan
         #overall[0,1] = np.nan
         coveragesForw, coveragesBack = {},{}

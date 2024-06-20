@@ -1,8 +1,7 @@
-import re
 from abc import ABC
 
 from src.Exceptions import InvalidInputException
-from src.entities.GeneralEntities import Macromolecule, Element, BuildingBlock, Sequence
+from src.entities.GeneralEntities import Macromolecule, Element, BuildingBlock, Sequence, rnaDict, aadict
 from src.resources import processTemplateName
 from src.repositories.sql.TD_Repositories import *
 from src.repositories.sql.MoleculeRepository import MoleculeRepository
@@ -51,7 +50,6 @@ class AbstractService(ABC):
         numericals=args[0]
         for i,val in enumerate(item):
             if (val == "" or val == '-') and i in self._necessaryValues:
-                print(i, item[i])
                 raise InvalidInputException(item[0], "No empty values allowed")
             if i in numericals:
                 if val == '':
@@ -162,9 +160,14 @@ class AbstractServiceForPatterns(AbstractService, ABC):
         '''
         if (name == '') or (name[0].islower()) or (len(name) > 1 and any(x.isupper() for x in name[1:])):
             raise InvalidInputException(name, "First Letter must be uppercase, all other letters must be lowercase!")
-        specialChars = [char for char in re.findall('[@_!#$%^&*()<>?/|}{~:]', name) if char!='']
-        if len(specialChars) >0 :
-            raise InvalidInputException(name, "Character(s): " + ', '.join(specialChars) + ' are not allowed')
+        for char in name:
+            if char in ("+","-"):
+                raise InvalidInputException(name, "Character(s): " + ', '.join(("+","-")) + ' are not allowed')
+        #if any(char.isdigit() for char in name):
+        #    raise InvalidInputException(name, 'Numbers are not are not allowed')
+        #specialChars = #[char for char in re.findall('[@_!#$%^&*()<>?/|}{~:]', name) if char!='']
+        #if len(specialChars) >0 :
+        #    raise InvalidInputException(name, "Character(s): " + ', '.join(specialChars) + ' are not allowed')
 
 
     def restart(self):
@@ -264,7 +267,7 @@ class PeriodicTableService(AbstractServiceForPatterns):
         for elem in elements:
             isotopeTable = np.array(sorted(self._repository.getPattern(elem), key=lambda tup: tup[1], reverse=True)
                                     , dtype=[('index', np.float64), ('nr', np.float64), ('nrIso', np.float64),
-                                             ('relAb', np.float64), ('mass', np.float64), ('M+', np.float64)])
+                                             ('I', np.float64), ('mass', np.float64), ('M+', np.float64)])
             self._repository.getPattern(elem)
             elementDict[elem] = """
         return {elem:self._repository.getPattern(elem).getItems() for elem in elements}
@@ -278,15 +281,15 @@ class MoleculeService(AbstractServiceForPatterns):
     Service handling a MoleculeRepository and Macromolecule entities.
     '''
     def __init__(self):
-        super(MoleculeService, self).__init__(MoleculeRepository(), (0,1))
+        super(MoleculeService, self).__init__(MoleculeRepository(), (0,2))
 
     def makeNew(self):
-        return Macromolecule("", "", "", 10 * [["", "", 0., 0.]], None)
+        return Macromolecule("", "", "", 10 * [["", "", ""]], None)
 
     def getFormula(self, item):
         '''
         Returns the molecular formula of a building block
-        :param (tuple[str, str, float, float]) item: corresponding building block
+        :param (tuple[str, str, str]) item: corresponding building block
         :return: (MolecularFormula) formula
         '''
         return BuildingBlock(item).getFormula()
@@ -304,16 +307,75 @@ class MoleculeService(AbstractServiceForPatterns):
                 raise InvalidInputException(pattern.getName(), "Element: " + key + " unknown")
         [self.checkName(bb[0]) for bb in pattern.getItems()]
         self.checkFormatOfItems(pattern.getItems(), elements, self._repository.getIntegers())
+        if len(pattern.getItems()[0])!=5:
+            pattern.setItems([bb+[1,1] for bb in pattern.getItems()])
         pattern = super(MoleculeService, self).save(pattern)
         elementRep.close()
         return pattern
 
-    def checkName(self, name):
+    '''def checkName(self, name):
         super(MoleculeService, self).checkName(name)
         if any(char.isdigit() for char in name):
-            raise InvalidInputException(name, "Building block name must not contain numbers!")
-        '''if (name[0].islower() or (len(name) > 1 and any(x.isupper() for x in name[1:]))):
+            raise InvalidInputException(name, "Building block name must not contain numbers!")'''
+    '''if (name[0].islower() or (len(name) > 1 and any(x.isupper() for x in name[1:]))):
             raise InvalidInputException(name, "First Letter must be uppercase, all other letters must be lowercase!")'''
+
+    def getPatternWithObjects(self, name, *args):
+        '''
+        Returns a pattern with items as generated objects (not tuples)
+        :param (str) name: name of the pattern
+        :param (callable) args: constructor of the object
+        :return: (PatternWithItems) pattern
+        '''
+        try:
+            return super(MoleculeService, self).getPatternWithObjects(name, BuildingBlock)
+        except NotImplementedError:
+            self._repository.addNewColumn()
+            molecule = super(MoleculeService, self).getPatternWithObjects(name, BuildingBlock)
+            bbs = molecule.getItems()
+            for bb in bbs:
+                name = bb.getName()
+                if molecule.getName()[0:3] == "RNA":
+                    if name in rnaDict.keys():
+                        bb.setTranslation(rnaDict[name])
+                if molecule.getName()[0:3] == "Pro":
+                    if name in aadict.keys():
+                        bb.setTranslation(aadict[name])
+                """if bb.getP_pos()>20:
+                    bb.setP_pos(1)
+                    bb.setP_neg(1)"""
+            molecule.setItems(bbs)
+            return molecule
+
+    def get(self, name):
+        '''
+        Returns a pattern with items as generated objects (not tuples)
+        :param (str) name: name of the pattern
+        :param (callable) args: constructor of the object
+        :return: (PatternWithItems) pattern
+        '''
+        #try:
+        #    return super(MoleculeService, self).get(name)
+        #except NotImplementedError:
+        molecule = super(MoleculeService, self).get(name)
+        items = molecule.getItems()
+        if type(items[0][2]) == float:
+            molecule = self._repository.addNewColumn(name)
+        bbs = [bb[:3] for bb in molecule.getItems()]
+        for i,bb in enumerate(bbs):
+            name = bb[0]
+            if molecule.getName().startswith("RN"):
+                if name in rnaDict.keys():
+                    bbs[i][1]=rnaDict[name]
+            if molecule.getName().startswith("Pro"):
+                if name in aadict.keys():
+                    bbs[i][1]=aadict[name]
+
+            """if bb[3] > 20:
+                bbs[i][3]=1
+                bbs[i][4]=1"""
+        molecule.setItems(bbs)
+        return molecule
 
     """def getItemDict(self, name):
         itemDict = dict()
@@ -361,6 +423,7 @@ class SequenceService(AbstractService):
         bbs = {}
         for molecule in molecules:
             bbs[molecule] = [bb[0] for bb in moleculeRepository.getPattern(molecule).getItems()]
+        self.checkSequenceNames(sequTuples)
         for sequTup in sequTuples:
             """if sequenceList.getMolecule() not in molecules:
                 raise InvalidInputException(sequenceList.getName(),sequenceList.getMolecule()+" unknown")
@@ -380,6 +443,10 @@ class SequenceService(AbstractService):
                 self._repository.createSequence(sequence)
         moleculeRepository.close()
 
+    def checkSequenceNames(self, sequTuples):
+        #ToDo: Check Names: Unique, no / in name
+        pass
+
     def checkFormatOfItem(self, item, *args):
         '''
         Checks the values of a sequence
@@ -390,6 +457,7 @@ class SequenceService(AbstractService):
         :return (Sequence): sequence
         '''
         sequName, sequString, moleculeName = item[0], item[1], item[2]
+        #print('hey', item)
         molecules  = args[0].keys()
         if sequName == '' or sequName == '-':
             raise InvalidInputException(sequName,"Name incorrect")
@@ -497,8 +565,9 @@ class ModificationService(AbstractServiceForPatterns):
         self.checkFormatOfItems(pattern.getItems(), elements, self._repository.getIntegers()[0])
         checkedItems = []
         mod = pattern.getModification()
-        if mod[0] not in ['+', '-']:
-            pattern.setModification('+'+mod)
+        if len(mod)>0:
+            if mod[0] not in ['+', '-']:
+                pattern.setModification('+'+mod)
         for item in pattern.getItems():
             checkedItem = item
             if item[0][0] not in ['+','-']:
@@ -507,8 +576,9 @@ class ModificationService(AbstractServiceForPatterns):
 
         pattern.setItems(checkedItems)
         modification = pattern.getModification()
-        if modification[0] not in ['+','-']:
-            pattern.setModification('+'+modification)
+        if len(modification)>0:
+            if modification[0] not in ['+','-']:
+                pattern.setModification('+'+modification)
         if modification not in [item[0] for item in pattern.getItems()]:
             raise InvalidInputException(modification,'Precursor modification must be included in the modification templates')
         pattern = super(ModificationService, self).save(pattern)

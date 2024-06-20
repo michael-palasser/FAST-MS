@@ -120,6 +120,8 @@ class AbstractDialog(QtWidgets.QDialog):
         if isinstance(widget, QtWidgets.QSpinBox) or isinstance(widget, QtWidgets.QDoubleSpinBox):
             widget.setValue(value)
         elif isinstance(widget, QtWidgets.QLineEdit) or isinstance(widget, OpenFileWidget):
+            if isinstance(value, int):
+                value = os.path.join(path, 'Spectral_data','top-down')
             widget.setText(value)
         elif isinstance(widget, QtWidgets.QComboBox):
             widget.setCurrentText(value)
@@ -136,6 +138,15 @@ class AbstractDialog(QtWidgets.QDialog):
         if self._configHandler.getAll()!=None:
             for name, item in self._widgets.items():
                 self.setValueOfWidget(item, self._configHandler.get(name))
+
+    
+    def getDefaultDirectory(self, widgetName):
+        last = self._configHandler.get(widgetName)
+        if isinstance(last, str):
+            default = os.path.split(last)[:-1][0]
+            if os.path.isdir(default):
+                return default
+        return os.path.join(path, 'Spectral_data','top-down')
 
     def reject(self):
         self._canceled = True
@@ -193,7 +204,7 @@ class StartDialog(AbstractDialog):
         self._defaultButton.setSizePolicy(sizePolicy)
         self._defaultButton.setMinimumSize(QSize(113, 0))
         self._defaultButton.clicked.connect(self.backToLast)
-        self._defaultButton.setText(self._translate(self.objectName(), "last settings"))
+        self._defaultButton.setText(self._translate(self.objectName(), "Last Settings"))
         return self._defaultButton
 
     def getNewSettings(self):
@@ -212,6 +223,10 @@ class StartDialog(AbstractDialog):
 
     def checkValues(self, configs, *args):
         configs['spectralData'] = self.checkSpectralDataFile(args[0], configs['spectralData'])
+        if 'profile' not in configs.keys():
+            configs['profile'] = ""
+        elif configs['profile'] != "":
+            configs['profile'] = self.checkSpectralDataFile(args[0], configs['profile'])
         if configs['sequName'] not in SequenceService().getAllSequenceNames():
             raise InvalidInputException(configs['sequName'], "not found")
         return configs

@@ -27,7 +27,8 @@ class Search(object):
         self._nrMod = vals[8]
         self._spectralData = vals[9]
         self._noiseLimit = vals[10]
-        self._fragLib = vals[11]
+        if len(vals)>11:
+            self._fragLib = vals[11]
         self._ions = ions
         self._deletedIons = deletedIons
         self._remIons = remIons

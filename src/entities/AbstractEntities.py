@@ -1,6 +1,6 @@
 from abc import ABC
 
-from src.FormulaFunctions import stringToFormula as MF_stringToFormula
+from src.services.FormulaFunctions import stringToFormula as MF_stringToFormula
 
 
 #from src.Exceptions import InvalidInputException

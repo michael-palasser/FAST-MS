@@ -4,7 +4,7 @@ from pandas import DataFrame
 from src.resources import DEVELOP
 from src.services.IsotopePatternLogics import IsotopePatternLogics
 from src.services.DataServices import *
-from src.gui.AbstractMainWindows import SimpleMainWindow
+from src.gui.MainWindows.AbstractMainWindows import SimpleMainWindow
 from src.gui.GUI_functions import makeFormLayout, shoot, connectTable
 from src.gui.widgets.IonTableWidgets import IsoPatternIon
 from src.gui.widgets.PeakWidgets import IsoPatternPeakWidget
@@ -255,21 +255,21 @@ class IsotopePatternView(SimpleMainWindow):
         except InvalidInputException as e:
             QtWidgets.QMessageBox.warning(self, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
             return
-        self.renderView(self._ion, neutralMass, avMass)
+        self.renderView(self._ion, neutralMass, avMass,charge)
 
-    def renderView(self, ion, neutralMass, avMass):
-        self.renderSpectrumView(ion)
+    def renderView(self, ion, neutralMass, avMass, charge):
+        self.renderSpectrumView(ion,charge)
         self._ionTable.updateTable((self.getIonVals(ion,neutralMass,avMass),))
         self._ionTable.resizeColumnsToContents()
         self._peakTable.updateTable(ion.getIsotopePattern())
         self._peakTable.resizeColumnsToContents()
 
-    def renderSpectrumView(self, ion):
+    def renderSpectrumView(self, ion, charge):
         self._spectrumView.hide()
         self._vertLayoutRight.removeWidget(self._spectrumView)
         del self._spectrumView
         #isotopePattern = self._logics.getIsotopePattern(ion)
-        self._spectrumView = TheoSpectrumView(self._rightWidget, ion.getIsotopePattern(), 365)
+        self._spectrumView = TheoSpectrumView(self._rightWidget, ion.getIsotopePattern(), 365, charge)
         self._spectrumView.setMinimumSize(365, 300)
         self._vertLayoutRight.addWidget(self._spectrumView)
 
@@ -310,7 +310,7 @@ class IsotopePatternView(SimpleMainWindow):
         except InvalidInputException as e:
             QtWidgets.QMessageBox.warning(self, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
             return
-        self.renderView(self._ion, self._logics.getNeutralMass(), self._logics.getAvMass())
+        self.renderView(self._ion, self._logics.getNeutralMass(), self._logics.getAvMass(), int(self._charge.text()))
 
     def showOptions(self, table, pos):
         '''
@@ -339,18 +339,19 @@ class IsotopePatternView(SimpleMainWindow):
             ion = self._logics.getIon()
             ion.setIsotopePattern(ion.getIsotopePattern()[:-1])
             self._logics.setIon(ion)
-            self.renderSpectrumView(ion)
+            self.renderSpectrumView(ion,int(self._charge.text()))
 
 
 class AddIonView(IsotopePatternView):
     '''
     QMainWindow which is used to add new ions to ion list in top-down search
     '''
-    def __init__(self, parent, mode, sequence, charge, fragmentation, modification, fun):
+    def __init__(self, parent, mode, sequence, sequenceName, charge, fragmentation, modification, fun):
         super(AddIonView, self).__init__(parent)
         self.setWindowTitle(self._translate(self.objectName(),'New Ion'))
         self.setBox(self._modeBox,mode)
         self._inputForm.setText(sequence)
+        self._sequenceName = sequenceName
         self.setChargeRange(charge)
         self.setBox(self._options['fragmentation'],fragmentation)
         self.setBox(self._options['modPattern'],modification)
@@ -370,6 +371,8 @@ class AddIonView(IsotopePatternView):
         box.setEnabled(False)
 
     def getIon(self):
+        if "Prec" in self._ion.getName():
+            self._ion.setType(self._sequenceName)
         return self._ion
 
     def accept(self):
@@ -388,3 +391,15 @@ class AddIonView(IsotopePatternView):
         else:
             self._signal(self)
 
+
+    def getIonVals(self, ion, neutralMass, avMass):
+        if ion is None:
+            return ()
+        self.correctName(ion)
+        return (ion.getIsotopePattern()['m/z'][0], abs(ion.getCharge()), self._intensity, ion.getName(),
+                ion.getQuality(),ion.getFormula().toString(), neutralMass, avMass)
+
+    def correctName(self, ion):
+        type = ion.getType()
+        if "Prec" in type:
+            ion.setType(self._sequenceName+type[4:])

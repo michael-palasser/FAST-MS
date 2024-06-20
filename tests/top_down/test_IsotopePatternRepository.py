@@ -20,10 +20,10 @@ class TestIsotopePatternRepository(TestCase):
         try:
             self.initLibrary()
         except:
-            sequences = [Sequence(tup[0], tup[1], tup[2], i) for i, tup in
+            sequences = [(tup[0], tup[1], tup[2], i) for i, tup in
                          enumerate(self.sequenceService.getSequences())]
-            sequences.append(Sequence('dummyRNA', 'GACU', 'RNA', len(sequences) + 1))
-            sequences.append(Sequence('dummyProt', 'GAPH', 'Protein', len(sequences) + 1))
+            sequences.append(('dummyRNA', 'GACU', 'RNA', len(sequences) + 1))
+            sequences.append(('dummyProt', 'GAPH', 'Protein', len(sequences) + 1))
             self.sequenceService.save(sequences)
             self.initLibrary()
 

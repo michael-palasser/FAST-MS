@@ -79,7 +79,10 @@ class IntactMainController(AbstractMainController):
         """Importing spectral pattern"""
         #spectralFile = os.path.join(path, 'Spectral_data','top-down', self._settings['spectralData'])
         print("\n********** Importing spectral pattern from:", self._settings['spectralData'], "**********")
-        self._spectrumHandler = IntactSpectrumHandler(self._settings, self._configs)
+        try:
+            self._spectrumHandler = IntactSpectrumHandler(self._settings, self._configs)
+        except Exception as e:
+            raise InvalidInputException('Problem in file ' + self._settings['spectralData'] + ':<br>', e.__str__())
         self._info.spectrumProcessed(self._spectrumHandler.getUpperBound(), self._spectrumHandler.getNoiseLevel())
         if self._settings['calibration']:
             allSettings = dict(self._settings)
@@ -97,25 +100,21 @@ class IntactMainController(AbstractMainController):
         self._intensityModeller = IntensityModeller(self._configs, self._spectrumHandler.getNoiseLevel())
         start = time.time()
         print("\n********** Calculating relative abundances **********")
-        for ion in self._spectrumHandler.getFoundIons():
-            self._intensityModeller.processIons(ion)
-        for ion in self._spectrumHandler._ionsInNoise:
-            self._intensityModeller.processNoiseIons(ion)
-        self._spectrumHandler.emptyLists()
+        self.processIons()
         print("\ndone\nexecution time: ", round((time.time() - start) / 60, 3), "min\n")
 
         """Handle ions with same monoisotopic peak and charge"""
         print("\n********** Handling overlaps **********")
-        sameMonoisotopics = self._intensityModeller.findSameMonoisotopics()
+        sameMonoisotopics = self._intensityModeller.findIsomers()
         print('mono', sameMonoisotopics)
         if len(sameMonoisotopics) > 0:
-            view = CheckMonoisotopicOverlapView(sameMonoisotopics, self._spectrumHandler.getSpectrum())
+            view = CheckMonoisotopicOverlapView(sameMonoisotopics, self._spectrumHandler)
             print("User Input requested")
             view.exec_()
             if view and not view.canceled():
                 dumpList = view.getDumplist()
                 [self._info.deleteMonoisotopic(ion) for ion in dumpList]
-                self._intensityModeller.deleteSameMonoisotopics(dumpList)
+                self._intensityModeller.deleteIsomers(dumpList)
             else:
                 return 1
 
@@ -150,7 +149,6 @@ class IntactMainController(AbstractMainController):
         dlg = ExportDialog(self._mainWindow, (), exportConfigHandler.getAll())
         dlg.exec_()
         if dlg and not dlg.canceled():
-            self._info.export()
             newOptions = dlg.getOptions()
             exportConfigHandler.write(newOptions)
             filename = dlg.getFilename()
@@ -179,6 +177,7 @@ class IntactMainController(AbstractMainController):
             try:
                 excelWriter.toExcel(analyser, self._intensityModeller, self._libraryBuilder.getNeutralLibrary(),
                                     self._settings, self._spectrumHandler, self._info.toString())
+                self._info.export(output)
                 print("********** saved in:", output, "**********\n")
                 try:
                     autoStart(output)

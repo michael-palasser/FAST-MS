@@ -31,6 +31,12 @@ class AbstractTableModel(QtCore.QAbstractTableModel):
 
     def getData(self):
         return self._data
+    
+    def setNewData(self, newData):
+        if len(newData)==0:
+            newData = ['' for _ in self._headers]
+        self._data = newData
+        self.layoutChanged.emit()
 
     def getHeaders(self):
         return self._headers
@@ -87,11 +93,11 @@ class IonTableModel(AbstractTableModel):
         Overwrites the data method of AbstractTableModel to correctly format each value
         '''
         if index.isValid():
+            col = index.column()
+            item = self._data[index.row()][col]
             if role == QtCore.Qt.DisplayRole:
                 if self._data[0][0] == '':
                     return ''
-                col = index.column()
-                item = self._data[index.row()][col]
                 formatString = self._format[col]
                 if col == 3 or col == 8:
                     return item
@@ -101,30 +107,28 @@ class IonTableModel(AbstractTableModel):
                         formatString = '{:' + lg10 + 'd}'
                     return formatString.format(item)
                 return formatString.format(item)
-        if role == QtCore.Qt.TextAlignmentRole:
-            if index.column() == 3 or index.column() == 8:
-                return QtCore.Qt.AlignLeft
-            else:
-                return QtCore.Qt.AlignRight
-        if role == QtCore.Qt.FontRole:
-            if index.column() == 8:
-                font = QtGui.QFont()
-                font.setPointSize(10)
-                return font
-        if role == QtCore.Qt.ForegroundRole:
-            col = index.column()
-            item = self._data[index.row()][col]
-            if item == '':
-                return QtGui.QColor('k')
-            if (col == 0) and (self._precRegion is not None):
-                if self._precRegion[0]<item<self._precRegion[1]:
-                    return QtGui.QColor('red')
-            if col == 6:
-                if item > self._maxQual:
-                    return QtGui.QColor('red')
-            if col == 7:
-                if item > self._maxScore:
-                    return QtGui.QColor('red')
+            elif role == QtCore.Qt.TextAlignmentRole:
+                if col == 3 or col == 8:
+                    return QtCore.Qt.AlignLeft
+                else:
+                    return QtCore.Qt.AlignRight
+            elif role == QtCore.Qt.FontRole:
+                if col == 8:
+                    font = QtGui.QFont()
+                    font.setPointSize(10)
+                    return font
+            elif role == QtCore.Qt.ForegroundRole:
+                if item == '':
+                    return QtGui.QColor('k')
+                if (col == 0) and (self._precRegion is not None):
+                    if self._precRegion[0]<item<self._precRegion[1]:
+                        return QtGui.QColor('red')
+                if col == 6:
+                    if item > self._maxQual:
+                        return QtGui.QColor('red')
+                if col == 7:
+                    if item > self._maxScore:
+                        return QtGui.QColor('red')
 
     def getHashOfRow(self, rowIndex):
         return (self._data[rowIndex][3],self._data[rowIndex][1])

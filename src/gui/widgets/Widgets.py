@@ -1,9 +1,12 @@
+import os
 import sys
 
 from PyQt5 import QtWidgets, QtGui, QtCore
+from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QFileDialog, QApplication
 
 from src.gui.GUI_functions import createComboBox
+from src.resources import path
 
 
 class OpenFileWidget(QtWidgets.QWidget):
@@ -22,8 +25,7 @@ class OpenFileWidget(QtWidgets.QWidget):
 
         self._horizontalLayout.addWidget(self._lineEdit)
         self._pushButton = QtWidgets.QPushButton(self)
-        #self._pushButton.setGeometry(QtCore.QRect(width-32, 0, 36, 30))
-        self._pushButton.setIcon(QtGui.QIcon('open.png'))
+        self._pushButton.setIcon(QtGui.QIcon(os.path.join(path, 'open.png')))
         self._pushButton.setIconSize(QtCore.QSize(32, 32))
         self._pushButton.setMaximumSize(32, 32)
         #self._pushButton.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum))
@@ -45,22 +47,27 @@ class OpenFileWidget(QtWidgets.QWidget):
         #_pushButton.setObjectName(name)
         self._pushButton.clicked.connect(lambda: self.getFileNames(mode))
         #self.buttons[_pushButton.objectName()] = _pushButton
+        self._accepted = False
 
     def getFileNames(self, mode):
         #_files = self.openFileNamesDialog(self.__title, self.__formats)
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
+        startPath = os.path.split(self.text())[:-1][0]
+        if not os.path.isdir(startPath):
+            startPath = self.__startPath
         if mode == 2:
-            files, _ = QFileDialog.getOpenFileNames(self, self.__title, self.__startPath, self.__formats, options=options)
+            files, _ = QFileDialog.getOpenFileNames(self, self.__title, startPath, self.__formats, options=options)
             self._lineEdit.setText(',  '.join(files))
         elif mode == 1:
-            file, _ = QFileDialog.getOpenFileName(self, self.__title, self.__startPath, self.__formats, options=options)
+            file, _ = QFileDialog.getOpenFileName(self, self.__title, startPath, self.__formats, options=options)
             self._lineEdit.setText(file)
         else:
-            dir = QFileDialog.getExistingDirectory(self, self.__title, self.__startPath)
+            dir = QFileDialog.getExistingDirectory(self, self.__title, startPath)
             if dir:
                 dir = QtCore.QDir.toNativeSeparators(dir)
             self._lineEdit.setText(dir)
+        self._accepted=True
         #self.__files = _files
 
     #ToDo different Versions:File/Files, title, file formats
@@ -76,6 +83,8 @@ class OpenFileWidget(QtWidgets.QWidget):
     def getFiles(self):
         return self._lineEdit.text().split(',  ')
 
+    def accepted(self):
+        return self._accepted
 
 """class BoxUpdateWidget(QtWidgets.QWidget):
     '''
@@ -203,6 +212,26 @@ class CheckableComboBox(QtWidgets.QComboBox):
             if item.checkState() == QtCore.Qt.Checked:
                 values.append(self._options[i])
         return values
+
+
+
+class ShowFormulaWidget(QtWidgets.QWidget):
+    '''
+    Widget which shows the molecular formula of an ion
+    '''
+    def __init__(self, ion):
+        super(ShowFormulaWidget, self).__init__(None)
+        self.setWindowTitle(ion.getName())
+        layout = QtWidgets.QVBoxLayout(self)
+        label = QtWidgets.QLabel(ion.getFormula().toString())
+        label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        layout.addWidget(label)
+        """buttonBox = QtWidgets.QDialogButtonBox(self)
+        buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Ok)
+        layout.addWidget(buttonBox)"""
+        self.show()
+
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

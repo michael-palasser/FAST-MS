@@ -1,4 +1,6 @@
 from copy import deepcopy
+from numpy import dtype, uint8, int64
+from src.repositories.SpectralDataReader import SpectralDataReader
 
 from src.services.assign_services.AbstractSpectrumHandler import calculateError
 from src.services.assign_services.Finders import IntactFinder, TD_Finder
@@ -19,8 +21,10 @@ class Calibrator(object):
             self._finder = IntactFinder(theoValues, settings)
         else:
             self._finder = TD_Finder(theoValues, settings, getChargeRange)
-        self._ionData = self._finder.readFile(settings['calIons'])[0]
+        #self._ionData = self._finder.readFile(settings['calIons'])[0]
         self._settings = settings
+        self._ionData = SpectralDataReader().openFile(self._settings['calIons'],
+                                                      dtype([('m/z', float), ('z', uint8), ('I', float)]))
         errorLimit = settings['errorLimitCalib']
         self._assignedIons = self._finder.findIonsInSpectrum(0, errorLimit, self._ionData)
         self._calibrationValues, self._errors, self._quality, self._usedIons = \
@@ -59,7 +63,7 @@ class Calibrator(object):
                                            ion.getTheoMz(),used))
                       #round(calculateError(x,ion.getTheoMz()),2),ion.getTheoMz(),used))
 
-        return array(l, dtype=[('m/z',float),('z',int),('int',int),('name','U32'),('error',float),('m/z_theo',float),('used',bool)])
+        return array(l, dtype=[('m/z',float),('z',int),('int',int64),('name','U32'),('error',float),('m/z_theo',float),('used',bool)])
 
     def calibratePeaks(self, peaks):
         '''
@@ -67,10 +71,11 @@ class Calibrator(object):
         :param (ndarray[float,float]) peaks: array with columns m/z, int
         :return: (ndarray[float,float]) calibrated peaks
         '''
-        peaks[:,0] = self._finder.calibrate(peaks[:,0], self._calibrationValues)
+        peaks['m/z'] = self._finder.calibrate(peaks['m/z'], self._calibrationValues)
         return peaks
 
-    def writePeaks(self, peaks, fileName):
+    @staticmethod
+    def writePeaks(peaks, fileName):
         '''
         Writes a calibrated peak list to a file
         :param (ndarray[float,float]) peaks: array with columns m/z, int
@@ -79,7 +84,7 @@ class Calibrator(object):
         with open(fileName, 'w') as f:
             f.write('m/z\tI\n')
             for peak in peaks:
-                f.write(str(peak[0])+'\t'+str(peak[1])+'\n')
+                f.write(str(peak['m/z'])+'\t'+str(peak['I'])+'\n')
 
     def recalibrate(self, usedIons):
         '''
@@ -89,3 +94,4 @@ class Calibrator(object):
         updatedIons = [ion for ion in self._assignedIons if (ion.getName(),ion.getCharge()) in usedIons]
         self._calibrationValues, self._errors, self._quality, self._usedIons = \
             self._finder.findCalibrationFunction(updatedIons, self._settings['errorLimitCalib'], self._settings['maxStd'])
+

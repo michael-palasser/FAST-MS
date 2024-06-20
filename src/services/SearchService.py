@@ -2,7 +2,7 @@ from copy import deepcopy
 from datetime import datetime
 
 from src.MolecularFormula import MolecularFormula
-from src.FormulaFunctions import stringToFormula2
+from src.services.FormulaFunctions import stringToFormula2
 from src.entities.Search import Search
 from src.repositories.sql.SearchRepository import SearchRepository
 from src.services.IntensityModeller import calcScore
@@ -91,5 +91,11 @@ class SearchService(object):
     def getAllAssignedPeaks(ions):
         peaks = set()
         for ion in ions:
-            peaks.update({(peak['m/z'],peak['relAb']) for peak in ion.getIsotopePattern() if peak['relAb']!=0})
+            peaks.update({(peak['m/z'],peak['I']) for peak in ion.getIsotopePattern() if peak['I']!=0})
         return peaks
+
+    def getDatabasePath(self):
+        return self._rep.getDatabasePath()
+
+    def close(self):
+        self._rep.close()

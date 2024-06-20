@@ -85,3 +85,5 @@ class ExportTable(QtWidgets.QTableWidget):
             if int(self.item(row, 1).checkState()/2)==1:
                 options.append(self.item(row, 0).text())
         return options
+
+

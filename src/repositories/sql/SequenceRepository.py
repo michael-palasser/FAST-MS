@@ -100,6 +100,13 @@ class SequenceRepository(AbstractRepository):
         cur.execute(sql, (sequence.getName(), sequence.getSequenceString(), sequence.getMolecule(), sequence.getName()))
         self._conn.commit()
 
-
-    """def deleteSequence(self):
-        pass"""
+    def delete(self, name):
+        '''
+        Deletes the entry
+        :param (str) name: name of the entry which should be deleted
+        :return: (int) id of the deleted entry
+        '''
+        cur = self._conn.cursor()
+        cur.execute('DELETE FROM ' + self._mainTable + ' WHERE name=?', (name,))
+        print('DELETE FROM ' + self._mainTable + ' WHERE name=?', (name,))
+        self._conn.commit()

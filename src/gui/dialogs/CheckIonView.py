@@ -208,7 +208,7 @@ class CheckMonoisotopicOverlapView(AbstractIonView):
     def __init__(self, patterns, spectrumHandler):
         self._comboBoxes = []
         self._optionDict = dict()
-        super(CheckMonoisotopicOverlapView, self).__init__(patterns, "Check Heavily Overlapping Ions",
+        super(CheckMonoisotopicOverlapView, self).__init__(patterns, "Check Isomeric Ions",
            "These ions have the same mass - select the ion you want to keep", [100, 30, 120, 140, 70, 60, 60], spectrumHandler)
 
     def makeTables(self, yPos):

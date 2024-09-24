@@ -88,7 +88,7 @@ class AbstractSpectrumView(QtWidgets.QWidget):
         setIcon(self)
         title = "Spectrum View"
         if focused:
-            title += ": " + self._focused[0] +str(self._focused[1])
+            title += ": " + self._focused[0] + ", " +str(self._focused[1])+self._ionMode
         self.setWindowTitle(title)
         self.show()
 
@@ -189,7 +189,12 @@ class AbstractSpectrumView(QtWidgets.QWidget):
                 self._items.append(self._profile)
             self._peakBars = pg.BarGraphItem(x=self._peaks['m/z'], height=self._peaks['I'], width=self._width, brush='k')
             self._graphWidget.addItem(self._peakBars)
-            colours = ['b','r','g', 'c', 'm', 'y',]
+            #colours = ['b','r','g', 'c', 'm', 'y']
+            colours = ['b','r']+list({'ocean green':'#4FB06D', 'tab:cyan':'#17becf', 'fuchsia':'#D9027D',
+                                      'Visitation':'#ffd700', "brown": "#eab76a", 'Corn Green':'#71A92C', 'Violet':'#9B26B6'}.values())
+
+            """colours = list({'royalblue':'#0504aa', 'tab:red':'#d62728', 'kelly green':'#4FB06D', 'tab:cyan':'#17becf',
+                            'indigo':'#5C62D6', 'TAN':'#F5C26B'}.values())"""
             markers = ['o','t', 's', 'p','h', 'star', '+', 'd', 'x', 't1','t2']#, 't3']
             #noise = []
             maxIndizes = (len(colours), len(markers))
@@ -221,7 +226,8 @@ class AbstractSpectrumView(QtWidgets.QWidget):
                     coulour_index += 1
                     marker_index+=1
                     size=10
-                    brush = (50,50,200,50)
+                    #brush = (50,50,200,50)
+                    brush = (255,255,0,50)
                 self._scatter = pg.ScatterPlotItem(x=ion.getIsotopePattern()['m/z'], y=ion.getIsotopePattern()['calcInt'],
                                              symbol=symbol,
                                              pen =pg.mkPen(color=colour, width=2),

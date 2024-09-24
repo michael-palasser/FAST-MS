@@ -7,6 +7,7 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 from scipy.optimize import least_squares
+from tqdm import tqdm
 
 from src.Exceptions import InvalidInputException
 from src.entities.Ions import SimpleIntactIon, SimpleIon
@@ -112,6 +113,7 @@ class AbstractFinder(ABC):
         :return: (list[SimpleIntactIon]) assigned ions
         '''
         ions = list()
+        bar = tqdm(total=len(self._theoValues))
         for neutral in self._theoValues:
             mass = neutral.getMonoisotopicMass()
             radicals = neutral.getRadicals()
@@ -147,6 +149,7 @@ class AbstractFinder(ABC):
                         if ionPicked == 0:
                             sortedArr = np.sort(spectrum[mask], order='I')
                             ions.append(self.getIon(mz, neutral, sortedArr[-1]))
+            bar.update(1)
         return ions
 
     @abstractmethod

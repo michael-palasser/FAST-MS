@@ -234,7 +234,7 @@ class MolecularFormula(object):
             for isotope in self._periodicTable[elem]:
                 #if self._formulaDict[elem] != 0:
                 isotopeTable.append((index, self._formulaDict[elem], 0, isotope[2], isotope[1], isotope[0] - mono))
-        isotopeTable = np.array(sorted(isotopeTable,key=lambda tup: tup[0], reverse=True)
+        isotopeTable = np.array(sorted(isotopeTable,key=lambda tup: tup[1], reverse=True)
                                 , dtype=isoTableDtype)
         """isotopeTable = np.array(isotopeTable
                                 , dtype=[('index', np.float64), ('nr', np.float64), ('nrIso', np.float64),

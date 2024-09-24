@@ -36,6 +36,8 @@ def getRelativePath(relativePath, data=True):
         #print("1a",relPath, pathlib.Path('data'), relativePath)
         if DEVELOP:
             relPath = pathlib.Path('data_meins') / relativePath
+        if INTERN:
+            relPath = pathlib.Path('data_BACHEM') / relativePath
     else:
         relPath = pathlib.Path(relativePath)
         #print("2a",relPath, pathlib.Path('data'), relativePath)

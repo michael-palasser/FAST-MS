@@ -6,9 +6,7 @@ Created on 20 Oct 2020
 import sys
 
 from PyQt5.QtCore import QSize
-from PyQt5.QtWidgets import QApplication, QPushButton
-
-from src.gui.GUI_functions import setIcon
+from PyQt5.QtWidgets import QPushButton
 from src.gui.controller.IntactSearchController import IntactMainController
 from src.gui.controller.IsotopePatternView import IsotopePatternView
 from src.gui.controller.EditorController import *
@@ -18,19 +16,11 @@ from src.top_down.OccupancyRecalculator import run as occupancyRecalculator
 from src.top_down.SpectrumComparator import run as spectrumComparator
 from src.intact.Main import run as IntactIonsSearch
 from src.gui.controller.TD_searchController import TD_MainController
-from src.resources import INTERN
-
-if INTERN:
-    from src.BACHEM_extension.gui.MainController_extension import MD_MainController
-    from src.BACHEM_extension.gui.Dialogs_extension import MDStartDialog
-    from src.BACHEM_extension.gui.SequenceTranslater import SequenceTranslaterWindow
-    from src.BACHEM_extension.services.TD_Assigner import TD_Assigner
-    from src.BACHEM_extension.gui.MainController_extension import BACHEM_MainController as TD_MainController
 
 
 class Window(SimpleMainWindow):
     '''
-    Main window which pops up when SAUSAGE is started
+    Main window which pops up when FAST MS is started
     '''
     def __init__(self):
         super(Window, self).__init__(None, 'FAST MS')
@@ -46,8 +36,8 @@ class Window(SimpleMainWindow):
                              (self.reopen, 'Re-opens the last analysis', None),
                          #'Calc. Abundances':
                          #    (lambda: modellingTool(self), 'Calculates relative abundances of an ion list', None),
-                         'Calculate Occupancies':
-                             (lambda: occupancyRecalculator(self), 'Calculates occupancies of a given (fragment) ion list', None),
+                         'Localise Modification':
+                             (lambda: occupancyRecalculator(self), 'Calculates the modified proportions for each fragment based on a given (fragment) ion list', None),
                          'Edit Fragments': (
                          lambda: self.editData(FragmentEditorController), 'Edit fragment patterns', None),
                          'Edit Modifications':
@@ -67,18 +57,8 @@ class Window(SimpleMainWindow):
                              (self.openIonModeller, 'Calculates the isotope pattern of an ion', None),
                          'Compare Ion Lists':
                              (self.compareSpectra, 'Compares the ion lists of multiple spectra', None)},None)
-        if INTERN:
-            self.createMenu('4 BACHEM',
-                            {#'Simple MS/MS Method Development':
-                             #   (self.startSimpleMD, 'Calculates occupancies of a given (fragment) ion list', None),"""
-                            'MS/MS Method Development':
-                                (lambda:self.startFullMD(True), 'Starts the analysis of an MS/MS spectrum for method development', None),
-                            'SequenceTranslater':
-                                (self.openTranslater, 'Translates a sequence in HELM or 3-letter code to FAST MS sequence', None),
-                            'Load MS/MS MD':
-                                (lambda:self.startFullMD(False), 'Loads an old MS/MS method development analysis', None),},
-                            None)
 
+        self.addAdditionalMenu()
         self.createMenu('Edit',
                         {'Configurations':(self.editTopDownConfig, 'Edit configurations', None),
                          'Elements': (lambda: self.editData(ElementEditorController), 'Edit element table', None),
@@ -160,47 +140,21 @@ class Window(SimpleMainWindow):
             traceback.print_exc()
             QtWidgets.QMessageBox.warning(self, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
 
-    def startSimpleMD(self):
-        if INTERN:
-            dialog = MDStartDialog(self)
-            if dialog.exec_() and dialog.ok:
-                try:
-                    assigner = TD_Assigner()
-                    assigner.search()
-                except InvalidInputException as e:
-                    traceback.print_exc()
-                    QtWidgets.QMessageBox.warning(self, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
-        else:
-            pass
-
-    def startFullMD(self, new=True):
-        if INTERN:
-            self._lastSearch = SimpleMainWindow(None, '')
-            if new:
-                MD_MainController(self, True, self._lastSearch)
-            else:
-                MD_MainController(self, False, self._lastSearch)
-        else:
-            pass
-
-    def loadMD(self):
+    def addAdditionalMenu(self):
         pass
 
 
-    def openTranslater(self):
-        if INTERN:
-            self._translater = SequenceTranslaterWindow()
-        else:
-            pass
-
-def run():
+"""def run():
     app = QApplication(sys.argv)
     app.setStyle(QtWidgets.QStyleFactory.create("Fusion"))
     app.setApplicationName("FAST MS")
     setIcon(app)
-    gui = Window()
+    if INTERN:
+        gui = InternalWindow()
+    else:
+        gui = Window()
     sys.exit(app.exec_())
 
 
 if __name__ == '__main__':
-    run()
+    run()"""

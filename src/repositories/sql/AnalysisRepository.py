@@ -1,7 +1,9 @@
+import re
 import sqlite3
 import numpy as np
 from tqdm import tqdm
 
+from src.entities.InternalIons import InternalFragmentIon, InternalFragment
 from src.entities.Ions import FragmentIon, Fragment
 from src.entities.Search import Search
 from src.resources import processTemplateName
@@ -83,8 +85,14 @@ class AnalysisRepository(object):
             peaks = np.array(peaks, dtype=peaksArrType)
             type, modification = processTemplateName(ionVals[1])
 
-            ion = FragmentIon(Fragment(type, ionVals[2], modification, ionVals[3], [],0),
-                              ionVals[4], ionVals[5], peaks,ionVals[6], ionVals[7], True, ionVals[8])
+            if (ionVals[2] < 0) and "[" in type:
+                numbers = re.findall(r'\[.*?\]', type)[0][1:-1].split(":")
+                ion = InternalFragmentIon(InternalFragment("i", int(numbers[1]), modification, ionVals[3], [], 0,
+                                                           type[1:3], int(numbers[0])),
+                                  ionVals[4], ionVals[5], peaks, ionVals[6], ionVals[7], True, ionVals[8])
+            else:
+                ion = FragmentIon(Fragment(type, ionVals[2], modification, ionVals[3], [],0),
+                                  ionVals[4], ionVals[5], peaks,ionVals[6], ionVals[7], True, ionVals[8])
             #ion.setRemaining(ionVals[10], ionVals[11], ionVals[12], ionVals[13])
             if ionVals[9] == 0:
                 ions.append(ion)

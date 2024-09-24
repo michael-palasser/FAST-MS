@@ -91,10 +91,15 @@ class FragmentationRepository(AbstractRepositoryWith2Items):
         '''
         pattern = self.get('name', name)
         listOfLists = self.getAllItems(pattern[0])
+        """newPrec = pattern[2].replace("Prec", "intact")
+        newList = []
+        for row in listOfLists[1]:
+            newList.append([row[0].replace("Prec", "intact")]+list(row[1:]))"""
         try:
+            #return FragmentationPattern(pattern[1], newPrec, listOfLists[0], newList, pattern[0])
             return FragmentationPattern(pattern[1], pattern[2], listOfLists[0], listOfLists[1], pattern[0])
         except:
-            return FragmentationPattern(pattern[1], 'Prec', listOfLists[0], listOfLists[1], pattern[0])
+            return FragmentationPattern(pattern[1], 'intact', listOfLists[0], listOfLists[1], pattern[0])
 
     def getAllItems(self, patternId):
         '''
@@ -182,8 +187,8 @@ class ModificationRepository(AbstractRepositoryWith2Items):
         columns = super(ModificationRepository, self).getItemColumns()
         columns.update({'residue': "If the species is dependent on the occurence of a specific building block within the "
                                    "sequence, enter the building block", 'radicals': "Enter the number of radicals",
-                        'z-effect': "If the modification alters the charge of modified fragment enter an (empiric) number of the extent",
-                        'calc.occ.': 'Should the modification be used for calculating the occupancy?',
+                        'charge': "If the modification alters the charge of modified fragment enter an (empiric) number of the extent",
+                        'exclude': 'Should the modification be used when localising a modification?',
                         'enabled': "Activate/Deactivate the modification"})
         return (columns,{'name': 'Modification to be excluded'})
 

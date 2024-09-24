@@ -118,7 +118,6 @@ class AbstractServiceForPatterns(AbstractService, ABC):
         elements = args[0]
         numericals = args[1]
         names = []
-        print(items)
         for item in items:
             name = item[0]
             if name in names:
@@ -403,6 +402,16 @@ class SequenceService(AbstractService):
 
     def getAllSequenceNames(self):
         return self._repository.getAllSequenceNames()
+
+    def getAllSequenceNamesAsDict(self):
+        sequences = self._repository.getAllSequences()
+        sequDict = {}
+        for sequ in sequences:
+            if sequ[2] in sequDict.keys():
+                sequDict[sequ[2]].append(sequ[0])
+            else:
+                sequDict[sequ[2]] = [sequ[0]]
+        return sequDict
 
     def save(self, sequTuples):
         '''

@@ -5,7 +5,7 @@ Created on 21 Jul 2020
 '''
 from multiprocessing import Pool
 import logging
-#from tqdm import tqdm
+from tqdm import tqdm
 
 from src.Exceptions import InvalidInputException
 from src.MolecularFormula import MolecularFormula
@@ -128,6 +128,7 @@ class FragmentLibraryBuilder(object):
         '''
         ladder = list()
         sequLength = len(self._sequence.getSequenceList())
+        bar = tqdm(total=(len(basicLadder)-1) * len(fragTemplates))#*(self._maxMod+1)*len(self._modifPattern.getItems()))
         for link in basicLadder:
             #precursor ion handled later
             linkSequ = link[0]
@@ -164,6 +165,7 @@ class FragmentLibraryBuilder(object):
                                             '''if modif.getCalcOccupancy():
                                                 self.__importantModifications.add(modifName+rest)'''
                                             ladder.append(newFragment)
+                bar.update(1)
         return ladder
 
 

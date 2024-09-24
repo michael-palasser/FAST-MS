@@ -11,6 +11,7 @@ import matplotlib.ticker as mticker
 from PyQt5 import QtWidgets, QtGui
 from PyQt5.QtCore import Qt, QVariant
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
+from matplotlib.font_manager import FontProperties
 
 from src.gui.GUI_functions import makeLabelInputWidget, createComboBox, setIcon, translate
 from src.gui.tableviews.TableModels import AbstractTableModel
@@ -150,7 +151,10 @@ class SequCovWidget(QtWidgets.QWidget):
         label.setText(self._translate(self._inputWidget.objectName(), type))
         tickBox = QtWidgets.QCheckBox(self._inputWidget)
         tickBox.setChecked(checked)
-        comboBox = createComboBox(self._inputWidget, ['red','blue','green', 'orange', 'brown', 'purple'])
+        colours = ['purple', 'green', 'orange', 'blue', 'brown', "turquoise", "black"]
+        comboBox = createComboBox(self._inputWidget, ['red']+colours)
+        """if row>0:
+            comboBox.setCurrentIndex((row-1)%4+1)"""
         self._gridLayout.addWidget(label, row, 0)
         self._gridLayout.addWidget(tickBox, row, 1)
         self._gridLayout.addWidget(comboBox, row, 2)
@@ -220,9 +224,13 @@ class SequenceCoveragePlot(FigureCanvasQTAgg):
         sequLength=len(self._sequence)
         rows = int(sequLength / lineWidth)+1
         step_x = 1
-        step_y = 1/(2*rows)
+        step_y = 1/(2*rows)#+(len(coveragesForward[0])+len(coveragesBackward[0])-2)*0.001
+
+        lenForward, lenBack = len(coveragesForward[0]), len(coveragesBackward[0])
+        font_path = 'C:/Windows/Fonts/seguisym.ttf'
+        prop = matplotlib.font_manager.FontProperties(fname=font_path)
         #print('rows', rows, sequLength,step_y)
-        self._fig = plt.figure(figsize=(lineWidth,rows+0))
+        self._fig = plt.figure(figsize=(lineWidth,rows))#+(lenForward+lenBack-2)*1))
         matplotlib.rcParams.update({'font.size': 15})
         ax = plt.subplot(111)
         ax.set_xlim([-step_x*0.5, lineWidth+0.5])
@@ -240,29 +248,43 @@ class SequenceCoveragePlot(FigureCanvasQTAgg):
         line=step_y
         counter = 1
         nrSize= 10
-        plt.text(x=-step_x*0.6, y=1-line, s=str(counter), fontsize=nrSize)
+        plt.text(x=-step_x * 0.5, y=1-line, s=str(counter), fontsize=nrSize)
         #size = 0.01
+        maxFrags = lenForward
+        if lenBack>maxFrags:
+            maxFrags= lenBack
         for i,bb in enumerate(self._sequence):
             plt.text(x=xPos, y=1-line, s=bb, fontsize=20, ha='center')
-            if i != sequLength-1:
-                for j,coverageForward in enumerate(coveragesForward[i]):
+            for j in range(maxFrags):
+                #for j,coverageForward in enumerate(coveragesForward[i]):
+                if (i != sequLength-1) and (j<lenForward):
+                    coverageForward = coveragesForward[i][j]
                     if coverageForward and not np.isnan(coverageForward):
-                        yPos_j=1-line+step_y*0.6+(len(coveragesForward[i])-j-1)*step_y*0.2
-                        plt.text(x=xPos+step_x*0.491, y=yPos_j, s='L', ha='center', c=coloursF[j],rotation=180)
-                        plt.text(x=xPos+step_x*0.586, y=1-line+step_y*0.15, s='I', ha='center', c=coloursF[-1])
+                        #yPos_j=1-line+step_y*(0.6+(len(coveragesForward[i])-j-1)*0.2)
+                        yPos_j=1-line+step_y*(0.12+(lenForward-j-1)*0.2)
+                        #plt.text(x=xPos+step_x*0.491, y=yPos_j, s='L', ha='center', c=coloursF[j],rotation=180)
+                        plt.text(x=xPos+step_x*0.5, y=yPos_j, s=u"\u23CB", fontproperties=prop, ha='center', c=coloursF[j], fontsize=22)
+
+                        #plt.text(x=xPos+step_x*0.586, y=1-line+step_y*0.15, s='I', ha='center', c=coloursF[-1])
                 '''if (i+1)%lineWidth:
                     xPos+=step_x'''
                 '''if not (i + 1) % lineWidth:
                     line += 2 * step_y
                     plt.text(x=-step_x * 0.5, y=1 - line, s=str(counter), fontsize=nrSize)
                     xPos = step_x / 2'''
-            if i != 0:
-                for j,coverageBackward in enumerate(coveragesBackward[i-1]):
+                if (i != sequLength-1) and (j<lenBack):#(i != 0) and (j<lenBack):
+                    #for j,coverageBackward in enumerate(coveragesBackward[i-1]):
+                    #coverageBackward = coveragesBackward[i-1][lenBack-j-1]
+                    coverageBackward = coveragesBackward[i][j]
                     if coverageBackward and not np.isnan(coverageBackward):
-                        yPos_j=1-line-step_y*0.3-(len(coveragesBackward[i-1])-j-1)*step_y*0.2
-                        #plt.text(x=xPos+step_x*0.62, y=yPos_j, s='L', ha='left', c=coloursB[j])
-                        plt.text(x=xPos-step_x*0.375, y=yPos_j, s='L', ha='center', c=coloursB[j])
-                        plt.text(x=xPos-step_x*0.414, y=1-line-step_y*0.15, s='I', ha='center', c=coloursB[-1])
+                        #yPos_j=1-line-step_y*0.3-(len(coveragesBackward[i-1])-j-1)*step_y*0.2
+                        #yPos_j=1-line-step_y*(0.3-(lenBack-j-1)*0.2)
+                        #yPos_j=1-line-step_y*(0.12+(lenBack-j-1)*0.2) last
+                        yPos_j=1-line-step_y*(0.12+j*0.2)
+                        #plt.text(x=xPos-step_x*0.375, y=yPos_j, s='L', ha='center', c=coloursB[j])
+                        #plt.text(x=xPos-step_x*0.449, y=yPos_j, s=u'\u23BF', fontproperties=prop, ha='center', c=coloursB[j], fontsize=22) last
+                        plt.text(x=xPos+step_x*0.503, y=yPos_j, s=u'\u23BF', fontproperties=prop, ha='center', c=coloursB[j], fontsize=22)
+                        #plt.text(x=xPos-step_x*0.414, y=1-line-step_y*0.15, s='I', ha='center', c=coloursB[-1])
                         #if (not coveragesForward[i]) or (xPos==step_x/2):
                         #plt.text(x=xPos+step_x*0.62, y=1-line-step_y*0.05, s='I', ha='left', c=coloursB[-1])
 
@@ -271,43 +293,10 @@ class SequenceCoveragePlot(FigureCanvasQTAgg):
             if (i+1)%lineWidth:
                 xPos+=step_x
             else:
-                line += 2 * step_y
+                line += step_y*(2+(len(coveragesForward[0])+len(coveragesBackward[0])-2)*0.08)
                 plt.text(x=-step_x * 0.5, y=1 - line, s=str(counter), fontsize=nrSize)
                 xPos = step_x / 2
 
         plt.show()
 
 
-"""if __name__ == '__main__':
-    from PyQt5.QtWidgets import QApplication
-    import sys
-    
-    sequ = list('GGCUGCUUGUCCUUUAAUGGUCCAGUC')
-    app = QApplication(sys.argv)
-    overall = [(key,val*100) for key,val in
-               {'a': 0.7692307692307693, 'c': 0.9230769230769231, 'w': 0.7692307692307693, 'y': 0.9230769230769231, 'allForward': 0.9615384615384616, 'allBackward': 0.9230769230769231, 'all': 0.9259259259259259}.items()]
-    gui = SequCovWidget( overall,
-                         sequ, {'a': np.array([0., 1., 0., 1., 1., 1., 0., 1., 1., 1., 0., 0., 1., 0., 1., 1., 1.,
-       1., 1., 1., 1., 1., 1., 1., 1., 1., np.nan]), 'c': np.array([0., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.,
-       1., 1., 1., 1., 1., 0., 1., 1., 1.,np.nan])}, {'w': np.array([np.nan,1., 1., 0., 0., 1., 1., 0., 1., 1., 0., 1., 1., 1., 1., 1., 1., 1.,
-       0., 1., 1., 1., 1., 1., 1., 1., 0.]), 'y': np.array([np.nan,1., 1., 1., 1., 1., 1., 1., 1., 1., 0., 1., 1., 1., 1., 1., 1., 1.,
-       1., 1., 1., 1., 1., 1., 1., 1., 0.])},np.array([(val1,val2) for val1,val2 in zip(np.array([0., 1., 0., 1., 1., 1., 0., 1., 1., 1., 0., 0., 1., 0., 1., 1., 1.,
-                                            1., 1., 1., 1., 1., 1., 1., 1., 1., np.nan]),np.array([np.nan,1., 1., 1., 1., 1., 1., 1., 1., 1., 0., 1., 1., 1., 1., 1., 1., 1.,
-                                            1., 1., 1., 1., 1., 1., 1., 1., 0.]))]))'''
-
-    '''sequ = list('GGCUGCUUGUCCUUUAAUGGUCCAGUC')*10
-    sequLength = len(sequ)
-    sequPlot = SequenceCoveragePlot(sequ, np.ones((sequLength,1)),
-                                          np.ones((sequLength,1)), 20)'''
-
-    star = matplotlib.markers.TICKLEFT
-    print(star)
-    circle = mpath.Path.unit_circle()
-    # concatenate the circle with an internal cutout of the star
-    '''verts = np.concatenate([circle.vertices, star])
-    codes = np.concatenate([circle.codes, star])
-    cut_star = mpath.Path(verts, codes)
-    plt.plot(np.arange(10) ** 2, '--r', marker=cut_star, markersize=15)
-
-    plt.show()
-    #sys.exit(app.exec_())"""

@@ -275,7 +275,9 @@ class IntensityModeller(object):
             return
         if correctedIon.getQuality() is None:
             correctedIon.addComment("qual._None")
-            correctedIon.setQuality(1.)
+            qual = 1.
+            correctedIon.setQuality(qual)
+            correctedIon.setScore(calcScore(1, qual, self._noiseLevel))
         if (correctedIon.getQuality() > self._configs['shapeDel']) :
             correctedIon.addComment("qual.")
             self._deletedIons[correctedIon.getHash()] = correctedIon
@@ -314,10 +316,13 @@ class IntensityModeller(object):
                  < getErrorLimit(elem['mono'], self._configs['k'], self._configs['d'])) & \
                                        (monoisotopicArr['name'] != elem['name']) &
                                        (monoisotopicArr['charge'] == elem['charge']))
-            if len(monoisotopicArr[same_mono_index]) > 0:    #direkte elemente von corrected spectrum uebernehmen
-                sameMonoisotopic = [self._correctedIons[(elem['name'][0], elem['charge'][0])]]
+            ionHash = (elem['name'][0], elem['charge'][0])
+            if (len(monoisotopicArr[same_mono_index]) > 0) and (ionHash in self._correctedIons.keys()):    #direkte elemente von corrected spectrum uebernehmen
+                sameMonoisotopic = [self._correctedIons[ionHash]]
                 for elem2 in monoisotopicArr[same_mono_index]:
-                    sameMonoisotopic.append(self._correctedIons[(elem2['name'], elem2['charge'])])
+                    ionHash2 = (elem2['name'], elem2['charge'])
+                    if ionHash2 in self._correctedIons.keys():
+                        sameMonoisotopic.append(self._correctedIons[(elem2['name'], elem2['charge'])])
                 sameMonoisotopic.sort(key=lambda obj:(abs(obj.getError()),obj.getName()))
                 if sameMonoisotopic not in isomers:
                     self.commentIonsInPatterns(([ion.getHash() for ion in sameMonoisotopic],), True)

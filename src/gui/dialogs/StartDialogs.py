@@ -3,7 +3,7 @@ import traceback
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QMessageBox
 
-from src.resources import path, INTERN
+from src.resources import path, INTERN, DEVELOP
 from os.path import join
 
 from src.Exceptions import InvalidInputException
@@ -22,7 +22,7 @@ class TDStartDialog(StartDialog):
     def __init__(self, parent, personal=False):
         super().__init__(parent, "Settings")
         #self._formLayout = self.makeFormLayout(self)
-        if not personal:
+        if not personal or DEVELOP:
             self._configHandler = ConfigurationHandlerFactory.getTD_SettingHandler()
         else:
             self._configHandler = ConfigurationHandlerFactory.getPersonalTD_SettingHandler()

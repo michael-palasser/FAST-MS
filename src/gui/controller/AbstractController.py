@@ -242,10 +242,10 @@ class AbstractMainController(ABC):
         copyTableAction = menu.addAction("Copy Table")
         actionStrings = ["Delete", "Restore"]
         mode = 0
-        other = 1
+        #other = 1
         if table != self._tables[0]:
             mode = 1
-            other = 0
+            #other = 0
         delAction = menu.addAction(actionStrings[mode])
         action = menu.exec_(table.viewport().mapToGlobal(pos))
         it = table.indexAt(pos)
@@ -288,7 +288,8 @@ class AbstractMainController(ABC):
             df=pd.DataFrame(data=table.model().getData(), columns=table.model().getHeaders())
             df.to_clipboard(index=False,header=True)
         elif action == delAction:
-            choice = QtWidgets.QMessageBox.question(self._mainWindow, "",
+            self.deleteRow(mode, selectedIon, selectedRow)
+            """choice = QtWidgets.QMessageBox.question(self._mainWindow, "",
                                         actionStrings[mode] +' ' + selectedIon.getName() +"?",
                                                     QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
             if choice == QtWidgets.QMessageBox.Yes:
@@ -309,7 +310,50 @@ class AbstractMainController(ABC):
                         ion = self._intensityModeller.resetIon(ovHash)
                         self._info.resetIon(ion)
                         self._tables[mode].model().updateData(ion.getMoreValues())
-                self._infoView.update()
+                self._infoView.update()"""
+
+    def deleteRow(self, mode, selectedIon, selectedRow):
+        actionStrings = ["Delete", "Restore"]
+        choice = QtWidgets.QMessageBox.question(self._mainWindow, "",
+                                                actionStrings[mode] + ' ' + selectedIon.getName() + "?",
+                                                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+        if mode == 0:
+            otherTable = self._tables[1]
+        else:
+            otherTable = self._tables[0]
+        if choice == QtWidgets.QMessageBox.Yes:
+            if mode == 0:
+                self._info.deleteIon(selectedIon)
+            else:
+                self._info.restoreIon(selectedIon)
+            self._saved = False
+            ovHash = self._intensityModeller.switchIon(selectedIon)
+            self._tables[mode].model().removeByIndex(selectedRow)
+            otherTable.model().addData(selectedIon.getMoreValues())
+            if ovHash is not None:
+                choice = QtWidgets.QMessageBox.question(self._mainWindow, "Attention",
+                                                        'Deleted Ion overlapped with ' + ovHash[0] + ', ' + str(
+                                                            ovHash[1]) + '\n' +
+                                                        'Should this ion be updated?',
+                                                        QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+                if choice == QtWidgets.QMessageBox.Yes:
+                    ion = self._intensityModeller.resetIon(ovHash)
+                    self._info.resetIon(ion)
+                    self._tables[mode].model().updateData(ion.getMoreValues())
+            self._infoView.update()
+
+    """def keyPressEvent(self, event):
+        print("hi")
+        if event.key() == Qt.Key_Delete:
+            print("hello")
+            mode = self._tabWidget.currentIndex()
+            table = self._tables[mode]
+            selectedRow = table.currentRow()
+            selectedHash = table.model().getHashOfRow(selectedRow)
+            selectedIon = self._intensityModeller.getIon(selectedHash)
+            self.deleteRow(mode, selectedIon, table.currentRow())
+        else:
+            super().keyPressEvent(event)"""
 
 
     def getSpectrumView(self, parent, selectedHash, empty=False, view=None, strongFocus=False):
@@ -557,6 +601,7 @@ class AbstractMainController(ABC):
                                     self._spectrumHandler.getSprayMode(), self._spectrumHandler.getNoise())"""
         self._openWindows.append(self.getSpectrumView(None, None))
         if DEVELOP:
+            print("noise:")
             for vals in self._spectrumHandler.getNoise():
                 print(vals[0], vals[1])
 

@@ -7,7 +7,7 @@ import os
 from PyQt5 import QtWidgets
 
 from src.gui.GUI_functions import translate
-from src.gui.MainWindows.AbstractMainWindows import SimpleMainWindow
+from src.gui.mainWindows.AbstractMainWindows import SimpleMainWindow
 from src.resources import path
 from src.gui.tableviews.TableViews import TableView
 from src.gui.tableviews.TableModels import IonTableModel

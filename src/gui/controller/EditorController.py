@@ -8,7 +8,7 @@ from PyQt5.QtCore import Qt
 from src.Exceptions import CanceledException
 from src.resources import DEVELOP
 from src.services.DataServices import *
-from src.gui.MainWindows.AbstractMainWindows import SimpleMainWindow
+from src.gui.mainWindows.AbstractMainWindows import SimpleMainWindow
 from src.gui.GUI_functions import createComboBox, shoot, translate
 from src.gui.dialogs.SimpleDialogs import OpenDialog
 
@@ -114,10 +114,15 @@ class AbstractSimpleEditorController(ABC):
             rowData = []
             for col in range(table.columnCount()):
                 widgetItem = table.item(row, col)
+                """try:
+                    print(widgetItem, widgetItem.text())
+                except:
+                    print(type(widgetItem), widgetItem)"""
                 if col in boolVals:
                     try:
                         rowData.append(int(widgetItem.checkState()/2))
                     except AttributeError as e:
+                        #print(row, col)
                         newItem = QtWidgets.QTableWidgetItem()
                         newItem.setCheckState(Qt.Checked)
                         table.setItem(row,col, newItem)
@@ -125,13 +130,15 @@ class AbstractSimpleEditorController(ABC):
                         raise Warning(e.__str__())
                     """elif isinstance(widgetItem, QtWidgets.QComboBox):
                         rowData.append(widgetItem.currentText())"""
-                elif widgetItem and widgetItem.text():
+                elif widgetItem:# and widgetItem.text(): test!
                     rowData.append(widgetItem.text())
                 else:
                     #QtWidgets.QTableWidget().cellWidget()
                     widgetItem = table.cellWidget(row, col)
                     if widgetItem is None:
                         rowData.append("")
+                        """elif isinstance(widgetItem, QtWidgets.QLineEdit):
+                            rowData.append(widgetItem.text())"""
                     else:
                         rowData.append(widgetItem.currentText())
             itemList.append(rowData)

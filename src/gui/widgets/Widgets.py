@@ -51,16 +51,16 @@ class OpenFileWidget(QtWidgets.QWidget):
 
     def getFileNames(self, mode):
         #_files = self.openFileNamesDialog(self.__title, self.__formats)
-        options = QFileDialog.Options()
-        options |= QFileDialog.DontUseNativeDialog
+        """options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog"""
         startPath = os.path.split(self.text())[:-1][0]
         if not os.path.isdir(startPath):
             startPath = self.__startPath
         if mode == 2:
-            files, _ = QFileDialog.getOpenFileNames(self, self.__title, startPath, self.__formats, options=options)
+            files, _ = QFileDialog.getOpenFileNames(self, self.__title, startPath, self.__formats)#, options=options)
             self._lineEdit.setText(',  '.join(files))
         elif mode == 1:
-            file, _ = QFileDialog.getOpenFileName(self, self.__title, startPath, self.__formats, options=options)
+            file, _ = QFileDialog.getOpenFileName(self, self.__title, startPath, self.__formats)#, options=options)
             self._lineEdit.setText(file)
         else:
             dir = QFileDialog.getExistingDirectory(self, self.__title, startPath)

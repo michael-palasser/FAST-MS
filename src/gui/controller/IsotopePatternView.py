@@ -4,7 +4,7 @@ from pandas import DataFrame
 from src.resources import DEVELOP
 from src.services.IsotopePatternLogics import IsotopePatternLogics
 from src.services.DataServices import *
-from src.gui.MainWindows.AbstractMainWindows import SimpleMainWindow
+from src.gui.mainWindows.AbstractMainWindows import SimpleMainWindow
 from src.gui.GUI_functions import makeFormLayout, shoot, connectTable
 from src.gui.widgets.IonTableWidgets import IsoPatternIon
 from src.gui.widgets.PeakWidgets import IsoPatternPeakWidget
@@ -180,6 +180,16 @@ class IsotopePatternView(SimpleMainWindow):
             sequence = service.get(openDialog.getName())
             self._modeBox.setCurrentText(sequence.getMolecule())
             self._inputForm.setText(''.join(sequence.getSequenceString()))
+            allItems = [self._options["fragmentation"].itemText(i) for i in
+                        range(self._options["fragmentation"].count())]
+            if "NA" in sequence.getMolecule():
+                if "RNA CAD" in allItems:
+                    self._options["fragmentation"].setCurrentIndex(allItems.index("RNA CAD"))
+            elif "Protein CAD" in allItems:
+                self._options["fragmentation"].setCurrentIndex(allItems.index("Protein CAD"))
+            allItems2 = [self._options["fragment"].itemText(i) for i in range(self._options["fragment"].count())]
+            if "intact" in allItems2:
+                self._options["fragment"].setCurrentIndex(allItems2.index("intact"))
 
     def pauseCalculation(self):
         if self._pause:

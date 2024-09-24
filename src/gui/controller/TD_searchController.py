@@ -10,10 +10,11 @@ import numpy as np
 import time
 from PyQt5 import QtWidgets
 
+from src.entities.InternalIons import InternalFragmentIon
 from src.resources import path, autoStart, DEVELOP, getRelativePath
 from src.Exceptions import InvalidIsotopePatternException, InvalidInputException
 from src.entities.Info import Info
-from src.gui.MainWindows.AbstractMainWindows import SimpleMainWindow
+from src.gui.mainWindows.AbstractMainWindows import SimpleMainWindow
 from src.gui.controller.AbstractController import AbstractMainController
 from src.gui.tableviews.FragmentationTable import FragmentationTable
 from src.gui.widgets.OccupancyWidget import OccupancyWidget
@@ -79,6 +80,7 @@ class TD_MainController(AbstractMainController):
             try:
                 self.loadSearch(parent,special)
             except IndexError as e:
+                traceback.print_exc()
                 QtWidgets.QMessageBox.warning(None, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
 
             """searchService = SearchService()
@@ -183,7 +185,7 @@ class TD_MainController(AbstractMainController):
         types.update(self._propStorage.getFragmentsByDir(-1))
         types.add(self._settings['sequName'])
         for key in {ion.getType() for ion in self._intensityModeller.getObservedIons().values()}:
-            if key not in types:
+            if (key not in types) and not isinstance(ion, InternalFragmentIon):
                 QtWidgets.QMessageBox.warning(None, "Fragment type not found", '"'+ key + '" was not found in fragmentation template list. Add the template to "'
                                               + self._propStorage.getFragmentation().getName() + '" to ensure correct behaviour', QtWidgets.QMessageBox.Ok)
         self._analyser = Analyser(None, self._propStorage.getSequenceList(), self._settings['charge'],
@@ -216,9 +218,10 @@ class TD_MainController(AbstractMainController):
         models intensities, fixes problems by overlapping ions (2 user inputs possible for deleting ions)
         '''
         print("\n********** Creating fragment library **********")
+        start = time.time()
         self._libraryBuilder = self.constructLibraryBuilder()
         self._libraryBuilder.createFragmentLibrary()
-
+        print("done", time.time()-start)
         """read existing ion-list file or create new one"""
         libraryImported = False
         patternReader = IsotopePatternRepository()

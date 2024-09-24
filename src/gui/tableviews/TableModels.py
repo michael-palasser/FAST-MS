@@ -14,6 +14,8 @@ class AbstractTableModel(QtCore.QAbstractTableModel):
     '''
     def __init__(self, data, format, headers):
         super(AbstractTableModel, self).__init__()
+        if data is None:
+            data=[["" for _ in headers]]
         self._data = data
         self._format = format
         self._headers = headers

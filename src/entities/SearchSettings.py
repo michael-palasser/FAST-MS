@@ -1,6 +1,6 @@
 from src.resources import processTemplateName
 from src.services.DataServices import SequenceService, MoleculeService, FragmentationService, ModificationService
-from src.entities.GeneralEntities import BuildingBlock
+from src.entities.GeneralEntities import BuildingBlock, Sequence
 from src.entities.IonTemplates import FragItem, ModificationItem
 
 
@@ -8,14 +8,17 @@ class SearchSettings(object):
     '''
     Container class for storage of search properties (sequence, molecule, fragmentation pattern, modification pattern)
     '''
-    def __init__(self, sequName,fragmentation, modificationPattern):
+    def __init__(self, sequName,fragmentation, modificationPattern, sequTup=None):
         '''
         Class to store several entities (sequence, fragmentation, modification-pattern)
         :param (str) sequName: name of the sequence
         :param (str) fragmentation: name of the fragmentation pattern
         :param (str) modificationPattern: name of the modification pattern
         '''
-        self.__sequence = SequenceService().get(sequName)
+        if sequTup is None:
+            self.__sequence = SequenceService().get(sequName)
+        else:
+            self.__sequence = Sequence(sequName, sequTup[0], sequTup[1], None)
         # self.sequenceList = self.__sequence.getSequenceList()
         self.__molecule = MoleculeService().getPatternWithObjects(self.__sequence.getMolecule(), BuildingBlock)
         # self.__monomers = MoleculeService().getItemDict(self.__sequence.getMolecule())

@@ -6,6 +6,7 @@ import os
 import time
 
 import numpy as np
+from tqdm import tqdm
 
 from src.resources import path
 from src.Exceptions import InvalidIsotopePatternException
@@ -78,11 +79,13 @@ class IsotopePatternRepository(object):
             isotopePatternDict[name] = np.array(isotopePattern, dtype=[('m/z',np.float64),('calcInt', np.float64)])
         print('Checking correctness of fragment library')
         start = time.time()
+        bar = tqdm(total=len(fragmentLibrary))
         for fragment in fragmentLibrary:
             if fragment.getName() not in isotopePatternDict:
                 raise InvalidIsotopePatternException(fragment.getName(), "not found in file")
             self.checkEquality(fragment, isotopePatternDict[fragment.getName()])
             fragment.setIsotopePattern(isotopePatternDict[fragment.getName()])
+            bar.update(1)
         print('time',time.time()-start)
         print('done')
         return fragmentLibrary

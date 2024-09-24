@@ -404,7 +404,7 @@ class AbstractSpectrumHandler(abc.ABC):
                               theoreticalPeaks[notInNoise]]
                 # find other isotope Peaks
                 foundPeaksArr = np.sort(np.array(foundPeaks, dtype=peaksArrType), order=['m/z'])
-                foundIon = self.getIonClass()(neutral, np.min(theoreticalPeaks['m/z']), z, foundPeaksArr, noise)
+                foundIon = self.getIonClass(neutral)(neutral, np.min(theoreticalPeaks['m/z']), z, foundPeaksArr, noise)
                 if not np.all(foundPeaksArr['I'] == 0):
                     self._foundIons.append(foundIon)
                     [print("\t", np.around(peak['m/z'], 4), "\t", peak['I']) for peak in foundPeaksArr if
@@ -416,7 +416,7 @@ class AbstractSpectrumHandler(abc.ABC):
                     self.addToDeletedIons(foundIon, 'noise')
             else:
                 foundMainPeaksArr = np.sort(np.array(foundMainPeaks, dtype=peaksArrType), order=['m/z'])
-                foundIon = self.getIonClass()(neutral, np.min(theoreticalPeaks['m/z']), z, foundMainPeaksArr, noise)
+                foundIon = self.getIonClass(neutral)(neutral, np.min(theoreticalPeaks['m/z']), z, foundMainPeaksArr, noise)
                 if theoreticalPeaks[notInNoise].size > 0:
                     """foundMainPeaksArr = np.sort(np.array(foundMainPeaks, dtype=peaksArrType), order=['m/z'])
                     foundIon = self.getIonClass()(neutral, np.min(theoreticalPeaks['m/z']), z, foundMainPeaksArr, noise)"""

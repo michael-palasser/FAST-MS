@@ -96,7 +96,7 @@ def run(mainWindow):
         workbook = xlsxwriter.Workbook(output)
         worksheet = workbook.add_worksheet()
         worksheet.write_row(0,0,['analysis:',datetime.now().strftime("%d/%m/%Y")])
-        worksheet.write_row(3,0,['fragment','z'])
+        worksheet.write_row(3,0,['name','z'])
         worksheet.write_row(3,3,spectralFiles)
         row = 4
 

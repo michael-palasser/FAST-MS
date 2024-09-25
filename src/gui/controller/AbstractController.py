@@ -132,9 +132,7 @@ class AbstractMainController(ABC):
 
     def makeGeneralOptions(self):
         actionDict = dict()
-        editActions = {'Repeat Ovl. Modelling':
-                           (self.repeatModellingOverlaps, 'Repeat overlap modelling involving user inputs', None),
-                            'Add New Ion':(self.addNewIonView, 'Add an ion manually', None),}
+        editActions = self.getEditOptions()
         # 'Take Shot':(self.shootPic,'', None),}
         if DEVELOP:
             editActions['Take shot'] = (self.shootPic, '', None)
@@ -154,6 +152,9 @@ class AbstractMainController(ABC):
                                                  None)
         actionDict.update(actions)
         return actionDict
+
+    def getEditOptions(self):
+        pass
 
     def shootPic(self):
         widgets = {w.windowTitle():w for w in self._openWindows}

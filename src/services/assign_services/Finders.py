@@ -119,7 +119,6 @@ class AbstractFinder(ABC):
             radicals = neutral.getRadicals()
             for z in self.getZRange(neutral):
                 mz = getMz(mass, z * self._sprayMode, radicals)
-
                 errorLimit = getErrorLimit(mz,k, d)
                 mask = np.where((abs(self.calculateError(spectrum['m/z'], mz)) < errorLimit)
                                 & (spectrum['z'] == z))

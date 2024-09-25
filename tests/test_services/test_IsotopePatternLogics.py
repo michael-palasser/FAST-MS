@@ -9,8 +9,8 @@ from src.entities.SearchSettings import SearchSettings
 from src.resources import processTemplateName
 from src.services.library_services.FragmentLibraryBuilder import FragmentLibraryBuilder
 from src.services.assign_services.AbstractSpectrumHandler import getMz
-from tests.test_MolecularFormula import RNA_formulaDummy, RNA_pattern
-from tests.top_down.test_LibraryBuilder import initTestSequences
+from tests.test_other.test_MolecularFormula import RNA_formulaDummy, RNA_pattern
+from tests.test_services.test_LibraryBuilder import initTestSequences
 #from tests.test_MolecularFormula
 
 
@@ -24,9 +24,9 @@ class TestIsotopePatternLogics(TestCase):
 
     def initLibrary(self):
         self.logics = IsotopePatternLogics()
-        self.searchSettingsRNA = SearchSettings('dummyRNA', 'RNA_CAD', 'CMCT')
+        self.searchSettingsRNA = SearchSettings('dummyRNA', 'RNA CAD', 'CMCT')
         self.fragmentsRNA = self.getLibrary(self.searchSettingsRNA, 2)
-        self.searchSettingsProt = SearchSettings('dummyProt', 'Protein_ECD', '-')
+        self.searchSettingsProt = SearchSettings('dummyProt', 'Protein ECD', '-')
         self.fragmentsProt = self.getLibrary(self.searchSettingsProt, 0)
 
     def getLibrary(self, searchSettings, nrMod):
@@ -119,7 +119,7 @@ class TestIsotopePatternLogics(TestCase):
             bad = 'g'
         properties = self.getProperties(searchSettings)
         return self.logics.calculate(mode,bad+properties['sequString'], charge, radicals,1000, properties['fragmentationName'],
-                                     'Prec', modifPattern, modif, nrMod)
+                                     'intact', modifPattern, modif, nrMod)
 
     def testIsotopePattern(self,calcIsotopePattern1=None, calcIsotopePattern2=None, delta=5*10**(-6)):
         if calcIsotopePattern1 is not None:
@@ -153,7 +153,7 @@ class TestIsotopePatternLogics(TestCase):
         self.test_get_fragment2('RNA')
         self.test_get_fragment2('Protein')
         with self.assertRaises(InvalidInputException):
-            self.logics.getFragment('RNA', 'GCHx', 'RNA_CAD', 'c', '-', '-', 0)
+            self.logics.getFragment('RNA', 'GCHx', 'RNA CAD', 'c', '-', '-', 0)
 
 
 
@@ -172,7 +172,7 @@ class TestIsotopePatternLogics(TestCase):
         for name, frag in fragLib.items():
             if precName in name:
                 _, rest = processTemplateName(name)
-                newFragDict['Prec' + rest] = frag
+                newFragDict['intact' + rest] = frag
             newFragDict[name] = frag
         properties = self.getProperties(searchSettings)
         for fragTemp in searchSettings.getFragmentation().getItems() + searchSettings.getFragmentation().getItems2():

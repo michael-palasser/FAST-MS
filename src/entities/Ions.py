@@ -12,7 +12,7 @@ class Ion(ABC):
     '''
     Abstract superclass for ions
     '''
-    def getName(self):
+    def getName(self, html=False):
         pass
 
     def getCharge(self):
@@ -325,8 +325,11 @@ class IntactNeutral(object):
         return self._name
     def getModification(self):
         return self._modification
-    def getName(self):
-        return self._name + self._modification
+    def getName(self, html=False):
+        name = self._name + self._modification
+        if html and self._modification != "":
+            return "[" + name + "]"
+        return name
     def getNrOfModifications(self):
         return self._nrOfModifications
     def getFormula(self):

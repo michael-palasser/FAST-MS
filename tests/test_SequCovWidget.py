@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import QApplication
 from src.entities.Ions import FragmentIon
 from src.gui.widgets.SequCovWidget import SequCovWidget, SequenceCoveragePlot
 from src.services.analyser_services.Analyser import Analyser
-from tests.top_down.test_IntensityModeller import initTestSpectrumHandler
+from tests.test_services.test_IntensityModeller import initTestSpectrumHandler
 
 if __name__ == '__main__':
     configs, settings, props, builder, spectrumHandler = initTestSpectrumHandler()

@@ -13,8 +13,8 @@ from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.services.library_services.FragmentLibraryBuilder import FragmentLibraryBuilder
 from src.services.assign_services.TD_SpectrumHandler import SpectrumHandler
 from src.services.assign_services.AbstractSpectrumHandler import getErrorLimit, calculateError, getMz
-from tests.test_MolecularFormula import averaginine, averagine
-from tests.top_down.test_LibraryBuilder import initTestSequences
+from tests.test_other.test_MolecularFormula import averaginine, averagine
+from tests.test_services.test_LibraryBuilder import initTestSequences
 
 def concatenateArrays(new, spectrumHandler):
     newSpec = [row for row in spectrumHandler.getSpectrum()]
@@ -35,7 +35,7 @@ def initTestLibraryBuilder(charge=-3, modif='CMCT'):
     configs = ConfigurationHandlerFactory.getConfigHandler().getAll()
     configs['zTolerance'] = 1.0
     filePath = os.path.join(path, 'tests', 'test_files', 'dummySpectrum.txt')
-    settings = {'sequName': 'dummyRNA', 'charge': charge, 'fragmentation': 'RNA_CAD', 'modifications': modif,
+    settings = {'sequName': 'dummyRNA', 'charge': charge, 'fragmentation': 'RNA CAD', 'modifications': modif,
                 'nrMod': 1, 'spectralData': filePath, 'noiseLimit': 10 ** 6, 'fragLib': ''}
     props = SearchSettings(settings['sequName'], settings['fragmentation'], settings['modifications'])
     builder = FragmentLibraryBuilder(props, 1)
@@ -49,7 +49,7 @@ class TestSpectrumHandler(TestCase):
         '''filePath = os.path.join(path, 'tests', 'dummySpectrum.txt')
         self._configs = ConfigurationHandlerFactory.getConfigHandler().getAll()
 
-        self.settings = {'sequName': 'dummyRNA', 'charge': -3, 'fragmentation': 'RNA_CAD', 'modifications': 'CMCT',
+        self.settings = {'sequName': 'dummyRNA', 'charge': -3, 'fragmentation': 'RNA CAD', 'modifications': 'CMCT',
                     'nrMod': 1, 'spectralData': filePath, 'noiseLimit': 10**5, 'fragLib': ''}
         self.props = SearchSettings(self.settings['sequName'], self.settings['fragmentation'], self.settings['modifications'])
         self.builder = FragmentLibraryBuilder(self.props,1)
@@ -58,7 +58,7 @@ class TestSpectrumHandler(TestCase):
         self.configs, self.settings, self.props, self.builder = initTestLibraryBuilder()
         self.spectrumHandler = SpectrumHandler(self.props, self.builder.getPrecursor(), self.settings, self.configs)
 
-        self.settingsProt = {'sequName': 'dummyProt', 'charge': 4, 'fragmentation': 'Protein_CAD', 'modifications': '-',
+        self.settingsProt = {'sequName': 'dummyProt', 'charge': 4, 'fragmentation': 'Protein CAD', 'modifications': '-',
                              'nrMod': 0, 'spectralData': os.path.join(path, 'tests', 'test_files', 'dummySpectrum.txt'),
                              'noiseLimit': 10 ** 5, 'fragLib': ''}
         self.propsProt = SearchSettings(self.settingsProt['sequName'], self.settingsProt['fragmentation'],

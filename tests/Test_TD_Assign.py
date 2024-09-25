@@ -1,13 +1,12 @@
 import os
 from copy import deepcopy
 
-import numpy as np
 from unittest import TestCase
 
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.resources import path
 from src.top_down.TD_Assign import TD_Assigner
-from tests.top_down.test_LibraryBuilder import initTestSequences
+from tests.test_services.test_LibraryBuilder import initTestSequences
 
 
 class Test_TD_Assign(TestCase):
@@ -15,7 +14,7 @@ class Test_TD_Assign(TestCase):
     def test_search(self):
         initTestSequences()
         configs = ConfigurationHandlerFactory.getConfigHandler().getAll()
-        settings = {'sequName': 'CR_1_2', 'charge': -4, 'fragmentation': 'RNA_CAD', 'modifications': +134,
+        settings = {'sequName': 'CR_1_2', 'charge': -4, 'fragmentation': 'RNA CAD', 'modifications': +134,
                     'nrMod': 1, 'spectralData': os.path.join(path, 'tests', 'test_files',
                                             'CR_1_2_annealed_noMg_ESI_500mMDEPC_125min_Sk75_CAD12p5_134_SNAP.txt'),
                     'errorlimit': 50}

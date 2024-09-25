@@ -1,4 +1,5 @@
 import os
+from copy import deepcopy
 from unittest import TestCase
 import numpy as np
 
@@ -11,13 +12,16 @@ from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 
 def initFinders():
     configHandlerRNA = initConfigurations()
+    print("configHandlerRNA", configHandlerRNA.getAll())
     configHandlerRNA.update('sprayMode','negative')
-    configHandlerRNA.update('sequName', 'neoRibo')
-    configHandlerProt = initConfigurations()
+    configHandlerRNA.update('sequName', 'NSR')
+    print("configHandlerRNA", configHandlerRNA.getAll())
+    configHandlerProt = deepcopy(configHandlerRNA)
     configHandlerProt.update('sprayMode','positive')
     configHandlerProt.update('sequName', 'dummyProt')
-    finderRNA = IntactFinder(IntactLibraryBuilder(SequenceService().get(configHandlerRNA.get('sequName')), 'CMCT').createLibrary(), configHandlerRNA.getAll())
-    finderProt = IntactFinder(IntactLibraryBuilder(SequenceService().get(configHandlerProt.get('sequName')), '-').createLibrary(), configHandlerProt.getAll())
+    finderRNA = IntactFinder(IntactLibraryBuilder(SequenceService().get('NSR'), 'CMCT').createLibrary(), configHandlerRNA.getAll())
+    print(configHandlerRNA.getAll(), configHandlerRNA, configHandlerProt)
+    finderProt = IntactFinder(IntactLibraryBuilder(SequenceService().get('dummyProt'), '-').createLibrary(), configHandlerProt.getAll())
     return finderRNA, configHandlerRNA, finderProt, configHandlerProt
 
 def initConfigurations():
@@ -33,8 +37,8 @@ def initConfigurations():
 def initTestSequences(sequenceService=SequenceService()):
     sequences = sequenceService.getSequences()
     names = [tup[0] for tup in sequences]
-    if 'neoRibo' not in names:
-        sequences.append(('neoRibo', 'GGCUGCUUGUCCUUUAAUGGUCCAGUC', 'RNA', len(sequences) + 1))
+    if 'NSR' not in names:
+        sequences.append(('NSR', 'GGCUGCUUGUCCUUUAAUGGUCCAGUC', 'RNA', len(sequences) + 1))
     if 'dummyProt' not in names:
         sequences.append(('dummyProt', 'GAPH', 'Protein', len(sequences) + 1))
     sequenceService.save(sequences)
@@ -62,6 +66,11 @@ class TestFinder(TestCase):
 
     def test_get_error_limit(self):
         self.fail()'''
+
+    def test_find_ions_in_spectrum(self):
+        self.finderRNA.readData([self.RNA_spectrum])
+        print(self.finderRNA.getData()[0][0])
+        print(self.finderRNA.findIonsInSpectrum(4.5, 0.5, self.finderRNA.getData()[0][0]))
 
     def test_find_ions(self):
         '''
@@ -93,7 +102,7 @@ class TestFinder(TestCase):
             stddevs.append(np.std(errors))
         for i in range(len(errors1)):
             self.assertLess(errors2[i],errors1[i])
-            #print(stddevs[i], errors2[i],errors1[i])
+            print(stddevs[i], errors2[i],errors1[i])
             self.assertLess(errors2[i],1)
             self.assertLess(stddevs[i],2)
 

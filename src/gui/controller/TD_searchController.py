@@ -329,7 +329,6 @@ class TD_MainController(AbstractMainController):
         print("done")
         return 0
 
-
     def getSpectrumHandlerConstructor(self):
         return SpectrumHandler
 
@@ -355,6 +354,10 @@ class TD_MainController(AbstractMainController):
 
         self._actions.update(actions)
 
+    def getEditOptions(self):
+        return {'Repeat Ovl. Modelling':
+                   (self.repeatModellingOverlaps, 'Repeat overlap modelling involving user inputs', None),
+                    'Add New Ion':(self.addNewIonView, 'Add an ion manually', None),}
 
     def makeTable(self, parent, data,fun):
         '''

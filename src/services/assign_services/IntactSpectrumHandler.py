@@ -20,7 +20,7 @@ class IntactSpectrumHandler(AbstractSpectrumHandler):
         super(IntactSpectrumHandler, self).__init__(settings, configs, mode, peaks)
 
     @staticmethod
-    def getIonClass():
+    def getIonClass(*args):
         '''
         Returns the constructor for an IntactIon
         '''

@@ -14,8 +14,8 @@ from src.services.assign_services.IntactSpectrumHandler import IntactSpectrumHan
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.services.assign_services.TD_SpectrumHandler import SpectrumHandler
 from src.services.library_services.FragmentLibraryBuilder import FragmentLibraryBuilder
-from tests.test_IntactFinder import initConfigurations, initTestSequences
-from tests.top_down.test_SpectrumHandler import initTestLibraryBuilder
+from tests.test_services.test_Finder import initConfigurations, initTestSequences
+from tests.test_services.test_SpectrumHandler import initTestLibraryBuilder
 
 
 def getTestIntactSettings():
@@ -91,7 +91,7 @@ class TestCalibrator(TestCase):
         configs['maxStd']=1.5
 
         filePath = os.path.join(path, 'tests', 'test_files', 'CR_1_2_annealed_noMg_ESI_500mMDEPC_125min_Sk75_CAD12p5_134_uncal.txt')
-        settings = {'sequName': 'CR_1_2', 'charge': -4, 'fragmentation': 'RNA_CAD', 'modifications': +134,
+        settings = {'sequName': 'CR_1_2', 'charge': -4, 'fragmentation': 'RNA CAD', 'modifications': +134,
                     'nrMod': 1, 'spectralData': filePath, 'noiseLimit': 10 ** 6, 'fragLib': '',
                     'calIons': os.path.join(path, 'tests', 'test_files', 'CR_1_2_annealed_noMg_ESI_500mMDEPC_125min_Sk75_CAD12p5_134_SNAP.txt')}
         props = SearchSettings(settings['sequName'], settings['fragmentation'], settings['modifications'])

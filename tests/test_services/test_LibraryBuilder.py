@@ -29,14 +29,14 @@ class TestFragmentLibraryBuilder(TestCase):
 
     def initLibrary(self):
         self.sequenceService = SequenceService()
-        self.propertyStorageRNA = SearchSettings('dummyRNA', 'RNA_CAD', 'CMCT')
-        self.builderRNA = FragmentLibraryBuilder(SearchSettings('dummyRNA', 'RNA_CAD', '-'), 0)
+        self.propertyStorageRNA = SearchSettings('dummyRNA', 'RNA CAD', 'CMCT')
+        self.builderRNA = FragmentLibraryBuilder(SearchSettings('dummyRNA', 'RNA CAD', '-'), 0)
         self.builderRNA_CMCT0 = FragmentLibraryBuilder(self.propertyStorageRNA, 0)
         self.builderRNA_CMCT1 = FragmentLibraryBuilder(self.propertyStorageRNA, 1)
         self.builderRNA_CMCT2 = FragmentLibraryBuilder(self.propertyStorageRNA, 2)
-        self.propertyStorageProtCAD = SearchSettings('dummyProt', 'Protein_CAD', '-')
+        self.propertyStorageProtCAD = SearchSettings('dummyProt', 'Protein CAD', '-')
         self.builderProt_CAD = FragmentLibraryBuilder(self.propertyStorageProtCAD, 0)
-        self.builderProt_ECD = FragmentLibraryBuilder(SearchSettings('dummyProt', 'Protein_ECD', '-'), 0)
+        self.builderProt_ECD = FragmentLibraryBuilder(SearchSettings('dummyProt', 'Protein ECD', '-'), 0)
 
     def test_build_simple_ladder(self):
         self.initLibrary()

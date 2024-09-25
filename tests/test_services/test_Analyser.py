@@ -1,13 +1,10 @@
-import sys
 from copy import deepcopy
 from unittest import TestCase
 import numpy as np
-from PyQt5.QtWidgets import QApplication
 
 from src.entities.Ions import FragmentIon, Fragment
-from src.gui.widgets.SequCovWidget import SequCovWidget
 from src.services.analyser_services.Analyser import Analyser
-from tests.top_down.test_IntensityModeller import initTestSpectrumHandler
+from tests.test_services.test_IntensityModeller import initTestSpectrumHandler
 
 
 class TestAnalyser(TestCase):

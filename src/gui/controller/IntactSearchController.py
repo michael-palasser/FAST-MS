@@ -64,6 +64,10 @@ class IntactMainController(AbstractMainController):
             traceback.print_exc()
             QtWidgets.QMessageBox.warning(None, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
 
+    def getEditOptions(self):
+        return {'Repeat Ovl. Modelling':
+             (self.repeatModellingOverlaps, 'Repeat overlap modelling involving user inputs', None)}
+
     def search(self):
         '''
         Search for ions in spectrum: Calculates theo. isotope patterns, searches for these in the spectrum (peak list),

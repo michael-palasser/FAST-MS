@@ -188,7 +188,7 @@ class ModificationRepository(AbstractRepositoryWith2Items):
         columns.update({'residue': "If the species is dependent on the occurence of a specific building block within the "
                                    "sequence, enter the building block", 'radicals': "Enter the number of radicals",
                         'charge': "If the modification alters the charge of modified fragment enter an (empiric) number of the extent",
-                        'exclude': 'Should the modification be used when localising a modification?',
+                        'localise?': 'Should the modification be used when localising a modification?',
                         'enabled': "Activate/Deactivate the modification"})
         return (columns,{'name': 'Modification to be excluded'})
 

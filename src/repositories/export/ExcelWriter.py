@@ -305,14 +305,14 @@ class ExcelWriter(BasicExcelWriter):
         row+=1
         modLoss = analyser.getPrecursorModification()
         if modLoss != None:
-            self._worksheet1.write(row, 0, 'occupancy of precursor ions:')
+            self._worksheet1.write(row, 0, '% modified intact ions:')
             self._worksheet1.write(row, 1, modLoss, self._percentFormat)
             row +=1
         row +=1
         row = self.writeAbundancesOfSpecies(row, analyser.calculateRelAbundanceOfSpecies()[0])
         sequence = properties.getSequenceList()
         forwFrags, backFrags = properties.getFragmentsByDir(1), properties.getFragmentsByDir(-1)
-        if (modLoss != None) and ('occupancies' in self._options['analysis']):
+        if (modLoss != None) and ('localise modification' in self._options['analysis']):
             occupPercentages = analyser.calculateOccupancies(self._configs['interestingIons'],
                                           unImportantMods=properties.getUnimportantModifs())[0]
             row = self.addOccupOrCharges(0, row, sequence, occupPercentages, nrMod, forwFrags, backFrags) +8

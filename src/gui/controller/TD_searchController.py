@@ -375,7 +375,7 @@ class TD_MainController(AbstractMainController):
         lastOptions= exportConfigHandler.getAll()
         lastOptions['dir'] = os.path.dirname(self._settings['spectralData'])
         if len(self._propStorage.getModifPattern().getItems()) != 0:
-            options = ('occupancies','charge states (int.)','charge states (int./z)')
+            options = ('localise modification','charge states (int.)','charge states (int./z)')
         else:
             options = ('charge states (int.)','charge states (int./z)')
         dlg = ExportDialog(self._mainWindow, options, lastOptions) #'sequence coverage'), lastOptions)

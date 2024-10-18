@@ -3,6 +3,7 @@ from unittest import TestCase
 import numpy as np
 
 from src.Exceptions import InvalidInputException
+from src.services.FormulaFunctions import protMass, eMass
 from src.services.IsotopePatternLogics import IsotopePatternLogics
 from src.MolecularFormula import MolecularFormula
 from src.entities.SearchSettings import SearchSettings
@@ -65,13 +66,6 @@ class TestIsotopePatternLogics(TestCase):
         self.assertAlmostEqual(RNA_averageMass,formulaAverageMass)
         self.testIsotopePattern(formulaIon.getIsotopePattern(), RNA_ion.getIsotopePattern())
 
-        pepIon,pepNeutralMass, pepAverageMass = self.getIon('Protein',1)
-        formulaIon, formulaNeutralMass, formulaAverageMass = self.logics.calculate('mol. formula','C16H24N6O5', 2, 1,1000)
-        self.assertEqual(pepIon.getFormula().toString(), formulaIon.getFormula().toString())
-        self.assertAlmostEqual(pepNeutralMass,formulaNeutralMass)
-        self.assertAlmostEqual(pepAverageMass,formulaAverageMass)
-        self.testIsotopePattern(formulaIon.getIsotopePattern(), pepIon.getIsotopePattern())
-
         formulaIon, formulaNeutralMass, formulaAverageMass = self.logics.calculate('mol. formula',RNA_formulaDummy.toString(),-2, 0,1000)
         #print([(getMz(RNA_pattern[i]['m/z'],2,0),RNA_pattern[i]['calcInt']*1000) for i in range(len(RNA_pattern))])
         theoIsotopePattern= np.array(self.getIonPattern(RNA_pattern,2,-1,0),dtype=RNA_pattern.dtype)
@@ -82,6 +76,26 @@ class TestIsotopePatternLogics(TestCase):
             self.logics.calculate('mol. formula', 'c(C14H25N3O)2',2, 0, 1000)
         with self.assertRaises(InvalidInputException):
             self.getIon('bad',0)
+
+    def test_radicals(self):
+        pepIon,pepNeutralMass, pepAverageMass = self.getIon('Protein',1)
+        formulaIon, formulaNeutralMass, formulaAverageMass = self.logics.calculate('mol. formula','C16H24N6O5', 2, 1,1000)
+        self.assertEqual(pepIon.getFormula().toString(), formulaIon.getFormula().toString())
+        self.assertAlmostEqual(pepNeutralMass,formulaNeutralMass)
+        self.assertAlmostEqual(pepAverageMass,formulaAverageMass)
+        self.testIsotopePattern(formulaIon.getIsotopePattern(), pepIon.getIsotopePattern())
+        self.assertAlmostEqual(getMz(380.180818,2,1),formulaIon.getIsotopePattern()[0]["m/z"],delta=10**-6)
+        formulaIon, formulaNeutralMass1, _ = self.logics.calculate('mol. formula','C16H24N6O5', 2, 2,1000)
+        self.assertAlmostEqual(getMz(380.180818,2,2),formulaIon.getIsotopePattern()[0]["m/z"],delta=10**-6)
+
+        formulaIon, formulaNeutralMass2, _ = self.logics.calculate('mol. formula','C16H24N6O5', -2, -2,1000)
+        self.assertAlmostEqual(getMz(380.180818,-2,2),formulaIon.getIsotopePattern()[0]["m/z"],delta=10**-6)
+        self.assertAlmostEqual(formulaNeutralMass1,formulaNeutralMass2,delta=10**-6)
+        formulaIon, formulaNeutralMass3, _ = self.logics.calculate('mol. formula','C16H24N6O5', 0, 1,1000)
+        self.assertAlmostEqual(380.180818+protMass+eMass,formulaIon.getIsotopePattern()[0]["m/z"],delta=10**-6)
+        self.assertAlmostEqual(formulaNeutralMass1,formulaNeutralMass3,delta=10**-6)
+        formulaIon, formulaNeutralMass3, _ = self.logics.calculate('mol. formula','C16H24N6O5', 0, -2,1000)
+        self.assertAlmostEqual(380.180818-2*(protMass+eMass),formulaIon.getIsotopePattern()[0]["m/z"],delta=10**-6)
 
     def getIonPattern(self, neutralPattern, z, sprayMode, radicals):
         protonIsotopePattern = MolecularFormula({'H': z}).calcIsotopePatternPart(2)['calcInt']

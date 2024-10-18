@@ -227,7 +227,10 @@ class Fragment(object):
 
     def getName(self, html=False):
         if self._number == 0:
-            return self._type + self._modification
+            if html:
+                return "["+self._type + self._modification+"]"
+            else:
+                return self._type + self._modification
         elif html:
             if self._modification=="":
                 return self._type + "<sub>"+str(self._number)+"</sub>"

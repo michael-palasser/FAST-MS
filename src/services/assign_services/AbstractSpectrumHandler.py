@@ -38,7 +38,8 @@ def getMz(mass, z, radicals):
     if z != 0:
         return abs(mass / z + protMass) + radicals * (eMass + protMass) / z
     else:
-        return abs(mass) + radicals * (eMass + protMass)
+        #return abs(mass) + radicals * (eMass + protMass)
+        return abs(mass) + radicals * (eMass+ protMass)
 
 
 peaksArrType = np.dtype([('m/z', float), ('I', float),

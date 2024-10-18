@@ -191,7 +191,7 @@ class AbstractSpectrumView(QtWidgets.QWidget):
             self._graphWidget.addItem(self._peakBars)
             #colours = ['b','r','g', 'c', 'm', 'y']
             colours = ['b','r']+list({'ocean green':'#4FB06D', 'tab:cyan':'#17becf', 'fuchsia':'#D9027D',
-                                      'Visitation':'#ffd700', "brown": "#eab76a", 'Corn Green':'#71A92C', 'Violet':'#9B26B6'}.values())
+                                      'Visitation':'#ffd700', 'Corn Green':'#71A92C',"brown": "#eab76a", 'Violet':'#9B26B6'}.values())
 
             """colours = list({'royalblue':'#0504aa', 'tab:red':'#d62728', 'kelly green':'#4FB06D', 'tab:cyan':'#17becf',
                             'indigo':'#5C62D6', 'TAN':'#F5C26B'}.values())"""

@@ -9,6 +9,7 @@ from src.entities.Ions import Fragment, FragmentIon
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.services.IntensityModeller import IntensityModeller
 from src.resources import processTemplateName
+from src.services.assign_services.AbstractSpectrumHandler import getMz
 
 
 #from src.services.assign_services.AbstractSpectrumHandler import peaksArrType
@@ -128,8 +129,8 @@ class IsotopePatternLogics(object):
         if formula != self._formula:
             self._formula = formula
             #self._fragment = fragment
-            tempFormula=self._formula.addFormula({'H':charge+electrons})
-            if tempFormula.getFormulaDict()['H']<0:
+            tempFormula = self._formula#changed: tempFormula=self._formula.addFormula({'H':charge+electrons})
+            if tempFormula.getFormulaDict()['H']+charge+electrons<0:
                 raise InvalidInputException('Nr of H = '+str(tempFormula.getFormulaDict()['H']), 'not enough Hs for deprotonation')
             #if tempFormula.calcIsotopePatternSlowly(1)['m/z'][0]>6000:
             if accelerate is None:
@@ -142,9 +143,12 @@ class IsotopePatternLogics(object):
         self._neutralMass = self._isotopePattern['m/z'][0]
         self._avMass = np.sum(self._isotopePattern['calcInt']*self._isotopePattern['m/z']) / \
                        np.sum(self._isotopePattern['calcInt'])
-        if charge != 0:
-            self._neutralMass -= (protMass+eMass)*charge
-        self._isotopePattern['m/z'] = self.getMz(self._isotopePattern['m/z'],charge,electrons)
+        """if charge != 0: changed
+            self._neutralMass -= (protMass+eMass)*charge"""
+        ionMode=np.sign(charge)
+        if ionMode==0:
+            ionMode=1
+        self._isotopePattern['m/z'] = getMz(self._isotopePattern['m/z'], charge, electrons*ionMode)#self.getMz(self._isotopePattern['m/z'],charge,electrons)
         self._isotopePattern['calcInt'] *= intensity
         peaks = []
         for row in self._isotopePattern:

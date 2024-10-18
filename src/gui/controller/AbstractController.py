@@ -16,7 +16,7 @@ from src.Exceptions import InvalidInputException
 from src.gui.GUI_functions import setIcon, translate
 from src.gui.widgets.Widgets import ShowFormulaWidget
 from src.repositories.SpectralDataReader import SpectralDataReader
-from src.resources import path, DEVELOP
+from src.resources import path, DEVELOP, INTERN
 from src.gui.controller.IsotopePatternView import AddIonView
 from src.gui.dialogs.CalibrationView import CalibrationView
 from src.gui.tableviews.TableViews import TableView
@@ -392,7 +392,7 @@ class AbstractMainController(ABC):
             maxI = np.max(selectedIon.getIsotopePattern()['I'])
             noise = self._spectrumHandler.getNoise((minMz_total, maxMz_total))
         profileSpec = None
-        if 'profile' in self._settings.keys() and self._settings['profile'] != "":
+        if 'profile' in self._settings.keys() and self._settings['profile'] != "" and INTERN:
             profileSpec = self._spectrumHandler.getProfileSpectrum((minMz_total, maxMz_total))
         if view is None:
             specView = SpectrumView(parent, peaks, ajacentIons, minMz_focus, maxMz_focus, maxI, self._spectrumHandler.getSprayMode(),

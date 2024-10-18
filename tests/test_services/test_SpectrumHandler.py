@@ -5,7 +5,7 @@ import numpy as np
 from numpy.random import randint
 
 from src.resources import path
-from src.FormulaFunctions import eMass
+from src.services.FormulaFunctions import eMass, protMass
 from src.MolecularFormula import MolecularFormula
 from src.entities.Ions import Fragment
 from src.entities.SearchSettings import SearchSettings
@@ -16,11 +16,12 @@ from src.services.assign_services.AbstractSpectrumHandler import getErrorLimit, 
 from tests.test_other.test_MolecularFormula import averaginine, averagine
 from tests.test_services.test_LibraryBuilder import initTestSequences
 
+
 def concatenateArrays(new, spectrumHandler):
     newSpec = [row for row in spectrumHandler.getSpectrum()]
     try:
-        if len(new>1):
-            #print("longer")
+        if len(new > 1):
+            # print("longer")
             for row in new:
                 newSpec.append((row[0], row[1]))
         else:
@@ -80,9 +81,9 @@ class TestSpectrumHandler(TestCase):
         self.assertEqual(5, self.spectrumHandler.calcPrecCharge(-6, 1))
 
     def test_add_spectrum_from_csv_and_txt(self):
-        #with open(os.path.join(path, 'tests', 'test_files', 'dummySpectrum.csv'), 'r') as f:
-        #fromCsv = self.spectrumHandler.addSpectrumFromCsv(os.path.join(path, 'tests', 'test_files', 'dummySpectrum.csv'))
-        #with open(self.settings['spectralData'], 'r') as f:
+        # with open(os.path.join(path, 'tests', 'test_files', 'dummySpectrum.csv'), 'r') as f:
+        # fromCsv = self.spectrumHandler.addSpectrumFromCsv(os.path.join(path, 'tests', 'test_files', 'dummySpectrum.csv'))
+        # with open(self.settings['spectralData'], 'r') as f:
         self.assertEqual(1090, len(self.spectrumHandler.addSpectrumFromTxt(self.settings['spectralData'])))
         """N = len(fromCsv)
         self.assertEqual(N, len(fromTxt))
@@ -99,7 +100,7 @@ class TestSpectrumHandler(TestCase):
         for i in range(10):
             point = 400 + i * 100
             self.assertAlmostEqual(1.05, self.spectrumHandler.calculateNoise(point, window) / (
-                        10 ** 6 + 100 * point), delta=0.12)
+                    10 ** 6 + 100 * point), delta=0.12)
 
     def test_get_peaks_in_window(self):
         allPeaks = np.column_stack((np.arange(100., 300.), np.ones(200))).astype(self.spectrumHandler.getDtype())
@@ -123,10 +124,10 @@ class TestSpectrumHandler(TestCase):
     def test_get_charge_range(self):
         nrP = len(self.props.getSequenceList()) - 1
         precModCharge = self.spectrumHandler.getModCharge(Fragment('c', 3, '+CMCT', '', [], 0))
-        #self.spectrumHandler.setNormalisationFactor(self.spectrumHandler.getNormalisationFactor())
+        # self.spectrumHandler.setNormalisationFactor(self.spectrumHandler.getNormalisationFactor())
         tolerance = self.configs['zTolerance']
         precCharge = abs(self.settings['charge'])
-        #self.spectrumHandlerProt.setNormalisationFactor(self.spectrumHandlerProt.getNormalisationFactor())
+        # self.spectrumHandlerProt.setNormalisationFactor(self.spectrumHandlerProt.getNormalisationFactor())
         self.spectrumHandler.setPrecModCharge(precModCharge)
         """rangeCalc = self.spectrumHandler.getChargeRange(Fragment('y', 1, '', MolecularFormula({'P': 0}), [], 0))
         self.assertEqual(0, rangeCalc.stop)"""
@@ -153,7 +154,7 @@ class TestSpectrumHandler(TestCase):
             Fragment('c', 3, '', MolecularFormula({'P': 1}), ['G', 'A', 'P'], 0))
         self.assertEqual(rangeTheo.start, rangeCalc.start)
         self.assertEqual(rangeTheo.stop, rangeCalc.stop)
-        rangeTheo = self.getRange(abs(self.settingsProt['charge'] * 3) / len(self.propsProt.getSequenceList()),# - 1,
+        rangeTheo = self.getRange(abs(self.settingsProt['charge'] * 3) / len(self.propsProt.getSequenceList()),  # - 1,
                                   tolerance, self.settingsProt['charge'])
         rangeCalc = self.spectrumHandlerProt.getChargeRange(
             Fragment('c', 3, '', MolecularFormula({'P': 1}), ['G', 'A', 'P'], 1))
@@ -177,8 +178,8 @@ class TestSpectrumHandler(TestCase):
         theoPeak = np.array([(300.54, 0.5)], dtype=dtype)
         self.assertEqual(0, self.spectrumHandler.getCorrectPeak(np.array([]), theoPeak[0])[1])
         dummyPeak, error = self.getDummyPeak(theoPeak[0])
-        dummyStructuredPeak = np.array([(dummyPeak[0][0],dummyPeak[0][1])], dtype=self.spectrumHandler.getDtype())
-        print("*3*",dummyStructuredPeak)
+        dummyStructuredPeak = np.array([(dummyPeak[0][0], dummyPeak[0][1])], dtype=self.spectrumHandler.getDtype())
+        print("*3*", dummyStructuredPeak)
         finPeak = self.spectrumHandler.getCorrectPeak(dummyStructuredPeak, theoPeak[0])
         print(dummyPeak.astype(self.spectrumHandler.getDtype())[0], finPeak)
         self.assertAlmostEqual(dummyPeak[0][0], finPeak[0])
@@ -214,15 +215,14 @@ class TestSpectrumHandler(TestCase):
         print(mz, theoPeak[1],
               (theoPeak[1] + np.random.rand(1) / 10 * (-1) ** (np.random.randint(2)))[0])
         foundI = (theoPeak[1] + np.random.rand(1)[0] / 10 * (-1) ** (np.random.randint(2)))
-        print(theoPeak[1], np.random.rand(1)[0],10 * (-1) ** np.random.randint(2))
+        print(theoPeak[1], np.random.rand(1)[0], 10 * (-1) ** np.random.randint(2))
         print(mz, foundI)
         arr = np.array([(mz, foundI)])
-                      # dtype=[('m/z', np.float64), ('calcInt', np.float64)])
+        # dtype=[('m/z', np.float64), ('calcInt', np.float64)])
         """if dtype is not None:
             arr = arr.astype(dtype)"""
-        print("arr",arr)
+        print("arr", arr)
         return arr, randomError[0]
-
 
     def test_find_peak(self):
         self.spectrumHandler.setSpectrum(self.standardSpec)
@@ -278,7 +278,7 @@ class TestSpectrumHandler(TestCase):
                         dummyPeak[0][1] = round(10 ** 8 * dummyPeak[0][1])
                         peaksToFind.append(dummyPeak[0])
                     peaksToFind = np.array(peaksToFind)
-                    print("peaksToFind",peaksToFind)
+                    print("peaksToFind", peaksToFind)
 
                     # find ion
                     """dummyStructuredPeak = np.array([(dummyPeak[0][0], dummyPeak[0][1])],
@@ -305,7 +305,7 @@ class TestSpectrumHandler(TestCase):
         # prepare everything
         self.spectrumHandler.setSpectrum(self.standardSpec)
         self.spectrumHandler.findIons(self.builder.getFragmentLibrary())
-        #print("fdslö", self.spectrumHandler.getFoundIons()[0].getHash())
+        # print("fdslö", self.spectrumHandler.getFoundIons()[0].getHash())
         self.assertEqual(0, len(self.spectrumHandler.getFoundIons()))
         precModCharge = self.spectrumHandler.getModCharge(self.builder.getPrecursor())
         upperBound = self.spectrumHandler.getUpperBound()
@@ -349,8 +349,6 @@ class TestSpectrumHandler(TestCase):
 
             self.setUp()
 
-
-
     def test_get_charged_isotope_pattern(self):
         configs, settings, props, builder = initTestLibraryBuilder(30)
         spectrumHandlerPos = SpectrumHandler(props, builder.getPrecursor(), settings, configs)
@@ -360,31 +358,33 @@ class TestSpectrumHandler(TestCase):
         spectrumHandlerNeg.getProtonIsotopePatterns()
         for i in range(10):
             randNr = randint(1, 100)
-            molFormulaDummy_RNA = MolecularFormula({key:int(round(val*randNr)) for key,val in averaginine.items()})
-            molFormulaDummy_prot = MolecularFormula({key:int(round(val*randNr)) for key,val in averagine.items()})
-            for molFormulaDummy_i in [molFormulaDummy_RNA,molFormulaDummy_prot]:
+            molFormulaDummy_RNA = MolecularFormula({key: int(round(val * randNr)) for key, val in averaginine.items()})
+            molFormulaDummy_prot = MolecularFormula({key: int(round(val * randNr)) for key, val in averagine.items()})
+            for molFormulaDummy_i in [molFormulaDummy_RNA, molFormulaDummy_prot]:
                 exactIsotopePattern = molFormulaDummy_i.calculateIsotopePattern(0.996)
-                #neutralIsotopePatternFFT = molFormulaDummy_i.calculateIsotopePatternFFT(1,exactIsotopePattern)
+                # neutralIsotopePatternFFT = molFormulaDummy_i.calculateIsotopePatternFFT(1,exactIsotopePattern)
                 exactIsotopePattern['calcInt'] /= np.sum(exactIsotopePattern['calcInt'])
-                #print('exact:',exactIsotopePattern[0])
-                maxZ = int(randNr/2)+2
-                z = randint(1,maxZ)
+                # print('exact:',exactIsotopePattern[0])
+                maxZ = int(randNr / 2) + 2
+                z = randint(1, maxZ)
                 molForm_i_pos = molFormulaDummy_i.subtractFormula({'H': z})
                 molForm_i_neg = molFormulaDummy_i.addFormula({'H': z})
                 correctedPos = spectrumHandlerPos.getChargedIsotopePattern2(molForm_i_pos,
-                                                molForm_i_pos.calculateIsotopePattern(0.996),z)#,neutralIsotopePatternFFT)
-                correctedPos['m/z'] =getMz(correctedPos['m/z'], z, 0)
+                                                                            molForm_i_pos.calculateIsotopePattern(
+                                                                                0.996), z)  # ,neutralIsotopePatternFFT)
+                correctedPos['m/z'] = getMz(correctedPos['m/z'], z, 0)
                 exactIsotopePattern_pos = deepcopy(exactIsotopePattern)
-                exactIsotopePattern_pos['m/z']=exactIsotopePattern_pos['m/z']/z-eMass
+                exactIsotopePattern_pos['m/z'] = exactIsotopePattern_pos['m/z'] / z - eMass
                 exactIsotopePattern_neg = deepcopy(exactIsotopePattern)
-                exactIsotopePattern_neg['m/z']=exactIsotopePattern_neg['m/z']/z+eMass
-                #print(correctedPos['m/z'], exactIsotopePattern['m/z'])
+                exactIsotopePattern_neg['m/z'] = exactIsotopePattern_neg['m/z'] / z + eMass
+                # print(correctedPos['m/z'], exactIsotopePattern['m/z'])
 
                 correctedNeg = spectrumHandlerNeg.getChargedIsotopePattern2(molForm_i_neg,
-                                                                        molForm_i_neg.calculateIsotopePattern(0.996),z)#,neutralIsotopePatternFFT)
-                correctedNeg['m/z'] =getMz(correctedNeg['m/z'], -z, 0)
-                print(self.testIsotopePattern(exactIsotopePattern_pos,correctedPos,deltaCalcInt=1*10e-4))
-                print(self.testIsotopePattern(exactIsotopePattern_neg,correctedNeg,deltaCalcInt=1*10e-4))
+                                                                            molForm_i_neg.calculateIsotopePattern(
+                                                                                0.996), z)  # ,neutralIsotopePatternFFT)
+                correctedNeg['m/z'] = getMz(correctedNeg['m/z'], -z, 0)
+                print(self.testIsotopePattern(exactIsotopePattern_pos, correctedPos, deltaCalcInt=1 * 10e-4))
+                print(self.testIsotopePattern(exactIsotopePattern_neg, correctedNeg, deltaCalcInt=1 * 10e-4))
             '''print('max error', molFormulaDummy_i.toString(),
                   self.testIsotopePattern(exactIsotopePattern,molForm_i_cor_pos,max_ppm=1.5, deltaCalcInt=8*10e-5))
             print('max error', molFormulaDummy_i.toString(),
@@ -395,29 +395,27 @@ class TestSpectrumHandler(TestCase):
                 raise e'''
 
     def testIsotopePattern(self, theoIsotopePattern=None, calcIsotopePattern=None, complete=True, max_ppm=0.3,
-                           deltaCalcInt=5*10e-6):
+                           deltaCalcInt=5 * 10e-6):
         if theoIsotopePattern is not None:
             ppms, diffs = [], []
             # theoIsotopePattern = np.array(theoIsotopePattern, dtype=[('m/z', np.float64), ('calcInt', np.float64)])
-            #theoIsotopePattern['calcInt'] *= (calcIsotopePattern['calcInt'][0] / theoIsotopePattern['calcInt'][0])
+            # theoIsotopePattern['calcInt'] *= (calcIsotopePattern['calcInt'][0] / theoIsotopePattern['calcInt'][0])
             if len(theoIsotopePattern) > (len(calcIsotopePattern) + 1):
                 raise Exception('Length of calculated isotope pattern to short')
-            for i in range(min(len(theoIsotopePattern),len(calcIsotopePattern))):
-                error =calculateError(theoIsotopePattern[i]['m/z'], calcIsotopePattern[i]['m/z'])
-                self.assertLess(np.abs(error),max_ppm)
+            for i in range(min(len(theoIsotopePattern), len(calcIsotopePattern))):
+                error = calculateError(theoIsotopePattern[i]['m/z'], calcIsotopePattern[i]['m/z'])
+                self.assertLess(np.abs(error), max_ppm)
                 ppms.append(error)
 
-                #self.assertAlmostEqual(theoIsotopePattern[i]['m/z']/z, calcIsotopePattern[i]['m/z'], delta=5 * 10 ** (-6))
+                # self.assertAlmostEqual(theoIsotopePattern[i]['m/z']/z, calcIsotopePattern[i]['m/z'], delta=5 * 10 ** (-6))
                 self.assertAlmostEqual(theoIsotopePattern[i]['calcInt'], calcIsotopePattern[i]['calcInt'],
                                        delta=deltaCalcInt)
-                diffs.append(calcIsotopePattern[i]['calcInt']-theoIsotopePattern[i]['calcInt']  )
+                diffs.append(calcIsotopePattern[i]['calcInt'] - theoIsotopePattern[i]['calcInt'])
             if complete:
                 self.assertAlmostEqual(1.0, float(np.sum(calcIsotopePattern['calcInt'])), delta=0.005)
-            #self.assertLess(np.sum(calcIsotopePattern['calcInt']), 1)
-            diffs=np.array(diffs)
+            # self.assertLess(np.sum(calcIsotopePattern['calcInt']), 1)
+            diffs = np.array(diffs)
             return diffs[np.argmax(np.abs(diffs))], np.average(np.abs(diffs))
-
-
 
     '''def test_resize_spectrum(self):
         self.fail()
@@ -456,3 +454,14 @@ class TestSpectrumHandler(TestCase):
     '''def tearDown(self):
         deleteTestSequences()'''
 
+
+    def test_get_mz(self):
+        Mass = 666.666
+        self.assertAlmostEqual(Mass, getMz(Mass, 0, 0))
+        for z in range(-8,8):
+            if z!=0:
+                self.assertAlmostEqual((Mass+z*1.007276)/abs(z), getMz(Mass, z, 0),delta=10**-6)
+        self.assertAlmostEqual((Mass+5*protMass+eMass)/4, getMz(Mass, 4, 1),delta=10**-6)
+        self.assertAlmostEqual((Mass+6*protMass+2*eMass)/4, getMz(Mass, 4, 2),delta=10**-6)
+        self.assertAlmostEqual((Mass-5*protMass-eMass)/4, getMz(Mass, -4, 1),delta=10**-6)
+        self.assertAlmostEqual((Mass-6*protMass-2*eMass)/4, getMz(Mass, -4, 2),delta=10**-6)

@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from src.FormulaFunctions import *
+from src.services.FormulaFunctions import *
 
 string1 = 'C5H5N5O'
 string2 = 'C5H5N5OS10Se1'

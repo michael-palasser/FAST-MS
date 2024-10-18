@@ -187,6 +187,9 @@ class IntensityModeller(object):
                 print("outlier: ",outliers)
                 noOutliers = np.isin(ion.getIsotopePattern()['m/z'],outlierList, invert=True)
                 if np.all(ion.getIsotopePattern()['I'][noOutliers] == 0):
+                    if ion.getQuality() is None:
+                        ion.setQuality(2.0)
+                        print(ion.getHash(), "None quality")
                     print("deleted:", ion.getName(), ion.getCharge(), ion.getIntensity(), round(ion.getQuality(), 2))
                     ion.setIsotopePatternPart("used",noOutliers)
                     if ion.getComment() != "noise,":

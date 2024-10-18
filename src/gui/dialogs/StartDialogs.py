@@ -65,7 +65,7 @@ class TDStartDialog(StartDialog):
 
     def getLabels(self):
         return ("Sequence Name:", "Charge:", "Fragmentation:", "Modifications:", "No. of Modifications:",
-                      "Spectral Data:", "Noise Threshold (x10^6):", 'Calibration:',
+                      "Spectral Data:", "Min. Noise (x10^6):", 'Calibration:',
                       'Ions for Cal.:', 'Profile Spectrum:') # "Fragment Library:",
 
     def getWidgets(self, args):

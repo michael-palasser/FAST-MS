@@ -4,6 +4,8 @@ import sys
 from platform import system
 from re import search as reSearch
 from subprocess import call
+from datetime import datetime
+import logging
 
 DEVELOP = False
 INTERN = False
@@ -25,6 +27,12 @@ for directory in ("Saved Analyses",'Fragment_lists'):
     if not os.path.isdir(dirPath):
         os.mkdir(dirPath)
 
+logFileBase = 'app_'+os.getlogin()+"_"+str(datetime.today().year)+"_"
+logFilePath = os.path.join(path,logFileBase+str(datetime.today().month)+'.log')
+if os.path.isfile(os.path.join(path,logFileBase+str(datetime.today().month-1)+'.log')):
+    os.remove(os.path.join(path,logFileBase+str(datetime.today().month-1)+'.log'))
+logging.basicConfig(filename=logFilePath, format='%(asctime)s - %(message)s', level=logging.INFO)
+logging.info("Starting")
 
 def getRelativePath(relativePath, data=True):
     parent = pathlib.Path(__file__).resolve().parent

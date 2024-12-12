@@ -605,7 +605,7 @@ class ModificationService(AbstractServiceForPatterns):
         return ModificationItem(item).getFormula()
 
     def getAllPatternNames(self):
-        return ["-"] + super(ModificationService, self).getAllPatternNames()
+        return ["-"] + sorted(super(ModificationService, self).getAllPatternNames())
 
     def getPatternWithObjects(self, name, *args):
         '''

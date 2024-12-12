@@ -228,9 +228,9 @@ class ExcelWriter(BasicExcelWriter):
         self._worksheet2 = self._workbook.add_worksheet('ions')
         self._worksheet3 = self._workbook.add_worksheet('peaks')
         self._worksheet4 = self._workbook.add_worksheet('deleted ions')
-        self._worksheet5 = self._workbook.add_worksheet('ions before remodelling')
+        #self._worksheet5 = self._workbook.add_worksheet('ions before remodelling')
         self._worksheet6 = self._workbook.add_worksheet('molecular formulas')
-        self._worksheet7 = self._workbook.add_worksheet('protocol')
+        self._worksheet7 = self._workbook.add_worksheet('audit trail')
         self._format5digit = self._workbook.add_format({'num_format': '0.00000'})
 
 
@@ -260,7 +260,7 @@ class ExcelWriter(BasicExcelWriter):
             self.writePeaks(self._worksheet3, 0, 0, observedIons)
             row = self.writeIons(self._worksheet4, deletedIons, precursorRegion)
             self.writePeaks(self._worksheet4, row + 3, 0, deletedIons)
-            self.writeIons(self._worksheet5, self.sortByName(intensityModeller.getRemodelledIons()), precursorRegion)
+            #self.writeIons(self._worksheet5, self.sortByName(intensityModeller.getRemodelledIons()), precursorRegion)
             self.writeSumFormulas(fragmentLibrary, spectrumHandler.getSearchedChargeStates())
         finally:
             self.closeWorkbook()

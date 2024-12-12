@@ -145,8 +145,8 @@ class AbstractMainController(ABC):
                                                   'Original Values': (
                                                   self.showRemodelledIons, 'Shows original values of overlapping ions',
                                                   None),
-                                                  'Protocol': (self._infoView.show, 'Shows protocol', None),
-                                                 'Spectrum': (self.showAllInSpectrum, 'Shows the entire spectrum', None),
+                                                  'Audit Trail': (self._infoView.show, 'Displays the audit trail', None),
+                                                 'Spectrum': (self.showAllInSpectrum, 'Displays the entire spectrum', None),
                                                  'Ion Evaluation View': (self.makeEvaluationView, 'Displays the '
                                                                                                   'currently selected ion', None)},
                                                  None)

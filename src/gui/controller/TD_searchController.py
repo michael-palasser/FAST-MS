@@ -3,7 +3,7 @@ Created on 21 Jul 2020
 
 @author: michael
 '''
-
+import logging
 import traceback
 import os
 import numpy as np
@@ -81,6 +81,7 @@ class TD_MainController(AbstractMainController):
                 self.loadSearch(parent,special)
             except IndexError as e:
                 traceback.print_exc()
+                logging.exception(e.__str__())
                 QtWidgets.QMessageBox.warning(None, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
 
             """searchService = SearchService()
@@ -132,7 +133,19 @@ class TD_MainController(AbstractMainController):
         searchService = StoredAnalysesService()
         if special is None:
             self.checkOldDatabase()
-            dialog = SelectSearchDlg(parent, searchService.getAllSearchNames(),self.deleteSearch, searchService)
+            allNames, corrupt = searchService.getAllSearchNames(True)
+            if len(corrupt)>0:
+                """QtWidgets.QMessageBox.warning(None, "Corrupted Directories",
+                                              "The following directories are corrupted and should be deleted: "
+                                              +  ", ".join(corrupt), QtWidgets.QMessageBox.Ok)"""
+                choice = QtWidgets.QMessageBox.question(None, "Corrupted Directories",
+                                                        "The following directories are corrupted: "
+                                              +  ", ".join(corrupt)+'<br>Should the directories be deleted?',
+                                                        QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+                if choice == QtWidgets.QMessageBox.Yes:
+                    for searchName in corrupt:
+                        searchService.deleteSearch(searchName)
+            dialog = SelectSearchDlg(parent, allNames,self.deleteSearch, searchService)
             if dialog.exec_() and not dialog.canceled():
                 self.load(dialog.getName(), searchService)
         else:
@@ -155,7 +168,7 @@ class TD_MainController(AbstractMainController):
         for key in keys:
             if not os.path.isfile(self._settings[key]):
                 choice = QtWidgets.QMessageBox.question(None, 'Spectral Data not found!',
-                    'File with spectral data (' +self._settings[key]+ ') could not be found.\n'
+                    'File with spectral data (' +self._settings[key]+ ') could not be found.<br>'
                     'Do you want to manually select the file? Otherwise, the analysis will be loaded without the '
                     'spectral data.',
                     QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
@@ -218,6 +231,7 @@ class TD_MainController(AbstractMainController):
         models intensities, fixes problems by overlapping ions (2 user inputs possible for deleting ions)
         '''
         print("\n********** Creating fragment library **********")
+        logging.info("********** Creating fragment library **********")
         start = time.time()
         self._libraryBuilder = self.constructLibraryBuilder()
         self._libraryBuilder.createFragmentLibrary()
@@ -230,6 +244,7 @@ class TD_MainController(AbstractMainController):
             settings = [self._settings['fragLib']]
         if patternReader.findFile(settings):
             print("\n********** Importing list of isotope patterns from:", patternReader.getFile(), "**********")
+            logging.info("********** Importing list of isotope patterns from: " + patternReader.getFile() + " **********")
             try:
                 self._libraryBuilder.setFragmentLibrary(patternReader)
                 libraryImported = True
@@ -237,14 +252,15 @@ class TD_MainController(AbstractMainController):
             except InvalidIsotopePatternException:
                 traceback.print_exc()
                 choice = QtWidgets.QMessageBox.question(None, "Problem with importing list of isotope patterns",
-                        "Imported Fragment Library from " + patternReader.getFile() + " incomplete\n"
-                        "Should a new library be created?\nThe search will be stopped otherwise",
+                        "Imported Fragment Library from " + patternReader.getFile() + " incomplete<br>"
+                        "Should a new library be created?<br>The search will be stopped otherwise",
                                                         QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
                 if choice != QtWidgets.QMessageBox.Yes:
                     return 1
                     #sys.exit()
         if libraryImported == False:
             print("\n********** Writing new list of isotope patterns to:", patternReader.getFile(), "**********\n")
+            logging.info("********** Writing new list of isotope patterns to: " + patternReader.getFile() + " **********")
             #ld = LoadingWidget(len(self._libraryBuilder.getFragmentLibrary()), True)
             start = time.time()
             patternReader.saveIsotopePattern(self._libraryBuilder.addNewIsotopePattern())#ld.progress))
@@ -255,12 +271,14 @@ class TD_MainController(AbstractMainController):
             return 1
         #spectralFile = os.path.join(path, 'Spectral_data','top-down', self._settings['spectralData'])
         print("\n********** Importing peak data from:", self._settings['spectralData'], "**********")
+        logging.info("********** Importing peak data from: "+ self._settings['spectralData']+" **********")
         try:
             constructor = self.getSpectrumHandlerConstructor()
             self._spectrumHandler = constructor(self._propStorage, self._libraryBuilder.getPrecursor(),self._settings,
                                                 self._configs)
         except Exception as e:
             traceback.print_exc()
+            logging.exception(e.__str__())
             raise InvalidInputException('Problem in file ' + self._settings['spectralData'] + ':<br>', traceback.format_exc())
         self._info.spectrumProcessed(self._spectrumHandler.getUpperBound(), self._spectrumHandler.getNoiseLevel())
         #try:
@@ -285,6 +303,7 @@ class TD_MainController(AbstractMainController):
         #    pass
         """Finding fragments"""
         print("\n********** Search for ions **********")
+        logging.info("********** Search for ions **********")
         start = time.time()
         self._spectrumHandler.findIons(self._libraryBuilder.getFragmentLibrary())
         print("\ndone\nexecution time: ", round((time.time() - start) / 60, 3), "min\n")
@@ -292,11 +311,13 @@ class TD_MainController(AbstractMainController):
         self._intensityModeller = IntensityModeller(self._configs, self._spectrumHandler.getNoiseLevel())
         start = time.time()
         print("\n********** Calculating relative abundances **********")
+        logging.info("********** Calculating relative abundances **********")
         self.processIons()
         print("\ndone\nexecution time: ", round((time.time() - start) / 60, 3), "min\n")
 
         """Handle ions with same monoisotopic peak and charge"""
         print("\n********** Handling overlaps **********")
+        logging.info("********** Handling isomers **********")
         sameMonoisotopics = self._intensityModeller.findIsomers()
         if len(sameMonoisotopics) > 0:
             view = CheckMonoisotopicOverlapView(sameMonoisotopics, self._spectrumHandler)
@@ -311,6 +332,7 @@ class TD_MainController(AbstractMainController):
 
         """remodelling overlaps"""
         print("\n********** Re-modelling overlaps **********")
+        logging.info("********** Re-modelling overlaps **********")
         complexPatterns = self._intensityModeller.remodelOverlaps()
         if len(complexPatterns) > 0:
             view = CheckOverlapsView(complexPatterns, self._spectrumHandler)
@@ -395,7 +417,7 @@ class TD_MainController(AbstractMainController):
             output = os.path.join(outputPath, filename)
             if os.path.isfile(output):
                 choice = QtWidgets.QMessageBox.question(self._mainWindow, "Warning",
-                                                        "There is already an file with the name: " + filename + "\nDo you want to overwrite it?",
+                                                        "There is already an file with the name: " + filename + "<br>Do you want to overwrite it?",
                                                         QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
                 if choice == QtWidgets.QMessageBox.No:
                     return
@@ -408,9 +430,11 @@ class TD_MainController(AbstractMainController):
                                     self._info.toString())
                 self._info.export(output)
                 print("********** saved in:", output, "**********\n")
+                logging.info("********** exported to: "+ output, "**********")
                 try:
                     autoStart(output)
-                except:
+                except Exception as e:
+                    logging.exception(e.__str__())
                     pass
             except KeyError as e:
                 traceback.print_exc()
@@ -581,7 +605,7 @@ class TD_MainController(AbstractMainController):
         Saves the results to the "search" - database
         '''
         searchService = StoredAnalysesService()
-        names = searchService.getAllSearchNames()
+        names = searchService.getAllSearchNames()[0]
         while True:
             dlg = SaveSearchDialog(self._savedName)
             #name, ok = QtWidgets.QInputDialog.getText(self._mainWindow, 'Save Analysis', 'Enter the name: ')
@@ -589,7 +613,7 @@ class TD_MainController(AbstractMainController):
                 self._savedName = dlg.getText()
                 if self._savedName in names:
                     choice = QtWidgets.QMessageBox.question(self._mainWindow, "Overwriting",
-                                "There is already a saved analysis with the name: " + self._savedName +"\nDo you want to overwrite it?",
+                                "There is already a saved analysis with the name: " + self._savedName +"<br>Do you want to overwrite it?",
                                                             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
                     if choice == QtWidgets.QMessageBox.Yes:
                         break
@@ -606,5 +630,6 @@ class TD_MainController(AbstractMainController):
         self._info.save(self._savedName)
         self._saved = True
         print('done')
+        logging.info('Analysis saved: ' + self._savedName)
         self._infoView.update()
         return self._savedName

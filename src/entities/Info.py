@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 
 
@@ -28,6 +29,11 @@ class Info(object):
         self._infoString += '* Sequence:\n\t' + ', '.join(searchProperties.getSequenceList())
         self._infoString += '\n* Fragmentation:' + searchProperties.getFragmentation().toString()
         self._infoString += '\n* Modification: ' + searchProperties.getModifPattern().toString()
+        logging.info("Settings: "+'; '.join(['%s: %s' % (key, val) for (key, val) in settings.items()]))
+        logging.info("Configurations: "+'; '.join(['%s: %s' % (key, val) for (key, val) in configurations.items()]))
+        logging.info('Sequence: ' + ', '.join(searchProperties.getSequenceList()))
+        logging.info('Fragmentation: ' + searchProperties.getFragmentation().toString())
+        logging.info('Modification: ' + searchProperties.getModifPattern().toString())
 
     def startIntact(self, settings, configurations, sequenceList, modification):
         self._infoString += '\n* Settings:\n'
@@ -41,6 +47,7 @@ class Info(object):
         self._infoString += '\n* Spectrum calibrated: m/z_cal = a * (m/z)^2 + b * m/z + c'
         for i, var in enumerate(['a','b','c']):
             self._infoString += '\n\t'+var + ' = {} ± {}'.format(values[i], errors[i])
+        logging.info("Calibration: "+ ", ".join(values)+' (error std.dev. = {}, av. error = {}'.format(quality[0], quality[1]))
         self._infoString += '\n\tquality: error std.dev. = {}, av. error = {}'.format(quality[0], quality[1])
         self._infoString += '\n\tused ions: (' + '), ('.join([self.ionToString(ion) for ion in usedIons])+')'
 
@@ -50,6 +57,7 @@ class Info(object):
 
     def searchFinished(self, mz):
         self._infoString += '\n* Search finished: ' + datetime.now().strftime("%d/%m/%Y %H:%M") + '\n'
+        logging.info('Search finished')
 
 
     def ionToString(self, ion):
@@ -116,9 +124,11 @@ class Info(object):
 
     def export(self, filename):
         self._infoString += '\n* Exported to: ' + filename  + " at " + datetime.now().strftime("%d/%m/%Y %H:%M")
+        logging.info('Exported to: ' + filename)
 
     def save(self, analysisname):
         self._infoString += '\n* Saved Analysis to: '+ analysisname  + " at " + datetime.now().strftime("%d/%m/%Y %H:%M")
+        logging.info('Saved Analysis to: '+ analysisname)
 
     def load(self):
         self._infoString += '\n\n* Load Analysis: ' + datetime.now().strftime("%d/%m/%Y %H:%M")

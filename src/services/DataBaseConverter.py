@@ -10,7 +10,7 @@ class DataBaseConverter(object):
         oldPath = oldService.getDatabasePath()
         print("**Converting",oldPath)
         newService = StoredAnalysesService()
-        newNames = newService.getAllSearchNames()
+        newNames = newService.getAllSearchNames()[0]
         oldNames = oldService.getAllSearchNames()
         #configs = ConfigurationHandlerFactory.getConfigHandler().getAll()
         """for name in newNames:

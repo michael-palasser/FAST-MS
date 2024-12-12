@@ -1,3 +1,4 @@
+import logging
 import traceback
 from functools import partial
 
@@ -127,6 +128,7 @@ class AbstractSimpleEditorController(ABC):
                         newItem.setCheckState(Qt.Checked)
                         table.setItem(row,col, newItem)
                         rowData.append(1)
+                        logging.warning(e.__str__())
                         raise Warning(e.__str__())
                     """elif isinstance(widgetItem, QtWidgets.QComboBox):
                         rowData.append(widgetItem.currentText())"""

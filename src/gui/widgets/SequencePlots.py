@@ -9,6 +9,7 @@ from matplotlib.ticker import MultipleLocator
 
 from src.resources import DEVELOP, INTERN
 
+SEQUENCE = True
 
 class PlotFactory(object):
     '''
@@ -18,12 +19,19 @@ class PlotFactory(object):
         self._parent = parent
         self._colours = ['r', 'm', 'y', 'c', 'g', 'b']
         if INTERN:
-            self._colours = list({'tab:red':'#d62728', 'tab:orange':'#ff7f0e',
+            """self._colours = list({'tab:red':'#d62728', 'tab:orange':'#ff7f0e',
                              'tab:purple':'#9467bd', 'tab:brown':'#8c564b',
                              'gold':'#dbb40c', 'm':'m', 'darkred':'#840000',
                              'limegreen':'#aaff32','tab:gray':'#7f7f7f',
                              'tab:olive':'#bcbd22', 'tab:cyan':'#17becf',
-                             'tab:green':'#2ca02c', 'royalblue':'#0504aa'}.values())
+                             'tab:green':'#2ca02c', 'royalblue':'#0504aa'}.values())"""
+        self._colours = list({'tab:red': '#d62728', 'royalblue': '#4169e1',
+                              'tab:green': '#2ca02c', 'tab:orange': '#ff7f0e',
+                              'tab:purple': '#9467bd', 'tab:cyan': '#17becf',
+                              'tab:brown': '#8c564b', 'tab:olive': '#bcbd22',
+                              'tab:gray': '#7f7f7f', 'm': 'm', 'gold': '#dbb40c',
+                              'darkred': '#840000', 'limegreen': '#aaff32'}.values())
+
         if DEVELOP:
             self._fontsize = 10
         else:
@@ -88,7 +96,8 @@ class PlotFactory(object):
         self._plot1.setRange(yRange=yRange, padding=0)
         self._plot2.setRange(yRange=yRange, padding=0)
         self._plot2.invertY()
-        self.addSequence(self._plot1)
+        if SEQUENCE:
+            self.addSequence(self._plot1)
         func()
         self.plot()
         if DEVELOP:
@@ -166,7 +175,7 @@ class PlotFactory(object):
         markers = ['t1', 'o', 's', 'p', 'h', 'star', 't2', 't3', '+', 'd', 'x','t']
         sequLength = len(self._sequence)
         self.plotCurve([i+1 for i in range(sequLength)], self._forwardVals, self._colours, markers, self._plot1)
-        self.plotCurve([sequLength-i-1 for i in range(sequLength)], self._backwardVals, self._colours[::-1],
+        self.plotCurve([sequLength-i-1 for i in range(sequLength)], self._backwardVals, self._colours[len(self._forwardVals.keys()):], #self._colours[::-1],
                        markers[::-1], self._plot2)
         self.updateViews()
         self._plot1.getViewBox().sigResized.connect(self.updateViews)
@@ -366,9 +375,10 @@ def plotBars(sequence, values, headers, title, occup=False):
     sequColour = 'black'
     '''if occup:
         sequColour = 'saddlebrown'''
-    for i,bb in enumerate(sequence):
-        plt.text(x=i+0.5, y=0, s=bb, fontsize=10, c=sequColour, ha='center')
-        #plt.text(x=(i+0.5)/sequLength, y=0, s=bb, fontsize=10, c=sequColour, ha='center', transform = ax.transAxes)
+    if SEQUENCE:
+        for i,bb in enumerate(sequence):
+            plt.text(x=i+0.5, y=0, s=bb, fontsize=10, c=sequColour, ha='center')
+            #plt.text(x=(i+0.5)/sequLength, y=0, s=bb, fontsize=10, c=sequColour, ha='center', transform = ax.transAxes)
     ax.set_ylabel('rel. abundance /a.u.')
     ax.set_xlabel('cleavage site')
     ax.xaxis.set_major_locator(MultipleLocator(5))

@@ -27,6 +27,7 @@ def calcScore(intensity, quality, noiseLevel):
             return exp(10 * quality) / 20 * quality * intensity / noiseLevel
         else:
             print('Warning: noiseLevel = 0')
+            logging.warning('Warning: noiseLevel = 0')
             return 0
 
 
@@ -165,6 +166,7 @@ class IntensityModeller(object):
     def calcQuality(self, sumSquare, intensity):
         if sumSquare**(0.5) / intensity is None:
             print("Attention:", sumSquare**(0.5) / intensity, sumSquare, intensity)
+            logging.warning("Warning: quality is None")
         return sumSquare**(0.5) / intensity
 
 
@@ -178,6 +180,7 @@ class IntensityModeller(object):
         :return: (FragmentIon) ion with calculated intensity, quality, ppm error, etc.
         '''
         print(ion.getId())
+        logging.info(ion.getId())
         outlierList = list()
         ion, outliers = self.modelIon(ion)
         correctedIon = deepcopy(ion)
@@ -185,12 +188,15 @@ class IntensityModeller(object):
             while len(outliers) > 0:
                 outlierList += outliers
                 print("outlier: ",outliers)
+                logging.info("outliers: "+", ".join([str(val) for val in outliers]))
                 noOutliers = np.isin(ion.getIsotopePattern()['m/z'],outlierList, invert=True)
                 if np.all(ion.getIsotopePattern()['I'][noOutliers] == 0):
                     if ion.getQuality() is None:
                         ion.setQuality(2.0)
                         print(ion.getHash(), "None quality")
-                    print("deleted:", ion.getName(), ion.getCharge(), ion.getIntensity(), round(ion.getQuality(), 2))
+                        logging.info("deleted: "+ion.getId()+", None quality")
+                    print("deleted:", ion.getId(), ion.getIntensity(), round(ion.getQuality(), 2))
+                    logging.info("deleted: "+ ion.getId() +", I="+ str(ion.getIntensity()) +", Q="+ str(round(ion.getQuality(), 2)))
                     ion.setIsotopePatternPart("used",noOutliers)
                     if ion.getComment() != "noise,":
                         ion.addComment("qual.")
@@ -219,7 +225,8 @@ class IntensityModeller(object):
             absError = np.average(np.abs(isoPattern['error'][noOutliers]
                                             [np.where(ion.getIsotopePattern()['I'][noOutliers] != 0)]))
             if absError> getErrorLimit(isoPattern['m/z'][0], self._configs['k'], self._configs['d']):
-                print('deleting: ' + correctedIon.getId(), ' Errors:', correctedIon.getIsotopePattern()['error'][noOutliers])
+                print('deleting: ' + correctedIon.getId(), ' (Errors:', correctedIon.getIsotopePattern()['error'][noOutliers],")")
+                logging.info('deleted: ' + correctedIon.getId() + ' (Errors: '+ ", ".join([str(val) for val in list(correctedIon.getIsotopePattern()['error'][noOutliers])])+")")
                 correctedIon.addComment("error")
                 if correctedIon.getHash() not in self._deletedIons.keys():
                     self._deletedIons[correctedIon.getHash()] = correctedIon
@@ -227,6 +234,10 @@ class IntensityModeller(object):
                 if peak['m/z'] in outlierList:
                     peak['used'] = False"""
         print(correctedIon.getIsotopePattern())
+        isotopePatternString = ""
+        for row in correctedIon.getIsotopePattern():
+            isotopePatternString += ", ".join([str(val) for val in row])+";; "
+        logging.info(isotopePatternString)
         return correctedIon
 
 
@@ -242,6 +253,7 @@ class IntensityModeller(object):
             #print("too high")
         if quality is None:
             print("Warning", ion.getName())
+            logging.warning("Warning: quality is None")
         ion.setQuality(quality)
         ion.setScore(calcScore(intensity, quality, self._noiseLevel))
 
@@ -295,6 +307,7 @@ class IntensityModeller(object):
             '''self._monoisotopicList.append(
                 (correctedIon.getName(), correctedIon.getCharge(), ion.getMonoisotopic()))'''
             print('\tqual',correctedIon.getQuality())
+            logging.info("Q = "+str(correctedIon.getQuality()))
 
     def processNoiseIon(self, ion):
         '''
@@ -332,6 +345,7 @@ class IntensityModeller(object):
                     isomers.append(sameMonoisotopic)
         print("* These ions have the same mass:")
         for ions in isomers:
+            logging.info("* isomeric ions: " + ", ".join([ion.getName() for ion in ions]))
             print(", ".join([ion.getName() for ion in ions]))
         return isomers
 
@@ -345,6 +359,7 @@ class IntensityModeller(object):
             print('deleting',ionHash)
             self._deletedIons[ionHash] = self._correctedIons[ionHash]
             del self._correctedIons[ionHash]
+            logging.info("deleted " + self._deletedIons[ionHash].getId())
 
     def remodelOverlaps(self, allAuto=False):
         '''
@@ -546,11 +561,13 @@ class IntensityModeller(object):
         '''
         for pattern in overlapPatterns:
             print(pattern)
+            logging.info(", ".join(["("+ionHash[0]+","+str(ionHash[1])+")" for ionHash in pattern]))
             del_ions = []
             spectr_peaks = list()
             for ionHash in pattern:
                 if ionHash in manDel:
                     print(ionHash, 'deleted by user')
+                    logging.info(ionHash[0]+","+str(ionHash[1]) + ' deleted by user')
                     continue
                 for peak in self._correctedIons[ionHash].getIsotopePattern():  # spectral list
                     if (peak['m/z'], peak['I']) not in spectr_peaks:
@@ -580,10 +597,12 @@ class IntensityModeller(object):
                         self._correctedIons[ionHash].setIntensity(self._correctedIons[ionHash].getIntensity() * factor)
                         del_ions.append(ionHash)
                         print("  ", ionHash, round(val, 2), 'deleted')
+                        logging.info(ionHash[0]+","+str(ionHash[1]) + ' deleted (factor = ' + str(round(val, 2))+")")
                 if len(pattern)-len(del_ions) < 2:
                     for i in range(len(undeletedIons)):
                         if undeletedIons[i] not in del_ions:
                             print(" ", undeletedIons[i], "not re-modeled (no overlaps)")
+                            logging.info(undeletedIons[i][0]+","+str(undeletedIons[i][1]) + 'not re-modeled (no overlaps)')
                     break
                 elif len(del_ions) - del_so_far > 0:
                     continue
@@ -596,10 +615,12 @@ class IntensityModeller(object):
                         elif 'high' not in self._correctedIons[ionHash].getComment():
                             factor = 1.05
                             print("  ", ionHash, " not remodeled (val=", round(val,2), ")")
+                            logging.info(ionHash[0]+","+str(ionHash[1]) + " not remodeled (factor = "+ str(round(val,2))+ ")")
                             self._correctedIons[ionHash].addComment("high," + str(round(val, 2)))
                         else:
                             factor = 1
                             print("  ", ionHash, " not remodeled (val=", round(val,2), ")")
+                            logging.info(ionHash[0]+","+str(ionHash[1]) + " not remodeled (factor = "+ str(round(val,2)), ")")
                         self._correctedIons[ionHash].setIsotopePatternPart('calcInt',
                             self._correctedIons[ionHash].getIsotopePattern()['calcInt'] * factor)
                         self._correctedIons[ionHash].setIntensity(self._correctedIons[ionHash].getIntensity() * factor)
@@ -613,11 +634,13 @@ class IntensityModeller(object):
                         if self._correctedIons[ionHash].getSignalToNoise() < self._configs['SNR']:
                             self.deleteIon(ionHash, 'SNR')
                     print("\tqual:",round(solution.fun**(0.5) / sum_int,2))
+                    #logging.info("Q=",str(round(solution.fun**(0.5) / sum_int,2)))
                     break
             for ionHash in del_ions:
                 self._deletedIons[ionHash] = self._correctedIons[ionHash]
                 print('deleting ',ionHash)
                 del self._correctedIons[ionHash]
+                logging.info('deleted '+ionHash[0]+","+str(ionHash[1]))
             print('')
 
 
@@ -628,18 +651,22 @@ class IntensityModeller(object):
         '''
         hash = ion.getHash()
         returnedHash=None
+        infoStr = hash[0]+","+str(hash[1])
         if hash in self._correctedIons.keys():
             comment = 'man.del.'
             oldDict, newDict = self._correctedIons, self._deletedIons
             returnedHash = self.checkForOverlaps(ion)
+            infoStr += " manually deleted"
         elif hash in self._deletedIons.keys():
             comment = 'man.undel.'
             oldDict, newDict = self._deletedIons, self._correctedIons
+            infoStr += " manually restored"
         else:
             raise Exception("Ion " + ion.getName() + ", " + str(ion.getCharge()) + " unknown!")
         ion.addComment(comment)
         newDict[hash] = ion
         del oldDict[hash]
+        logging.info(infoStr)
         return returnedHash
 
     def checkForOverlaps(self, ion):
@@ -677,6 +704,7 @@ class IntensityModeller(object):
         self._correctedIons[ionHash] = self.calculateIntensity(ion)
         self._correctedIons[ionHash].addComment(ion.getComment())
         self._correctedIons[ionHash].addComment('reset')
+        logging.info(hash[0]+","+str(hash[1])+" resetted")
         return self._correctedIons[ionHash]
 
     def getAdjacentIons(self, ionHash, distance=50):

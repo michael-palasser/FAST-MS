@@ -22,11 +22,11 @@ class InternalFragment(Fragment):
 
     def getName(self, html=False):
         if html:
-            modification = self._modification
+            name = self._type + "<sub>" + self._type2 + "<sub>{" + str(self._number2+1)+ ":" + str(self._number)+ "}"
             if self._modification !="" and html:
-                modification = self._modification + "]"
-            return self._type + "<sub>" + self._type2 + "<sub>[" + str(self._number2+1)+ ":" + str(self._number)+ "]" + modification
-        return self._type + self._type2 + "[" + str(self._number2+1)+ ":" + str(self._number)+ "]" + self._modification
+                return "["+name+self._modification + "]"
+            return name
+        return self._type + self._type2 + "{" + str(self._number2+1)+ ":" + str(self._number)+ "}" + self._modification
         #return self._type + self._type2 + "[" + format(self._number2+1, "02d")+ "-" + format(self._number, "02d")+ "]" + self._modification
             #return self._type2 + "<sub>"+str(self._number2)+"<sub>"+ super().getName(html)
         #return self._type2 + format(self._number2, "02d") + self._modification  # + "-" + self.loss

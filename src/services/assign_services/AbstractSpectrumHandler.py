@@ -1,7 +1,6 @@
 import copy
 import logging
 import abc
-
 import numpy as np
 
 from src.entities.Ions import Fragment
@@ -230,6 +229,7 @@ class AbstractSpectrumHandler(abc.ABC):
         :return: (int) m/z (upperBound)
         '''
         print("\n********** Finding upper bound m/z - Window in spectralFile containing fragments ********** ")
+        logging.info("********** Finding upper bound m/z - Window in spectralFile containing fragments")
         windowSize = self._configs['upperBoundWindowSize']
         currentMz = self._configs['minUpperBound']
         # tolerance = 50
@@ -248,12 +248,12 @@ class AbstractSpectrumHandler(abc.ABC):
         peaksHigherThanNoise = np.array(peaksHigherThanNoise, dtype=self._spectrum.dtype)
         windowSize, currentMz = 100, self._configs['minUpperBound']
         logging.info('********** Finding upper bound m/z - Window in spectralFile containing fragments **********')
-        logging.info('m/z\tpeaks')
+        logging.debug('m/z\tpeaks')
         while True:  # currentMz < 2500:
             currentWindow = self.getPeaksInWindow(peaksHigherThanNoise, currentMz, windowSize)
             numPeaks = np.sum(currentWindow['I'])
             # logging.info(str(currentMz)+'\t'+ str(numPeaks))
-            logging.info(str(currentMz) + '\t' + str(numPeaks))
+            logging.debug(str(currentMz) + '\t' + str(numPeaks))
             # print(currentMz, numPeaks)
             if numPeaks < 5:
                 currentMz += self._configs['upperBoundTolerance']
@@ -354,8 +354,8 @@ class AbstractSpectrumHandler(abc.ABC):
         radicals = neutral.getRadicals()
         foundIons = []
         for z in zRange:
-            logging.debug('* z' + str(z))
             print(neutral.getName(), z)
+            logging.info(neutral.getName()+ ": z=" + str(z))
             theoreticalPeaks = copy.deepcopy(sortedPattern)
             theoreticalPeaks['m/z'] = self.getMz(theoreticalPeaks['m/z'], z, radicals)
             theoreticalPeaks = self.getChargedIsotopePattern(sortedPattern, z, radicals)
@@ -428,6 +428,7 @@ class AbstractSpectrumHandler(abc.ABC):
                                   str(peak['I'])) for peak in foundMainPeaksArr if peak['I'] > 0]
                 else:
                     print('deleting: ' + neutral.getName() + ", " + str(z))
+                    logging.info('deleting: ' + neutral.getName() + ", " + str(z))
                     #foundIon = self.getIonClass(neutral)(neutral, np.min(theoreticalPeaks['m/z']), z, foundMainPeaks, noise)
                     self.addToDeletedIons(foundIon, 'noise')
             return foundIon

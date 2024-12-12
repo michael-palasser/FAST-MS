@@ -21,20 +21,40 @@ class StoredAnalysesService(object):
             self._dir = os.path.join(path, "Saved Analyses_meins")
         self._search = None
 
-    def getAllSearchNames(self):
+    def getAllSearchNames(self, tooltips=False):
         allAnalyses = []
+        corrupt = []
         for savedDir in os.listdir(self._dir):
             if savedDir == "Archive":
                 continue
+            infoFile = os.path.join(self._dir, savedDir, savedDir+"_infos.txt")
+            if not os.path.isfile(infoFile):
+                corrupt.append(savedDir)
+                continue
             with open(os.path.join(self._dir, savedDir, savedDir+"_infos.txt")) as f:
-                firstLine = f.readline().strip('\n')
+                content = {}
+                counter=0
+                for line in f:
+                    if counter>6:
+                        break
+                    elif counter == 0:
+                        time = datetime.strptime(line.rstrip()[10:26], '%d/%m/%Y %H:%M')
+                        content["time"] = str(time)
+                    elif counter not in (1,2):
+                        lineL = line.rstrip().split()
+                        content[lineL[0]] = lineL[1]
+                    counter += 1
+
+                """firstLine = f.readline().strip('\n')
                 #print("a",firstLine[10:26],"e")
                 #try:
-                time = datetime.strptime(firstLine[10:26], '%d/%m/%Y %H:%M')
+                time = datetime.strptime(firstLine[10:26], '%d/%m/%Y %H:%M')"""
                 #except ValueError:
                 #    time = datetime.strptime(firstLine[10:27], '%d/%m/%Y %H:%M')
-            allAnalyses.append((savedDir,time))
-        return [tup[0] for tup in sorted(allAnalyses, key=lambda tup:tup[1])]
+            allAnalyses.append((savedDir,time, ", ".join(content.values())))
+        if tooltips:
+            return [(tup[0], tup[2]) for tup in sorted(allAnalyses, key=lambda tup:tup[1])], corrupt
+        return [tup[0] for tup in sorted(allAnalyses, key=lambda tup:tup[1])], corrupt
 
     def getSearch(self, name):
         '''
@@ -97,7 +117,7 @@ class StoredAnalysesService(object):
         :param (Info) info: information log
         '''
         print("*** Saving Analysis", name)
-        if name in self.getAllSearchNames():
+        if name in self.getAllSearchNames()[0]:
             filePaths = self.getFileNames(name)
             if os.path.isfile(filePaths[0]):
                 newName = os.path.join(filePaths[4], "temp.db")
@@ -160,7 +180,7 @@ class StoredAnalysesService(object):
 
 
     def checkConfigs(self):
-        allNames = self.getAllSearchNames()
+        allNames = self.getAllSearchNames()[0]
         correct = ConfigHandler(self.getFileNames(allNames[-1])[2], []).getAll()
         for name in allNames:
             #print(name,self.getFileNames(name))

@@ -19,12 +19,14 @@ def makeLabelInputWidget(parent,labelName,*args):
         horizLayout.addWidget(widget)
     return horizontalWidget, horizLayout
 
-def createComboBox(parent, options, comboBox=None):
+def createComboBox(parent, options, comboBox=None, tooltips=None):
     if comboBox is None:
         comboBox = QtWidgets.QComboBox(parent)
     for i, option in enumerate(options):
         comboBox.addItem("")
         comboBox.setItemText(i, translate(parent.objectName(), option))
+        if tooltips is not None:
+            comboBox.setItemData(i, tooltips[i], QtCore.Qt.ToolTipRole)
     return comboBox
 
 def makeToolBox(parent, options):

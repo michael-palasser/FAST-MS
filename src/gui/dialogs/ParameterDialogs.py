@@ -61,8 +61,8 @@ class ConfigurationDialog(DialogWithTabs):
         gridLayout = QtWidgets.QGridLayout(box)
         gridLayout.setContentsMargins(0,0,0,0)
         gridLayout.setSizeConstraint(QtWidgets.QLayout.SetMinimumSize)
-        box.setTitle(self._translate(self.objectName(), "interesting ions"))
-        box.setToolTip(self._translate(self.objectName(), "tick fragment types which should be more deeply analysed"))
+        box.setTitle(self._translate(self.objectName(), "Interesting Ions"))
+        box.setToolTip(self._translate(self.objectName(), "Tick fragment types which should be more analysed in more detail."))
         column = 0
         row = 0
         interestingIons = self._configHandler.get('interestingIons')
@@ -91,7 +91,7 @@ class ConfigurationDialog(DialogWithTabs):
         gridLayout.addWidget(spacer,3,0)
         label = QtWidgets.QLabel(box)
         label.setMaximumHeight(25)
-        label.setText(self._translate(self.objectName(), 'User defined ions:'))
+        label.setText(self._translate(self.objectName(), 'user defined ions:'))
         gridLayout.addWidget(label,4,0,1,-1)
         for i in range(4):
             lineEdit = QtWidgets.QLineEdit(box)
@@ -113,7 +113,7 @@ class ConfigurationDialog(DialogWithTabs):
         self._modellingTab = self.createTab("Modelling")
         #self._threshold2Tab = self.createTab("thresholds 2")
         self._outputTab = self.createTab("Analysis/Output")
-        self._mzBox = self.fillBox(self._spectrumTab, "m/z area containing peaks", ("min. m/z", "min. max. m/z", "tolerance", "window size"),
+        self._mzBox = self.fillBox(self._spectrumTab, "Finding Relevant m/z Area", ("min. m/z", "min. max. m/z", "tolerance", "window size"),
                         {"lowerBound": (QtWidgets.QSpinBox(),"lower m/z bound (just peaks with higher m/z are examined)"),
                          "minUpperBound":(QtWidgets.QSpinBox(), "minimal upper m/z bound"),
                          "upperBoundTolerance": (QtWidgets.QSpinBox(),
@@ -131,7 +131,7 @@ class ConfigurationDialog(DialogWithTabs):
         self._widgets['minUpperBound'].setMaximum(9999)
         self._widgets['upperBoundTolerance'].setMaximum(999)
 
-        self._errorBox=self.fillBox(self._findingTab, "error threshold: threshold [ppm] = k/1000 * (m/z) +d",
+        self._errorBox=self.fillBox(self._findingTab, "Error Threshold: threshold [ppm] = k/1000 * (m/z) +d",
                             ("charge tolerance", "error threshold k", "error threshold d", "tolerance for isotope peaks"),
                             {"zTolerance": (QtWidgets.QDoubleSpinBox(),"ions with charge states between the calculated "
                                                                        "charge +/- tolerance will be searched for"),
@@ -141,11 +141,11 @@ class ConfigurationDialog(DialogWithTabs):
         self._widgets["d"].setMinimum(-9.99)
         #self._qualityBox = QtWidgets.QGroupBox(self._modellingTab)
 
-        self._noiseBox = self.fillBox(self._findingTab, "noise calculation", ("window size", "noise threshold tolerance"),
+        self._noiseBox = self.fillBox(self._findingTab, "Noise Calculation", ("window size", "noise threshold tolerance"),
                                       {"noiseWindowSize": (QtWidgets.QDoubleSpinBox(),"window size for noise calculation"),
                                        "thresholdFactor": (QtWidgets.QDoubleSpinBox(),
                                                            "set it lower to search for more isotope peaks")})
-        self._isoPatternBox = self.fillBox(self._modellingTab, "isotope pattern calculation",
+        self._isoPatternBox = self.fillBox(self._modellingTab, "Isotope Pattern Calculation",
                                           ("min. proportion", "approximation"),
                                           {"maxIso": (QtWidgets.QDoubleSpinBox(),
                                                       "the calculation of the isotope peaks will be stopped when "
@@ -155,7 +155,7 @@ class ConfigurationDialog(DialogWithTabs):
                                            })
         self._widgets["maxIso"].setDecimals(3)
         self._widgets["maxIso"].setMaximum(0.999)
-        self._modellingBox = self.fillBox(self._modellingTab, "modelling",
+        self._modellingBox = self.fillBox(self._modellingTab, "Modelling Intensities",
                             ("outlier peak threshold","max. nr. of overlapping ions","overlap threshold"),
                             {"outlierLimit": (QtWidgets.QDoubleSpinBox(),
                              "isotope peaks with higher values are not used for intensity modelling"),
@@ -165,7 +165,7 @@ class ConfigurationDialog(DialogWithTabs):
                                                   "ions which have a lower proportion in overlap pattern are deleted")})
 
         self._widgets["manualDeletion"].setMinimum(1)
-        self._qualityBox = self.fillBox(self._outputTab, "Quality thresholds",
+        self._qualityBox = self.fillBox(self._outputTab, "Quality Thresholds",
                                         ("quality (deletion)","quality (highlighting)","score (highlighting)", 'S/N (deletion)'),
                         {"shapeDel": (QtWidgets.QDoubleSpinBox(),"ions which have a higher value will be deleted"),
                          "shapeMarked": (QtWidgets.QDoubleSpinBox(), "ions which have a higher value will be highlighted"),

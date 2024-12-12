@@ -34,9 +34,9 @@ class SelectSearchDlg(AbstractDialog):
         self._deleteFun = deleteFun
         self._service = service
         formLayout = self.makeFormLayout(self)
-        self._options = options
+        self._options = [tup[0] for tup in options]
         #self._options = ['search1, 23.01.1992, 08:12', 'search2, 28.01.1992, 08:12']
-        self._comboBox = createComboBox(self, self._options)
+        self._comboBox = createComboBox(self, self._options, tooltips=[tup[1] for tup in options])
         index = self.fill(self, formLayout, ("Enter Name:",), {'name':(self._comboBox, '')})
 
         self._delBtn = QtWidgets.QPushButton(self)
@@ -68,6 +68,7 @@ class SelectSearchDlg(AbstractDialog):
         else:
             return None
 
+defaultFilters = "Supported Files (*txt, *csv);;Comma Separated Values (*csv);;Plain Text Files (*txt);;Comma Separated Values (*csv);;All Files (*)"
 
 class OpenSpectralDataDlg(AbstractDialog):
     '''
@@ -80,7 +81,7 @@ class OpenSpectralDataDlg(AbstractDialog):
         #label.setText(self._translate(self.objectName(), 'Select the location of the file.'))
         #formLayout.setWidget(0, QtWidgets.QFormLayout.LabelRole, label)
         self._fileWidget = OpenFileWidget(parent, 1, join(path, 'Spectral_data', 'top-down'), "Open File",
-                                           "Plain Text Files (*txt);;Comma Separated Values (*csv);;All Files (*)")
+                                          defaultFilters)
         self.fill(self, formLayout, ("File name:",), {'spectralData':(self._fileWidget,
                                   'Name of the file with spectral peaks (txt or csv format)')})
         formLayout.setWidget(2, QtWidgets.QFormLayout.FieldRole, self._buttonBox)

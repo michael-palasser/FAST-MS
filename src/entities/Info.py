@@ -47,7 +47,7 @@ class Info(object):
         self._infoString += '\n* Spectrum calibrated: m/z_cal = a * (m/z)^2 + b * m/z + c'
         for i, var in enumerate(['a','b','c']):
             self._infoString += '\n\t'+var + ' = {} ± {}'.format(values[i], errors[i])
-        logging.info("Calibration: "+ ", ".join(values)+' (error std.dev. = {}, av. error = {}'.format(quality[0], quality[1]))
+        logging.info("Calibration: "+ ", ".join([str(val) for val in values])+' (error std.dev. = {}, av. error = {}'.format(quality[0], quality[1]))
         self._infoString += '\n\tquality: error std.dev. = {}, av. error = {}'.format(quality[0], quality[1])
         self._infoString += '\n\tused ions: (' + '), ('.join([self.ionToString(ion) for ion in usedIons])+')'
 

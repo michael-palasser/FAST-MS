@@ -10,13 +10,7 @@
 /Spectral_data/model_output.txt
 /dist/*
 /Fragment_lists/*
-/src/data/*
-/src/data/intact.db
-/src/data/search.db
-/src/data/shared.db
-/src/data/top_down.db
 /venv/*
 /build/*
-/Data/*
 /.idea/*
 /Saved Analyses/*

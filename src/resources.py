@@ -11,17 +11,19 @@ DEVELOP = False
 INTERN = False
 COMPILATION = False
 
+path = pathlib.Path(__file__).resolve().parent.parent
 if getattr(sys, 'frozen', False):
-    path = os.path.dirname(sys.executable)
+    path = path.parent
+    """path = os.path.dirname(sys.executable)
     pos = path.find('FAST MS')
     if pos != -1:
-        path = path[:pos+len('FAST MS')]
+        path = path[:pos+len('FAST MS')]"""
     #if DEVELOP:
     #print("1",path)
-else:
+"""else:
     path = pathlib.Path(__file__).resolve().parent.parent
     #if DEVELOP:
-    #print("2",path)
+    #print("2",path)"""
 for directory in ("Saved Analyses",'Fragment_lists'):
     dirPath = os.path.join(path, directory)
     if not os.path.isdir(dirPath):
@@ -35,10 +37,12 @@ logging.basicConfig(filename=logFilePath, format='%(asctime)s - %(message)s', le
 logging.info("Starting")
 
 def getRelativePath(relativePath, data=True):
-    parent = pathlib.Path(__file__).resolve().parent.parent
-    #print(parent, parent.parent)
-    if not os.path.isdir(parent):
-        parent = parent.parent
+    """parent = pathlib.Path(__file__).resolve().parent.parent
+    print(parent, parent.parent)
+    print(parent.name, "_internal" == parent.name)
+    if not os.path.isdir(parent) or parent.name == "_internal":
+        print("yes")
+        parent = parent.parent"""
     if data:
         relPath = pathlib.Path('data') / relativePath
         #print("1a",relPath, pathlib.Path('data'), relativePath)
@@ -49,7 +53,8 @@ def getRelativePath(relativePath, data=True):
     else:
         relPath = pathlib.Path(relativePath)
         #print("2a",relPath, pathlib.Path('data'), relativePath)
-    basePath = getattr(sys, '_MEIPASS', parent)
+    #basePath = getattr(sys, '_MEIPASS', parent)
+    basePath = path
     #print(basePath, basePath / relPath)
     return basePath / relPath
 

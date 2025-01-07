@@ -25,7 +25,7 @@ class TestIsotopePatternLogics(TestCase):
 
     def initLibrary(self):
         self.logics = IsotopePatternLogics()
-        self.searchSettingsRNA = SearchSettings('dummyRNA', 'RNA CAD', 'CMCT')
+        self.searchSettingsRNA = SearchSettings('dummyRNA', 'RNA CAD', 'CMC')
         self.fragmentsRNA = self.getLibrary(self.searchSettingsRNA, 2)
         self.searchSettingsProt = SearchSettings('dummyProt', 'Protein ECD', '-')
         self.fragmentsProt = self.getLibrary(self.searchSettingsProt, 0)
@@ -115,8 +115,8 @@ class TestIsotopePatternLogics(TestCase):
         charge = -2
         if mode == 'RNA':
             searchSettings = self.searchSettingsRNA
-            modifPattern = 'CMCT'
-            modif = '+CMCT'
+            modifPattern = 'CMC'
+            modif = '+CMC'
             nrMod = 2
         elif mode == 'Protein':
             searchSettings = self.searchSettingsProt
@@ -213,7 +213,7 @@ class TestIsotopePatternLogics(TestCase):
                                                        properties['modifPatternName'], modTemp.getName(), nrMod)
                     name = fragment.getName()
                     if nrMod == 1:
-                        pos = name.find('CMCT')
+                        pos = name.find('CMC')
                         name = name[:pos] + str(nrMod) + name[pos:]
                     self.assertIn(name, newFragDict.keys())
                     self.assertEqual(fragment.getFormula().getFormulaDict(),

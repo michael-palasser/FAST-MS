@@ -105,34 +105,34 @@ class TestAnalyser(TestCase):
             for i, val in enumerate(occupDict[currentType]):
                 if arr[i, 0] != 0:
                     self.assertAlmostEqual(arr[i, 1] / arr[i, 0], val)
-            occupDict = self.analyser.calculateOccupancies([currentType], '+CMCT', ['+CMCT'])[0]
+            occupDict = self.analyser.calculateOccupancies([currentType], '+CMC', ['+CMC'])[0]
             self.assertTrue(currentType in occupDict.keys())
             self.assertEqual(1, len(occupDict.keys()))
             self.assertEqual(len(arr), len(occupDict[currentType]))
             for i, val in enumerate(occupDict[currentType]):
                 if arr[i, 1] != 0:
                     self.assertAlmostEqual(0, val)
-        ions = [FragmentIon(Fragment('c',5,'+2CMCT','',[],0), 1., 2, [], 10e5),
-                FragmentIon(Fragment('c',4,'+1CMCT','',[],0), 1., 2, [], 10e5),
-                FragmentIon(Fragment('c',4,'+2CMCT','',[],0), 1., 2, [], 10e5),
-                FragmentIon(Fragment('c',3,'+1CMCT','',[],0), 1., 2, [], 10e5),
-                FragmentIon(Fragment('c',2,'+1CMCT','',[],0), 1., 2, [], 10e5),
+        ions = [FragmentIon(Fragment('c',5,'+2CMC','',[],0), 1., 2, [], 10e5),
+                FragmentIon(Fragment('c',4,'+1CMC','',[],0), 1., 2, [], 10e5),
+                FragmentIon(Fragment('c',4,'+2CMC','',[],0), 1., 2, [], 10e5),
+                FragmentIon(Fragment('c',3,'+1CMC','',[],0), 1., 2, [], 10e5),
+                FragmentIon(Fragment('c',2,'+1CMC','',[],0), 1., 2, [], 10e5),
                 FragmentIon(Fragment('c',2,'+','',[],0), 1., 2, [], 10e5),
                 FragmentIon(Fragment('c',1,'+','',[],0), 1., 2, [], 10e5)]
         [ion.setIntensity(5*10**6) for ion in ions]
-        analyser = Analyser(ions, 7*['G'],4,'+CMCT')
-        percentages = analyser.calculateOccupancies(['c','y'],'+CMCT')[0]
+        analyser = Analyser(ions, 7*['G'],4,'+CMC')
+        percentages = analyser.calculateOccupancies(['c','y'],'+CMC')[0]
         for i in range(5):
             self.assertAlmostEqual(i/2,percentages['c'][i])
 
     def test_get_nr_of_modifications(self):
-        self.assertEqual(1, self.analyser.getNrOfModifications('+CMCT', '+CMCT'))
-        self.assertEqual(1, self.analyser.getNrOfModifications('+CMCT-G', '+CMCT'))
-        self.assertEqual(2, self.analyser.getNrOfModifications('+CMCT-2G', '-G'))
+        self.assertEqual(1, self.analyser.getNrOfModifications('+CMC', '+CMC'))
+        self.assertEqual(1, self.analyser.getNrOfModifications('+CMC-G', '+CMC'))
+        self.assertEqual(2, self.analyser.getNrOfModifications('+CMC-2G', '-G'))
         for _ in range(10):
             randNr = np.random.randint(10)
-            self.assertEqual(randNr, self.analyser.getNrOfModifications('+' + str(randNr) + 'CMCT', '+CMCT'))
-            self.assertEqual(randNr, self.analyser.getNrOfModifications('+' + str(randNr) + 'CMCT-A', '+CMCT'))
+            self.assertEqual(randNr, self.analyser.getNrOfModifications('+' + str(randNr) + 'CMC', '+CMC'))
+            self.assertEqual(randNr, self.analyser.getNrOfModifications('+' + str(randNr) + 'CMC-A', '+CMC'))
         self.assertEqual(1, self.analyser.getNrOfModifications('+PARO', '+PARO'))
         self.assertEqual(2, self.analyser.getNrOfModifications('+2PARO', '+PARO'))
 

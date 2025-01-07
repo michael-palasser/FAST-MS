@@ -31,7 +31,7 @@ def concatenateArrays(new, spectrumHandler):
     spectrumHandler.setSpectrum(np.array(newSpec, dtype=spectrumHandler.getDtype()))
 
 
-def initTestLibraryBuilder(charge=-3, modif='CMCT'):
+def initTestLibraryBuilder(charge=-3, modif='CMC'):
     initTestSequences()
     configs = ConfigurationHandlerFactory.getConfigHandler().getAll()
     configs['zTolerance'] = 1.0
@@ -50,7 +50,7 @@ class TestSpectrumHandler(TestCase):
         '''filePath = os.path.join(path, 'tests', 'dummySpectrum.txt')
         self._configs = ConfigurationHandlerFactory.getConfigHandler().getAll()
 
-        self.settings = {'sequName': 'dummyRNA', 'charge': -3, 'fragmentation': 'RNA CAD', 'modifications': 'CMCT',
+        self.settings = {'sequName': 'dummyRNA', 'charge': -3, 'fragmentation': 'RNA CAD', 'modifications': 'CMC',
                     'nrMod': 1, 'spectralData': filePath, 'noiseLimit': 10**5, 'fragLib': ''}
         self.props = SearchSettings(self.settings['sequName'], self.settings['fragmentation'], self.settings['modifications'])
         self.builder = FragmentLibraryBuilder(self.props,1)
@@ -112,9 +112,9 @@ class TestSpectrumHandler(TestCase):
         zEffect = self.props.getModifPattern().getItems()[0].getZEffect()
         fragment0 = Fragment('c', 5, '', '', [], 0)
         self.assertAlmostEqual(0, self.spectrumHandler.getModCharge(fragment0))
-        fragment1 = Fragment('c', 5, '+CMCT', '', [], 0)
+        fragment1 = Fragment('c', 5, '+CMC', '', [], 0)
         self.assertAlmostEqual(zEffect, self.spectrumHandler.getModCharge(fragment1))
-        fragment2 = Fragment('c', 5, '+2CMCT', '', [], 0)
+        fragment2 = Fragment('c', 5, '+2CMC', '', [], 0)
         self.assertAlmostEqual(2 * zEffect, self.spectrumHandler.getModCharge(fragment2))
 
     def test_get_normalization_factor(self):
@@ -123,7 +123,7 @@ class TestSpectrumHandler(TestCase):
 
     def test_get_charge_range(self):
         nrP = len(self.props.getSequenceList()) - 1
-        precModCharge = self.spectrumHandler.getModCharge(Fragment('c', 3, '+CMCT', '', [], 0))
+        precModCharge = self.spectrumHandler.getModCharge(Fragment('c', 3, '+CMC', '', [], 0))
         # self.spectrumHandler.setNormalisationFactor(self.spectrumHandler.getNormalisationFactor())
         tolerance = self.configs['zTolerance']
         precCharge = abs(self.settings['charge'])
@@ -143,7 +143,7 @@ class TestSpectrumHandler(TestCase):
         self.assertEqual(rangeTheo.stop, rangeCalc.stop)
 
         rangeTheo = self.getRange(2 * precCharge / nrP, tolerance, precCharge)
-        rangeCalc = self.spectrumHandler.getChargeRange(Fragment('c', 3, '+CMCT', MolecularFormula({'P': 2}), [], 0))
+        rangeCalc = self.spectrumHandler.getChargeRange(Fragment('c', 3, '+CMC', MolecularFormula({'P': 2}), [], 0))
         self.assertEqual(rangeTheo.start, rangeCalc.start)
         self.assertEqual(rangeTheo.stop, rangeCalc.stop)
 

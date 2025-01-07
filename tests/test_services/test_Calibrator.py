@@ -23,12 +23,12 @@ def getTestIntactSettings():
     spectralFile = os.path.join(path, 'tests', 'test_files', '2511_neoRibo_3xRIO_CMCT_1.5mMPip_4mMIm_01_0.52.txt')
     calFile = os.path.join(path, 'tests', 'test_files', '2511_RIO_test_0.txt')
     try:
-        settings.update({'sequName': 'neoRibo', 'modifications': 'CMCT', 'calibration': True,
+        settings.update({'sequName': 'NSR', 'modifications': 'CMCT', 'calibration': True,
                          'spectralData': spectralFile, "calIons": calFile, 'noiseLimit': 520000, 'sprayMode':'negative',
                          'minMz': 400, 'maxMz': 1600, 'errorLimitCalib':50, 'k':2, 'd':6, 'maxStd':2})
     except:
         settings = ConfigurationHandlerFactory.getIntactAssignHandler().getAll()
-        settings.update({'sequName': 'neoRibo', 'modifications': 'CMCT', 'calibration': True,
+        settings.update({'sequName': 'NSR', 'modifications': 'CMCT', 'calibration': True,
                          'spectralData': spectralFile, "calIons": calFile, 'noiseLimit': 520000, 'sprayMode':'negative',
                          'minMz': 400, 'maxMz': 1600})
     return settings
@@ -54,7 +54,7 @@ class TestCalibrator(TestCase):
     def setUp(self):
         configHandlerRNA = initConfigurations()
         configHandlerRNA.update('sprayMode', 'negative')
-        configHandlerRNA.update('sequName', 'neoRibo')
+        configHandlerRNA.update('sequName', 'NSR')
         configHandlerRNA.update2('calIons', os.path.join(path, 'tests', 'test_files', '2511_RIO_test_0.txt'))
 
         #self._SNAP_list = os.path.join(path, 'test_files', 'intact', '2511_RIO_test_0.txt')
@@ -91,7 +91,7 @@ class TestCalibrator(TestCase):
         configs['maxStd']=1.5
 
         filePath = os.path.join(path, 'tests', 'test_files', 'CR_1_2_annealed_noMg_ESI_500mMDEPC_125min_Sk75_CAD12p5_134_uncal.txt')
-        settings = {'sequName': 'CR_1_2', 'charge': -4, 'fragmentation': 'RNA CAD', 'modifications': +134,
+        settings = {'sequName': 'RNA2', 'charge': -4, 'fragmentation': 'RNA CAD', 'modifications': "+134",
                     'nrMod': 1, 'spectralData': filePath, 'noiseLimit': 10 ** 6, 'fragLib': '',
                     'calIons': os.path.join(path, 'tests', 'test_files', 'CR_1_2_annealed_noMg_ESI_500mMDEPC_125min_Sk75_CAD12p5_134_SNAP.txt')}
         props = SearchSettings(settings['sequName'], settings['fragmentation'], settings['modifications'])

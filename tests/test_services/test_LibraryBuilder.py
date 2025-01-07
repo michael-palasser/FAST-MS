@@ -29,7 +29,7 @@ class TestFragmentLibraryBuilder(TestCase):
 
     def initLibrary(self):
         self.sequenceService = SequenceService()
-        self.propertyStorageRNA = SearchSettings('dummyRNA', 'RNA CAD', 'CMCT')
+        self.propertyStorageRNA = SearchSettings('dummyRNA', 'RNA CAD', 'CMC')
         self.builderRNA = FragmentLibraryBuilder(SearchSettings('dummyRNA', 'RNA CAD', '-'), 0)
         self.builderRNA_CMCT0 = FragmentLibraryBuilder(self.propertyStorageRNA, 0)
         self.builderRNA_CMCT1 = FragmentLibraryBuilder(self.propertyStorageRNA, 1)
@@ -107,9 +107,9 @@ class TestFragmentLibraryBuilder(TestCase):
         tup = processTemplateName('c14-G')
         self.assertEqual('c14', tup[0])
         self.assertEqual('-G', tup[1])
-        tup = processTemplateName('c03+CMCT+Na-Eth-G')
+        tup = processTemplateName('c03+CMC+Na-Eth-G')
         self.assertEqual('c03', tup[0])
-        self.assertEqual('+CMCT+Na-Eth-G', tup[1])
+        self.assertEqual('+CMC+Na-Eth-G', tup[1])
 
     def test_add_precursor(self):
         # RNA
@@ -123,8 +123,8 @@ class TestFragmentLibraryBuilder(TestCase):
         self.assertEqual((len(modifications) + 2) * len(precFrags),
                          len(self.builderRNA_CMCT2.addPrecursor(simpleLadderBack[len(sequenceList) - 1][1])))
         self.assertEqual('dummyRNA', self.builderRNA_CMCT0.getPrecursor().getName())
-        self.assertEqual('dummyRNA+CMCT', self.builderRNA_CMCT1.getPrecursor().getName())
-        self.assertEqual('dummyRNA+2CMCT', self.builderRNA_CMCT2.getPrecursor().getName())
+        self.assertEqual('dummyRNA+CMC', self.builderRNA_CMCT1.getPrecursor().getName())
+        self.assertEqual('dummyRNA+2CMC', self.builderRNA_CMCT2.getPrecursor().getName())
 
         # Protein
         sequenceList, modifications, precFrags = self.getValues(self.propertyStorageProtCAD,

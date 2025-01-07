@@ -5,8 +5,7 @@ from PyQt5 import QtWidgets, QtGui, QtCore
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QFileDialog, QApplication
 
-from src.gui.GUI_functions import createComboBox
-from src.resources import path
+from src.gui.GUI_functions import createComboBox, getIconPath
 
 
 class OpenFileWidget(QtWidgets.QWidget):
@@ -25,7 +24,7 @@ class OpenFileWidget(QtWidgets.QWidget):
 
         self._horizontalLayout.addWidget(self._lineEdit)
         self._pushButton = QtWidgets.QPushButton(self)
-        self._pushButton.setIcon(QtGui.QIcon(os.path.join(path, 'open.png')))
+        self._pushButton.setIcon(QtGui.QIcon(getIconPath('open.png')))
         self._pushButton.setIconSize(QtCore.QSize(32, 32))
         self._pushButton.setMaximumSize(32, 32)
         #self._pushButton.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum))

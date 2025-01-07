@@ -1,4 +1,5 @@
 import os
+import sys
 from functools import partial
 import pandas as pd
 
@@ -101,8 +102,10 @@ def shoot(widget):
         print('Shot taken')
 
 def setIcon(widget):
-    widget.setWindowIcon(QIcon(os.path.join(path, 'icon.ico')))
+    widget.setWindowIcon(QIcon(getIconPath('icon.ico')))
 
+def getIconPath(fileName):
+    return os.path.join(getattr(sys, '_MEIPASS', path), fileName)
 
 def makeButton(parent, name, toolTip, fun):
     btn = QtWidgets.QPushButton(name, parent)

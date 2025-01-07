@@ -493,8 +493,8 @@ class SequenceEditorController(AbstractSimpleEditorController):
         self._moleculeService = MoleculeService()
         super(SequenceEditorController, self).__init__(self._service.getSequences(), "Edit Sequences",
                                            {"Save": (self.save, None, "Ctrl+S"), "Close": (self.close, None, "Ctrl+Q")})
-        if len(self._pattern)<5:
-            [self._pattern.append(self._service.makeNew()) for i in range(6 - len(self._pattern))]
+        """if len(self._pattern)<5:
+            [self._pattern.append(self._service.makeNew()) for i in range(6 - len(self._pattern))]"""
         self._table = self.createTableWidget(self._centralwidget, self._pattern,
                                              self._service.getHeaders(), self._service.getBoolVals())
         self._verticalLayout.addWidget(self._table)   #ToDo
@@ -551,7 +551,7 @@ class SequenceEditorController(AbstractSimpleEditorController):
             if molecule in allMolecules:
                 comboBox.setCurrentText(row[lastCol])
             else:
-                QtWidgets.QMessageBox.warning(self, "Warning",
+                QtWidgets.QMessageBox.warning(None, "Warning",
                                               'The molecule type "'+molecule+'" of sequence "'+ row[0] +
                                               '" is unknown. Change the molecule to an existing type or add '
                                               'the corresponding molecule type.',

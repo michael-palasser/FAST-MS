@@ -29,7 +29,7 @@ class TestIsotopePatternRepository(TestCase):
 
     def initLibrary(self):
         self.sequenceService = SequenceService()
-        propertyStorage = SearchSettings('dummyRNA', 'RNA CAD', 'CMCT')
+        propertyStorage = SearchSettings('dummyRNA', 'RNA CAD', 'CMC')
         self.builderRNA = FragmentLibraryBuilder(SearchSettings('dummyRNA', 'RNA CAD', '-'), 0)
         self.builderRNA_CMCT0 = FragmentLibraryBuilder(propertyStorage,0)
         self.builderRNA_CMCT1 = FragmentLibraryBuilder(propertyStorage, 1)
@@ -76,11 +76,11 @@ class TestIsotopePatternRepository(TestCase):
         os.remove(os.path.join(path,'Fragment_lists','dummyRNA_RNA CAD.csv'))
 
         self.builderRNA_CMCT2.createFragmentLibrary()
-        self.assertFalse(self.patternRep.findFile(('dummyRNA', 'RNA CAD', '2', 'CMCT')))
+        self.assertFalse(self.patternRep.findFile(('dummyRNA', 'RNA CAD', '2', 'CMC')))
         self.patternRep.saveIsotopePattern(self.builderRNA_CMCT2.addNewIsotopePattern())
-        self.assertTrue(self.patternRep.findFile(('dummyRNA', 'RNA CAD', '2', 'CMCT')))
+        self.assertTrue(self.patternRep.findFile(('dummyRNA', 'RNA CAD', '2', 'CMC')))
         self.patternRep.addIsotopePatternFromFile(self.builderRNA_CMCT2.getFragmentLibrary())
-        os.remove(os.path.join(path,'Fragment_lists','dummyRNA_RNA CAD_2_CMCT.csv'))
+        os.remove(os.path.join(path,'Fragment_lists','dummyRNA_RNA CAD_2_CMC.csv'))
 
     def tearDown(self):
         self.sequenceService.delete('dummyRNA')

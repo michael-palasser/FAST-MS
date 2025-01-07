@@ -74,5 +74,24 @@ class SimpleMainWindow(QtWidgets.QMainWindow):
 
     def makeHelpMenu(self):
         manual = os.path.join(path, 'FAST MS Manual.pdf')
-        self.createMenu('Help',{'Manual':(lambda: autoStart(manual),'Open the Manual',None)},None)
+        paper = os.path.join(path, 'palasser-breuker-2024-fast-ms-software-for-the-automated-analysis-of-top-down-mass-spectra-of-polymeric-molecules.pdf')
+        self.createMenu('Help',{'Manual':(lambda: autoStart(manual),'Open the Manual',None),
+                                'Publication':(lambda: autoStart(paper),'Open the FAST MS publication',None),
+                                'Citing FAST MS': (self.openRefWidget, "How to cite the programme", None)},None)
+
+    def openRefWidget(self):
+        global refWidget
+        refWidget = QtWidgets.QWidget(None)
+        layout = QtWidgets.QVBoxLayout(refWidget)
+        text = "FAST MS: Software for the Automated Analysis of Top-Down Mass Spectra of Polymeric Molecules Including RNA, DNA, and Proteins<br>" \
+               "Michael Palasser and Kathrin Breuker<br>" \
+               "Journal of the American Society for Mass Spectrometry Article ASAP<br>" \
+               "DOI: 10.1021/jasms.4c00236"
+        label = QtWidgets.QLabel(refWidget)
+        label.setText(text)
+        label.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
+        layout.addWidget(label)
+        refWidget.setWindowTitle("Citing FAST MS")
+        refWidget.show()
+        return refWidget
 

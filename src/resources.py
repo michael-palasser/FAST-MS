@@ -35,7 +35,7 @@ logging.basicConfig(filename=logFilePath, format='%(asctime)s - %(message)s', le
 logging.info("Starting")
 
 def getRelativePath(relativePath, data=True):
-    parent = pathlib.Path(__file__).resolve().parent
+    parent = pathlib.Path(__file__).resolve().parent.parent
     #print(parent, parent.parent)
     if not os.path.isdir(parent):
         parent = parent.parent

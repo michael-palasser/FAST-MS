@@ -52,7 +52,7 @@ class Window(SimpleMainWindow):
                         {'Model Ion':
                              (self.openIonModeller, 'Calculates the isotope pattern of an ion', None),
                          'Compare Ion Lists':
-                             (lambda: self.startApp(spectrumComparator), 'Compares the ion lists of multiple spectra', None)},None)
+                             (lambda: self.startApp(spectrumComparator, self), 'Compares ion lists of multiple spectra', None)},None)
 
         self.addAdditionalMenu()
         self.createMenu('Edit',

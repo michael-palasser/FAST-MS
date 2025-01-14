@@ -68,7 +68,7 @@ class SelectSearchDlg(AbstractDialog):
         else:
             return None
 
-defaultFilters = "Supported Files (*txt, *csv);;Comma Separated Values (*csv);;Plain Text Files (*txt);;Comma Separated Values (*csv);;All Files (*)"
+defaultFilters = "Supported Files (*txt *csv);;Comma Separated Values (*csv);;Plain Text Files (*txt);;Comma Separated Values (*csv);;All Files (*)"
 
 class OpenSpectralDataDlg(AbstractDialog):
     '''

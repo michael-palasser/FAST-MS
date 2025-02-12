@@ -620,7 +620,7 @@ class IntensityModeller(object):
                         else:
                             factor = 1
                             print("  ", ionHash, " not remodeled (val=", round(val,2), ")")
-                            logging.info(ionHash[0]+","+str(ionHash[1]) + " not remodeled (factor = "+ str(round(val,2)), ")")
+                            logging.info(ionHash[0]+","+str(ionHash[1]) + " not remodeled (factor = "+ str(round(val,2)) + ")")
                         self._correctedIons[ionHash].setIsotopePatternPart('calcInt',
                             self._correctedIons[ionHash].getIsotopePattern()['calcInt'] * factor)
                         self._correctedIons[ionHash].setIntensity(self._correctedIons[ionHash].getIntensity() * factor)
@@ -704,7 +704,7 @@ class IntensityModeller(object):
         self._correctedIons[ionHash] = self.calculateIntensity(ion)
         self._correctedIons[ionHash].addComment(ion.getComment())
         self._correctedIons[ionHash].addComment('reset')
-        logging.info(hash[0]+","+str(hash[1])+" resetted")
+        logging.info(ionHash[0]+","+str(hash[1])+" resetted")
         return self._correctedIons[ionHash]
 
     def getAdjacentIons(self, ionHash, distance=50):

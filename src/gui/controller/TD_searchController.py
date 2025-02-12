@@ -430,7 +430,7 @@ class TD_MainController(AbstractMainController):
                                     self._info.toString())
                 self._info.export(output)
                 print("********** saved in:", output, "**********\n")
-                logging.info("********** exported to: "+ output, "**********")
+                logging.info("********** exported to: "+ output+ "**********")
                 try:
                     autoStart(output)
                 except Exception as e:

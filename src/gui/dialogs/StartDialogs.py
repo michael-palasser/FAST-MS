@@ -3,6 +3,7 @@ import traceback
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QMessageBox
 
+from src.gui.dialogs.SimpleDialogs import defaultFilters
 from src.resources import path, INTERN, DEVELOP
 from os.path import join
 
@@ -78,14 +79,14 @@ class TDStartDialog(StartDialog):
                 "modifications": (createComboBox(self,modPatterns), "Name of the modification/ligand - pattern"),
                 "nrMod": (QtWidgets.QSpinBox(self), "How often is the precursor ion modified?"),
                 "spectralData": (OpenFileWidget(self, 1, self.getDefaultDirectory("spectralData"),
-                                "Open File","Plain Text Files (*txt);;Comma Separated Values (*csv);;All Files (*)"),
+                                "Open File", defaultFilters),
                             "Name of the file with spectral peaks (txt or csv format)\n"
                              "If no file is stated, the program will just calculate the fragment library"),
                 'noiseLimit': (QtWidgets.QDoubleSpinBox(self), "Minimal noise level"),
 
                 "calibration": (QtWidgets.QCheckBox(), "Spectral data will be calibrated if this option is ticked"),
                 "calIons": (OpenFileWidget(self, 1, self.getDefaultDirectory("spectralData"), "Open Files",
-                                            "Plain Text Files (*txt);;Comma Separated Values (*csv);;All Files (*)"),
+                                            defaultFilters),
                              "Name of the file with ions for calibration (txt format)"),}
         if INTERN:
             widgets["profile"] = (OpenFileWidget(self, 1, self.getDefaultDirectory("spectralData"),
@@ -205,7 +206,7 @@ class IntactStartDialog(StartDialog):
                  "modifications": (createComboBox(self, modPatterns), "Name of the modification pattern"),
                  "spectralData": (
                  OpenFileWidget(self, 2, join(path, 'Spectral_data', 'intact'), "Open Files",  # changed here
-                                "Plain Text Files (*txt);;Comma Separated Values (*csv);;All Files (*)"),
+                                defaultFilters),
                  "Name of the file with unassigned ions (txt format)"),
                  "sprayMode": (createComboBox(self, ("negative", "positive")), "Spray mode"),
                  "inputMode": (createComboBox(self, ("intensities", "abundances (int./z)")), "Are the intensities or "
@@ -273,7 +274,7 @@ class IntactStartDialogFull(IntactStartDialog):
                  "modifications": (createComboBox(self, modPatterns), "Name of the modification pattern"),
                  "spectralData": (
                     OpenFileWidget(self, 1, join(path, 'Spectral_data', 'intact'), "Open Files",
-                                   "Plain Text Files (*txt);;Comma Separated Values (*csv);;All Files (*)"),
+                                   defaultFilters),
                     "Name of the file with peaks (txt format)"),
                  "sprayMode": (createComboBox(self, ("negative", "positive")), "Spray mode"),
                  'noiseLimit': (QtWidgets.QDoubleSpinBox(self), "Minimal noise level"),
@@ -281,7 +282,7 @@ class IntactStartDialogFull(IntactStartDialog):
                  "maxMz": (self.getMinMaxWidget(), "m/z where search ends"),
                  "calibration": (QtWidgets.QCheckBox(self), "Spectral data will be calibrated if this option is ticked"),
                  "calIons": (OpenFileWidget(self, 1, join(path, 'Spectral_data', 'intact'), "Open Files",
-                                            "Plain Text Files (*txt);;Comma Separated Values (*csv);;All Files (*)"),
+                                            defaultFilters),
                              "Name of the file with ions for calibration (txt format)")}
         if INTERN:
             widgets["profile"] = (OpenFileWidget(self, 1, self.getDefaultDirectory("spectralData"),

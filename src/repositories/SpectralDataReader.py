@@ -61,7 +61,10 @@ class SpectralDataReader(object):
         #print(rawData)
         for line in rawData[1:]:
             if len(line)>1:
-                data.append(tuple([line[indizes[mandatoryHeader]] for mandatoryHeader in mandatoryHeaders]))
+                try:
+                    data.append(tuple([line[indizes[mandatoryHeader]] for mandatoryHeader in mandatoryHeaders]))
+                except (ValueError,IndexError):
+                    logging.warning("Missing data in file "+dataPath+ "("+ ", ".join([str(val) for val in line]) +")")
         try:
             return np.array(data, dtype=dataDtype)
         except (ValueError,IndexError):
@@ -70,7 +73,7 @@ class SpectralDataReader(object):
             for i, row in enumerate(data):
                 checked = True
                 for val in row:
-                    if val=="":
+                    if val in ("", " "):
                         checked=False
                 if checked:
                     correctedData.append(row)
@@ -129,6 +132,8 @@ class SpectralDataReader(object):
             rawData = self.getRawData(dataPath," ")
         else:
             rawData = self.getRawData(dataPath)[1:]
+        if len(rawData[0])>2:
+            rawData = [row[:2] for row in rawData]
         rawData = np.array([tuple(row) for row in rawData], dtype=[('m/z', float), ('I', float)])
         data = rawData[rawData['m/z']<max_mz]
         return data

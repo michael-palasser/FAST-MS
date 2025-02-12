@@ -48,10 +48,13 @@ class Ion(ABC):
         return self.getNeutral(self.getMonoisotopic(),mode)
 
     def getAverageMass(self, mode):
-        avMass = np.sum(self._isotopePattern['m/z']*self._isotopePattern['calcInt'])/np.sum(self._isotopePattern['calcInt'])
-        if np.isnan(self.getNeutral(avMass,mode)):
-            print(self._isotopePattern, avMass, self._isotopePattern['calcInt'])
-        return self.getNeutral(avMass,mode)
+        if np.sum(self._isotopePattern['calcInt'])>0:
+            avMass = np.sum(self._isotopePattern['m/z']*self._isotopePattern['calcInt'])/np.sum(self._isotopePattern['calcInt'])
+            if np.isnan(self.getNeutral(avMass,mode)):
+                print(self._isotopePattern, avMass, self._isotopePattern['calcInt'])
+            return self.getNeutral(avMass,mode)
+        else:
+            return np.nan
 
     def getNoise(self):
         return self._noise

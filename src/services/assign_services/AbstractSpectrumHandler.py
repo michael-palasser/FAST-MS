@@ -228,8 +228,8 @@ class AbstractSpectrumHandler(abc.ABC):
         Finds the highest m/z in spectrum where non-noise peaks occur
         :return: (int) m/z (upperBound)
         '''
-        print("\n********** Finding upper bound m/z - Window in spectralFile containing fragments ********** ")
-        logging.info("********** Finding upper bound m/z - Window in spectralFile containing fragments")
+        print("\n********** Finding m/z window containing ions in peak list ********** ")
+        logging.info("Finding m/z window containing ions in peak list")
         windowSize = self._configs['upperBoundWindowSize']
         currentMz = self._configs['minUpperBound']
         # tolerance = 50
@@ -247,7 +247,6 @@ class AbstractSpectrumHandler(abc.ABC):
             currentMz += 1
         peaksHigherThanNoise = np.array(peaksHigherThanNoise, dtype=self._spectrum.dtype)
         windowSize, currentMz = 100, self._configs['minUpperBound']
-        logging.info('********** Finding upper bound m/z - Window in spectralFile containing fragments **********')
         logging.debug('m/z\tpeaks')
         while True:  # currentMz < 2500:
             currentWindow = self.getPeaksInWindow(peaksHigherThanNoise, currentMz, windowSize)

@@ -55,6 +55,10 @@ class AbstractSimpleEditorController(ABC):
         tableWidget.customContextMenuRequested['QPoint'].connect(partial(self.editRow, tableWidget, bools))
         tableWidget.setSortingEnabled(True)
         tableWidget.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        maxWidth = 500
+        for i in range(len(headers)):
+            if tableWidget.columnWidth(i)>maxWidth:
+                tableWidget.setColumnWidth(i,maxWidth) #neu
         """header = tableWidget.horizontalHeader()
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
         for col in range(1, tableWidget.columnCount()):
@@ -434,6 +438,7 @@ class MoleculeEditorController(AbstractEditorController):
         self._table = self.createTableWidget(self._centralwidget, self._pattern.getItems(),
                                              self._service.getHeaders(), self._service.getBoolVals())
         self._formLayout.setWidget(3, QtWidgets.QFormLayout.SpanningRole, self._table)   #ToDo
+        #QtWidgets.QTableWidget().horizontalHeader().setMaximumSectionSize(20)
         self._mainWindow.show()
 
     def addBB(self, translations:list[str], formulas:list[str]):

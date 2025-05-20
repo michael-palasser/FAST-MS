@@ -3,6 +3,7 @@ from multiprocessing import freeze_support
 
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QApplication
+import numpy.core.multiarray #ModuleNotFoundError: No module named 'numpy.core.multiarray' otherwise
 
 from src.gui.GUI_functions import setIcon
 from src.resources import INTERN

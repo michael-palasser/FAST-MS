@@ -85,7 +85,7 @@ class SimpleMainWindow(QtWidgets.QMainWindow):
         layout = QtWidgets.QVBoxLayout(refWidget)
         text = "FAST MS: Software for the Automated Analysis of Top-Down Mass Spectra of Polymeric Molecules Including RNA, DNA, and Proteins<br>" \
                "Michael Palasser and Kathrin Breuker<br>" \
-               "Journal of the American Society for Mass Spectrometry Article ASAP<br>" \
+               "Journal of the American Society for Mass Spectrometry 2025 36 (2), 247-257<br>" \
                "DOI: 10.1021/jasms.4c00236"
         label = QtWidgets.QLabel(refWidget)
         label.setText(text)

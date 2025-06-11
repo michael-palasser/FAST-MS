@@ -16,7 +16,7 @@ class SpectralDataReader(object):
 
     def openFile(self, dataPath, dataDtype, optional=()):
         '''
-        Reads a text file with unassigned ion data
+        Reads a text file
         :param (str) dataPath: path of the file
         :param (dtype) dataDtype: dtype of the returned array
         :return: (ndarray) array

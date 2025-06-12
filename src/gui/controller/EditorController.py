@@ -74,7 +74,7 @@ class AbstractSimpleEditorController(ABC):
         :param (list[int]) boolVals: indizes of columns with boolean values
         :return: tableWidget
         '''
-        self._headers = list(headers.keys())
+        headerKeys = list(headers.keys())
         tableWidget.setRowCount(len(data))
         #tableWidget.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         tableWidget.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
@@ -91,7 +91,7 @@ class AbstractSimpleEditorController(ABC):
                     newItem = QtWidgets.QTableWidgetItem(str(item))
                     tableWidget.setItem(i, j, newItem)
                 #tableWidget.setItem(i, j, newitem)
-                newItem.setToolTip(headers[self._headers[j]])
+                newItem.setToolTip(headers[headerKeys[j]])
         if len(data) < 2:
             for i in range(2-len(data)):
                 self.insertRow(tableWidget, boolVals)
@@ -206,7 +206,7 @@ class AbstractSimpleEditorController(ABC):
         elif action == copyAction:
             data = self.readTable(table, bools)
             QtWidgets.QTableWidget().horizontalHeader()
-            df = pd.DataFrame(data=data, columns=self._headers)
+            df = pd.DataFrame(data=data, columns=[table.horizontalHeaderItem(i).text() for i in range(table.columnCount())])
             df.to_clipboard(index=False, header=True)
 
     def copyPaste(self, table, bools, selectedRowIndex):

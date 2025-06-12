@@ -95,6 +95,8 @@ class IntactLibraryBuilder(object):
             #logging.debug('Parallel calculation')
             p = Pool()
             updatedNeutralLibrary = p.map(self.calculateParallel, self._neutralLibrary)
+
+            print(updatedNeutralLibrary)
             self._neutralLibrary = sorted(updatedNeutralLibrary, key=lambda obj:(obj.getName()))
         return self._neutralLibrary
 
@@ -111,4 +113,5 @@ class IntactLibraryBuilder(object):
         #logging.info('\t'+fragment.getName())
         #self._bar.update(1) does not work in python 3.8
         #self._fun()
-        #return neutral
+        return neutral
+

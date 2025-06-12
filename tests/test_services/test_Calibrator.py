@@ -68,8 +68,6 @@ class TestCalibrator(TestCase):
                                                                'CMCT').createLibrary(),
                        configHandlerRNA.getAll())
 
-    def test_init(self):
-        pass
 
     def test_calibrate_peaks(self):
         configs, settings, props, builder = initTestLibraryBuilder()

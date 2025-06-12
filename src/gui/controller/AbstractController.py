@@ -11,8 +11,6 @@ import pandas as pd
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 
-from src.BACHEM_extension.services.TD_Assigner import peakDtype, snapDtype
-from src.Exceptions import InvalidInputException
 from src.gui.GUI_functions import setIcon, translate
 from src.gui.widgets.Widgets import ShowFormulaWidget
 from src.repositories.SpectralDataReader import SpectralDataReader
@@ -26,6 +24,7 @@ from src.gui.tableviews.ShowPeaksViews import PeakView, SimplePeakView
 from src.gui.widgets.SpectrumView import SpectrumView
 
 
+
 class AbstractMainController(ABC):
     '''
     Controller class for starting, saving, exporting and loading a top-down search/analysis
@@ -37,6 +36,8 @@ class AbstractMainController(ABC):
         :param (bool) new: True if new search, False if old search is loaded
         '''
         self._mainWindow= window
+        self._peakDtype = np.dtype([('m/z', float), ('I', np.int64)])
+        self._snapDtype = np.dtype([('m/z', float), ('z', np.uint8), ('I', np.int64)])
 
 
     def calibrate(self):
@@ -45,7 +46,12 @@ class AbstractMainController(ABC):
         if dlg and not dlg.canceled():
             reader = SpectralDataReader()
             self._calibrator.calibratePeaks(self._spectrumHandler.getSpectrum())
-            try:
+            peaks = self.calibrateAndWrite(reader.openFile(self._settings['spectralData'], self._peakDtype),
+                                           self._settings['spectralData'], reader)
+            self._spectrumHandler.setSpectrum(peaks)
+            self.calibrateAndWrite(reader.openFile(self._settings['calIons'], self._snapDtype), self._settings['calIons'],
+                                   reader)
+            """try:
                 peaks = self.calibrateAndWrite(reader.openFile(self._settings['spectralData'], peakDtype),
                                                self._settings['spectralData'], reader)
             except InvalidInputException:
@@ -59,7 +65,7 @@ class AbstractMainController(ABC):
             except InvalidInputException:
                 alternativeDtype = np.dtype([('m/z', float), ('z', np.uint8), ('I', np.int64)])
                 self.calibrateAndWrite(reader.openFile(self._settings['calIons'], alternativeDtype), self._settings['calIons'],
-                                       reader)
+                                       reader)"""
             if 'profile' in self._settings.keys() and self._settings['profile'] != "":
                 profile = self.calibrateAndWrite(self._spectrumHandler.getProfileSpectrum(), self._settings['profile'], reader)
                 self._spectrumHandler.setProfileSpectrum(profile)
@@ -649,3 +655,4 @@ class AbstractMainController(ABC):
                                    max(selectedIon.getIsotopePattern()['I']),
                                    self._spectrumHandler.getNoise((min(peaks['m/z']),max(peaks['m/z']))),
                                    selectedHash)"""
+

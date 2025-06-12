@@ -55,6 +55,10 @@ class AbstractSimpleEditorController(ABC):
         tableWidget.customContextMenuRequested['QPoint'].connect(partial(self.editRow, tableWidget, bools))
         tableWidget.setSortingEnabled(True)
         tableWidget.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        maxWidth = 500
+        for i in range(len(headers)):
+            if tableWidget.columnWidth(i)>maxWidth:
+                tableWidget.setColumnWidth(i,maxWidth) #neu
         """header = tableWidget.horizontalHeader()
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
         for col in range(1, tableWidget.columnCount()):
@@ -70,7 +74,7 @@ class AbstractSimpleEditorController(ABC):
         :param (list[int]) boolVals: indizes of columns with boolean values
         :return: tableWidget
         '''
-        self._headers = list(headers.keys())
+        headerKeys = list(headers.keys())
         tableWidget.setRowCount(len(data))
         #tableWidget.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         tableWidget.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
@@ -87,7 +91,7 @@ class AbstractSimpleEditorController(ABC):
                     newItem = QtWidgets.QTableWidgetItem(str(item))
                     tableWidget.setItem(i, j, newItem)
                 #tableWidget.setItem(i, j, newitem)
-                newItem.setToolTip(headers[self._headers[j]])
+                newItem.setToolTip(headers[headerKeys[j]])
         if len(data) < 2:
             for i in range(2-len(data)):
                 self.insertRow(tableWidget, boolVals)
@@ -202,7 +206,7 @@ class AbstractSimpleEditorController(ABC):
         elif action == copyAction:
             data = self.readTable(table, bools)
             QtWidgets.QTableWidget().horizontalHeader()
-            df = pd.DataFrame(data=data, columns=self._headers)
+            df = pd.DataFrame(data=data, columns=[table.horizontalHeaderItem(i).text() for i in range(table.columnCount())])
             df.to_clipboard(index=False, header=True)
 
     def copyPaste(self, table, bools, selectedRowIndex):
@@ -434,6 +438,7 @@ class MoleculeEditorController(AbstractEditorController):
         self._table = self.createTableWidget(self._centralwidget, self._pattern.getItems(),
                                              self._service.getHeaders(), self._service.getBoolVals())
         self._formLayout.setWidget(3, QtWidgets.QFormLayout.SpanningRole, self._table)   #ToDo
+        #QtWidgets.QTableWidget().horizontalHeader().setMaximumSectionSize(20)
         self._mainWindow.show()
 
     def addBB(self, translations:list[str], formulas:list[str]):

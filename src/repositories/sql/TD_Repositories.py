@@ -72,7 +72,7 @@ class FragmentationRepository(AbstractRepositoryWith2Items):
         columns1 = super(FragmentationRepository, self).getItemColumns()
         columns1.update({'BB': "If the species is dependent on the occurence of a specific building block within the "
                                     "sequence, enter the building block",
-                         'radicals (deprecated)': "Enter the number of radicals. (positive value: +electron in positive mode, -electron in negative mode and vice versa)",
+                         'radicals (deprecated)': "Deprecated functionality since radical ions can be easier specified using H atoms as gain or loss. Enter the number of radicals. (positive value: +electron in positive mode, -electron in negative mode and vice versa)",
                          'direction': "Enter +1 for forward (e.g. N-/5'- terminus) or -1 for backward (e.g. C-/3'- terminus)",
                          'enabled': "Activate/Deactivate Species"})
         columns1['name'] = 'Name of the fragment, 1. letter specifies type of fragment, optionally followed by "+" or "-".\n' \
@@ -80,7 +80,7 @@ class FragmentationRepository(AbstractRepositoryWith2Items):
         columns2 = super(FragmentationRepository, self).getItemColumns()
         columns2.update({'BB': "If the species is dependent on the occurence of a specific building block within the "
                                     "sequence, enter the building block",
-                         'radicals (deprecated)': "Enter the number of radicals. (positive value: +electron in positive mode, -electron in negative mode and vice versa)", 'enabled': "Activate/Deactivate Species"})
+                         'radicals (deprecated)': "Deprecated functionality since radical ions can be easier specified using H atoms as gain or loss. Enter the number of radicals. (positive value: +electron in positive mode, -electron in negative mode and vice versa)", 'enabled': "Activate/Deactivate Species"})
         return (columns1,columns2)
 
     def getPattern(self, name):
@@ -186,7 +186,8 @@ class ModificationRepository(AbstractRepositoryWith2Items):
         '''
         columns = super(ModificationRepository, self).getItemColumns()
         columns.update({'BB': "If the species is dependent on the occurence of a specific building block within the "
-                                   "sequence, enter the building block", 'radicals (deprecated)': "Enter the number of radicals. (positive value: +electron in positive mode, -electron in negative mode and vice versa)",
+                                   "sequence, enter the building block",
+                        'radicals (deprecated)': "Deprecated functionality since radical ions can be easier specified using H atoms as gain or loss. Enter the number of radicals. (positive value: +electron in positive mode, -electron in negative mode and vice versa).",
                         'charge': "If the modification alters the charge of modified fragment enter an (empiric) number of the extent",
                         'localise?': 'Should the modification be used when localising a modification?',
                         'enabled': "Activate/Deactivate the modification"})

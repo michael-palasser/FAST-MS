@@ -1,4 +1,5 @@
 import os
+import getpass
 import pathlib
 import sys
 from platform import system
@@ -29,7 +30,8 @@ for directory in ("Saved Analyses",'Fragment_lists'):
     if not os.path.isdir(dirPath):
         os.mkdir(dirPath)
 
-logFileBase = 'app_'+os.getlogin()+"_"+str(datetime.today().year)+"_"
+#logFileBase = 'app_'+os.getlogin()+"_"+str(datetime.today().year)+"_" Does not work in non-terminal contexts
+logFileBase = 'app_'+getpass.getuser()+"_"+str(datetime.today().year)+"_"
 logFilePath = os.path.join(path,logFileBase+str(datetime.today().month)+'.log')
 if os.path.isfile(os.path.join(path,logFileBase+str(datetime.today().month-1)+'.log')):
     os.remove(os.path.join(path,logFileBase+str(datetime.today().month-1)+'.log'))

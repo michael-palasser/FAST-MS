@@ -130,8 +130,11 @@ class IsotopePatternLogics(object):
             self._formula = formula
             #self._fragment = fragment
             tempFormula = self._formula#changed: tempFormula=self._formula.addFormula({'H':charge+electrons})
-            if tempFormula.getFormulaDict()['H']+charge+electrons<0:
-                raise InvalidInputException('Nr of H = '+str(tempFormula.getFormulaDict()['H']), 'not enough Hs for deprotonation')
+            numH = 0
+            if 'H' in tempFormula.getFormulaDict():
+                numH = tempFormula.getFormulaDict()['H']
+            if numH+charge+electrons<0:
+                raise InvalidInputException('Nr of H = '+str(numH), 'not enough Hs for deprotonation')
             #if tempFormula.calcIsotopePatternSlowly(1)['m/z'][0]>6000:
             if accelerate is None:
                 self._isotopePattern = tempFormula.calculateIsotopePattern(self._configs['maxIso'])

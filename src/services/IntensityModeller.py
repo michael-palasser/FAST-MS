@@ -677,7 +677,7 @@ class IntensityModeller(object):
         '''
         overlappingIons = findall('ov.:\[(.*?)\]', ion.getComment())
         if len(overlappingIons)>0:
-            ionStrings = overlappingIons[-1].split(',')
+            ionStrings = overlappingIons[-1].split(',') #ToDo
             counter=0
             returnedHash=None
             for ionString in ionStrings:

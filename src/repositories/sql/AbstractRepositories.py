@@ -24,10 +24,11 @@ class AbstractRepository(ABC):
         '''
         #print('hey',path)
         #try:
+        self._path = getRelativePath(database)
         if isolationLevel is not None:
-            self._conn = sqlite3.connect(getRelativePath(database),isolation_level=isolationLevel)
+            self._conn = sqlite3.connect(self._path,isolation_level=isolationLevel)
         else:
-            self._conn = sqlite3.connect(getRelativePath(database))
+            self._conn = sqlite3.connect(self._path)
         #self.openDatabase(database, isolationLevel)
         '''except sqlite3.OperationalError:
             #print('not found', path,os.path.dirname(sys.executable))
@@ -146,6 +147,14 @@ class AbstractRepository(ABC):
         cur.execute('DELETE FROM ' + self._mainTable + ' WHERE name=?', (name,))
         return id[0]
 
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        del state['conn']  # Remove connection before pickling
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self.conn = sqlite3.connect(self._path)  # Recreate connection
 
     def close(self):
         self._conn.close()

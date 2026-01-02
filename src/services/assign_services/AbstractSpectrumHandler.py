@@ -138,6 +138,8 @@ class AbstractSpectrumHandler(abc.ABC):
                                               (self._profileSpectrum['m/z'] < limits[1]))]
 
     def addProfileSpectrum(self, fileName):
+        print("\n********** Importing profile data from:", fileName, "**********")
+        logging.info("********** Importing profile data from: "+ fileName+" **********")
         self._profileSpectrum = SpectralDataReader().openXYFile(fileName, self._upperBound)
 
     def setProfileSpectrum(self, profileSpec):
@@ -152,6 +154,8 @@ class AbstractSpectrumHandler(abc.ABC):
         Add spectrum from file
         :param (str) filePath: path of txt or csv file
         '''
+        print("\n********** Importing peak data from:", filePath, "**********")
+        logging.info("********** Importing peak data from: "+ filePath+" **********")
         self._spectrum = SpectralDataReader().openFile(filePath, self._dType)
         if self._settings['noiseLimit'] == 0:
             # smallest noise is mean of smallest 20% of peak intensities

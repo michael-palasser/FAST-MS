@@ -401,7 +401,7 @@ class SequenceService(AbstractService):
         return self._repository.getAllSequences()
 
     def getAllSequenceNames(self):
-        return self._repository.getAllSequenceNames()
+        return sorted(self._repository.getAllSequenceNames())
 
     def getAllSequenceNamesAsDict(self):
         sequences = self._repository.getAllSequences()

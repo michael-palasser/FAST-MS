@@ -270,8 +270,6 @@ class TD_MainController(AbstractMainController):
         if self._settings['spectralData'] == '':
             return 1
         #spectralFile = os.path.join(path, 'Spectral_data','top-down', self._settings['spectralData'])
-        print("\n********** Importing peak data from:", self._settings['spectralData'], "**********")
-        logging.info("********** Importing peak data from: "+ self._settings['spectralData']+" **********")
         try:
             constructor = self.getSpectrumHandlerConstructor()
             self._spectrumHandler = constructor(self._propStorage, self._libraryBuilder.getPrecursor(),self._settings,

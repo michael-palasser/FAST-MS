@@ -228,20 +228,21 @@ class AbstractSpectrumView(QtWidgets.QWidget):
                     size=10
                     #brush = (50,50,200,50)
                     brush = (255,255,0,50)
-                self._scatter = pg.ScatterPlotItem(x=ion.getIsotopePattern()['m/z'], y=ion.getIsotopePattern()['calcInt'],
+                scatter = pg.ScatterPlotItem(x=ion.getIsotopePattern()['m/z'], y=ion.getIsotopePattern()['calcInt'],
                                              symbol=symbol,
                                              pen =pg.mkPen(color=colour, width=2),
                                              brush=brush, size=size, pxMode=True) #Todo resize"""
-                self._items.append(self._scatter)
-                #maxMz = np.sort(ion.getIsotopePattern(), order='calcInt')[::-1]['m/z'][0]
-                #noise.append((maxMz, ion.getNoise()))
-                self._graphWidget.addItem(self._scatter)
                 if ion.getCharge() ==1:
                     charge=""
                 else:
                     charge = str(ion.getCharge())
                 text = ion.getName(True)+"<sup>"+charge+self._ionMode+"</sup>"
-                self._legend.addItem(self._scatter, text)#ion.getId())
+                scatter.setToolTip(text)
+                self._items.append(scatter)
+                #maxMz = np.sort(ion.getIsotopePattern(), order='calcInt')[::-1]['m/z'][0]
+                #noise.append((maxMz, ion.getNoise()))
+                self._graphWidget.addItem(scatter)
+                self._legend.addItem(scatter, text)#ion.getId())
                 if coulour_index == maxIndizes[0]:
                     coulour_index = 0
                 if marker_index == maxIndizes[1]:

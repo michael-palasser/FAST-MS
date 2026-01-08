@@ -1,11 +1,10 @@
 import sys
 from multiprocessing import freeze_support
-
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QApplication
 import numpy.core.multiarray #ModuleNotFoundError: No module named 'numpy.core.multiarray' otherwise
 
-from src.gui.GUI_functions import setIcon
+from src.gui.GUI_functions import setIcon, set_appusermodel_id
 from src.resources import INTERN
 
 if INTERN:
@@ -16,6 +15,8 @@ else:
 
 def run():
     global gui
+    if sys.platform == "win32":
+        set_appusermodel_id()
     app = QApplication(sys.argv)
     app.setStyle(QtWidgets.QStyleFactory.create("Fusion"))
     app.setApplicationName("FAST MS")

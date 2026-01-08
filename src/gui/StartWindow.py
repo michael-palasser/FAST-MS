@@ -7,6 +7,7 @@ import sys
 
 from PyQt5.QtCore import QSize
 from PyQt5.QtWidgets import QPushButton
+
 from src.gui.controller.IntactSearchController import IntactMainController
 from src.gui.controller.IsotopePatternView import IsotopePatternView
 from src.gui.controller.EditorController import *
@@ -70,6 +71,7 @@ class Window(SimpleMainWindow):
         self._lastSearch = None
         self.showButtons()
         self._openWindows=[]
+        self.show()
 
     def showButtons(self):
         btn = self.makeButton('Analyse Top-Down\nSpectrum', 'Starts analysis of top-down spectrum',
@@ -80,7 +82,6 @@ class Window(SimpleMainWindow):
                               self.startIntactIonSearch)
         self._layout.addWidget(btn)
         #self.setGeometry(50, 50, xPos+40, 230)
-        self.show()
 
     def startTopDown(self, new):
         self._lastSearch = SimpleMainWindow(None, '')

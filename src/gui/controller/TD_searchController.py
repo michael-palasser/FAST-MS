@@ -4,6 +4,7 @@ Created on 21 Jul 2020
 @author: michael
 '''
 import logging
+import sqlite3
 import traceback
 import os
 import numpy as np
@@ -33,7 +34,9 @@ from src.repositories.export.ExcelWriter import ExcelWriter
 from src.gui.dialogs.CheckIonView import CheckMonoisotopicOverlapView, CheckOverlapsView
 from src.gui.tableviews.PlotTables import PlotTableView
 from src.gui.widgets.SequencePlots import PlotFactory, plotBars
-from src.gui.dialogs.SimpleDialogs import ExportDialog, SelectSearchDlg, OpenSpectralDataDlg, SaveSearchDialog
+from src.gui.dialogs.OpenDialogs import OpenSpectralDataDlg
+from src.gui.dialogs.SaveDialogs import ExportDialog, SaveSearchDialog
+from src.gui.dialogs.SelectSearchDlg import SelectSearchDlgNew
 from src.gui.dialogs.StartDialogs import TDStartDialog
 from src.gui.GUI_functions import shoot
 
@@ -67,9 +70,9 @@ class TD_MainController(AbstractMainController):
             self._info = Info(self._settings, self._configs, self._propStorage)
             self._saved = False
             try:
-                self._savedName = os.path.split(self._settings['spectralData'])[-1][:-4]
+                self._savedPath = os.path.join(path, "Saved Analyses",os.path.split(self._settings['spectralData'])[-1][:-4])
             except:
-                self._savedName = ''
+                self._savedPath = os.path.join(path, "Saved Analyses")
             try:
                 if self.search() == 0:
                     self.setUpUi()
@@ -133,19 +136,16 @@ class TD_MainController(AbstractMainController):
         searchService = StoredAnalysesService()
         if special is None:
             self.checkOldDatabase()
-            allNames, corrupt = searchService.getAllSearchNames(True)
-            if len(corrupt)>0:
-                """QtWidgets.QMessageBox.warning(None, "Corrupted Directories",
-                                              "The following directories are corrupted and should be deleted: "
-                                              +  ", ".join(corrupt), QtWidgets.QMessageBox.Ok)"""
+            #allNames, corrupt = searchService.getAllSearchNames(True)
+            """if len(corrupt)>0:
                 choice = QtWidgets.QMessageBox.question(None, "Corrupted Directories",
                                                         "The following directories are corrupted: "
                                               +  ", ".join(corrupt)+'<br>Should the directories be deleted?',
                                                         QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
                 if choice == QtWidgets.QMessageBox.Yes:
                     for searchName in corrupt:
-                        searchService.deleteSearch(searchName)
-            dialog = SelectSearchDlg(parent, allNames,self.deleteSearch, searchService)
+                        searchService.deleteSearch(searchName)"""
+            dialog = SelectSearchDlgNew(parent)#, allNames,self.deleteSearch, searchService)
             if dialog.exec_() and not dialog.canceled():
                 self.load(dialog.getName(), searchService)
         else:
@@ -154,12 +154,12 @@ class TD_MainController(AbstractMainController):
 
     def load(self, analysisName, searchService):
         start=time.time()
-        self._settings, self._configs, noiseLevel, observedIons, delIons, searchedZStates, logs = \
+        self._settings, self._configs, noiseLevel, observedIons, delIons, searchedZStates, logs, dbPath = \
             searchService.getSearch(analysisName)
         print('time:', time.time()-start)
 
         self._info = Info(logs)
-        self._savedName = analysisName
+        self._savedPath = analysisName
         peaks = None
         if 'profile' not in self._settings.keys() or self._settings['profile']=="":
             keys = ('spectralData',)
@@ -178,7 +178,12 @@ class TD_MainController(AbstractMainController):
                         self._settings[key] = dlg.getValue()
                 elif choice == QtWidgets.QMessageBox.No:
                     peaks = searchService.getAllAssignedPeaks(observedIons+delIons)
-        self._propStorage = SearchSettings(self._settings['sequName'], self._settings['fragmentation'],
+        try:
+            self._propStorage = SearchSettings(self._settings['sequName'], self._settings['fragmentation'],
+                                            self._settings['modifications'], dbPath=dbPath)
+        except sqlite3.OperationalError:
+            logging.info("Template data missing, loading new data")
+            self._propStorage = SearchSettings(self._settings['sequName'], self._settings['fragmentation'],
                                             self._settings['modifications'])
         self._libraryBuilder = self.constructLibraryBuilder()
         self._libraryBuilder.createFragmentLibrary()
@@ -197,9 +202,10 @@ class TD_MainController(AbstractMainController):
         types = self._propStorage.getFragmentsByDir(1)
         types.update(self._propStorage.getFragmentsByDir(-1))
         types.add(self._settings['sequName'])
-        for key in {ion.getType() for ion in self._intensityModeller.getObservedIons().values()}:
-            if (key not in types) and not isinstance(ion, InternalFragmentIon):
-                QtWidgets.QMessageBox.warning(None, "Fragment type not found", '"'+ key + '" was not found in fragmentation template list. Add the template to "'
+        #for key in {ion.getType() for ion in self._intensityModeller.getObservedIons().values()}:
+        for ion in self._intensityModeller.getObservedIons().values():
+            if (ion.getType() not in types) and not isinstance(ion, InternalFragmentIon):
+                QtWidgets.QMessageBox.warning(None, "Fragment type not found", '"'+ ion.getType() + '" was not found in fragmentation template list. Add the template to "'
                                               + self._propStorage.getFragmentation().getName() + '" to ensure correct behaviour', QtWidgets.QMessageBox.Ok)
         self._analyser = Analyser(None, self._propStorage.getSequenceList(), self._settings['charge'],
                                     self._propStorage.getModificationName(), self._configs['useAb'])
@@ -394,6 +400,7 @@ class TD_MainController(AbstractMainController):
         exportConfigHandler = ConfigurationHandlerFactory.getExportHandler()
         lastOptions= exportConfigHandler.getAll()
         lastOptions['dir'] = os.path.dirname(self._settings['spectralData'])
+        lastOptions['file'] = os.path.basename(self._settings['spectralData'])[:-4]
         if len(self._propStorage.getModifPattern().getItems()) != 0:
             options = ('localise modification','charge states (int.)','charge states (int./z)')
         else:
@@ -476,12 +483,13 @@ class TD_MainController(AbstractMainController):
                                                 key+" to " + self._propStorage.getFragmentation().getName() + " and try again")"""
         table = self._analyser.toTable(forwardVals.values(), backwardVals.values())
         headers= list(fragPerSite.keys())
+        title = self.generateWindowTitle('Fragmentation Efficiencies')
         fragmentationView = FragmentationTable([(type,val) for type,val in fragmentation.items()],
-                                               table, headers)
+                                               table, headers, title)
         if DEVELOP:
             shoot(fragmentationView)
         self._openWindows.append(fragmentationView)
-        plotBars(self._propStorage.getSequenceList(), np.array(table)[:,2:-2].astype(float), headers, '')
+        plotBars(self._propStorage.getSequenceList(), np.array(table)[:,2:-2].astype(float), headers, title)
 
 
     def showOccupancyPlot(self):
@@ -500,6 +508,7 @@ class TD_MainController(AbstractMainController):
             self._analyser.setIons(self.getIonList())
             percentageDict, absDict = self._analyser.calculateOccupancies(interestingIons, modification,
                                                                  self._propStorage.getUnimportantModifs())
+            title = self.generateWindowTitle('Localise '+modification)
             plotFactory = PlotFactory(self._mainWindow)
             forwardVals = self._propStorage.filterByDir(percentageDict,1)
             backwardVals = self._propStorage.filterByDir(percentageDict,-1)
@@ -509,7 +518,7 @@ class TD_MainController(AbstractMainController):
                 maxY=1
                 if modification[1].isnumeric():
                     maxY=self._analyser.getNrOfModifications(modification, None)
-            self._openWindows.append(plotFactory.showOccupancyPlot(sequence, forwardVals, backwardVals,maxY, modification))
+            self._openWindows.append(plotFactory.showOccupancyPlot(sequence, forwardVals, backwardVals,maxY, modification, title))
             #absTable = np.zeros((len(sequence),len(absDict.keys())))
             forwardAbsVals = self._propStorage.filterByDir(absDict,1)
             backwardAbsVals = self._propStorage.filterByDir(absDict,-1)
@@ -525,9 +534,9 @@ class TD_MainController(AbstractMainController):
                                       self._analyser.getPrecursorModification())'''
             occupView = OccupancyWidget(modification, self._analyser.toTable(forwardVals.values(), backwardVals.values()),
                                         list(percentageDict.keys()), self._analyser.getPrecursorModification(),
-                                        absTable, headers)
+                                        absTable, headers, title)
             self._openWindows.append(occupView)
-            plotBars(sequence, np.array(absTable)[:,2:-2].astype(float), headers, '', True)
+            plotBars(sequence, np.array(absTable)[:,2:-2].astype(float), headers, title, True)
 
     def getInterestingIons(self):
         interestingIons = ConfigurationHandlerFactory.getConfigHandler().get('interestingIons')
@@ -556,10 +565,13 @@ class TD_MainController(AbstractMainController):
         if interestingIons is None:
             return
         chargeDict, minMaxCharges = self._analyser.analyseCharges(interestingIons, reduced)
+        title = self.generateWindowTitle()
         if reduced:
-            mainWindow, centralWidget, layout = self.getMainWindow('Charges State Analysis (I/z)')
+            fullTitle = 'Charges State Analysis (I/z): '+title
+            mainWindow, centralWidget, layout = self.getMainWindow(fullTitle)
         else:
-            mainWindow, centralWidget, layout = self.getMainWindow('Charges State Analysis')
+            fullTitle = 'Charges State Analysis (I/z): '+title
+            mainWindow, centralWidget, layout = self.getMainWindow(fullTitle)
         plotFactory = PlotFactory(centralWidget)
         #plotFactory2 = PlotFactory(self._mainWindow)
         forwardVals = self._propStorage.filterByDir(chargeDict,1)
@@ -567,13 +579,13 @@ class TD_MainController(AbstractMainController):
         forwardLimits = self._propStorage.filterByDir(minMaxCharges,1)
         backwardLimits = self._propStorage.filterByDir(minMaxCharges,-1)
         chargeView = PlotTableView(centralWidget, self._analyser.toTable(forwardVals.values(), backwardVals.values()),
-                                       list(chargeDict.keys()), 'Av. Charge per Fragment', 1)
+                                       list(chargeDict.keys()), 'Av. Charge per Fragment: '+title, 1)
         chargeView.sortBy(1)
         layout.addWidget(chargeView,2)
         layout.addWidget(plotFactory.showChargePlot(self._propStorage.getSequenceList(), forwardVals,
-                                    backwardVals, self._spectrumHandler.getCharge(), forwardLimits, backwardLimits),3)
+                                    backwardVals, self._spectrumHandler.getCharge(), forwardLimits, backwardLimits, fullTitle),3)
         mainWindow.show()
-        #self._openWindows.append(chargeView)
+        self._openWindows.append(chargeView)
 
     def getMainWindow(self, title):
         mainWindow = SimpleMainWindow(self._mainWindow, title)
@@ -603,15 +615,15 @@ class TD_MainController(AbstractMainController):
         Saves the results to the "search" - database
         '''
         searchService = StoredAnalysesService()
-        names = searchService.getAllSearchNames()[0]
+        #names = searchService.getAllSearchNames()[0]
         while True:
-            dlg = SaveSearchDialog(self._savedName)
+            dlg = SaveSearchDialog(self._savedPath)
             #name, ok = QtWidgets.QInputDialog.getText(self._mainWindow, 'Save Analysis', 'Enter the name: ')
             if dlg.exec_() and dlg.ok:
-                self._savedName = dlg.getText()
-                if self._savedName in names:
+                self._savedPath = dlg.getFilename()
+                if os.path.isdir(self._savedPath):
                     choice = QtWidgets.QMessageBox.question(self._mainWindow, "Overwriting",
-                                "There is already a saved analysis with the name: " + self._savedName +"<br>Do you want to overwrite it?",
+                                "There is already a saved analysis with the name: " + os.path.basename(self._savedPath) + " in " + os.path.dirname(self._savedPath) + "<br>Do you want to overwrite it?",
                                                             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
                     if choice == QtWidgets.QMessageBox.Yes:
                         break
@@ -619,15 +631,15 @@ class TD_MainController(AbstractMainController):
                     break
             else:
                 return
-        print('Saving analysis', self._savedName)
+        print('Saving analysis', self._savedPath)
         #start=time.time()
-        searchService.saveSearch(self._savedName, self._spectrumHandler.getNoiseLevel(), self._settings, self._configs,
+        searchService.saveSearch(self._savedPath, self._spectrumHandler.getNoiseLevel(), self._settings, self._configs,
                                  self._intensityModeller.getObservedIons().values(),
                                  self._intensityModeller.getDeletedIons().values(),
-                                 self._spectrumHandler.getSearchedChargeStates(), self._info.toString())
-        self._info.save(self._savedName)
+                                 self._spectrumHandler.getSearchedChargeStates(), self._info.toString(), self._propStorage)
+        self._info.save(self._savedPath)
         self._saved = True
         print('done')
-        logging.info('Analysis saved: ' + self._savedName)
+        logging.info('Analysis saved: ' + self._savedPath)
         self._infoView.update()
-        return self._savedName
+        return self._savedPath

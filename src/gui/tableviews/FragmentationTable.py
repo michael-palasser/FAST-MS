@@ -37,7 +37,7 @@ class FragmentationTable(QtWidgets.QWidget):
     '''
     Widget with QTableView showing relative percentages of each fragment
     '''
-    def __init__(self, typeData, siteData, siteHeaders):
+    def __init__(self, typeData, siteData, siteHeaders, title):
         super().__init__(parent=None)
         verticalLayout = QtWidgets.QVBoxLayout(self)
         #scrollArea = QtWidgets.QScrollArea(self)
@@ -62,7 +62,7 @@ class FragmentationTable(QtWidgets.QWidget):
 
         #self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         #self._table.move(0,0)
-        self.setObjectName('Fragmentation Efficiencies')
+        self.setObjectName(title)#'Fragmentation Efficiencies')
         self._translate = translate
         self.setWindowTitle(self._translate(self.objectName(), self.objectName()))
         self._table.resizeColumnsToContents()

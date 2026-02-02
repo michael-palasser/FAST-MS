@@ -15,7 +15,6 @@ def getErrorLimit(mz:float, k:float, d:float) ->float:
     '''
     return k / 1000 * mz + d
 
-
 def calculateError(value:float, theoValue:float) -> float:
     '''
     Calculates the mass errror
@@ -25,20 +24,19 @@ def calculateError(value:float, theoValue:float) -> float:
     '''
     return (value - theoValue) / theoValue * 10 ** 6
 
-
-def getMz(mass, z, radicals):
+def getMz(mass, z, electrons):
     '''
     Calculates the m/z
     :param (float) mass: neutral mass
     :param (int) z: charge
-    :param (int) radicals: number of radicals
+    :param (int) electrons: number of electrons
     :return: (float) m/z
     '''
     if z != 0:
-        return abs(mass / z + protMass) + radicals * (eMass + protMass) / z
+        return abs(mass / z + protMass + electrons * (eMass + protMass) / z)
     else:
         #return abs(mass) + radicals * (eMass + protMass)
-        return abs(mass) + radicals * (eMass+ protMass)
+        return mass + electrons * (eMass+ protMass)
 
 
 peaksArrType = np.dtype([('m/z', float), ('I', float),
@@ -80,6 +78,7 @@ class AbstractSpectrumHandler(abc.ABC):
         if 'profile' in self._settings.keys() and self._settings['profile'] != "":
             self.addProfileSpectrum(self._settings["profile"])
             # self.expectedChargeStates = dict()
+
     @staticmethod
     @abc.abstractmethod
     def getIonClass(*args):

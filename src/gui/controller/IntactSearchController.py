@@ -24,7 +24,7 @@ from src.services.assign_services.IntactSpectrumHandler import IntactSpectrumHan
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.services.IntensityModeller import IntensityModeller
 from src.gui.dialogs.CheckIonView import CheckMonoisotopicOverlapView
-from src.gui.dialogs.SimpleDialogs import ExportDialog
+from src.gui.dialogs.SaveDialogs import ExportDialog
 from src.gui.dialogs.StartDialogs import IntactStartDialogFull
 
 
@@ -150,7 +150,10 @@ class IntactMainController(AbstractMainController):
         Exports the results to a xlsx file
         '''
         exportConfigHandler = ConfigurationHandlerFactory.getIntactExportHandler()
-        dlg = ExportDialog(self._mainWindow, (), exportConfigHandler.getAll())
+        lastOptions= exportConfigHandler.getAll()
+        lastOptions['dir'] = os.path.dirname(self._settings['spectralData'])
+        lastOptions['file'] = os.path.basename(self._settings['spectralData'])
+        dlg = ExportDialog(self._mainWindow, (), lastOptions, "intact")
         dlg.exec_()
         if dlg and not dlg.canceled():
             newOptions = dlg.getOptions()

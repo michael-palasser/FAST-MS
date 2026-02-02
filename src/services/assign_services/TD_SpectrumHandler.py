@@ -68,7 +68,7 @@ class SpectrumHandler(AbstractSpectrumHandler):
         self._precModCharge = precModCharge
 
     def calcPrecCharge(self, charge, radicals):
-        return abs(charge) - radicals #must be changed if radicals turns to electrons
+        return abs(charge - radicals) #must be changed if radicals turns to electrons
 
     def setNormalisationFactor(self, factor):
         self._normalisationFactor = factor

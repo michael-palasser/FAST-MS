@@ -148,10 +148,10 @@ class IsotopePatternLogics(object):
                        np.sum(self._isotopePattern['calcInt'])
         """if charge != 0: changed
             self._neutralMass -= (protMass+eMass)*charge"""
-        ionMode=np.sign(charge)
+        """ionMode=np.sign(charge)
         if ionMode==0:
-            ionMode=1
-        self._isotopePattern['m/z'] = getMz(self._isotopePattern['m/z'], charge, electrons*ionMode)#self.getMz(self._isotopePattern['m/z'],charge,electrons)
+            ionMode=1"""
+        self._isotopePattern['m/z'] = getMz(self._isotopePattern['m/z'], charge, electrons)#self.getMz(self._isotopePattern['m/z'],charge,electrons)
         self._isotopePattern['calcInt'] *= intensity
         peaks = []
         for row in self._isotopePattern:

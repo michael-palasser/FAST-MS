@@ -362,13 +362,18 @@ class AbstractMainController(ABC):
         else:
             super().keyPressEvent(event)"""
 
+    def generateWindowTitle(self, title=""):
+        if title == "":
+            return self._mainWindow.windowTitle().replace('Results:  ', "")
+        else:
+            return title+": " +self._mainWindow.windowTitle().replace('Results:  ', "")
 
     def getSpectrumView(self, parent, selectedHash, empty=False, view=None, strongFocus=False):
         """profileMode = False
         if 'profile' in self._settings.keys() and self._settings['profile'] == "":
             profileMode=True"""
         if empty: #nothing selected yet (start)
-            return SpectrumView(parent, self._spectrumHandler.getSpectrum(), [], 0, 0, 0,
+            return SpectrumView(parent, self.generateWindowTitle(), self._spectrumHandler.getSpectrum(), [], 0, 0, 0,
                                 self._spectrumHandler.getSprayMode())
         if selectedHash is None: #Full spec
             ajacentIons = sorted(self.getIonList(), key=lambda obj: obj.getIsotopePattern()['m/z'][0])
@@ -401,7 +406,7 @@ class AbstractMainController(ABC):
         if 'profile' in self._settings.keys() and self._settings['profile'] != "" and INTERN:
             profileSpec = self._spectrumHandler.getProfileSpectrum((minMz_total, maxMz_total))
         if view is None:
-            specView = SpectrumView(parent, peaks, ajacentIons, minMz_focus, maxMz_focus, maxI, self._spectrumHandler.getSprayMode(),
+            specView = SpectrumView(parent, self.generateWindowTitle(), peaks, ajacentIons, minMz_focus, maxMz_focus, maxI, self._spectrumHandler.getSprayMode(),
                                 noise, selectedHash,profileSpec)
             return specView
         else:

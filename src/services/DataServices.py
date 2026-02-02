@@ -279,8 +279,11 @@ class MoleculeService(AbstractServiceForPatterns):
     '''
     Service handling a MoleculeRepository and Macromolecule entities.
     '''
-    def __init__(self):
-        super(MoleculeService, self).__init__(MoleculeRepository(), (0,2))
+    def __init__(self, dbPath:str|None=None):
+        if dbPath is None:
+            super(MoleculeService, self).__init__(MoleculeRepository(), (0,2))
+        else:
+            super(MoleculeService, self).__init__(MoleculeRepository(dbPath), (0,2))
 
     def makeNew(self):
         return Macromolecule("", "", "", 10 * [["", "", ""]], None)
@@ -388,8 +391,11 @@ class SequenceService(AbstractService):
     '''
     Service handling a SequenceRepository and Sequence entities.
     '''
-    def __init__(self):
-        super(SequenceService, self).__init__(SequenceRepository(),(0,1,2))
+    def __init__(self, dbPath:str|None=None):
+        if dbPath is None:
+            super(SequenceService, self).__init__(SequenceRepository(),(0,1,2))
+        else:
+            super(SequenceService, self).__init__(SequenceRepository(dbPath),(0,1,2))
 
     def makeNew(self):
         return ("", "", "")
@@ -495,8 +501,11 @@ class FragmentationService(AbstractServiceForPatterns):
     '''
     Service handling a FragmentationRepository and FragmentationPattern entities.
     '''
-    def __init__(self):
-        super(FragmentationService, self).__init__(FragmentationRepository(), (0, 5, 6))
+    def __init__(self, dbPath:str|None=None):
+        if dbPath is None:
+            super(FragmentationService, self).__init__(FragmentationRepository(), (0, 5, 6))
+        else:
+            super(FragmentationService, self).__init__(FragmentationRepository(dbPath), (0, 5, 6))
 
     def makeNew(self):
         #return PatternWithItems("", [{"Name": "", "Gain": "", "Loss": "", "NrOfMod": 0, "enabled": False}], None)
@@ -555,8 +564,11 @@ class ModificationService(AbstractServiceForPatterns):
     '''
     Service handling a ModificationRepository and ModificationPattern entities.
     '''
-    def __init__(self):
-        super(ModificationService, self).__init__(ModificationRepository(), (0,6,7))
+    def __init__(self, dbPath:str|None=None):
+        if dbPath is None:
+            super(ModificationService, self).__init__(ModificationRepository(), (0,6,7))
+        else:
+            super(ModificationService, self).__init__(ModificationRepository(dbPath), (0,6,7))
 
     def makeNew(self):
         #return PatternWithItems("", [{"Name": "", "Gain": "", "Loss": "", "NrOfMod": 0, "enabled": False}], None)

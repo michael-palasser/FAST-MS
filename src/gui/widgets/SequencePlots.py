@@ -18,6 +18,8 @@ class PlotFactory(object):
     def __init__(self, parent):
         self._parent = parent
         self._colours = ['r', 'm', 'y', 'c', 'g', 'b']
+        """if parent is not None:
+            self._baseName = parent.windowTitle().replace('Results:  ', ": ")"""
         if INTERN:
             """self._colours = list({'tab:red':'#d62728', 'tab:orange':'#ff7f0e',
                              'tab:purple':'#9467bd', 'tab:brown':'#8c564b',
@@ -37,20 +39,20 @@ class PlotFactory(object):
         else:
             self._fontsize = 12
 
-    def showOccupancyPlot(self, sequence, forwardVals, backwardVals, maxY, modification):
-        self.initiatePlot(sequence, forwardVals, backwardVals, maxY, lambda: self.formatForOccupancies(modification, maxY))
+    def showOccupancyPlot(self, sequence, forwardVals, backwardVals, maxY, modification, title):
+        self.initiatePlot(sequence, forwardVals, backwardVals, maxY, lambda: self.formatForOccupancies(modification, maxY), title)
         #self.initiateAbsPlot(sequence, absVals, maxY, 'Abs. Occupancies '+modification)
         return self._plot1
 
-    def showChargePlot(self, sequence, forwardVals, backwardVals, maxY, forwardVals2, backwardVals2):
-        self.initiatePlot(sequence, forwardVals, backwardVals, abs(maxY), self.formatForCharges)
+    def showChargePlot(self, sequence, forwardVals, backwardVals, maxY, forwardVals2, backwardVals2, title):
+        self.initiatePlot(sequence, forwardVals, backwardVals, abs(maxY), self.formatForCharges, title)
         self.plotMinMaxVals(forwardVals2, backwardVals2)
         return self._plot1
 
     def getFontSizeString(self):
         return str(self._fontsize)+'pt'
 
-    def initiatePlot(self, sequence, forwardVals, backwardVals, maxY, func):
+    def initiatePlot(self, sequence, forwardVals, backwardVals, maxY, func, title):
         '''
         Constructs the corresponding plots. Plot has 2 lines (2 axis) in forward and backward direction
         :param (list[str]) sequence: sequence of building blocks
@@ -60,6 +62,7 @@ class PlotFactory(object):
             {fragment type: proportions [fragment number x proportion]} in backward direction (C-term./3')
         :param (float) maxY: max. y value
         :param (callable) func: method which formats the plot
+        :param (str) title: Window title
         '''
         self._forwardVals = forwardVals
         self._backwardVals = backwardVals
@@ -76,6 +79,7 @@ class PlotFactory(object):
         self._plot2.setYLink(self._plot1)
         styles = {"black": "#f00", "font-size": self.getFontSizeString()}
         self._plot1.setLabel('bottom', 'cleavage site', **styles)
+        self._plot1.setWindowTitle(title)
 
         for axisName in ("left", "bottom", "right"):
             font=QtGui.QFont()
@@ -142,7 +146,6 @@ class PlotFactory(object):
         '''
         Formats the plot if it's a charge plot
         '''
-        self._plot1.setWindowTitle('Charge Distribution')
         yLabel = 'average charge '
         styles = {"black": "#f00", "font-size": self.getFontSizeString()}
         self._plot1.setLabel('left', yLabel + ','.join(self._forwardVals.keys()), **styles)
@@ -152,7 +155,6 @@ class PlotFactory(object):
         '''
         Formats the plot if it's an occupancy plot
         '''
-        self._plot1.setWindowTitle('Localise ' +modification)
         #yLabel = '% '+modification + ' ('
         yLabel = modification + ' ('
         styles = {"black": "#f00", "font-size": self.getFontSizeString()}
@@ -351,6 +353,7 @@ def plotBars(sequence, values, headers, title, occup=False):
     width = 0.8  # the width of the bars: can also be len(x) sequence
 
     fig, ax = plt.subplots()#figsize=(50,nrRows*10+50))
+    fig.canvas.manager.set_window_title(title)
     bottom=np.zeros(nrRows)
 
     size =nrRows/5+4, 4
@@ -386,7 +389,7 @@ def plotBars(sequence, values, headers, title, occup=False):
     ax.xaxis.set_minor_locator(MultipleLocator(1))
     ax.ticklabel_format(axis="y", style="sci", scilimits=(0,0))
     plt.grid(axis = 'y',linestyle = '--', linewidth = 0.4)
-    ax.set_title(title)
+    #ax.set_title(title)
     leg = ax.legend()
     if leg:
         leg.set_draggable(True)
@@ -410,7 +413,7 @@ if __name__ == '__main__':
     #plotBars(sequ, arr, ['c','c+CMCT','y','y+CMCT'], 'hey', False)
 
     app = QApplication(sys.argv)
-    plotFactory = PlotFactory(None)
+    plotFactory = PlotFactory(None, "")
     forwardVals = {'c':np.random.rand(len(sequ))}
     backwardVals =  {'y':np.random.rand(len(sequ))}
 

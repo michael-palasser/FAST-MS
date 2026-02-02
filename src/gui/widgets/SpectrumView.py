@@ -30,7 +30,7 @@ class AbstractSpectrumView(QtWidgets.QWidget):
     '''
     QWidget which shows a part of the spectrum. Superclass of SpectrumView and TheoSpectrumView.
     '''
-    def __init__(self, parent, peaks, ions, minRange, maxRange, maxY, lblSize, ionMode, noise=None, focused=False,
+    def __init__(self, parent, title, peaks, ions, minRange, maxRange, maxY, lblSize, ionMode, noise=None, focused=False,
                  profileSpec=None):
         super(AbstractSpectrumView, self).__init__(parent)
         self._peaks = peaks
@@ -86,9 +86,8 @@ class AbstractSpectrumView(QtWidgets.QWidget):
         #self._graphWidget.addItem(self._cursorLabel)
         #self._graphWidget.getAxis('left').setTickSpacing(0.1,0.05)
         setIcon(self)
-        title = "Spectrum View"
         if focused:
-            title += ": " + self._focused[0] + ", " +str(self._focused[1])+self._ionMode
+            title = self._focused[0] + ", " +str(self._focused[1])+self._ionMode +" (" + title+")"
         self.setWindowTitle(title)
         self.show()
 
@@ -281,8 +280,8 @@ class SpectrumView(AbstractSpectrumView):
      modelled intensities are shown as scatter plots.
     Used in top-down search.
     '''
-    def __init__(self, parent, peaks, ions, minRange, maxRange, maxY, ionMode, noise=None, focused=False, profileSpec=None):
-        super(SpectrumView, self).__init__(parent, peaks, ions, minRange-1, maxRange+1, maxY, '12pt', ionMode, noise,
+    def __init__(self, parent, title, peaks, ions, minRange, maxRange, maxY, ionMode, noise=None, focused=False, profileSpec=None):
+        super(SpectrumView, self).__init__(parent, title, peaks, ions, minRange-1, maxRange+1, maxY, '12pt', ionMode, noise,
                                            focused, profileSpec)
         self.resize(700,400)
 
@@ -369,7 +368,7 @@ class TheoSpectrumView(AbstractSpectrumView):
         spectrPeaks = peaks[['m/z', 'I']]
         tolerance = (np.max(peaks['m/z'])-np.min(peaks['m/z']))*0.2
         yMax = max(np.max(peaks['calcInt']),np.max(peaks['I']))
-        super(TheoSpectrumView, self).__init__(parent, spectrPeaks, peaks,
+        super(TheoSpectrumView, self).__init__(parent, "", spectrPeaks, peaks,
                np.min(peaks['m/z'])-tolerance, np.max(peaks['m/z'])+tolerance, yMax, "12pt", ionMode,
                                                noise=[(0,0)])
         self.makeWidthWidgets()

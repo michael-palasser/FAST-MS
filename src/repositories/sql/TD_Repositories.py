@@ -8,9 +8,10 @@ class FragmentationRepository(AbstractRepositoryWith2Items):
     '''
     Repository for fragmentation patterns
     '''
-    def __init__(self):
-        #self.__conn = sqlite3.connect(dbFile)
-        super(FragmentationRepository, self).__init__(join('top_down.db'), 'fragPatterns',
+    def __init__(self, dirPath=None):
+        if dirPath is None:
+            dirPath = join('top_down.db')
+        super(FragmentationRepository, self).__init__(dirPath, 'fragPatterns',
                                                       ("name", 'precursor'),
                     {'fragmentTypes':('name', 'gain', 'loss', 'residue', 'radicals', 'direct', 'enabled', 'patternId'),
                      'precFragments':('name', 'gain', 'loss', 'residue', 'radicals', 'enabled', 'patternId')},
@@ -72,7 +73,7 @@ class FragmentationRepository(AbstractRepositoryWith2Items):
         columns1 = super(FragmentationRepository, self).getItemColumns()
         columns1.update({'BB': "If the species is dependent on the occurence of a specific building block within the "
                                     "sequence, enter the building block",
-                         'radicals (deprecated)': "Deprecated functionality since radical ions can be easier specified using H atoms as gain or loss. Enter the number of radicals. (positive value: +electron in positive mode, -electron in negative mode and vice versa)",
+                         'electrons': "Enter the number of captured electrons (in ECD/ETD/EDD/...). Enter a positive value for captured electrons, negative ones for detached electrons.",
                          'direction': "Enter +1 for forward (e.g. N-/5'- terminus) or -1 for backward (e.g. C-/3'- terminus)",
                          'enabled': "Activate/Deactivate Species"})
         columns1['name'] = 'Name of the fragment, 1. letter specifies type of fragment, optionally followed by "+" or "-".\n' \
@@ -80,7 +81,8 @@ class FragmentationRepository(AbstractRepositoryWith2Items):
         columns2 = super(FragmentationRepository, self).getItemColumns()
         columns2.update({'BB': "If the species is dependent on the occurence of a specific building block within the "
                                     "sequence, enter the building block",
-                         'radicals (deprecated)': "Deprecated functionality since radical ions can be easier specified using H atoms as gain or loss. Enter the number of radicals. (positive value: +electron in positive mode, -electron in negative mode and vice versa)", 'enabled': "Activate/Deactivate Species"})
+                         'electrons': "Enter the number of captured electrons (in ECD/ETD/EDD/...). Enter a positive value for captured electrons, negative ones for detached electrons.",
+                         'enabled': "Activate/Deactivate Species"})
         return (columns1,columns2)
 
     def getPattern(self, name):
@@ -126,8 +128,10 @@ class ModificationRepository(AbstractRepositoryWith2Items):
     '''
     Repository for modification patterns
     '''
-    def __init__(self):
-        super(ModificationRepository, self).__init__('top_down.db', 'modPatterns',("name","modification"),
+    def __init__(self, dirPath=None):
+        if dirPath is None:
+            dirPath = join('top_down.db')
+        super(ModificationRepository, self).__init__(dirPath, 'modPatterns',("name","modification"),
                             {'modItems':('name', 'gain', 'loss', 'residue', 'radicals', 'chargeEffect', 'calcOcc',
                                          'enabled', 'patternId'),
                              'excluded': ('name', 'patternId')}, ((4, 5),()), ((6,7),()) )
@@ -187,7 +191,7 @@ class ModificationRepository(AbstractRepositoryWith2Items):
         columns = super(ModificationRepository, self).getItemColumns()
         columns.update({'BB': "If the species is dependent on the occurence of a specific building block within the "
                                    "sequence, enter the building block",
-                        'radicals (deprecated)': "Deprecated functionality since radical ions can be easier specified using H atoms as gain or loss. Enter the number of radicals. (positive value: +electron in positive mode, -electron in negative mode and vice versa).",
+                        'electrons': "Enter the number of captured electrons (in ECD/ETD/EDD/...). Enter a positive value for captured electrons, negative ones for detached electrons.",
                         'charge': "If the modification alters the charge of modified fragment enter an (empiric) number of the extent",
                         'localise?': 'Should the modification be used when localising a modification?',
                         'enabled': "Activate/Deactivate the modification"})

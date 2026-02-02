@@ -43,7 +43,7 @@ class IntactRepository(AbstractRepositoryWithItems):
         '''
         return {'name':"Enter \"+\"modification or \"-\"loss", 'gain':"Molecular formula to be added",
                 'loss':"Molecular formula to be subtracted", 'no.mod.':"Number how often the species is modified",
-                'radicals': "Enter the number of radicals",
+                'electrons': "Enter the number of captured electrons. Enter a positive value for captured electrons, negative ones for detached electrons.",
                 'enabled':"Activate/Deactivate Species"}
 
 

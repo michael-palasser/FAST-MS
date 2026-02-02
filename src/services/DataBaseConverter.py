@@ -1,5 +1,6 @@
 import os
 
+from src.entities.SearchSettings import SearchSettings
 from src.services.SearchService import SearchService
 from src.services.StoredAnalysesService import StoredAnalysesService
 
@@ -29,7 +30,8 @@ class DataBaseConverter(object):
                 continue
             settings, noiseLevel, ions, deletedIons, remIons, searchedZStates, info = oldService.getSearch(name)
             configs = newService.getSettingsAndConfigs(info)
-            newService.saveSearch(name, noiseLevel, settings, configs, ions, deletedIons, searchedZStates, info)
+            props = SearchSettings(settings['sequName'], settings['fragmentation'], settings['modifications'])
+            newService.saveSearch(name, noiseLevel, settings, configs, ions, deletedIons, searchedZStates, info, props)
 
         oldService.close()
         os.rename(oldPath, oldPath[:-3]+"_old.db")

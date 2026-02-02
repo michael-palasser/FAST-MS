@@ -11,7 +11,7 @@ from src.resources import DEVELOP
 from src.services.DataServices import *
 from src.gui.mainWindows.AbstractMainWindows import SimpleMainWindow
 from src.gui.GUI_functions import createComboBox, shoot, translate
-from src.gui.dialogs.SimpleDialogs import OpenDialog
+from src.gui.dialogs.OpenDialogs import OpenDialog
 
 
 class AbstractSimpleEditorController(ABC):

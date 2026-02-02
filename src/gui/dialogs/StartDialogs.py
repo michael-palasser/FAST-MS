@@ -1,12 +1,11 @@
 import traceback
+from os.path import join
 
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QMessageBox
 
-from src.gui.dialogs.SimpleDialogs import defaultFilters
+from src.gui.dialogs.OpenDialogs import defaultFilters
 from src.resources import path, INTERN, DEVELOP
-from os.path import join
-
 from src.Exceptions import InvalidInputException
 from src.services.DataServices import FragmentationService, ModificationService, SequenceService, IntactIonService
 from src.gui.dialogs.AbstractDialogs import StartDialog, AbstractDialog

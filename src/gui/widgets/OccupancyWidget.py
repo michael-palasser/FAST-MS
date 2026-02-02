@@ -9,10 +9,10 @@ class OccupancyWidget(QtWidgets.QWidget):
     Widget with a QTableView showing relative percentages of each fragment and a second QTableView showing sums of the
      relative abundances of each fragment (unmodified/modified)
     '''
-    def __init__(self,modification, percData,percHeaders, modificationLoss, absData, absHeaders):
+    def __init__(self,modification, percData,percHeaders, modificationLoss, absData, absHeaders, title):
         super().__init__(parent=None)
         verticalLayout = QtWidgets.QVBoxLayout(self)
-        self.setWindowTitle('Localise '+modification)
+        self.setWindowTitle(title)
         #scrollArea = QtWidgets.QScrollArea(self)
         #_scrollArea.setGeometry(QtCore.QRect(10, 10, len(typeData[0])*50+200, len(typeData)*22+25))
         #scrollArea.setWidgetResizable(True)

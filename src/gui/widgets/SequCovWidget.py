@@ -230,7 +230,7 @@ class SequenceCoveragePlot(FigureCanvasQTAgg):
         font_path = 'C:/Windows/Fonts/seguisym.ttf'
         prop = matplotlib.font_manager.FontProperties(fname=font_path)
         #print('rows', rows, sequLength,step_y)
-        self._fig = plt.figure(figsize=(lineWidth,rows))#+(lenForward+lenBack-2)*1))
+        self._fig = plt.figure("Cleavage Map",figsize=(lineWidth,rows))#+(lenForward+lenBack-2)*1))
         matplotlib.rcParams.update({'font.size': 15})
         ax = plt.subplot(111)
         ax.set_xlim([-step_x*0.5, lineWidth+0.5])

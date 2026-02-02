@@ -92,6 +92,9 @@ class BuildingBlock(AbstractItem1):
     def setTranslation(self, translation):
         self.__translation = translation
 
+    def toString(self):
+        return [self._name, self.__translation, self.__formulaString, "", ""]
+
     """def getP_pos(self):
         return self.__p_pos
     def getP_neg(self):

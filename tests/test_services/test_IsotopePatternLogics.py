@@ -89,7 +89,7 @@ class TestIsotopePatternLogics(TestCase):
         self.assertAlmostEqual(getMz(380.180818,2,2),formulaIon.getIsotopePattern()[0]["m/z"],delta=10**-6)
 
         formulaIon, formulaNeutralMass2, _ = self.logics.calculate('mol. formula','C16H24N6O5', -2, -2,1000)
-        self.assertAlmostEqual(getMz(380.180818,-2,2),formulaIon.getIsotopePattern()[0]["m/z"],delta=10**-6)
+        self.assertAlmostEqual(getMz(380.180818,-2,-2),formulaIon.getIsotopePattern()[0]["m/z"],delta=10**-6)
         self.assertAlmostEqual(formulaNeutralMass1,formulaNeutralMass2,delta=10**-6)
         formulaIon, formulaNeutralMass3, _ = self.logics.calculate('mol. formula','C16H24N6O5', 0, 1,1000)
         self.assertAlmostEqual(380.180818+protMass+eMass,formulaIon.getIsotopePattern()[0]["m/z"],delta=10**-6)

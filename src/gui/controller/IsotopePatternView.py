@@ -8,7 +8,7 @@ from src.gui.mainWindows.AbstractMainWindows import SimpleMainWindow
 from src.gui.GUI_functions import makeFormLayout, shoot, connectTable
 from src.gui.widgets.IonTableWidgets import IsoPatternIon
 from src.gui.widgets.PeakWidgets import IsoPatternPeakWidget
-from src.gui.dialogs.SimpleDialogs import OpenDialog
+from src.gui.dialogs.OpenDialogs import OpenDialog
 from src.gui.widgets.SpectrumView import TheoSpectrumView
 
 

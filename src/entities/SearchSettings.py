@@ -8,7 +8,7 @@ class SearchSettings(object):
     '''
     Container class for storage of search properties (sequence, molecule, fragmentation pattern, modification pattern)
     '''
-    def __init__(self, sequName,fragmentation, modificationPattern, sequTup=None):
+    def __init__(self, sequName,fragmentation, modificationPattern, sequTup=None, dbPath=None):
         '''
         Class to store several entities (sequence, fragmentation, modification-pattern)
         :param (str) sequName: name of the sequence
@@ -16,14 +16,14 @@ class SearchSettings(object):
         :param (str) modificationPattern: name of the modification pattern
         '''
         if sequTup is None:
-            self.__sequence = SequenceService().get(sequName)
+            self.__sequence = SequenceService(dbPath).get(sequName)
         else:
             self.__sequence = Sequence(sequName, sequTup[0], sequTup[1], None)
         # self.sequenceList = self.__sequence.getSequenceList()
-        self.__molecule = MoleculeService().getPatternWithObjects(self.__sequence.getMolecule(), BuildingBlock)
+        self.__molecule = MoleculeService(dbPath).getPatternWithObjects(self.__sequence.getMolecule(), BuildingBlock)
         # self.__monomers = MoleculeService().getItemDict(self.__sequence.getMolecule())
-        self.__fragmentation = FragmentationService().getPatternWithObjects(fragmentation, FragItem)
-        self.__modifPattern = ModificationService().getPatternWithObjects(modificationPattern, ModificationItem)
+        self.__fragmentation = FragmentationService(dbPath).getPatternWithObjects(fragmentation, FragItem)
+        self.__modifPattern = ModificationService(dbPath).getPatternWithObjects(modificationPattern, ModificationItem)
 
     def getSequence(self):
         return self.__sequence

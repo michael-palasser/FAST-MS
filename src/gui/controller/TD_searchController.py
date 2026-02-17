@@ -11,7 +11,7 @@ import numpy as np
 import time
 from PyQt5 import QtWidgets
 
-from src.entities.InternalIons import InternalFragmentIon
+from src.entities.InternalFragments import InternalFragmentIon
 from src.resources import path, autoStart, DEVELOP, getRelativePath
 from src.Exceptions import InvalidIsotopePatternException, InvalidInputException
 from src.entities.Info import Info

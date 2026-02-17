@@ -7,7 +7,7 @@ from re import findall
 import logging
 import numpy as np
 
-from src.entities.Ions import FragmentIon
+from src.entities.Ions import FragmentIon, FragmentIonRed
 from src.resources import DEVELOP
 from src.services.assign_services.AbstractSpectrumHandler import AbstractSpectrumHandler
 
@@ -57,12 +57,14 @@ class SpectrumHandler(AbstractSpectrumHandler):
         self._precModCharge = self.getModCharge(self._precursor)
         self._calculatedZs = []
 
-    @staticmethod
-    def getIonClass(*args):
+    def getIonClass(self, *args):
         '''
         Returns the constructor for a FragmentIon
         '''
-        return FragmentIon
+        if "subtract noise" in self._configs.keys() and self._configs["subtract noise"]:
+            return FragmentIonRed
+        else:
+            return FragmentIon
 
     def setPrecModCharge(self, precModCharge):
         self._precModCharge = precModCharge

@@ -19,7 +19,7 @@ class SearchService(object):
     def getAllSearchNames(self):
         return self._rep.getAllNames()
 
-    def getSearch(self, name):
+    def getSearch(self, name, constr):
         '''
         Returns the values of a stored analysis
         :param (str) name: name of the analysis/search
@@ -27,7 +27,7 @@ class SearchService(object):
             str) settings {name:value}, observed ions, deleted ions, remodelled ions, calculated charge states per
             fragment {fragment name: charge states}, information log
         '''
-        search =self._rep.getSearch(name)
+        search =self._rep.getSearch(name, constr)
         if search.getNoiseLevel() == 0:
             search.setNoiseLevel(search.getSettings()['noiseLimit'])
         noiseLevel = search.getNoiseLevel()

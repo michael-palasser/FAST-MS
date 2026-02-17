@@ -158,7 +158,6 @@ class IonTableModel(AbstractTableModel):
         if len(self._data)==0:
             self._data.append(['' for _ in self._headers])
 
-
     def updateData(self, newRow):
         for i, row in enumerate(self._data):
             if row[1]==newRow[1] and row[3]==newRow[3]:

@@ -86,6 +86,18 @@ class InternalFragmentIon(InternalFragment, Ion):
         return [self.getName()+self._modification, -1, self._formula, self._monoisotopicRaw, self._charge,
                 int(round(self._noise)), self._quality, self._comment]
 
+class InternalFragmentIonRed(InternalFragmentIon):
+    def getSignalToNoise(self):
+        if self._noise != 0:
+            signal = 0
+            for val in self._isotopePattern['calcInt']:
+                if val > self._noise:
+                    signal += val - self._noise
+            return signal / self._noise
+        else:
+            print(self.getName(), self._intensity, self._noise)
+            return np.nan
+
 class SimpleInternalIon(InternalFragment, Ion):
     def __init__(self, neutral, mz, theoMz, charge, intensity, error, snr, qual):
         '''

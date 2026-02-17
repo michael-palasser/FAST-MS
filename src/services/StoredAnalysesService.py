@@ -71,9 +71,12 @@ class StoredAnalysesService(object):
         print("*** Loading Analysis", name)
         filePaths = self.getFileNames(name)
         rep = AnalysisRepository(filePaths[0])
-        ions, delIons, searchedZStates, log = rep.getSearch()
-        settings = ConfigHandler(filePaths[1], []).getAll()
         configurations = ConfigHandler(filePaths[2], []).getAll()
+        subtrNoise = False
+        if "subtract noise" in configurations.keys():
+            subtrNoise = configurations["subtract noise"]
+        ions, delIons, searchedZStates, log = rep.getSearch(subtrNoise)
+        settings = ConfigHandler(filePaths[1], []).getAll()
         noiseLevel = settings['noiseLevel']
         if noiseLevel == 0:
             noiseLevel = settings['noiseLimit']

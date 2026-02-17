@@ -98,11 +98,11 @@ class AbstractSimpleEditorController(ABC):
         return tableWidget
 
     def save(self, *args):
-        try:
-            self._pattern = self._service.save(args[0])
-        except InvalidInputException as e:
-            traceback.print_exc()
-            QtWidgets.QMessageBox.warning(self._mainWindow, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
+        #try:
+        self._pattern = self._service.save(args[0])
+        #except InvalidInputException as e:
+        #    traceback.print_exc()
+        #    QtWidgets.QMessageBox.warning(self._mainWindow, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
 
 
     def readTable(self, table, boolVals):
@@ -326,8 +326,12 @@ class AbstractEditorController(AbstractSimpleEditorController, ABC):
                 return self._service.makeNew()
 
     def save(self, *args):
-        super(AbstractEditorController, self).save(args[0])
-        self.openAgain(title=False)
+        try:
+            super(AbstractEditorController, self).save(args[0])
+            self.openAgain(title=False)
+        except InvalidInputException as e:
+            traceback.print_exc()
+            QtWidgets.QMessageBox.warning(self._mainWindow, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
 
     def delete(self):
         '''
@@ -536,7 +540,11 @@ class SequenceEditorController(AbstractSimpleEditorController):
         sequences = []
         for sequTuple in self.readTable(self._table, self._service.getBoolVals()):
             sequences.append((sequTuple[0], sequTuple[1], sequTuple[2]))
-        super(SequenceEditorController, self).save(sequences)
+        try:
+            super(SequenceEditorController, self).save(sequences)
+        except InvalidInputException as e:
+            traceback.print_exc()
+            QtWidgets.QMessageBox.warning(self._mainWindow, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
 
     def formatTableWidget(self, headers, tableWidget, data, boolVals):
         '''
@@ -610,6 +618,9 @@ class FragmentEditorController(AbstractEditorControllerWithTabs):
         self.updatePrecBox()
         self._widgets['precursor'].setCurrentText(self._pattern.getPrecursor())
 
+    def insertRow(self, table, bools):
+        super().insertRow(table, bools)
+        table.setItem(table.rowCount() - 1, 4, QtWidgets.QTableWidgetItem("0"))
 
 
 class ModificationEditorController(AbstractEditorControllerWithTabs):
@@ -695,6 +706,13 @@ class ModificationEditorController(AbstractEditorControllerWithTabs):
                 QtWidgets.QMessageBox.warning(self._mainWindow, "Problem occured", 'Deleting "'+text+ '" not possible',
                                               QtWidgets.QMessageBox.Ok)
 
+
+    def insertRow(self, table, bools):
+        super().insertRow(table, bools)
+        if table.columnCount() > 1:
+            table.setItem(table.rowCount() - 1, 4, QtWidgets.QTableWidgetItem("0"))
+            table.setItem(table.rowCount() - 1, 5, QtWidgets.QTableWidgetItem("0"))
+
 class IntactIonEditorController(AbstractEditorController):
     '''
     Controller class to intact ion patterns
@@ -716,3 +734,9 @@ class IntactIonEditorController(AbstractEditorController):
             id = None
         super(IntactIonEditorController, self).save(IntactPattern(self._widgets["name"].text(),
                                                                   self.readTable(self._table, self._service.getBoolVals()), id))
+
+
+    def insertRow(self, table, bools):
+        super().insertRow(table, bools)
+        table.setItem(table.rowCount() - 1, 3, QtWidgets.QTableWidgetItem("0"))
+        table.setItem(table.rowCount() - 1, 4, QtWidgets.QTableWidgetItem("0"))

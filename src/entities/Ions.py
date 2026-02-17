@@ -94,11 +94,6 @@ class Ion(ABC):
 
     def getSignalToNoise(self):
         if self._noise != 0:
-            """signal = 0
-            for val in self._isotopePattern['calcInt']:
-                if val> self._noise:
-                    signal += val-self._noise
-            return signal / self._noise"""
             return self._intensity / (self._noise)#*len(self._isotopePattern))
         else:
             print(self.getName(), self._intensity, self._noise)
@@ -114,7 +109,6 @@ class Ion(ABC):
         if self._quality is None:
             print("reset quality", self.getName())
             self._quality = 1
-            
         return [round(self.getMonoisotopic(),5), self._charge, int(round(self._intensity)), self.getName(), round(self._error, 2),
                 round(self.getSignalToNoise(),1), round(self._quality, 2)]#"""
 
@@ -306,6 +300,17 @@ class FragmentIon(Fragment, Ion):
         return self._monoisotopicRaw
 
 
+class FragmentIonRed(FragmentIon):
+    def getSignalToNoise(self):
+        if self._noise != 0:
+            signal = 0
+            for val in self._isotopePattern['calcInt']:
+                if val > self._noise:
+                    signal += val - self._noise
+            return signal / self._noise
+        else:
+            print(self.getName(), self._intensity, self._noise)
+            return np.nan
 
 class IntactNeutral(object):
     '''
@@ -400,6 +405,17 @@ class IntactIon(IntactNeutral, Ion):
         self._noise = noise
         self._comment = comment
 
+class IntactIonRed(IntactIon):
+    def getSignalToNoise(self):
+        if self._noise != 0:
+            signal = 0
+            for val in self._isotopePattern['calcInt']:
+                if val > self._noise:
+                    signal += val - self._noise
+            return signal / self._noise
+        else:
+            print(self.getName(), self._intensity, self._noise)
+            return np.nan
 
 class SimpleIntactIon(IntactNeutral, Ion):
     '''

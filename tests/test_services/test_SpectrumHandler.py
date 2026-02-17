@@ -78,7 +78,7 @@ class TestSpectrumHandler(TestCase):
 
     def test_calcPrecCharge(self):
         self.assertEqual(5, self.spectrumHandler.calcPrecCharge(6, 1))
-        self.assertEqual(5, self.spectrumHandler.calcPrecCharge(-6, 1))
+        self.assertEqual(5, self.spectrumHandler.calcPrecCharge(-6, -1))
 
     def test_add_spectrum_from_csv_and_txt(self):
         # with open(os.path.join(path, 'tests', 'test_files', 'dummySpectrum.csv'), 'r') as f:
@@ -463,5 +463,5 @@ class TestSpectrumHandler(TestCase):
                 self.assertAlmostEqual((Mass+z*1.007276)/abs(z), getMz(Mass, z, 0),delta=10**-6)
         self.assertAlmostEqual((Mass+5*protMass+eMass)/4, getMz(Mass, 4, 1),delta=10**-6)
         self.assertAlmostEqual((Mass+6*protMass+2*eMass)/4, getMz(Mass, 4, 2),delta=10**-6)
-        self.assertAlmostEqual((Mass-5*protMass-eMass)/4, getMz(Mass, -4, 1),delta=10**-6)
-        self.assertAlmostEqual((Mass-6*protMass-2*eMass)/4, getMz(Mass, -4, 2),delta=10**-6)
+        self.assertAlmostEqual((Mass-5*protMass-eMass)/4, getMz(Mass, -4, -1),delta=10**-6)
+        self.assertAlmostEqual((Mass-6*protMass-2*eMass)/4, getMz(Mass, -4, -2),delta=10**-6)

@@ -638,11 +638,11 @@ class IntactIonService(AbstractServiceForPatterns):
     Service handling a IntactRepository and IntactPattern entities.
     '''
     def __init__(self):
-        super(IntactIonService, self).__init__(IntactRepository(),(0,4,5))
+        super(IntactIonService, self).__init__(IntactRepository(),(0,3,4,5))
 
     def makeNew(self):
         # return PatternWithItems("", [{"Name": "", "Gain": "", "Loss": "", "NrOfMod": 0, "enabled": False}], None)
-        return IntactPattern("", 10 * [["", "", "", "", '', False]], None)
+        return IntactPattern("", 10 * [["", "", "", 0, 0, False]], None)
 
     def getFormula(self, item):
         '''

@@ -3,8 +3,8 @@ import sqlite3
 import numpy as np
 from tqdm import tqdm
 
-from src.entities.InternalIons import InternalFragmentIon, InternalFragment
-from src.entities.Ions import FragmentIon, Fragment
+from src.entities.InternalFragments import InternalFragmentIon, InternalFragment, InternalFragmentIonRed
+from src.entities.Ions import FragmentIon, Fragment, FragmentIonRed
 from src.entities.Search import Search
 from src.resources import processTemplateName
 from src.services.assign_services.AbstractSpectrumHandler import peaksArrType
@@ -70,7 +70,7 @@ class AnalysisRepository(object):
         '''
         return [searchVals[1] for searchVals in self.getAll()]"""
 
-    def getSearch(self):
+    def getSearch(self, subtrNoise:bool):
         '''
         Finds a search by name
         :param (str) name: name of the search
@@ -87,12 +87,20 @@ class AnalysisRepository(object):
 
             if (ionVals[2] < 0) and "[" in type:
                 numbers = re.findall(r'\[.*?\]', type)[0][1:-1].split(":")
-                ion = InternalFragmentIon(InternalFragment("i", int(numbers[1]), modification, ionVals[3], [], 0,
-                                                           type[1:3], int(numbers[0])),
-                                  ionVals[4], ionVals[5], peaks, ionVals[6], ionVals[7], True, ionVals[8])
+                if subtrNoise:
+                    constr = InternalFragmentIonRed
+                else:
+                    constr = InternalFragmentIon
+                ion = constr(InternalFragment("i", int(numbers[1]), modification, ionVals[3], [], 0, type[1:3],
+                                              int(numbers[0])), ionVals[4], ionVals[5], peaks, ionVals[6], ionVals[7],
+                             True, ionVals[8])
             else:
-                ion = FragmentIon(Fragment(type, ionVals[2], modification, ionVals[3], [],0),
-                                  ionVals[4], ionVals[5], peaks,ionVals[6], ionVals[7], True, ionVals[8])
+                if subtrNoise:
+                    constr = FragmentIonRed
+                else:
+                    constr = FragmentIon
+                ion = constr(Fragment(type, ionVals[2], modification, ionVals[3], [],0), ionVals[4], ionVals[5],
+                             peaks,ionVals[6], ionVals[7], True, ionVals[8])
             #ion.setRemaining(ionVals[10], ionVals[11], ionVals[12], ionVals[13])
             if ionVals[9] == 0:
                 ions.append(ion)

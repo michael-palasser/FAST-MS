@@ -146,26 +146,18 @@ class SpectrumHandler(AbstractSpectrumHandler):
         else:
             #probableZ = self.getChargeScore(fragment.getSequence()) * self._normalisationFactor
             probableZ = len(fragment.getSequence()) * self._normalisationFactor
-        #print("first", probableZ, fragment.getName())
-        #print('hey',probableZ,fragment.getRadicals(),self._precursor.getRadicals(),self._charge)
-        #probableZ -= (fragment.getRadicals()-self._precursor.getRadicals())
         tolerance = self._configs['zTolerance']
         lowZ, highZ = 1, self._charge
         if fragment.getNumber()==0:
             highZ = abs(self._settings['charge'])
         zEffect = (self.getModCharge(fragment)-self._precModCharge) * self._sprayMode
-        #print(1,fragment.getName(),probableZ)
         probableZ += zEffect
-        #print("second", probableZ, zEffect)
-
-        #print(2,fragment.getName(),probableZ)
         if (probableZ-tolerance)> lowZ:
             lowZ = round(probableZ-tolerance)
         if (probableZ+tolerance)< highZ:
             highZ = round(probableZ + tolerance)
             if highZ<lowZ:
                 highZ=lowZ
-        #print(fragment.getName(),lowZ,round(probableZ,2),highZ)
         logging.info(fragment.getName()+'\tmin z: '+str(lowZ)+'\tcalc. z: '+str(round(probableZ,2))+'\tmax z: '+str(highZ))
         self._calculatedZs.append((fragment.getName(),probableZ))
         return range(lowZ,highZ+1)
@@ -231,4 +223,3 @@ class SpectrumHandler(AbstractSpectrumHandler):
             return np.array(found, dtype=np.dtype([('m/z', float), ('z', int), ('I', int), ('name', 'U32'), ('m/z_theo', float), ('error', float), ('S/N', float)]))
         except OverflowError:
             return np.array(found, dtype=np.dtype([('m/z', float), ('z', int), ('I', np.int64), ('name', 'U32'), ('m/z_theo', float), ('error', float), ('S/N', float)]))
-

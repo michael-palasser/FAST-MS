@@ -394,3 +394,78 @@ class OccupancyRecalcStartDialog(AbstractDialog):
         self._modification = self._widgets['modification'].text()
         super(OccupancyRecalcStartDialog, self).accept()
 
+
+
+class TableStartDialog(StartDialog):
+    '''
+    Dialog which pops up when top-down analysis is started. Values are stored in settings_top_down.json
+    '''
+    def __init__(self, parent, personal=False):
+        super().__init__(parent, "Settings")
+        if not personal or DEVELOP:
+            self._configHandler = ConfigurationHandlerFactory.getTD_SettingHandler()
+        else:
+            self._configHandler = ConfigurationHandlerFactory.getPersonalTD_SettingHandler()
+        self.setupUi()
+
+    def setupUi(self):
+        super().setupUi(SequenceService().getAllSequenceNames(), FragmentationService().getAllPatternNames(),
+                        ModificationService().getAllPatternNames())
+        self._widgets['modifications'].currentTextChanged.connect(self.changeNrOfMods)
+        if self._configHandler.getAll() != None:
+            try:
+                self._widgets["fragmentation"].setCurrentText(self._configHandler.get('fragmentation'))
+                self._widgets["modifications"].setCurrentText(self._configHandler.get('modifications'))
+                self.changeNrOfMods()
+            except KeyError:
+                traceback.print_exc()
+        self.backToLast()
+
+    def getLabels(self):
+        return ("Sequence Name:", "Charge:", "Fragmentation:", "Modifications:", "No. of Modifications:")
+
+    def getWidgets(self, args):
+        sequences, fragPatterns, modPatterns = args
+        chargeWidget = QtWidgets.QSpinBox(self)
+        chargeWidget.setMinimum(-99)
+        widgets = {"sequName": (createComboBox(self,sequences), "Name of the sequence"),
+                   "charge": (chargeWidget, "Charge of the precursor ion"),
+                   "fragmentation": (createComboBox(self,fragPatterns), "Name of the fragmentation - pattern"),
+                   "modifications": (createComboBox(self,modPatterns), "Name of the modification/ligand - pattern"),
+                    "nrMod": (QtWidgets.QSpinBox(self), "How often is the precursor ion modified?")}
+        return widgets
+
+    def changeNrOfMods(self):
+        if self._widgets['modifications'].currentText() == '-':
+            self._widgets['nrMod'].setValue(0)
+            self._widgets['nrMod'].setEnabled(False)
+        elif 'nrMod' in self._configHandler.getAll().keys():
+            self._widgets['nrMod'].setEnabled(True)
+            self._widgets["nrMod"].setValue(self._configHandler.get('nrMod'))
+        else:
+            self._widgets['nrMod'].setEnabled(True)
+            self._widgets["nrMod"].setValue(1)
+
+    def accept(self):
+        settings = self.getNewSettings()
+        if settings is not None:
+            self._newSettings = settings
+            self._configHandler.write(self._newSettings)
+            super().accept()
+
+    def getNewSettings(self):
+        newSettings = self.makeDictToWrite()
+        try:
+            newSettings = self.checkValues(newSettings)
+            if newSettings['nrMod'] == 0:
+                newSettings['modifications'] = '-'
+            return newSettings
+        except InvalidInputException as e:
+            traceback.print_exc()
+            QMessageBox.warning(self, "Problem occured", e.__str__(), QMessageBox.Ok)
+
+    def checkValues(self, configs, *args):
+        if self._widgets['charge'].value() == 0:
+            raise InvalidInputException('Invalid Input','Charge must not be 0')
+        return configs
+

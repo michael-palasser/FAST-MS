@@ -704,7 +704,7 @@ class IntensityModeller(object):
         self._correctedIons[ionHash] = self.calculateIntensity(ion)
         self._correctedIons[ionHash].addComment(ion.getComment())
         self._correctedIons[ionHash].addComment('reset')
-        logging.info(ionHash[0]+","+str(hash[1])+" resetted")
+        logging.info(ionHash[0]+","+str(ionHash[1])+" resetted")
         return self._correctedIons[ionHash]
 
     def getAdjacentIons(self, ionHash, distance=50):

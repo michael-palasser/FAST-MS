@@ -111,6 +111,14 @@ class ConfigurationHandlerFactory(object):
     def getPersonalTD_SettingHandler():
         return ConfigHandler("C:/temp/settings_top_down.json",
                              ConfigurationHandlerFactory.getTD_SettingHandler().getAll())
+    @staticmethod
+    def getTable_SettingHandler():
+        return ConfigHandler(getRelativePath("settings_td_table.json"), top_down_search)
+
+    @staticmethod
+    def getPersonalTable_SettingHandler():
+        return ConfigHandler("C:/temp/settings_td_table.json",
+                             ConfigurationHandlerFactory.getPersonalTD_SettingHandler().getAll())
 
     @staticmethod
     def getConfigHandler():

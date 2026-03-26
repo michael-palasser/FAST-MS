@@ -1,12 +1,8 @@
-import traceback
 from copy import deepcopy
-
 import numpy as np
 import matplotlib
 from matplotlib import pyplot as plt
 import matplotlib.ticker as mticker
-
-#import matplotlib.path as mpath
 
 from PyQt5 import QtWidgets, QtGui
 from PyQt5.QtCore import Qt, QVariant

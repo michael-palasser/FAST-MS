@@ -3,17 +3,19 @@ Created on 20 Oct 2020
 
 @author: michael
 '''
+import os.path
 import sys
 
+from PyQt5 import QtCore
 from PyQt5.QtCore import QSize
 from PyQt5.QtWidgets import QPushButton
 
 from src.gui.controller.IntactSearchController import IntactMainController
+from src.gui.controller.IonTableController import IonTableController
 from src.gui.controller.IsotopePatternView import IsotopePatternView
 from src.gui.controller.EditorController import *
 from src.gui.dialogs.ParameterDialogs import ConfigurationDialog
 from src.gui.dialogs.StartDialogs import IntactStartDialog
-from src.top_down.OccupancyRecalculator import run as occupancyRecalculator
 from src.top_down.SpectrumComparator import run as spectrumComparator
 from src.intact.Main import run as IntactIonsSearch
 from src.gui.controller.TD_searchController import TD_MainController
@@ -33,12 +35,14 @@ class Window(SimpleMainWindow):
                              (lambda:self.startTopDown(True), 'Starts analysis of top-down spectrum', None),
                          'Load Analysis':
                              (lambda:self.startTopDown(False), 'Loads an old analysis', None),
-                         'Reopen Current Analysis':
-                             (self.reopen, 'Re-opens the last analysis', None),
+                         "Get Fragment m/z's":
+                             (self.startTable, "Calculates theoretic m/z's", None),
+                         #'Reopen Current Analysis':
+                         #    (self.reopen, 'Re-opens the last analysis', None),
                          #'Calc. Abundances':
                          #    (lambda: modellingTool(self), 'Calculates relative abundances of an ion list', None),
-                         'Localise Modification':
-                             (lambda: occupancyRecalculator(self), 'Calculates the modified proportions for each fragment based on a given (fragment) ion list', None),
+                         #'Localise Modification':
+                         #    (lambda: occupancyRecalculator(self), 'Calculates the modified proportions for each fragment based on a given (fragment) ion list', None),
                          }, None)
         #[print(action.toolTip()) for action in menuActions.values()]
         #print(menu.toolTipsVisible())
@@ -74,12 +78,13 @@ class Window(SimpleMainWindow):
         self.show()
 
     def showButtons(self):
+        #layout1 = QtWidgets.QVBoxLayout(self._centralwidget)
         btn = self.makeButton('Analyse Top-Down\nSpectrum', 'Starts analysis of top-down spectrum',
-                              lambda:self.startTopDown(True))
+                              lambda:self.startTopDown(True))#, "topdown.png")
         self._layout.addWidget(btn)
         self._layout.setSpacing(30)
         btn = self.makeButton('Assign\nIntact Ions', 'Starts assignment and analysis of lists with unfragmented ions',
-                              self.startIntactIonSearch)
+                              self.startIntactIonSearch)#, "esi.png")
         self._layout.addWidget(btn)
         #self.setGeometry(50, 50, xPos+40, 230)
 
@@ -92,6 +97,10 @@ class Window(SimpleMainWindow):
             logging.exception(e.__str__())
             raise e"""
 
+    def startTable(self):
+        self._lastSearch = SimpleMainWindow(None, '')
+        self.startApp(IonTableController, self, self._lastSearch)
+
     def startIntact(self, new):
         self._lastSearch = SimpleMainWindow(None, '')
         self.startApp(IntactMainController, self, new, self._lastSearch)
@@ -101,11 +110,40 @@ class Window(SimpleMainWindow):
         if self._lastSearch is not None:
             self._lastSearch.show()
 
-    def makeButton(self, name, toolTip, fun):
+    def makeButton(self, name, toolTip, fun, image=None):
+        #image = os.path.join(path, "open.png")
         btn = QPushButton(name, self._centralwidget)
         btn.setToolTip(toolTip)
         btn.clicked.connect(fun)
         btn.setMinimumSize(QSize(200, 150))
+        #print(os.path.isfile(image))
+        if image is not None:
+            abs_path = os.path.abspath(image)
+            url = QtCore.QUrl.fromLocalFile(abs_path).toString()
+            print("Exists:", os.path.isfile(abs_path))
+            print("URL:", url)
+            btn.setStyleSheet(f"""
+                            QPushButton {{
+                                border: 1px solid #cccccc;
+                                background-color: #fafafa;
+                                border-image : url("{image}");
+                                background-position: center;
+                                background-repeat: no-repeat;
+                                background-size: contain;
+                            }}
+                        """)
+            btn.setStyleSheet(f"""
+                QPushButton {{
+                    border: 1px solid #cccccc;
+                    font-size: 12pt;
+                    border-image : url("{image}");
+                    background-repeat: no-repeat;
+                }}
+            """)
+            #btn.setStyleSheet('border-image :  url("{image}");')
+
+            btn.setFlat(True)
+            btn.setAutoFillBackground(True)
         return btn
 
 

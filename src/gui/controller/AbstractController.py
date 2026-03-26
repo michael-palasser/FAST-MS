@@ -8,8 +8,7 @@ from abc import ABC
 
 import numpy as np
 import pandas as pd
-from PyQt5 import QtWidgets
-from PyQt5.QtCore import Qt
+from PyQt5 import QtWidgets, QtGui, QtCore
 
 from src.gui.GUI_functions import setIcon, translate
 from src.gui.widgets.Widgets import ShowFormulaWidget
@@ -235,6 +234,8 @@ class AbstractMainController(ABC):
         #table.setSelectionBehavior(QAbstractItemView.SelectRows)
         table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)"""
+        sc = QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.Key_Delete), table)
+        sc.activated.connect(self.delete_selected_rows)
         return table
 
     def showOptions(self, table, pos):
@@ -295,7 +296,7 @@ class AbstractMainController(ABC):
             df=pd.DataFrame(data=table.model().getData(), columns=table.model().getHeaders())
             df.to_clipboard(index=False,header=True)
         elif action == delAction:
-            self.deleteRow(mode, selectedIon, selectedRow)
+            self.deleteRows(mode, [selectedIon], [selectedRow])
             """choice = QtWidgets.QMessageBox.question(self._mainWindow, "",
                                         actionStrings[mode] +' ' + selectedIon.getName() +"?",
                                                     QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
@@ -319,35 +320,57 @@ class AbstractMainController(ABC):
                         self._tables[mode].model().updateData(ion.getMoreValues())
                 self._infoView.update()"""
 
-    def deleteRow(self, mode, selectedIon, selectedRow):
+    def deleteRows(self, mode, selectedIons, selectedRows):
         actionStrings = ["Delete", "Restore"]
-        choice = QtWidgets.QMessageBox.question(self._mainWindow, "",
-                                                actionStrings[mode] + ' ' + selectedIon.getName() + "?",
+        text = ", ".join([selectedIon.getName() for selectedIon in selectedIons])
+        choice = QtWidgets.QMessageBox.question(self._mainWindow, actionStrings[mode] + " Ions",
+                                                actionStrings[mode] + ' ' + text + "?",
                                                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-        if mode == 0:
-            otherTable = self._tables[1]
-        else:
-            otherTable = self._tables[0]
-        if choice == QtWidgets.QMessageBox.Yes:
+        for selectedIon, selectedRow in zip(selectedIons, selectedRows):
             if mode == 0:
-                self._info.deleteIon(selectedIon)
+                otherTable = self._tables[1]
+                docufun = self._info.deleteIon
             else:
-                self._info.restoreIon(selectedIon)
-            self._saved = False
-            ovHash = self._intensityModeller.switchIon(selectedIon)
-            self._tables[mode].model().removeByIndex(selectedRow)
-            otherTable.model().addData(selectedIon.getMoreValues())
-            if ovHash is not None:
-                choice = QtWidgets.QMessageBox.question(self._mainWindow, "Attention",
-                                                        'Deleted Ion overlapped with ' + ovHash[0] + ', ' + str(
-                                                            ovHash[1]) + '\n' +
-                                                        'Should this ion be updated?',
-                                                        QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-                if choice == QtWidgets.QMessageBox.Yes:
-                    ion = self._intensityModeller.resetIon(ovHash)
-                    self._info.resetIon(ion)
-                    self._tables[mode].model().updateData(ion.getMoreValues())
-            self._infoView.update()
+                otherTable = self._tables[0]
+                docufun = self._info.restoreIon
+            if choice == QtWidgets.QMessageBox.Yes:
+                docufun(selectedIon)
+                self._saved = False
+                ovHash = self._intensityModeller.switchIon(selectedIon)
+                #self._tables[mode].model().removeByIndex(selectedRow)
+                self._tables[mode].model().removeByIndex(selectedRow)
+                otherTable.model().addData(selectedIon.getMoreValues())
+                if ovHash is not None:
+                    choice2 = QtWidgets.QMessageBox.question(self._mainWindow, "Attention",
+                                                            'Deleted Ion overlapped with ' + ovHash[0] + ', ' + str(
+                                                                ovHash[1]) + '\n' +
+                                                            'Should this ion be updated?',
+                                                            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+                    if choice2 == QtWidgets.QMessageBox.Yes:
+                        ion = self._intensityModeller.resetIon(ovHash)
+                        self._info.resetIon(ion)
+                        self._tables[mode].model().updateData(ion.getMoreValues())
+                self._infoView.update()
+
+    def delete_selected_rows(self):
+        mode = self._tabWidget.currentIndex()
+        table = self._tables[mode]
+        sel = table.selectionModel()
+        if not sel:
+            return
+        model = table.model()
+        map_to_source = lambda idx: idx
+        selected_rows = sel.selectedRows()
+        if selected_rows:
+            rows = sorted({map_to_source(idx).row() for idx in selected_rows}, reverse=True)
+        else:
+            rows = sorted({map_to_source(idx).row() for idx in table.selectedIndexes()}, reverse=True)
+        if not rows:
+            return
+        table.closePersistentEditor(table.currentIndex())
+        self.deleteRows(mode, [self._intensityModeller.getIon(model.getHashOfRow(row)) for row in rows], rows)
+
+
 
     """def keyPressEvent(self, event):
         print("hi")
@@ -591,7 +614,7 @@ class AbstractMainController(ABC):
             # self.setWindowTitle(ion.getName())
             layout = QtWidgets.QVBoxLayout(dlg)
             label = QtWidgets.QLabel(selectedIon.getFormula().toString())
-            label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+            label.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
             layout.addWidget(label)
             dlg.show()
         elif action == copyRowAction:

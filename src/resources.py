@@ -67,6 +67,7 @@ def autoStart(file):
         call(['open', file])
     elif os_system == 'Windows':
         os.startfile(file)
+        print("started")
     else:
         call(('xdg-open', file))
 

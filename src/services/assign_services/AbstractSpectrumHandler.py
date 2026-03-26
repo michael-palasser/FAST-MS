@@ -60,16 +60,17 @@ class AbstractSpectrumHandler(abc.ABC):
         # self._searchedChargeStates = dict()
         self._noiseLevel = 0
         self._noise = []
-        if type(self._settings['noiseLimit']) == str:
-            self._settings['noiseLimit'] = 0
-        if noise is not None:
-            self._noise = noise
-        if peaks is None:
-            self.addSpectrum(self._settings['spectralData'])
-        else:
-            self._spectrum = np.array(sorted(list(peaks), key=lambda tup: tup[0]), dtype=self._dType)
-            self._upperBound = max([peak[0] for peak in peaks])
-            # self._noiseLevel = noiseLevel
+        if 'spectralData' in self._settings.keys():
+            if type(self._settings['noiseLimit']) == str:
+                self._settings['noiseLimit'] = 0
+            if noise is not None:
+                self._noise = noise
+            if peaks is None:
+                self.addSpectrum(self._settings['spectralData'])
+            else:
+                self._spectrum = np.array(sorted(list(peaks), key=lambda tup: tup[0]), dtype=self._dType)
+                self._upperBound = max([peak[0] for peak in peaks])
+                # self._noiseLevel = noiseLevel
         #self._IonClass = IonClass
         self._foundIons = list()
         self._ionsInNoise = list()
@@ -77,7 +78,24 @@ class AbstractSpectrumHandler(abc.ABC):
         self._profileSpectrum = None
         if 'profile' in self._settings.keys() and self._settings['profile'] != "":
             self.addProfileSpectrum(self._settings["profile"])
-            # self.expectedChargeStates = dict()
+        """self._foundIons = list()
+        self._ionsInNoise = list()
+        self._searchedChargeStates = dict()
+        print("afdsdf", self._settings)
+        if 'spectralData' in self._settings.keys():
+            print("ds")
+            self._profileSpectrum = None
+            if type(self._settings['noiseLimit']) == str:
+                self._settings['noiseLimit'] = 0
+            if noise is not None:
+                self._noise = noise
+            if peaks is None:
+                self.addSpectrum(self._settings['spectralData'])
+            else:
+                self._spectrum = np.array(sorted(list(peaks), key=lambda tup: tup[0]), dtype=self._dType)
+                self._upperBound = max([peak[0] for peak in peaks])
+                if 'profile' in self._settings.keys() and self._settings['profile'] != "":
+                    self.addProfileSpectrum(self._settings["profile"])"""
 
     @staticmethod
     @abc.abstractmethod
@@ -548,3 +566,19 @@ class AbstractSpectrumHandler(abc.ABC):
                 'Selected Peak: ' + '\t' + str(lowestErrorPeak['m/z']) + '\t' + str(lowestErrorPeak['I']) + '\t' +
                 str(theoPeak['calcInt']) + '\t' + str(lowestError))
             return (lowestErrorPeak['m/z'], lowestErrorPeak['I'], theoPeak['calcInt'], lowestError, True)
+
+    def generateTheoreticIons(self, fragmentLibrary):
+        self.getProtonIsotopePatterns()
+        ionDict = {}
+        for neutral in fragmentLibrary:
+            #neutralPatternFFT = formula.calculateIsotopePatternFFT(1, )
+            radicals = neutral.getRadicals()
+            zRange = self.getChargeRange(neutral)
+            monoisotopic = neutral.getMonoisotopicMass()
+            sortedPattern = np.sort(neutral.getIsotopePattern(), order='calcInt')[::-1]
+            mostAbundant = copy.deepcopy(sortedPattern)['m/z'][0]
+            ionVals = {0: (monoisotopic, mostAbundant)}
+            for z in zRange:
+                ionVals[z] = (self.getMz(monoisotopic, z, radicals), self.getMz(mostAbundant, z, radicals))
+            ionDict[neutral.getName()] = ionVals
+        return ionDict

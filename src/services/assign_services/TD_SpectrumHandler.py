@@ -216,7 +216,7 @@ class SpectrumHandler(AbstractSpectrumHandler):
                 if (self._configs['lowerBound'] < monoisotopic['m/z'] < self._upperBound):
                     spectralPeak = self.findPeak(monoisotopic)
                     if spectralPeak[1] != 0:
-                        snr = peakData[peakData['m/z'] == spectralPeak[0]]['S/N']
+                        snr = peakData[peakData['m/z'] == spectralPeak[0]]['S/N'][0]
                         #m/z, z, int, name, error
                         found.append((spectralPeak[0], z, spectralPeak[1], fragment.getName(), round(monoisotopic['m/z'],5),round(spectralPeak[3],2),snr))
         try:

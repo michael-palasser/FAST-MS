@@ -167,17 +167,30 @@ class TD_MainController(AbstractMainController):
             keys = ('spectralData', 'profile')
         for key in keys:
             if not os.path.isfile(self._settings[key]):
-                choice = QtWidgets.QMessageBox.question(None, 'Spectral Data not found!',
-                    'File with spectral data (' +self._settings[key]+ ') could not be found.<br>'
-                    'Do you want to manually select the file? Otherwise, the analysis will be loaded without the '
-                    'spectral data.',
-                    QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-                if choice == QtWidgets.QMessageBox.Yes:
-                    dlg = OpenSpectralDataDlg(None)
-                    if dlg.exec_() and not dlg.canceled():
-                        self._settings[key] = dlg.getValue()
-                elif choice == QtWidgets.QMessageBox.No:
-                    peaks = searchService.getAllAssignedPeaks(observedIons+delIons)
+                newPath = self.processLongPaths(self._settings[key])
+                if os.path.isfile(newPath):
+                    print("Path too long, changing path to",newPath)
+                    self._settings[key] = newPath
+                    """rawPath = self._settings[key].replace("/", "\\")
+                    t2 = os.path.normpath('\\\\?\\UNC\\' + rawPath[2:])
+                    print(t2, os.path.isfile(t2))"""
+                    """if self._settings[key].startswith("UNC/"):
+                        self._settings[key] = self._settings[key].replace("UNC/", "\\\\")
+                    newPath = self._settings[key].replace("/", "\\")
+                    if os.path.isfile(os.path.normpath(newPath)):
+                        self._settings[key] = os.path.normpath(newPath)"""
+                else:
+                    choice = QtWidgets.QMessageBox.question(None, 'Spectral Data not found!',
+                        'File with spectral data (' +self._settings[key]+ ') could not be found.<br>'
+                        'Do you want to manually select the file? Otherwise, the analysis will be loaded without the '
+                        'spectral data.',
+                        QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+                    if choice == QtWidgets.QMessageBox.Yes:
+                        dlg = OpenSpectralDataDlg(None)
+                        if dlg.exec_() and not dlg.canceled():
+                            self._settings[key] = self.processLongPaths(dlg.getValue())
+                    elif choice == QtWidgets.QMessageBox.No:
+                        peaks = searchService.getAllAssignedPeaks(observedIons+delIons)
         try:
             self._propStorage = SearchSettings(self._settings['sequName'], self._settings['fragmentation'],
                                             self._settings['modifications'], dbPath=dbPath)
@@ -633,11 +646,11 @@ class TD_MainController(AbstractMainController):
                 return
         print('Saving analysis', self._savedPath)
         #start=time.time()
+        self._info.save(self._savedPath)
         searchService.saveSearch(self._savedPath, self._spectrumHandler.getNoiseLevel(), self._settings, self._configs,
                                  self._intensityModeller.getObservedIons().values(),
                                  self._intensityModeller.getDeletedIons().values(),
                                  self._spectrumHandler.getSearchedChargeStates(), self._info.toString(), self._propStorage)
-        self._info.save(self._savedPath)
         self._saved = True
         print('done')
         logging.info('Analysis saved: ' + self._savedPath)

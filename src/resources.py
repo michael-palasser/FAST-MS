@@ -83,3 +83,7 @@ def processTemplateName(templName):
         return templName, ""
     # print('hey',templName[0:search.start()], templName[search.start():])
     return templName[0:search.start()], templName[search.start():]
+
+
+def processLongPaths(rawPath):
+    return os.path.normpath('\\\\?\\UNC\\' + rawPath[2:])

@@ -59,19 +59,19 @@ class AbstractTableModel(QtCore.QAbstractTableModel):
                 return self._headers[section]
 
     def sort(self, Ncol, order):
+        """
+        Sort table by selected column
+        """
         self.layoutAboutToBeChanged.emit()
-        def sort_key(row):
-            value = row[Ncol]
-            # Empty fields sort first (or last)
-            if value == "" or value is None:
-                return float("-inf")  # or float("inf") if you prefer empty last
-            # Convert strings to float if possible
-            try:
-                return float(value)
-            except Exception:
-                return float("-inf")
         reverse = (order == QtCore.Qt.DescendingOrder)
-        self._data = sorted(self._data, key=sort_key, reverse=reverse)
+        self._data = sorted(self._data, key= lambda tup:tup[Ncol], reverse=reverse)
+        #self._data = self._data.sort_values(self._headers[Ncol], ascending=order == QtCore.Qt.AscendingOrder)
+        """if order == QtCore.Qt.AscendingOrder:
+            #self._data.sort(key= lambda tup:tup[Ncol])
+            self._data = sorted(self._data, key= lambda tup:tup[Ncol])
+        else:
+            #self._data.sort(key= lambda tup:tup[Ncol], reverse=True)
+            self._data = sorted(self._data,key= lambda tup:tup[Ncol], reverse=True)"""
         self.layoutChanged.emit()
 
 
@@ -293,3 +293,19 @@ class TheoIonTableModel(AbstractTableModel):
                     return float(item)
                 except ValueError:
                     return float('-inf')
+
+    def sort(self, Ncol, order):
+        self.layoutAboutToBeChanged.emit()
+        def sort_key(row):
+            value = row[Ncol]
+            # Empty fields sort first (or last)
+            if value == "" or value is None:
+                return float("-inf")  # or float("inf") if you prefer empty last
+            # Convert strings to float if possible
+            try:
+                return float(value)
+            except Exception:
+                return float("-inf")
+        reverse = (order == QtCore.Qt.DescendingOrder)
+        self._data = sorted(self._data, key=sort_key, reverse=reverse)
+        self.layoutChanged.emit()

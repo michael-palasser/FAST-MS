@@ -35,7 +35,7 @@ class Window(SimpleMainWindow):
                              (lambda:self.startTopDown(True), 'Starts analysis of top-down spectrum', None),
                          'Load Analysis':
                              (lambda:self.startTopDown(False), 'Loads an old analysis', None),
-                         "Get Fragment m/z's":
+                         "Get m/z's":
                              (self.startTable, "Calculates theoretic m/z's", None),
                          #'Reopen Current Analysis':
                          #    (self.reopen, 'Re-opens the last analysis', None),

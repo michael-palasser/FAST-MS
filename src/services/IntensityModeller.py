@@ -505,7 +505,7 @@ class IntensityModeller(object):
                 ionHash = undeletedIons[j]
                 if ionHash in self.usedPeaks[peak[0]]:
                     equ_matrix[i,j] = self._correctedIons[ionHash].getIsotopePattern()[
-                        np.where(self._correctedIons[ionHash].getIsotopePattern()['m/z'] == peak[0])]['calcInt']
+                        np.where(self._correctedIons[ionHash].getIsotopePattern()['m/z'] == peak[0])]['calcInt'][0]
         return equ_matrix, undeletedIons
 
     @staticmethod

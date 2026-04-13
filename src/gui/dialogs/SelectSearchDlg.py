@@ -79,12 +79,12 @@ class SelectSearchDlgNew(AbstractDialog):
 
     def add_subfolders(self, parent_item, directory):
         try:
-            entries = sorted(
-                [e for e in os.scandir(directory) if e.is_dir()],
-                key=os.path.getmtime)
+            unsorted = [e for e in os.scandir(directory) if e.is_dir()]
+            tooltips = {entry:self.getToolTip(entry) for entry in unsorted}
+            sortedEntries = sorted([key for key in unsorted], key=lambda key:tooltips[key][0])
         except PermissionError:
             return
-        for entry in entries:
+        for entry in sortedEntries:
             item = QtWidgets.QTreeWidgetItem([entry.name])
             item.setData(0, Qt.UserRole, entry.path)
             #item.setToolTip(0, self.tooltip_provider.tooltip(entry.path))
@@ -92,24 +92,27 @@ class SelectSearchDlgNew(AbstractDialog):
             # Recursively add only if this folder itself has subfolders
             if self.has_subfolders(entry.path):
                 self.add_subfolders(item, entry.path)
-            else:
-                pass
-                infoFile = os.path.join(entry.path, entry.name + "_infos.txt")
-                if os.path.isfile(infoFile):
-                    with open(infoFile) as f:
-                        content = {}
-                        counter = 0
-                        for line in f:
-                            if counter > 6:
-                                break
-                            elif counter == 0:
-                                time = datetime.strptime(line.rstrip()[10:26], '%d/%m/%Y %H:%M')
-                                content["time"] = str(time)
-                            elif counter not in (1, 2):
-                                lineL = line.rstrip().split()
-                                content[lineL[0]] = lineL[1]
-                            counter += 1
-                    item.setToolTip(0, ", ".join(content.values()))
+            elif entry in tooltips.keys():
+                item.setToolTip(0, ", ".join(tooltips[entry]))
+
+    def getToolTip(self, entry):
+        infoFile = os.path.join(entry.path, entry.name + "_infos.txt")
+        if os.path.isfile(infoFile):
+            with open(infoFile) as f:
+                content = {}
+                counter = 0
+                for line in f:
+                    if counter > 6:
+                        break
+                    elif counter == 0:
+                        time = datetime.strptime(line.rstrip()[10:26], '%d/%m/%Y %H:%M')
+                        content["time"] = str(time)
+                    elif counter not in (1, 2):
+                        lineL = line.rstrip().split()
+                        content[lineL[0]] = lineL[1]
+                    counter += 1
+            return list(content.values())
+        return ["" for _ in range(5)]
 
     def has_subfolders(self, directory):
         try:

@@ -13,7 +13,7 @@ from PyQt5 import QtWidgets, QtGui, QtCore
 from src.gui.GUI_functions import setIcon, translate
 from src.gui.widgets.Widgets import ShowFormulaWidget
 from src.repositories.SpectralDataReader import SpectralDataReader
-from src.resources import path, DEVELOP, INTERN
+from src.resources import path, DEVELOP, INTERN, processLongPaths
 from src.gui.controller.IsotopePatternView import AddIonView
 from src.gui.dialogs.CalibrationView import CalibrationView
 from src.gui.tableviews.TableViews import TableView
@@ -38,6 +38,9 @@ class AbstractMainController(ABC):
         self._peakDtype = np.dtype([('m/z', float), ('I', np.int64)])
         self._snapDtype = np.dtype([('m/z', float), ('z', np.uint8), ('I', np.int64)])
 
+    @staticmethod
+    def processLongPaths(rawPath):
+        return processLongPaths(rawPath)
 
     def calibrate(self):
         dlg = CalibrationView(self._calibrator)

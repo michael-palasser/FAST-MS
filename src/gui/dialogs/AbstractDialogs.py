@@ -5,7 +5,7 @@ from PyQt5 import QtWidgets
 from PyQt5.QtCore import QSize
 from PyQt5.QtWidgets import QMessageBox
 
-from src.resources import path
+from src.resources import path, processLongPaths
 from src.Exceptions import InvalidInputException
 from src.services.DataServices import SequenceService
 from src.gui.GUI_functions import makeFormLayout, setIcon, translate
@@ -171,6 +171,8 @@ class AbstractDialog(QtWidgets.QDialog):
             spectralDataPath = os.path.join(path, 'Spectral_data', mode, fileName)
             if os.path.isfile(spectralDataPath):
                 return spectralDataPath
+            elif os.path.isfile(processLongPaths(spectralDataPath)):
+                return processLongPaths(spectralDataPath)
             else:
                 #message = QtWidgets.QMessageBox.warning(None, "Problem occured", spectralDataPath+ " not found", QtWidgets.QMessageBox.Ok)
                 raise InvalidInputException(spectralDataPath, "not found")

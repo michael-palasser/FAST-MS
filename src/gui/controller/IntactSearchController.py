@@ -10,7 +10,7 @@ from datetime import datetime
 import time
 from PyQt5 import QtWidgets
 
-from src.resources import path, autoStart
+from src.resources import base_path, autoStart
 from src.Exceptions import InvalidInputException
 from src.services.DataServices import IntactIonService, SequenceService
 from src.entities.Info import Info
@@ -166,7 +166,7 @@ class IntactMainController(AbstractMainController):
                 filename += '.xlsx'
             outputPath = newOptions['dir']
             if outputPath == '':
-                outputPath = os.path.join(path, 'Spectral_data', 'top-down')
+                outputPath = os.path.join(base_path, 'Spectral_data', 'top-down')
             output = os.path.join(outputPath, filename)
             if os.path.isfile(output):
                 choice = QtWidgets.QMessageBox.question(self._mainWindow, "Overwriting",

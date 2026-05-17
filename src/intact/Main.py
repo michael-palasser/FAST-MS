@@ -14,7 +14,7 @@ from src.services.assign_services.Finders import IntactFinder
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.services.analyser_services.IntactAnalyser import IntactAnalyser
 from src.repositories.export.IntactExcelWriter import IntactExcelWriter
-from src.resources import path, autoStart
+from src.resources import base_path, autoStart
 
 
 #from src.gui.ParameterDialogs import IntactStartDialog
@@ -62,7 +62,7 @@ def run():
     output = settings['output']
     if output == '':
         output =  datetime.now().strftime("%d.%m.%Y")
-    output = os.path.join(path, 'Spectral_data','intact', output + '.xlsx')
+    output = os.path.join(base_path, 'Spectral_data', 'intact', output + '.xlsx')
     listOfParameters = []
     for file in settings['spectralData']:
         parameters = {'date:':datetime.now().strftime("%d/%m/%Y %H:%M"), 'data:':file}

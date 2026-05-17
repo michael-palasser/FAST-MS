@@ -3,12 +3,13 @@ import shutil
 from copy import deepcopy
 from datetime import datetime
 
+from src.Exceptions import InvalidInputException
 from src.repositories.ConfigurationHandler import ConfigHandler
 from src.repositories.sql.AnalysisRepository import AnalysisRepository
 from src.repositories.sql.TD_Repositories import *
 from src.repositories.sql.MoleculeRepository import MoleculeRepository
 from src.repositories.sql.SequenceRepository import SequenceRepository
-from src.resources import path, DEVELOP, INTERN
+from src.resources import base_path, DEVELOP, INTERN
 from src.MolecularFormula import MolecularFormula
 from src.services.FormulaFunctions import stringToFormula2
 from src.services.IntensityModeller import calcScore
@@ -19,9 +20,9 @@ class StoredAnalysesService(object):
     Service handling a SearchRepository and Search entities.
     '''
     def __init__(self):
-        self._dir = os.path.join(path, "Saved Analyses")
+        self._dir = os.path.join(base_path, "Saved Analyses")
         if DEVELOP:
-            self._dir = os.path.join(path, "Saved Analyses_meins")
+            self._dir = os.path.join(base_path, "Saved Analyses_meins")
         self._search = None
         #self._constructors = (SequenceRepository, MoleculeRepository, FragmentationRepository,ModificationRepository)
 
@@ -77,6 +78,8 @@ class StoredAnalysesService(object):
             subtrNoise = configurations["subtract noise"]
         ions, delIons, searchedZStates, log = rep.getSearch(subtrNoise)
         settings = ConfigHandler(filePaths[1], []).getAll()
+        if len(settings)==0:
+            raise InvalidInputException("Configuration File not Found", "The file "+ filePaths[2]+ " could not be found. The analysis cannot be loaded")
         noiseLevel = settings['noiseLevel']
         if noiseLevel == 0:
             noiseLevel = settings['noiseLimit']

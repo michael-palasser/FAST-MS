@@ -12,7 +12,7 @@ import time
 from PyQt5 import QtWidgets
 
 from src.entities.InternalFragments import InternalFragmentIon
-from src.resources import path, autoStart, DEVELOP, getRelativePath
+from src.resources import base_path, autoStart, DEVELOP, getRelativePath
 from src.Exceptions import InvalidIsotopePatternException, InvalidInputException
 from src.entities.Info import Info
 from src.gui.mainWindows.AbstractMainWindows import SimpleMainWindow
@@ -70,9 +70,9 @@ class TD_MainController(AbstractMainController):
             self._info = Info(self._settings, self._configs, self._propStorage)
             self._saved = False
             try:
-                self._savedPath = os.path.join(path, "Saved Analyses",os.path.split(self._settings['spectralData'])[-1][:-4])
+                self._savedPath = os.path.join(base_path, "Saved Analyses", os.path.split(self._settings['spectralData'])[-1][:-4])
             except:
-                self._savedPath = os.path.join(path, "Saved Analyses")
+                self._savedPath = os.path.join(base_path, "Saved Analyses")
             try:
                 if self.search() == 0:
                     self.setUpUi()
@@ -431,7 +431,7 @@ class TD_MainController(AbstractMainController):
                 filename += '.xlsx'
             outputPath = newOptions['dir']
             if outputPath == '':
-                outputPath = os.path.join(path, 'Spectral_data', 'top-down')
+                outputPath = os.path.join(base_path, 'Spectral_data', 'top-down')
             output = os.path.join(outputPath, filename)
             if os.path.isfile(output):
                 choice = QtWidgets.QMessageBox.question(self._mainWindow, "Warning",

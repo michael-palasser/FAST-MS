@@ -4,7 +4,7 @@ from unittest import TestCase
 import numpy as np
 from numpy.random import randint
 
-from src.resources import path
+from src.resources import base_path
 from src.services.FormulaFunctions import eMass, protMass
 from src.MolecularFormula import MolecularFormula
 from src.entities.Ions import Fragment
@@ -35,7 +35,7 @@ def initTestLibraryBuilder(charge=-3, modif='CMC'):
     initTestSequences()
     configs = ConfigurationHandlerFactory.getConfigHandler().getAll()
     configs['zTolerance'] = 1.0
-    filePath = os.path.join(path, 'tests', 'test_files', 'dummySpectrum.txt')
+    filePath = os.path.join(base_path, 'tests', 'test_files', 'dummySpectrum.txt')
     settings = {'sequName': 'dummyRNA', 'charge': charge, 'fragmentation': 'RNA CAD', 'modifications': modif,
                 'nrMod': 1, 'spectralData': filePath, 'noiseLimit': 10 ** 6, 'fragLib': ''}
     props = SearchSettings(settings['sequName'], settings['fragmentation'], settings['modifications'])
@@ -60,7 +60,7 @@ class TestSpectrumHandler(TestCase):
         self.spectrumHandler = SpectrumHandler(self.props, self.builder.getPrecursor(), self.settings, self.configs)
 
         self.settingsProt = {'sequName': 'dummyProt', 'charge': 4, 'fragmentation': 'Protein CAD', 'modifications': '-',
-                             'nrMod': 0, 'spectralData': os.path.join(path, 'tests', 'test_files', 'dummySpectrum.txt'),
+                             'nrMod': 0, 'spectralData': os.path.join(base_path, 'tests', 'test_files', 'dummySpectrum.txt'),
                              'noiseLimit': 10 ** 5, 'fragLib': ''}
         self.propsProt = SearchSettings(self.settingsProt['sequName'], self.settingsProt['fragmentation'],
                                         self.settingsProt['modifications'])

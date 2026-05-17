@@ -13,7 +13,7 @@ from PyQt5 import QtWidgets, QtGui, QtCore
 from src.gui.GUI_functions import setIcon, translate
 from src.gui.widgets.Widgets import ShowFormulaWidget
 from src.repositories.SpectralDataReader import SpectralDataReader
-from src.resources import path, DEVELOP, INTERN, processLongPaths
+from src.resources import base_path, DEVELOP, INTERN, processLongPaths
 from src.gui.controller.IsotopePatternView import AddIonView
 from src.gui.dialogs.CalibrationView import CalibrationView
 from src.gui.tableviews.TableViews import TableView
@@ -170,7 +170,7 @@ class AbstractMainController(ABC):
                                         "Select the window", list(widgets.keys()), 0, False)
         if ok and item:
             p=widgets[item].grab()
-            p.save(os.path.join(path,'pics',item+'.png'), 'png')
+            p.save(os.path.join(base_path, 'pics', item + '.png'), 'png')
             print('Shoot taken')
 
     def fillMainWindow(self):

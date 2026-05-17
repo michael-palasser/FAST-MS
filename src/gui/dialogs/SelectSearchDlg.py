@@ -8,7 +8,7 @@ from PyQt5.QtCore import Qt
 
 from src.gui.GUI_functions import createComboBox
 from src.gui.dialogs.AbstractDialogs import AbstractDialog
-from src.resources import path
+from src.resources import base_path
 
 
 class SelectSearchDlgNew(AbstractDialog):
@@ -50,7 +50,7 @@ class SelectSearchDlgNew(AbstractDialog):
         self._delBtn.clicked.connect(self.delete)
         self._delBtn.setText(self._translate(self.objectName(), "Delete"))"""
 
-        self.load_folder(join(path, 'Saved Analyses'))
+        self.load_folder(join(base_path, 'Saved Analyses'))
         self.show()
 
     def choose_root(self):

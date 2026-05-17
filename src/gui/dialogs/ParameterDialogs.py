@@ -1,12 +1,12 @@
 from PyQt5 import QtCore, QtWidgets
 from os.path import join
 
-from src.resources import path
+from src.resources import base_path
 from src.gui.GUI_functions import shoot
 from src.gui.dialogs.AbstractDialogs import DialogWithTabs
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 
-dataPath = join(path, 'src', 'data')
+dataPath = join(base_path, 'src', 'data')
 
 
 class ConfigurationDialog(DialogWithTabs):

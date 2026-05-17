@@ -1,14 +1,10 @@
 import csv
 import os
-#import sqlite3
-#import time
-#from os.path import join
 import time
-
 import numpy as np
 from tqdm import tqdm
 
-from src.resources import path
+from src.resources import base_path
 from src.Exceptions import InvalidIsotopePatternException
 
 
@@ -32,14 +28,14 @@ class IsotopePatternRepository(object):
             file = settings[0]
             if not file[-4:] == '.csv':
                 file += '.csv'
-            self.__file = os.path.join(path, 'Fragment_lists',file)
+            self.__file = os.path.join(base_path, 'Fragment_lists', file)
         else:
             sequName, fragmentation, nrMod, modifications = settings[0], settings[1], settings[2], settings[3]
             if modifications == "-" or nrMod == "0":
-                self.__file = os.path.join(path, 'Fragment_lists', '_'.join((sequName, fragmentation + '.csv')))
+                self.__file = os.path.join(base_path, 'Fragment_lists', '_'.join((sequName, fragmentation + '.csv')))
             else:
-                self.__file = os.path.join(path, 'Fragment_lists', '_'.join((sequName, fragmentation, str(nrMod),
-                                                                             modifications+'.csv')))
+                self.__file = os.path.join(base_path, 'Fragment_lists', '_'.join((sequName, fragmentation, str(nrMod),
+                                                                                  modifications +'.csv')))
         return os.path.isfile(self.__file)
 
 

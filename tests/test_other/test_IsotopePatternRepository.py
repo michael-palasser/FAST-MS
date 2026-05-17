@@ -3,7 +3,7 @@ from unittest import TestCase
 from random import randint
 import os
 
-from src.resources import path
+from src.resources import base_path
 from src.Exceptions import InvalidIsotopePatternException
 from src.MolecularFormula import MolecularFormula
 from src.services.DataServices import SequenceService
@@ -73,14 +73,14 @@ class TestIsotopePatternRepository(TestCase):
         self.patternRep.saveIsotopePattern(self.builderRNA.addNewIsotopePattern())
         self.assertTrue(self.patternRep.findFile(('dummyRNA', 'RNA CAD', '0', '-')))
         self.patternRep.addIsotopePatternFromFile(self.builderRNA.getFragmentLibrary())
-        os.remove(os.path.join(path,'Fragment_lists','dummyRNA_RNA CAD.csv'))
+        os.remove(os.path.join(base_path, 'Fragment_lists', 'dummyRNA_RNA CAD.csv'))
 
         self.builderRNA_CMCT2.createFragmentLibrary()
         self.assertFalse(self.patternRep.findFile(('dummyRNA', 'RNA CAD', '2', 'CMC')))
         self.patternRep.saveIsotopePattern(self.builderRNA_CMCT2.addNewIsotopePattern())
         self.assertTrue(self.patternRep.findFile(('dummyRNA', 'RNA CAD', '2', 'CMC')))
         self.patternRep.addIsotopePatternFromFile(self.builderRNA_CMCT2.getFragmentLibrary())
-        os.remove(os.path.join(path,'Fragment_lists','dummyRNA_RNA CAD_2_CMC.csv'))
+        os.remove(os.path.join(base_path, 'Fragment_lists', 'dummyRNA_RNA CAD_2_CMC.csv'))
 
     def tearDown(self):
         self.sequenceService.delete('dummyRNA')

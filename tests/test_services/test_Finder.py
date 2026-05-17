@@ -3,7 +3,7 @@ from copy import deepcopy
 from unittest import TestCase
 import numpy as np
 
-from src.resources import path
+from src.resources import base_path
 from src.services.DataServices import SequenceService
 from src.services.assign_services.Finders import IntactFinder
 from src.services.library_services.IntactLibraryBuilder import IntactLibraryBuilder
@@ -46,7 +46,7 @@ def initTestSequences(sequenceService=SequenceService()):
 class TestFinder(TestCase):
     #ToDo: test for protein
     def setUp(self):
-        self.RNA_spectrum = os.path.join(path, 'tests', 'test_files', '2511_RIO_test.txt')
+        self.RNA_spectrum = os.path.join(base_path, 'tests', 'test_files', '2511_RIO_test.txt')
         try:
             self.finderRNA, self.configRNA, self.finderProt, self.configProt = initFinders()
         except:

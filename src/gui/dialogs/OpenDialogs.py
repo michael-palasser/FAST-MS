@@ -1,12 +1,12 @@
 from PyQt5 import QtWidgets
 from os.path import join
 
-from src.resources import path
+from src.resources import base_path
 from src.gui.dialogs.AbstractDialogs import AbstractDialog
 from src.gui.GUI_functions import createComboBox
 from src.gui.widgets.Widgets import OpenFileWidget
 
-dataPath = join(path, 'src', 'data')
+dataPath = join(base_path, 'src', 'data')
 
 class OpenDialog(AbstractDialog):
     '''
@@ -36,7 +36,7 @@ class OpenSpectralDataDlg(AbstractDialog):
         #label = QtWidgets.QLabel(self)
         #label.setText(self._translate(self.objectName(), 'Select the location of the file.'))
         #formLayout.setWidget(0, QtWidgets.QFormLayout.LabelRole, label)
-        self._fileWidget = OpenFileWidget(parent, 1, join(path, 'Spectral_data', 'top-down'), "Open File",
+        self._fileWidget = OpenFileWidget(parent, 1, join(base_path, 'Spectral_data', 'top-down'), "Open File",
                                           defaultFilters)
         self.fill(self, formLayout, ("File name:",), {'spectralData':(self._fileWidget,
                                   'Name of the file with spectral peaks (txt or csv format)')})

@@ -1,5 +1,4 @@
 import sys
-
 import numpy as np
 from PyQt5.QtWidgets import QApplication
 from matplotlib import pyplot as plt
@@ -7,7 +6,7 @@ from PyQt5 import QtGui
 import pyqtgraph as pg
 from matplotlib.ticker import MultipleLocator
 
-from src.resources import DEVELOP, INTERN
+from src.resources import DEVELOP
 
 SEQUENCE = True
 
@@ -20,8 +19,8 @@ class PlotFactory(object):
         self._colours = ['r', 'm', 'y', 'c', 'g', 'b']
         """if parent is not None:
             self._baseName = parent.windowTitle().replace('Results:  ', ": ")"""
-        if INTERN:
-            """self._colours = list({'tab:red':'#d62728', 'tab:orange':'#ff7f0e',
+        """if INTERN:
+            self._colours = list({'tab:red':'#d62728', 'tab:orange':'#ff7f0e',
                              'tab:purple':'#9467bd', 'tab:brown':'#8c564b',
                              'gold':'#dbb40c', 'm':'m', 'darkred':'#840000',
                              'limegreen':'#aaff32','tab:gray':'#7f7f7f',

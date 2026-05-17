@@ -8,7 +8,7 @@ from PyQt5 import QtWidgets
 
 from src.gui.GUI_functions import translate
 from src.gui.mainWindows.AbstractMainWindows import SimpleMainWindow
-from src.resources import path
+from src.resources import base_path
 from src.gui.tableviews.TableViews import TableView
 from src.gui.tableviews.TableModels import IonTableModel
 
@@ -41,7 +41,7 @@ class ResultWindow(SimpleMainWindow):
                                         "Select the window", list(widgets.keys()), 0, False)
         if ok and item:
             p=widgets[item].grab()
-            p.save(os.path.join(path,'pics',item+'.png'), 'png')
+            p.save(os.path.join(base_path, 'pics', item + '.png'), 'png')
             print('Shoot taken')
 
     def fillMainWindow(self, observedIons, deletedIons, showOptions):

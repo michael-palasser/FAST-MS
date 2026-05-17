@@ -6,7 +6,7 @@ Created on 31 Aug 2020
 
 import json
 from os.path import isfile, join
-from src.resources import getRelativePath, path
+from src.resources import getRelativePath, base_path
 
 top_down_search = {'sequName': '', 'charge': -1, 'fragmentation': '', 'modifications': '', 'nrMod': 0,
                    'spectralData': '', 'noiseLimit': 0.0, 'fragLib': '', 'calibration': False, 'calIons': ''}
@@ -21,9 +21,9 @@ configurations = {'lowerBound': 300, 'minUpperBound': 1200, 'upperBoundTolerance
                   'shapeMarked': 0.25, 'scoreMarked': 2.5, 'SNR': 2.0, 'useAb': True, 'interestingIons': ['c', 'y'],
                   '# ions displayed':10}
 top_down_export = {'columns': ['m/z', 'z', 'intensity', 'fragment', 'error /ppm', 'S/N', 'quality', 'formula', 'score', 'comment'],
-                   'analysis': ['occupancies', 'reduced charges'], 'dir': join(path,'Spectral_data','top-down')}
+                   'analysis': ['occupancies', 'reduced charges'], 'dir': join(base_path, 'Spectral_data', 'top-down')}
 intact_export = {'columns': ['m/z', 'z', 'intensity', 'fragment', 'error /ppm', 'S/N', 'quality', 'formula', 'score', 'comment'],
-                 'analysis': [], 'dir': join(path,'Spectral_data','intact')}
+                 'analysis': [], 'dir': join(base_path, 'Spectral_data', 'intact')}
                  
 md = {'sequName': '', 'charge': 1, 'fragmentation': '', 'modifications': '', 'nrMod': 0,
                    'spectralData': '', 'snapData': "", 'profile': "","output":""}

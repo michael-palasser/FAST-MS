@@ -12,9 +12,9 @@ DEVELOP = False
 INTERN = False
 COMPILATION = False
 
-path = pathlib.Path(__file__).resolve().parent.parent
+base_path = pathlib.Path(__file__).resolve().parent.parent
 if getattr(sys, 'frozen', False):
-    path = path.parent
+    base_path = base_path.parent
     """path = os.path.dirname(sys.executable)
     pos = path.find('FAST MS')
     if pos != -1:
@@ -26,15 +26,15 @@ if getattr(sys, 'frozen', False):
     #if DEVELOP:
     #print("2",path)"""
 for directory in ("Saved Analyses",'Fragment_lists'):
-    dirPath = os.path.join(path, directory)
+    dirPath = os.path.join(base_path, directory)
     if not os.path.isdir(dirPath):
         os.mkdir(dirPath)
 
 #logFileBase = 'app_'+os.getlogin()+"_"+str(datetime.today().year)+"_" Does not work in non-terminal contexts
 logFileBase = 'app_'+getpass.getuser()+"_"+str(datetime.today().year)+"_"
-logFilePath = os.path.join(path,logFileBase+str(datetime.today().month)+'.log')
-if os.path.isfile(os.path.join(path,logFileBase+str(datetime.today().month-1)+'.log')):
-    os.remove(os.path.join(path,logFileBase+str(datetime.today().month-1)+'.log'))
+logFilePath = os.path.join(base_path, logFileBase + str(datetime.today().month) + '.log')
+if os.path.isfile(os.path.join(base_path, logFileBase + str(datetime.today().month - 1) + '.log')):
+    os.remove(os.path.join(base_path, logFileBase + str(datetime.today().month - 1) + '.log'))
 logging.basicConfig(filename=logFilePath, format='%(asctime)s - %(message)s', level=logging.INFO)
 logging.info("Starting")
 
@@ -56,9 +56,10 @@ def getRelativePath(relativePath, data=True):
         relPath = pathlib.Path(relativePath)
         #print("2a",relPath, pathlib.Path('data'), relativePath)
     #basePath = getattr(sys, '_MEIPASS', parent)
-    basePath = path
+    #basePath = getattr(sys, '_MEIPASS', parent)
+    #basePath = base_path
     #print(basePath, basePath / relPath)
-    return basePath / relPath
+    return base_path / relPath
 
 
 def autoStart(file):

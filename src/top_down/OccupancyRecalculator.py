@@ -11,7 +11,7 @@ from src.entities.Ions import Fragment,FragmentIon
 from src.gui.dialogs.StartDialogs import OccupancyRecalcStartDialog
 from src.services.analyser_services.Analyser import Analyser
 from src.repositories.export.ExcelWriter import BasicExcelWriter
-from src.resources import path, autoStart
+from src.resources import base_path, autoStart
 
 
 def readCsv(file):
@@ -41,7 +41,7 @@ def run(mainWindow):
         modification = dlg.getModification()
 
         """import ion-list"""
-        spectralFile = os.path.join(path, 'Spectral_data','Occupancies_in.csv')
+        spectralFile = os.path.join(base_path, 'Spectral_data', 'Occupancies_in.csv')
         with open(spectralFile, 'w') as f:
             f.write("m/z,z,int,name")
         autoStart(spectralFile)
@@ -68,14 +68,14 @@ def run(mainWindow):
 
             """Analysis and Output"""
             analyser = Analyser(ionList, sequence, 1, modification, configs['useAb'])
-            excelWriter = BasicExcelWriter(os.path.join(path, "Spectral_data","Occupancies_out.xlsx"), modification)
+            excelWriter = BasicExcelWriter(os.path.join(base_path, "Spectral_data", "Occupancies_out.xlsx"), modification)
             excelWriter.writeDate()
             row = excelWriter.writeAbundancesOfSpecies(2, analyser.calculateRelAbundanceOfSpecies()[0])
             excelWriter.addOccupOrCharges(0,row, sequence,
                                   analyser.calculateOccupancies(speciesList)[0],1) #ToDo
             excelWriter.closeWorkbook()
             try:
-                autoStart(os.path.join(path, "Spectral_data","Occupancies_out.xlsx"))
+                autoStart(os.path.join(base_path, "Spectral_data", "Occupancies_out.xlsx"))
                 #subprocess.call(['open', os.path.join(path, "Spectral_data","Occupancies_out.xlsx")])
             except:
                 pass

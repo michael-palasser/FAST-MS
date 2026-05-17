@@ -5,7 +5,7 @@ from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QMessageBox
 
 from src.gui.dialogs.OpenDialogs import defaultFilters
-from src.resources import path, INTERN, DEVELOP
+from src.resources import base_path, INTERN, DEVELOP
 from src.Exceptions import InvalidInputException
 from src.services.DataServices import FragmentationService, ModificationService, SequenceService, IntactIonService
 from src.gui.dialogs.AbstractDialogs import StartDialog, AbstractDialog
@@ -204,7 +204,7 @@ class IntactStartDialog(StartDialog):
         return  {"sequName": (createComboBox(self, sequences), "Name of sequence"),
                  "modifications": (createComboBox(self, modPatterns), "Name of the modification pattern"),
                  "spectralData": (
-                 OpenFileWidget(self, 2, join(path, 'Spectral_data', 'intact'), "Open Files",  # changed here
+                 OpenFileWidget(self, 2, join(base_path, 'Spectral_data', 'intact'), "Open Files",  # changed here
                                 defaultFilters),
                  "Name of the file with unassigned ions (txt format)"),
                  "sprayMode": (createComboBox(self, ("negative", "positive")), "Spray mode"),
@@ -272,7 +272,7 @@ class IntactStartDialogFull(IntactStartDialog):
         widgets = {"sequName": (createComboBox(self, sequences), "Name of sequence"),
                  "modifications": (createComboBox(self, modPatterns), "Name of the modification pattern"),
                  "spectralData": (
-                    OpenFileWidget(self, 1, join(path, 'Spectral_data', 'intact'), "Open Files",
+                    OpenFileWidget(self, 1, join(base_path, 'Spectral_data', 'intact'), "Open Files",
                                    defaultFilters),
                     "Name of the file with peaks (txt format)"),
                  "sprayMode": (createComboBox(self, ("negative", "positive")), "Spray mode"),
@@ -280,7 +280,7 @@ class IntactStartDialogFull(IntactStartDialog):
                  "minMz": (self.getMinMaxWidget(), "m/z where search starts"),
                  "maxMz": (self.getMinMaxWidget(), "m/z where search ends"),
                  "calibration": (QtWidgets.QCheckBox(self), "Spectral data will be calibrated if this option is ticked"),
-                 "calIons": (OpenFileWidget(self, 1, join(path, 'Spectral_data', 'intact'), "Open Files",
+                 "calIons": (OpenFileWidget(self, 1, join(base_path, 'Spectral_data', 'intact'), "Open Files",
                                             defaultFilters),
                              "Name of the file with ions for calibration (txt format)")}
         if INTERN:
@@ -323,7 +323,7 @@ class SpectrumComparatorStartDialog(AbstractDialog):
         label2.setText(self._translate(self.objectName(),'The format in the _files must be:\t"m/z   z   int.   name"\n'
                                                          '\t-with tab stops between each value'))
         horizLayout.addWidget(label2)
-        self._startPath = join(path, 'Spectral_data', 'comparison')
+        self._startPath = join(base_path, 'Spectral_data', 'comparison')
         self._pushButton = QtWidgets.QPushButton(widget)
         self._pushButton.resize(52, 32)
         self._pushButton.setText(self._translate(self.objectName(), "+"))

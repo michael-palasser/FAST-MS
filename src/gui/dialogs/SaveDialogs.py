@@ -6,7 +6,7 @@ from src.Exceptions import InvalidInputException
 from src.gui.dialogs.AbstractDialogs import AbstractDialog
 from src.gui.widgets.ExportTable import ExportTable
 from src.gui.widgets.Widgets import OpenFileWidget
-from src.resources import path
+from src.resources import base_path
 
 
 class SaveDlg(AbstractDialog):
@@ -94,7 +94,7 @@ class ExportDialog(SaveDlg):
             startPath = storedOptions['dir']
         else:
             startPath = join(path, 'Spectral_data', default)"""
-        super(ExportDialog, self).__init__(parent, 'Export Results', storedOptions, os.path.join(path, 'Spectral_data', default))
+        super(ExportDialog, self).__init__(parent, 'Export Results', storedOptions, os.path.join(base_path, 'Spectral_data', default))
         #except KeyError:
         #    startPath = join(path, 'Spectral_data', 'top-down')
         """index=self.fill(self, formLayout,('Directory:','Filename:'),
@@ -165,7 +165,7 @@ class SaveSearchDialog(SaveDlg):
     '''
     def __init__(self, filePath):
         filePath = os.path.normpath(filePath)
-        super().__init__(None,'Save Analysis', {"dir":os.path.dirname(filePath), "file":os.path.basename(filePath)}, path)
+        super().__init__(None,'Save Analysis', {"dir":os.path.dirname(filePath), "file":os.path.basename(filePath)}, base_path)
         self._formLayout.setWidget(3, QtWidgets.QFormLayout.FieldRole, self._buttonBox)
         self.show()
 

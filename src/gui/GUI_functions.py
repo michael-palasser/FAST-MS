@@ -6,7 +6,7 @@ import pandas as pd
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtGui import QIcon
 
-from src.resources import path, DEVELOP
+from src.resources import base_path, DEVELOP
 
 translate = QtCore.QCoreApplication.translate
 
@@ -104,14 +104,14 @@ def shoot(widget):
     if DEVELOP:
         #filename = datetime.now().strftime('%Y-%m-%d_%H-%M-%S.png')
         p=widget.grab()
-        p.save(os.path.join(path,'pics',widget.windowTitle()+'.png'), 'png')
+        p.save(os.path.join(base_path, 'pics', widget.windowTitle() + '.png'), 'png')
         print('Shot taken')
 
 def setIcon(widget):
     widget.setWindowIcon(QIcon(getIconPath('icon.ico')))
 
 def getIconPath(fileName):
-    return os.path.join(getattr(sys, '_MEIPASS', path), fileName)
+    return os.path.join(getattr(sys, '_MEIPASS', base_path), fileName)
 
 def makeButton(parent, name, toolTip, fun):
     btn = QtWidgets.QPushButton(name, parent)

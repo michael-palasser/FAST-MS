@@ -8,6 +8,7 @@ import sys
 
 from PyQt5 import QtCore
 from PyQt5.QtCore import QSize
+from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QPushButton
 
 from src.gui.controller.IntactSearchController import IntactMainController
@@ -16,6 +17,7 @@ from src.gui.controller.IsotopePatternView import IsotopePatternView
 from src.gui.controller.EditorController import *
 from src.gui.dialogs.ParameterDialogs import ConfigurationDialog
 from src.gui.dialogs.StartDialogs import IntactStartDialog
+from src.resources import base_path
 from src.top_down.SpectrumComparator import run as spectrumComparator
 from src.intact.Main import run as IntactIonsSearch
 from src.gui.controller.TD_searchController import TD_MainController
@@ -26,9 +28,9 @@ class Window(SimpleMainWindow):
     Main window which pops up when FAST MS is started
     '''
     def __init__(self):
-        super(Window, self).__init__(None, 'FAST MS')
+        super(Window, self).__init__(None, 'FAST MS - Home')
         self._layout = QtWidgets.QHBoxLayout(self._centralwidget)
-        self._layout.setContentsMargins(40,25,40,40)
+        self._layout.setContentsMargins(25,10,25,25)
         self.createMenuBar()
         self.createMenu('Top-Down',
                         {'Analyse Spectrum':
@@ -79,13 +81,21 @@ class Window(SimpleMainWindow):
 
     def showButtons(self):
         #layout1 = QtWidgets.QVBoxLayout(self._centralwidget)
-        btn = self.makeButton('Analyse Top-Down\nSpectrum', 'Starts analysis of top-down spectrum',
-                              lambda:self.startTopDown(True))#, "topdown.png")
-        self._layout.addWidget(btn)
-        self._layout.setSpacing(30)
-        btn = self.makeButton('Assign\nIntact Ions', 'Starts assignment and analysis of lists with unfragmented ions',
-                              self.startIntactIonSearch)#, "esi.png")
-        self._layout.addWidget(btn)
+        btnWidget1 = QtWidgets.QWidget(self._centralwidget)
+        btnLayout1 = QtWidgets.QVBoxLayout(btnWidget1)
+        self._layout.addWidget(btnWidget1)
+        self.makeButton(btnWidget1, btnLayout1, 'Starts analysis of top-down spectrum',
+                              lambda:self.startTopDown(True), "msms.png")
+        self.makeButton(btnWidget1, btnLayout1, "Calculates theoretic fragment ion m/z's",
+                              self.startTable, "table.png")
+        #self._layout.setSpacing(30)
+        btnWidget2 = QtWidgets.QWidget(self._centralwidget)
+        btnLayout2 = QtWidgets.QVBoxLayout(btnWidget2)
+        self.makeButton(btnWidget2, btnLayout2, 'Starts analysis of intact ion spectrum',
+                              self.startIntact, "esi.png")
+        self.makeButton(btnWidget2, btnLayout2, 'Calculates the isotope pattern of an ion',
+                              self.openIonModeller, "modelIon.png")
+        self._layout.addWidget(btnWidget2)
         #self.setGeometry(50, 50, xPos+40, 230)
 
     def startTopDown(self, new):
@@ -110,38 +120,16 @@ class Window(SimpleMainWindow):
         if self._lastSearch is not None:
             self._lastSearch.show()
 
-    def makeButton(self, name, toolTip, fun, image=None):
-        #image = os.path.join(path, "open.png")
-        btn = QPushButton(name, self._centralwidget)
+    def makeButton(self, parent, layout, toolTip, fun, image=None):
+        btn = QPushButton(parent)
         btn.setToolTip(toolTip)
         btn.clicked.connect(fun)
         btn.setMinimumSize(QSize(200, 150))
-        #print(os.path.isfile(image))
+        layout.addWidget(btn)
         if image is not None:
-            abs_path = os.path.abspath(image)
-            url = QtCore.QUrl.fromLocalFile(abs_path).toString()
-            print("Exists:", os.path.isfile(abs_path))
-            print("URL:", url)
-            btn.setStyleSheet(f"""
-                            QPushButton {{
-                                border: 1px solid #cccccc;
-                                background-color: #fafafa;
-                                border-image : url("{image}");
-                                background-position: center;
-                                background-repeat: no-repeat;
-                                background-size: contain;
-                            }}
-                        """)
-            btn.setStyleSheet(f"""
-                QPushButton {{
-                    border: 1px solid #cccccc;
-                    font-size: 12pt;
-                    border-image : url("{image}");
-                    background-repeat: no-repeat;
-                }}
-            """)
-            #btn.setStyleSheet('border-image :  url("{image}");')
-
+            abs_path = os.path.join(base_path, "icons", image)
+            btn.setIcon(QIcon(abs_path))
+            btn.setIconSize(QSize(200, 150))
             btn.setFlat(True)
             btn.setAutoFillBackground(True)
         return btn

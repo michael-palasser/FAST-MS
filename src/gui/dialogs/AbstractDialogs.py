@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import QMessageBox
 from src.resources import base_path, processLongPaths
 from src.Exceptions import InvalidInputException
 from src.services.DataServices import SequenceService
-from src.gui.GUI_functions import makeFormLayout, setIcon, translate
+from src.gui.GUI_functions import makeFormLayout, setWindowIcon, translate
 from src.gui.widgets.Widgets import OpenFileWidget
 
 
@@ -33,7 +33,7 @@ class AbstractDialog(QtWidgets.QDialog):
         self.move(300,100)
         self._canceled = False
         if parent is not None:
-            setIcon(self)
+            setWindowIcon(self)
 
     def canceled(self):
         return self._canceled
@@ -168,14 +168,13 @@ class AbstractDialog(QtWidgets.QDialog):
         if fileName == '':
             raise InvalidInputException('Empty Filename', "Name must not be empty")
         if not os.path.isfile(fileName):
-            spectralDataPath = os.path.join(base_path, 'Spectral_data', mode, fileName)
-            if os.path.isfile(spectralDataPath):
-                return spectralDataPath
-            elif os.path.isfile(processLongPaths(spectralDataPath)):
-                return processLongPaths(spectralDataPath)
+            if os.path.isfile(processLongPaths(fileName)):
+                return processLongPaths(fileName)
+            elif os.path.isfile(os.path.join(base_path, 'Spectral_data', mode, fileName)):
+                return os.path.join(base_path, 'Spectral_data', mode, fileName)
             else:
                 #message = QtWidgets.QMessageBox.warning(None, "Problem occured", spectralDataPath+ " not found", QtWidgets.QMessageBox.Ok)
-                raise InvalidInputException(spectralDataPath, "not found")
+                raise InvalidInputException(fileName, "not found")
         return fileName
 
 

@@ -2,7 +2,7 @@ from abc import ABC
 
 from src.Exceptions import InvalidInputException
 from src.entities.GeneralEntities import Macromolecule, Element, BuildingBlock, Sequence, rnaDict, aadict
-from src.resources import processTemplateName
+from src.resources import processTemplateName, forbiddenCharacters
 from src.repositories.sql.TD_Repositories import *
 from src.repositories.sql.MoleculeRepository import MoleculeRepository
 from src.repositories.sql.PeriodicTableRepository import PeriodicTableRepository
@@ -58,6 +58,11 @@ class AbstractService(ABC):
                     float(val)
                 except ValueError:
                     raise InvalidInputException(item[0], "Number required, Column: " + str(i) + ", " + val)
+
+    def checkForbiddenCharacters(self, name):
+        for c in forbiddenCharacters:
+            if c in name:
+                raise InvalidInputException(c, "Character "+c+" in "+name+" is forbidden. You have to replace it")
 
 
 class AbstractServiceForPatterns(AbstractService, ABC):
@@ -458,9 +463,9 @@ class SequenceService(AbstractService):
                 self._repository.createSequence(sequence)
         moleculeRepository.close()
 
-    def checkSequenceNames(self, sequTuples):
-        #ToDo: Check Names: Unique, no / in name
-        pass
+    def checkSequenceNames(self, seqTupels):
+        for seqTup in seqTupels:
+            self.checkForbiddenCharacters(seqTup[0])
 
     def checkFormatOfItem(self, item, *args):
         '''
@@ -520,6 +525,7 @@ class FragmentationService(AbstractServiceForPatterns):
         '''
         elementRep = PeriodicTableRepository()
         elements = elementRep.getAllPatternNames()
+        self.checkForbiddenCharacters(pattern.getName())
         self.checkFormatOfItems(pattern.getItems(), elements, self._repository.getIntegers()[0])
         for item in pattern.getItems():
             if processTemplateName(item[0])[-1].isnumeric():
@@ -583,6 +589,7 @@ class ModificationService(AbstractServiceForPatterns):
         '''
         elementRep = PeriodicTableRepository()
         elements = elementRep.getAllPatternNames()
+        self.checkForbiddenCharacters(pattern.getName())
         self.checkFormatOfItems(pattern.getItems(), elements, self._repository.getIntegers()[0])
         checkedItems = []
         mod = pattern.getModification()

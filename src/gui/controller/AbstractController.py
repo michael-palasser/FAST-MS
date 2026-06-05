@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 from PyQt5 import QtWidgets, QtGui, QtCore
 
-from src.gui.GUI_functions import setIcon, translate
+from src.gui.GUI_functions import setWindowIcon, translate
 from src.gui.widgets.Widgets import ShowFormulaWidget
 from src.repositories.SpectralDataReader import SpectralDataReader
 from src.resources import base_path, DEVELOP, INTERN, processLongPaths
@@ -577,7 +577,7 @@ class AbstractMainController(ABC):
         verticalLayout.addWidget(scrollArea)
         remView.resize(1000, 750)
         self._openWindows.append(remView)
-        setIcon(remView)
+        setWindowIcon(remView)
         remView.show()
 
     def showRedOptions(self, table, pos):

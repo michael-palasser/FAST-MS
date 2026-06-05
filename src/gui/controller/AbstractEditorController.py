@@ -1,0 +1,421 @@
+import logging
+import traceback
+from abc import ABC
+from functools import partial
+
+import pandas as pd
+from PyQt5 import QtWidgets
+from PyQt5.QtCore import Qt
+
+from src.Exceptions import CanceledException, InvalidInputException
+from src.resources import DEVELOP
+from src.gui.mainWindows.AbstractMainWindows import SimpleMainWindow
+from src.gui.GUI_functions import shoot, translate
+from src.gui.dialogs.OpenDialogs import OpenDialog
+
+
+class AbstractSimpleEditorController(ABC):
+    '''
+    Abstract controller class: parent class of AbstractEditorController and SequenceEditorController
+    '''
+    def __init__(self, pattern, title, options):
+        self._pattern = pattern
+        self._translate = translate
+        #self.pattern = self.service.makeNew()
+        self.setUpUi(title)
+        self._mainWindow.createMenuBar()
+        if DEVELOP:
+            options['Shoot'] = (lambda: shoot(self._mainWindow),None,None)
+        self._fileMenu, self._fileMenuActions = self._mainWindow.createMenu("File", options, 3)
+        self._mainWindow.makeHelpMenu()
+
+
+    def setUpUi(self, title):
+        self._mainWindow = SimpleMainWindow(None, title, QtWidgets.QScrollArea)
+        #self.mainWindow.setObjectName(title)
+        self._centralwidget = self._mainWindow.centralWidget()
+        self._verticalLayout = QtWidgets.QVBoxLayout(self._centralwidget)
+        self._mainWindow.resize(800,500)
+        #self._centralwidget = QtWidgets.QScrollArea(self._centralwidget)
+        #self._formLayout = QtWidgets.QFormLayout(self._centralwidget)
+        #self._formLayout.setFieldGrowthPolicy(QtWidgets.QFormLayout.ExpandingFieldsGrow)
+
+
+    def createTableWidget(self, parent, data, headers, bools):
+        tableWidget = QtWidgets.QTableWidget(parent)
+        #headers = self.service.getHeaders()
+        tableWidget.setColumnCount(len(headers.keys()))
+        #tableWidget.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        #tableWidget.customContextMenuRequested['QPoint'].connect(self.h3_table_right_click)
+        #tableWidget.move(20,yPos) #70
+        tableWidget = self.formatTableWidget(headers, tableWidget, data, bools)
+        tableWidget.setHorizontalHeaderLabels(headers)
+        tableWidget.resizeColumnsToContents()
+        tableWidget.setContextMenuPolicy(Qt.CustomContextMenu)
+        tableWidget.customContextMenuRequested['QPoint'].connect(partial(self.editRow, tableWidget, bools))
+        tableWidget.setSortingEnabled(True)
+        tableWidget.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        maxWidth = 500
+        for i in range(len(headers)):
+            if tableWidget.columnWidth(i)>maxWidth:
+                tableWidget.setColumnWidth(i,maxWidth) #neu
+        """header = tableWidget.horizontalHeader()
+        header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        for col in range(1, tableWidget.columnCount()):
+            header.setSectionResizeMode(col, QtWidgets.QHeaderView.ResizeToContents)"""
+        return tableWidget
+
+    def formatTableWidget(self, headers, tableWidget, data, boolVals):
+        '''
+        Fills the QTableWidget with data
+        :param (list[str] | tuple[str]) headers: names of the headers
+        :param (QWidgets.QTableWidget) tableWidget:
+        :param data: 2D data
+        :param (list[int]) boolVals: indizes of columns with boolean values
+        :return: tableWidget
+        '''
+        headerKeys = list(headers.keys())
+        tableWidget.setRowCount(len(data))
+        #tableWidget.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        tableWidget.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+        for i, row in enumerate(data):
+            for j, item in enumerate(row):
+                if j in boolVals:
+                    newItem = QtWidgets.QTableWidgetItem(item)
+                    if item == 1:
+                        newItem.setCheckState(Qt.Checked)
+                    elif item == 0:
+                        newItem.setCheckState(Qt.Unchecked)
+                    tableWidget.setItem(i, j, newItem)
+                else:
+                    newItem = QtWidgets.QTableWidgetItem(str(item))
+                    tableWidget.setItem(i, j, newItem)
+                #tableWidget.setItem(i, j, newitem)
+                newItem.setToolTip(headers[headerKeys[j]])
+        if len(data) < 2:
+            for i in range(2-len(data)):
+                self.insertRow(tableWidget, boolVals)
+        return tableWidget
+
+    def save(self, *args):
+        #try:
+        self._pattern = self._service.save(args[0])
+        #except InvalidInputException as e:
+        #    traceback.print_exc()
+        #    QtWidgets.QMessageBox.warning(self._mainWindow, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
+
+
+    def readTable(self, table, boolVals):
+        '''
+        Reads the values from the table
+        :param (QWidgets.QTableWidget) table: tableWidget
+        :param (list[int]) boolVals: indizes of columns with boolean values
+        :return:
+        '''
+        itemList = []
+        for row in range(table.rowCount()):
+            if table.item(row,0) == None or table.item(row,0).text() == "":
+                continue
+            rowData = []
+            for col in range(table.columnCount()):
+                widgetItem = table.item(row, col)
+                """try:
+                    print(widgetItem, widgetItem.text())
+                except:
+                    print(type(widgetItem), widgetItem)"""
+                if col in boolVals:
+                    try:
+                        rowData.append(int(widgetItem.checkState()/2))
+                    except AttributeError as e:
+                        #print(row, col)
+                        newItem = QtWidgets.QTableWidgetItem()
+                        newItem.setCheckState(Qt.Checked)
+                        table.setItem(row,col, newItem)
+                        rowData.append(1)
+                        logging.warning(e.__str__())
+                        raise Warning(e.__str__())
+                    """elif isinstance(widgetItem, QtWidgets.QComboBox):
+                        rowData.append(widgetItem.currentText())"""
+                elif widgetItem:# and widgetItem.text(): test!
+                    rowData.append(widgetItem.text())
+                else:
+                    #QtWidgets.QTableWidget().cellWidget()
+                    widgetItem = table.cellWidget(row, col)
+                    if widgetItem is None:
+                        rowData.append("")
+                        """elif isinstance(widgetItem, QtWidgets.QLineEdit):
+                            rowData.append(widgetItem.text())"""
+                    else:
+                        rowData.append(widgetItem.currentText())
+            itemList.append(rowData)
+        return itemList
+
+    def editRow(self, table, bools, pos):
+        '''
+        Right click menu options for the table
+        :param table:
+        :param bools:
+        :param pos:
+        :return:
+        '''
+        it = table.itemAt(pos)
+        if it is None:
+            return
+        selectedRowIndex = it.row()
+        item_range = QtWidgets.QTableWidgetSelectionRange(0, selectedRowIndex, table.columnCount() - 1, selectedRowIndex)
+        table.setRangeSelected(item_range, True)
+        menu = QtWidgets.QMenu()
+        insertRowAction = menu.addAction("Insert row")
+        copyPasteAction = menu.addAction("Copy and insert row")
+        deleteRowAction = menu.addAction("Delete row")
+        copyAction = menu.addAction("Copy table")
+        action = menu.exec_(table.viewport().mapToGlobal(pos))
+        if action == insertRowAction:
+            self.insertRow(table, bools)
+            table.resizeRowsToContents()
+        elif action == copyPasteAction:
+            self.copyPaste(table, bools, selectedRowIndex)
+            """rowCount = table.rowCount()
+            emptyRow = rowCount
+            for rowNr in range(rowCount):
+                if table.item(rowNr, 0) == None or table.item(rowNr, 0).text() == "":
+                    emptyRow = rowNr
+                    break
+            if emptyRow == rowCount:
+                #self.insertRow(table, bools)
+                self.insertRow(table, bools)
+            for j in range(columnCount):
+                print(rowCount)
+                item = table.item(rowCount, j)
+                if not table.item(selectedRowIndex, j) is None:
+                    print(item, type(item), isinstance(item,QtWidgets.QComboBox))
+                    if isinstance(item,QtWidgets.QComboBox):
+                        print('ok')
+                        item.setCurrentText(table.item(selectedRowIndex, j).currentText())
+                    else:
+                        table.setItem(emptyRow, j, QtWidgets.QTableWidgetItem(table.item(selectedRowIndex, j).text()))
+
+                        print('not ok')
+                        if j in bools:
+                            #print('bool',emptyRow, j)
+                            table.item(emptyRow, j).setCheckState(table.item(selectedRowIndex, j).checkState())
+"""
+            table.resizeRowsToContents()
+        elif action == deleteRowAction:
+            table.removeRow(selectedRowIndex)
+        elif action == copyAction:
+            data = self.readTable(table, bools)
+            QtWidgets.QTableWidget().horizontalHeader()
+            df = pd.DataFrame(data=data, columns=[table.horizontalHeaderItem(i).text() for i in range(table.columnCount())])
+            df.to_clipboard(index=False, header=True)
+
+    def copyPaste(self, table, bools, selectedRowIndex):
+        newRow = self.getEmptyRow(table)
+        rowCount = table.rowCount()
+        self.insertRow(table, bools)
+        #table.insertRow(newRow)
+        for j in range(table.columnCount()):
+            if not table.item(selectedRowIndex, j) is None:
+                table.setItem(rowCount, j, QtWidgets.QTableWidgetItem(table.item(selectedRowIndex, j).text()))
+                if j in bools:
+                    table.item(newRow, j).setCheckState(table.item(selectedRowIndex, j).checkState())
+        table.resizeRowsToContents()
+
+    def getEmptyRow(self, table):
+        rowCount = table.rowCount()
+        for rowNr in range(rowCount):
+            if table.item(rowNr, 0) == None or table.item(rowNr, 0).text() == "":
+                return rowNr
+        return rowCount
+
+    def insertRow(self, table, bools):
+        '''
+        Inserts a row at the end of the table
+        :param table:
+        :param bools:
+        :return:
+        '''
+        table.insertRow(table.rowCount())
+        for i in bools:
+            newitem = QtWidgets.QTableWidgetItem(0)
+            newitem.setCheckState(Qt.Unchecked)
+            table.setItem(table.rowCount() - 1, i, newitem)
+
+
+    def close(self):
+        self._service.close()
+        self._mainWindow.close()
+
+
+class AbstractEditorController(AbstractSimpleEditorController, ABC):
+    '''
+    Abstract controller class to edit patterns with items: parent class of AbstractEditorControllerWithTabs,
+    ElementEditorController, IntactIonEditorController, MoleculeEditorController
+    '''
+    def __init__(self, service, title, name, patternName=None):
+        self._service = service
+        if patternName is None:
+            pattern = self.open('Open ' + name)
+            if pattern == None:
+                self._service.close()
+                raise CanceledException("Closing")
+        else:
+            pattern = self._service.get(patternName)
+        super(AbstractEditorController, self).__init__(pattern, title,
+                   {"Open " + name: (lambda: self.openAgain('Open'), None,"Ctrl+O"), "Delete " + name: (self.delete,None,None),
+                    "Save": (self.save,None,"Ctrl+S"), "Save As": (self.saveNew,None,None),
+                    "Close": (self.close,None,"Ctrl+Q")})
+        upperWidget = QtWidgets.QWidget(self._centralwidget)
+        self._verticalLayout.addWidget(upperWidget)
+        self._formLayout = QtWidgets.QFormLayout(upperWidget)
+
+
+    def createWidgets(self, parent, formLayout, labels, widgets, initialValues):
+        """
+        Formats widgets with labels into a QFormlayout.
+        :param labels: list of label names
+        :param widgets: dict of {name:widget}
+        :return: (int) number of widgets
+        """
+        maxWidth = 0 #ToDo: Was macht maxWidth?
+        for i, labelName in enumerate(labels):
+            label = QtWidgets.QLabel(parent)
+            width = len(labelName)*10
+            label.setText(self._translate(self._mainWindow.objectName(), labelName))
+            formLayout.setWidget(i, QtWidgets.QFormLayout.LabelRole, label)
+            if width>maxWidth:
+                maxWidth = width
+        self._widgets = dict()
+        counter = 0
+        for widgetName, widget in widgets.items():
+            widget.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed))
+            formLayout.setWidget(counter, QtWidgets.QFormLayout.FieldRole, widget)
+            self._widgets[widgetName] = widget
+            counter+=1
+        for widget, initVal in zip(self._widgets.values(), initialValues):
+            if isinstance(widget, QtWidgets.QComboBox):
+                widget.setCurrentText(initVal)
+            else:
+                widget.setText(initVal)
+        return counter
+
+    def openAgain(self, title = "Open"):
+        '''
+        To open a new pattern
+        '''
+        if title is not False:
+            openedPattern = self.open(title)
+            if openedPattern != None:
+                self._pattern = openedPattern
+        self._widgets["name"].setText(self._pattern.getName())
+        self._table = self.formatTableWidget(self._service.getHeaders(), self._table, self._pattern.getItems(),
+                                             self._service.getBoolVals())
+
+
+    def open(self, title):
+        '''
+        To open a pattern
+        '''
+        openDialog = OpenDialog(title, self._service.getAllPatternNames() + ['--New--'])
+        openDialog.show()
+        if openDialog.exec_() and openDialog.accepted:
+            name = openDialog.getName()
+            if name != "--New--":
+                return self._service.get(name)
+            else:
+                return self._service.makeNew()
+
+    def save(self, *args):
+        try:
+            super(AbstractEditorController, self).save(args[0])
+            self.openAgain(title=False)
+        except InvalidInputException as e:
+            traceback.print_exc()
+            QtWidgets.QMessageBox.warning(self._mainWindow, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
+
+    def delete(self):
+        '''
+        Delets a pattern
+        '''
+        openDialog = OpenDialog("Delete", self._service.getAllPatternNames())
+        #openDialog.show()
+        if openDialog.exec_() and openDialog.accepted:
+            text = openDialog.getName()
+            if text != "--New--":
+                print('Deleting '+text)
+                choice = QtWidgets.QMessageBox.question(self._mainWindow, 'Deleting ',
+                                                        "Warning: Deleting " + text +
+                                                        " cannot be undone!\n\nResume?",
+                                                        QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+                if choice == QtWidgets.QMessageBox.Yes:
+                    print("deleting",text)
+                    self._pattern = self._service.delete(text)
+
+    def saveNew(self):
+        self.save(None)
+
+    """def copyRow(self):
+        rowCount = self._table.rowCount()
+        columnCount = self._table.columnCount()
+        rowSelecter = RowSelecter(rowCount, "Copy Row")
+        if rowSelecter.exec_() and rowSelecter.accepted:
+            self._table.insertRow(self._table.rowCount())
+            copiedRow = rowSelecter.spinBox.value() - 1
+            for j in range(columnCount):
+                if not self._table.item(copiedRow, j) is None:
+                    self._table.setItem(rowCount, j, QTableWidgetItem(self._table.item(copiedRow, j).text()))
+            self._table.item(rowCount, columnCount-1).setCheckState(QtCore.Qt.Checked)"""
+
+
+class AbstractEditorControllerWithTabs(AbstractEditorController, ABC):
+    '''
+    Abstract controller class to edit patterns with multiple item classes: parent class of FragmentEditorController,
+    ModificationEditorController
+    '''
+    """def setUpUi(self, title):
+        self._mainWindow = SimpleMainWindow(None,title)
+        self._translate = translate
+        self._centralwidget = self._mainWindow.centralWidget()
+        self._verticalLayout = QtWidgets.QVBoxLayout(self._centralwidget)"""
+
+    def makeTabWidget(self, tabName1, tabName2):
+        tabWidget = QtWidgets.QTabWidget(self._centralwidget)
+        self._tab1, self._table1 = self.makeTab(tabWidget, self._pattern.getItems(), 0, tabName1)
+        self._tab2, self._table2 = self.makeTab(tabWidget, self._pattern.getItems2(), 1, tabName2)
+        tabWidget.setEnabled(True)
+        self._verticalLayout.addWidget(tabWidget)
+        return tabWidget
+
+    def makeTab(self, tabWidget, items, index, tabName):
+        tab = QtWidgets.QWidget()
+        vertLayout = QtWidgets.QVBoxLayout(tab)
+        vertLayout.setContentsMargins(4,12,4,12)
+        table = self.createTableWidget(tab, items, self._service.getHeaders()[index], self._service.getBoolVals()[index])
+        vertLayout.addWidget(table)
+        tabWidget.addTab(tab, "")
+        tabWidget.setTabText(tabWidget.indexOf(tab), self._translate(self._mainWindow.objectName(), tabName))
+        return tab, table
+
+
+    def makeUpperWidget(self):
+        upperWidget = QtWidgets.QWidget(self._centralwidget)
+        formLayout = QtWidgets.QFormLayout(upperWidget)
+        formLayout.setFieldGrowthPolicy(QtWidgets.QFormLayout.ExpandingFieldsGrow)
+        self._verticalLayout.addWidget(upperWidget)
+        return upperWidget
+
+    def openAgain(self, title='Open'):
+        '''
+        To open a new pattern
+        '''
+        if title is not False:
+            openedPattern = self.open(title)
+            if openedPattern != None:
+                self._pattern = openedPattern
+        self._widgets["name"].setText(self._pattern.getName())
+        self._table1 = self.formatTableWidget(self._service.getHeaders()[0], self._table1, self._pattern.getItems(),
+                                              self._service.getBoolVals()[0])
+        self._table2 = self.formatTableWidget(self._service.getHeaders()[1], self._table2, self._pattern.getItems2(),
+                                              self._service.getBoolVals()[1])
+
+

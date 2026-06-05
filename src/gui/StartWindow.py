@@ -3,24 +3,17 @@ Created on 20 Oct 2020
 
 @author: michael
 '''
-import os.path
+import logging
 import sys
+import traceback
 
-from PyQt5 import QtCore
+from PyQt5 import QtWidgets
 from PyQt5.QtCore import QSize
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QPushButton
 
-from src.gui.controller.IntactSearchController import IntactMainController
-from src.gui.controller.IonTableController import IonTableController
-from src.gui.controller.IsotopePatternView import IsotopePatternView
-from src.gui.controller.EditorController import *
-from src.gui.dialogs.ParameterDialogs import ConfigurationDialog
-from src.gui.dialogs.StartDialogs import IntactStartDialog
-from src.resources import base_path
+from src.Exceptions import CanceledException, InvalidInputException
+from src.gui.GUI_functions import setIcon
+from src.gui.mainWindows.AbstractMainWindows import SimpleMainWindow
 from src.top_down.SpectrumComparator import run as spectrumComparator
-from src.intact.Main import run as IntactIonsSearch
-from src.gui.controller.TD_searchController import TD_MainController
 
 
 class Window(SimpleMainWindow):
@@ -54,7 +47,7 @@ class Window(SimpleMainWindow):
                          'Assign Intact Ions': (lambda: self.editData(self.startIntactIonSearch),
                                                  'Starts assignment and analysis of lists with unfragmented ions', None),
                          'Edit Intact Ions': (
-                         lambda: self.editData(IntactIonEditorController), 'Edit Intact Ions', None)}, None)
+                         lambda: self.editData("intact"), 'Edit Intact Ions', None)}, None)
         self.createMenu('Other Tools',
                         {'Model Ion':
                              (self.openIonModeller, 'Calculates the isotope pattern of an ion', None),
@@ -64,11 +57,11 @@ class Window(SimpleMainWindow):
         self.addAdditionalMenu()
         self.createMenu('Edit',
                         {'Configurations':(self.editTopDownConfig, 'Edit configurations', None),
-                         'Elements': (lambda: self.editData(ElementEditorController), 'Edit element table', None),
-                         'Molecules': (lambda: self.editData(MoleculeEditorController), 'Edit Molecular Properties', None),
-                         'Sequences': (lambda: self.editData(SequenceEditorController), 'Edit stored sequences', None),
-                         'Fragments': (lambda: self.editData(FragmentEditorController), 'Edit fragment patterns', None),
-                         'Modifications': (lambda: self.editData(ModificationEditorController),
+                         'Elements': (lambda: self.editData("element"), 'Edit element table', None),
+                         'Molecules': (lambda: self.editData("molecule"), 'Edit Molecular Properties', None),
+                         'Sequences': (lambda: self.editData("sequence"), 'Edit stored sequences', None),
+                         'Fragments': (lambda: self.editData("fragment"), 'Edit fragment patterns', None),
+                         'Modifications': (lambda: self.editData("modification"),
                                            'Edit modification/ligand patterns',None)},
                         None)
         self.makeHelpMenu()
@@ -96,9 +89,10 @@ class Window(SimpleMainWindow):
         self.makeButton(btnWidget2, btnLayout2, 'Calculates the isotope pattern of an ion',
                               self.openIonModeller, "modelIon.png")
         self._layout.addWidget(btnWidget2)
-        #self.setGeometry(50, 50, xPos+40, 230)
+        return btnWidget1, btnLayout1, btnWidget2, btnLayout2
 
     def startTopDown(self, new):
+        from src.gui.controller.TD_searchController import TD_MainController
         self._lastSearch = SimpleMainWindow(None, '')
         self.startApp(TD_MainController, self, new, self._lastSearch)
         """try:
@@ -108,10 +102,12 @@ class Window(SimpleMainWindow):
             raise e"""
 
     def startTable(self):
-        self._lastSearch = SimpleMainWindow(None, '')
-        self.startApp(IonTableController, self, self._lastSearch)
+        from src.gui.controller.IonTableController import IonTableController
+        self._tableWindow = SimpleMainWindow(None, '')
+        self.startApp(IonTableController, self, self._tableWindow)
 
     def startIntact(self, new):
+        from src.gui.controller.IntactSearchController import IntactMainController
         self._lastSearch = SimpleMainWindow(None, '')
         self.startApp(IntactMainController, self, new, self._lastSearch)
         #IntactMainController(self, new, self._lastSearch)
@@ -121,14 +117,16 @@ class Window(SimpleMainWindow):
             self._lastSearch.show()
 
     def makeButton(self, parent, layout, toolTip, fun, image=None):
-        btn = QPushButton(parent)
+        btn = QtWidgets.QPushButton(parent)
         btn.setToolTip(toolTip)
         btn.clicked.connect(fun)
         btn.setMinimumSize(QSize(200, 150))
         layout.addWidget(btn)
         if image is not None:
-            abs_path = os.path.join(base_path, "icons", image)
-            btn.setIcon(QIcon(abs_path))
+            """abs_path = os.path.join(base_path, "src", "gui","icons", image)
+            btn.setIcon(QIcon(abs_path))"""
+            #btn.setIcon(QIcon(f":/icons/{image}"))
+            setIcon(btn,image)
             btn.setIconSize(QSize(200, 150))
             btn.setFlat(True)
             btn.setAutoFillBackground(True)
@@ -136,6 +134,8 @@ class Window(SimpleMainWindow):
 
 
     def startIntactIonSearch(self):
+        from src.gui.dialogs.StartDialogs import IntactStartDialog
+        from src.intact.Main import run as IntactIonsSearch
         dialog = IntactStartDialog(self)
         if dialog.exec_() and dialog.ok:
             self.startApp(IntactIonsSearch)
@@ -145,6 +145,7 @@ class Window(SimpleMainWindow):
                 QtWidgets.QMessageBox.warning(self, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)"""
 
     def openIonModeller(self):
+        from src.gui.controller.IsotopePatternView import IsotopePatternView
         self._openWindows.append(IsotopePatternView(None))
 
     """
@@ -162,12 +163,17 @@ class Window(SimpleMainWindow):
         sys.exit()
 
     def editTopDownConfig(self):
+        from src.gui.dialogs.ParameterDialogs import ConfigurationDialog
         dialog = ConfigurationDialog(self)
         dialog.exec_()
 
     def editData(self, controller):
+        from src.gui.controller.EditorController import IntactIonEditorController, ElementEditorController, \
+            MoleculeEditorController, SequenceEditorController, FragmentEditorController, ModificationEditorController
+        d = {"element":ElementEditorController, "molecule": MoleculeEditorController, "sequence":SequenceEditorController,
+             "fragment":FragmentEditorController, "modification":ModificationEditorController, "intact":IntactIonEditorController}
         try:
-            self._openWindows.append(controller())
+            self._openWindows.append(d[controller]())
         except CanceledException:
             pass
         except InvalidInputException as e:

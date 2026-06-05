@@ -2,7 +2,7 @@
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
 
-from src.gui.GUI_functions import setIcon, translate
+from src.gui.GUI_functions import setWindowIcon, translate
 from src.gui.tableviews.PlotTables import PlotTableView
 from src.gui.tableviews.TableModels import AbstractTableModel
 from src.gui.tableviews.TableViews import TableView
@@ -74,6 +74,6 @@ class FragmentationTable(QtWidgets.QWidget):
         #table2.setContentsMargins(0,0,0,0)
         table2.sortBy(1)
         verticalLayout.addWidget(table2)
-        setIcon(self)
+        setWindowIcon(self)
         self.show()
 

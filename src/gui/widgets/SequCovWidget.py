@@ -8,7 +8,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from PyQt5 import QtWidgets, QtGui
 from PyQt5.QtCore import Qt, QVariant
 
-from src.gui.GUI_functions import makeLabelInputWidget, createComboBox, setIcon, translate
+from src.gui.GUI_functions import makeLabelInputWidget, createComboBox, setWindowIcon, translate
 from src.gui.tableviews.TableModels import AbstractTableModel
 from src.gui.tableviews.TableViews import TableView
 
@@ -139,7 +139,7 @@ class SequCovWidget(QtWidgets.QWidget):
         self._sequPlot = SequenceCoveragePlot(sequence, globalData[:,0].reshape((self._noCleavageSites, 1)),
                                               globalData[:,1].reshape((self._noCleavageSites, 1)), width)
         updateBtn.clicked.connect(self.updatePlot)
-        setIcon(self)
+        setWindowIcon(self)
 
     def fillGrid(self, type, row, checked=False):
         label = QtWidgets.QLabel(self._inputWidget)

@@ -1,6 +1,6 @@
 from PyQt5 import QtWidgets
 
-from src.gui.GUI_functions import setIcon, translate
+from src.gui.GUI_functions import setWindowIcon, translate
 
 
 class InfoView(QtWidgets.QWidget):
@@ -22,7 +22,7 @@ class InfoView(QtWidgets.QWidget):
         scrollArea.setWidgetResizable(True)
         scrollArea.setWidget(self._text)
         verticalLayout2.addWidget(self._text)
-        setIcon(self)
+        setWindowIcon(self)
         self.resize(700, 400)
         self.show()
 

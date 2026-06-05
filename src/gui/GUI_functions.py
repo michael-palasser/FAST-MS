@@ -6,6 +6,7 @@ import pandas as pd
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtGui import QIcon
 
+import src.gui.icons.icons_rc #necessary
 from src.resources import base_path, DEVELOP
 
 translate = QtCore.QCoreApplication.translate
@@ -107,8 +108,12 @@ def shoot(widget):
         p.save(os.path.join(base_path, 'pics', widget.windowTitle() + '.png'), 'png')
         print('Shot taken')
 
-def setIcon(widget):
-    widget.setWindowIcon(QIcon(getIconPath('icon.ico')))
+def setWindowIcon(widget):
+    widget.setWindowIcon(QIcon(f":/icons/icon.ico"))
+    #widget.setWindowIcon(QIcon(getIconPath('icon.ico')))
+
+def setIcon(widget, icon):
+    widget.setIcon(QIcon(f":/icons/{icon}"))
 
 def getIconPath(fileName):
     return os.path.join(getattr(sys, '_MEIPASS', base_path), fileName)

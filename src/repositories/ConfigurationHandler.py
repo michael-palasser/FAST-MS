@@ -3,10 +3,9 @@ Created on 31 Aug 2020
 
 @author: michael
 '''
-
 import json
 from os.path import isfile, join
-from src.resources import getRelativePath, base_path
+from src.resources import getRelativePath, base_path, user
 
 top_down_search = {'sequName': '', 'charge': -1, 'fragmentation': '', 'modifications': '', 'nrMod': 0,
                    'spectralData': '', 'noiseLimit': 0.0, 'fragLib': '', 'calibration': False, 'calIons': ''}
@@ -43,8 +42,6 @@ class ConfigHandler(object):
         '''
         :param (str) configFile: path of json file where configuration values are stored
         '''
-        #with openAgain(_configFile, "w") as f:
-         #   json.dump(json.dumps(parameters), f)
         self._configFile = configFile
         if isfile(configFile):
             with open(configFile, "r") as f:
@@ -97,7 +94,6 @@ class ConfigHandler(object):
     def update2(self, parameter, value):
         self.__parameters[parameter] = value
 
-#dataPath = join("src", "data")
 
 class ConfigurationHandlerFactory(object):
     '''
@@ -105,62 +101,46 @@ class ConfigurationHandlerFactory(object):
     '''
     @staticmethod
     def getTD_SettingHandler():
-        return ConfigHandler(getRelativePath("settings_top_down.json"), top_down_search)
+        return ConfigHandler(getRelativePath("settings_top_down_"+user+".json"), top_down_search)
 
-    @staticmethod
+    """@staticmethod
     def getPersonalTD_SettingHandler():
         return ConfigHandler("C:/temp/settings_top_down.json",
-                             ConfigurationHandlerFactory.getTD_SettingHandler().getAll())
+                             ConfigurationHandlerFactory.getTD_SettingHandler().getAll())"""
     @staticmethod
     def getTable_SettingHandler():
-        return ConfigHandler(getRelativePath("settings_td_table.json"), top_down_search)
+        return ConfigHandler(getRelativePath("settings_td_table_"+user+".json"), top_down_search)
 
-    @staticmethod
+    """@staticmethod
     def getPersonalTable_SettingHandler():
         return ConfigHandler("C:/temp/settings_td_table.json",
-                             ConfigurationHandlerFactory.getPersonalTD_SettingHandler().getAll())
+                             ConfigurationHandlerFactory.getPersonalTD_SettingHandler().getAll())"""
 
     @staticmethod
     def getConfigHandler():
         return ConfigHandler(getRelativePath("configurations.json"), configurations)
 
-
     @staticmethod
     def getExportHandler():
-        return ConfigHandler(getRelativePath("export_options.json"), top_down_export)
+        return ConfigHandler(getRelativePath("export_options_"+user+".json"), top_down_export)
 
     @staticmethod
     def getIntactExportHandler():
-        return ConfigHandler(getRelativePath("export_options_intact.json"), intact_export)
+        return ConfigHandler(getRelativePath("export_options_intact_"+user+".json"), intact_export)
 
     @staticmethod
     def getIntactAssignHandler():
-        return ConfigHandler(getRelativePath("settings_intact.json"), intact_assign)
+        return ConfigHandler(getRelativePath("settings_intact_"+user+".json"), intact_assign)
 
     @staticmethod
     def getFullIntactHandler():
-        return ConfigHandler(getRelativePath("settings_intactFull.json"), intact_search)
+        return ConfigHandler(getRelativePath("settings_intactFull_"+user+".json"), intact_search)
 
     @staticmethod
     def getMDHandler():
-        #return ConfigHandler(getRelativePath("settings_MD.json"), md)
-        return ConfigHandler("C:/temp/settings_MD.json",
-                             ConfigHandler(getRelativePath("settings_MD.json"), md).getAll())
+        return ConfigHandler(getRelativePath("settings_MD_"+user+".json"), md)
 
     @staticmethod
     def getMDScoresHandler():
         return ConfigHandler(getRelativePath("settings_MD_scores.json"), scoreDict)
 
-"""
-from src import path
-if __name__ == '__main__':
-    absPath = path +"/src/data/settings_top_down.json"
-    handler = ConfigHandler(absPath)
-
-    with open(absPath, "w") as f:
-        json.dump(json.dumps(conf, indent=3), f)
-
-with open(absPath) as json_data_file:
-    pattern = json.load(json_data_file)
-print(pattern)
-"""

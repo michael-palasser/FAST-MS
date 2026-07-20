@@ -34,7 +34,10 @@ class SaveDlg(AbstractDialog):
                    'name': (QtWidgets.QLineEdit(self), "Name of the output-file\n"
                                                        "(default: name of spectral input file + _out)")})
         self._widgets['dir'].setText(startDir)
-        self._widgets['name'].setText(storedOptions['file'])
+        fileName = storedOptions['file']
+        if fileName[-4]==".":
+            fileName = fileName[:-4]
+        self._widgets['name'].setText(fileName)
         """formLayout.addItem(QtWidgets.QSpacerItem(0,1))
 
         index +=1

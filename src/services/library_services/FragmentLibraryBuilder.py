@@ -224,7 +224,7 @@ class FragmentLibraryBuilder(object):
         logging.info("********** Creating fragment library **********")
         if len(self._modifPattern.getExcluded())>0:
             #print('These nrOfModifications are excluded:')
-            logging.info('These nrOfModifications are excluded: '
+            logging.info('These modifications are excluded: '
                          +', '.join([elem for elem in self._modifPattern.getExcluded()]))
             '''for elem in self.__modifPattern.getExcluded():
                 print(elem)'''

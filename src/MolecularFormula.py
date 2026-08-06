@@ -110,12 +110,15 @@ class MolecularFormula(object):
         '''
         #returnedString = 'C' + str(self.formulaDict['C']) + 'H' + str(self.formulaDict['H'])
         returnedString = ''
-        for element in sorted(list(self._formulaDict.keys())):
+        #for element in sorted(list(self._formulaDict.keys())):
+        alreadyIncluded = set()
+        for element in ["C", "H"] + list(sorted(list(self._formulaDict.keys()))):
+            if (element in self._formulaDict.keys()) and (self._formulaDict[element] != 0) and (element not in alreadyIncluded):
             #if element in ['C','H']:
             #    continue
             #else:
-            if self._formulaDict[element] > 0:
                 returnedString += element + str(self._formulaDict[element])
+                alreadyIncluded.add(element)
         return returnedString
 
 

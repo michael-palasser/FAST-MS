@@ -377,7 +377,9 @@ class AbstractSpectrumHandler(abc.ABC):
             print(neutral.getName(), z)
             logging.info(neutral.getName()+ ": z=" + str(z))
             theoreticalPeaks = copy.deepcopy(sortedPattern)
+            print(theoreticalPeaks['m/z'],radicals)
             theoreticalPeaks['m/z'] = self.getMz(theoreticalPeaks['m/z'], z, radicals)
+            print(theoreticalPeaks['m/z'])
             theoreticalPeaks = self.getChargedIsotopePattern(sortedPattern, z, radicals)
             if (self._configs['lowerBound'] < theoreticalPeaks[0]['m/z'] < self._upperBound):
                 self._searchedChargeStates[neutral.getName()].append(z)

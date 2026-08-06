@@ -194,6 +194,7 @@ class PeriodicTableService(AbstractServiceForPatterns):
     '''
     def __init__(self):
         super(PeriodicTableService, self).__init__(PeriodicTableRepository(), (0,1,2))
+        self._allElements = self.getAllElements()
 
     def makeNew(self):
         return Element("", 2*[["", "", ""]], None)
@@ -274,7 +275,7 @@ class PeriodicTableService(AbstractServiceForPatterns):
                                              ('I', np.float64), ('mass', np.float64), ('M+', np.float64)])
             self._repository.getPattern(elem)
             elementDict[elem] = """
-        return {elem:self._repository.getPattern(elem).getItems() for elem in elements}
+        return {elem:self._allElements[elem] for elem in elements}
 
     def getAllElements(self):
         return {elem:self._repository.getPattern(elem).getItems() for elem in self.getAllPatternNames()}
@@ -412,7 +413,7 @@ class SequenceService(AbstractService):
         return self._repository.getAllSequences()
 
     def getAllSequenceNames(self):
-        return sorted(self._repository.getAllSequenceNames())
+        return sorted(self._repository.getAllSequenceNames(), key=str.lower)
 
     def getAllSequenceNamesAsDict(self):
         sequences = self._repository.getAllSequences()
@@ -624,7 +625,7 @@ class ModificationService(AbstractServiceForPatterns):
         return ModificationItem(item).getFormula()
 
     def getAllPatternNames(self):
-        return ["-"] + sorted(super(ModificationService, self).getAllPatternNames())
+        return ["-"] + sorted(super(ModificationService, self).getAllPatternNames(), key=str.lower)
 
     def getPatternWithObjects(self, name, *args):
         '''

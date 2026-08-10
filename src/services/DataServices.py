@@ -80,6 +80,9 @@ class AbstractServiceForPatterns(AbstractService, ABC):
     def getAllPatternNames(self):
         return self._repository.getAllPatternNames()
 
+    def getAllPatternsWithObjects(self):
+        return {name:self.getPatternWithObjects(name) for name in self.getAllPatternNames()}
+
     """def updatePattern(self, *args, **kwargs):
         pass"""
 

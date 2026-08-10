@@ -60,7 +60,7 @@ def processTemplateName(templName):
     return templName[0:search.start()], templName[search.start():]
 
 def processLongPaths(rawPath):
-    newPath = rawPath.replace("/", "\\")
+    newPath = str(rawPath).replace("/", "\\")
     if INTERN and newPath.startswith("I:"):
         newPath = newPath.replace("I:", r"\\bagfa001\groupdata$")
     if newPath.startswith("\\") and not newPath.startswith("\\\\"):
@@ -80,7 +80,7 @@ logging.info("Starting")
 trainingTxt = "training_"+user+".txt"
 try:
     if not os.path.isfile(trainingTxt) and not INTERN:
-        autoStart(os.path.join(base_path,"FAST MS 1.1.0.pptx"))
+        autoStart(os.path.join(base_path,"FAST MS 1.1.0.pdf"))
         with open(trainingTxt, "w") as f:
             pass
 except:

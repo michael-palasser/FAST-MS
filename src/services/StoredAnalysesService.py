@@ -4,7 +4,7 @@ from copy import deepcopy
 from datetime import datetime
 
 from src.Exceptions import InvalidInputException
-from src.repositories.ConfigurationHandler import ConfigHandler
+from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory, ConfigHandler
 from src.repositories.sql.AnalysisRepository import AnalysisRepository
 from src.repositories.sql.TD_Repositories import *
 from src.repositories.sql.MoleculeRepository import MoleculeRepository
@@ -72,13 +72,13 @@ class StoredAnalysesService(object):
         print("*** Loading Analysis", name)
         filePaths = self.getFileNames(name)
         rep = AnalysisRepository(filePaths[0])
-        configurations = ConfigHandler(filePaths[2], []).getAll()
+        configurations = ConfigurationHandlerFactory.getConfigHandler(filePaths[2]).getAll()
         subtrNoise = False
         if "subtract noise" in configurations.keys():
             subtrNoise = configurations["subtract noise"]
         ions, delIons, searchedZStates, log = rep.getSearch(subtrNoise)
         settings = ConfigHandler(filePaths[1], []).getAll()
-        if len(settings)==0:
+        if settings is None or len(settings)==0:
             raise InvalidInputException("Configuration File not Found", "The file "+ filePaths[2]+ " could not be found. The analysis cannot be loaded")
         noiseLevel = settings['noiseLevel']
         if noiseLevel == 0:
@@ -148,7 +148,7 @@ class StoredAnalysesService(object):
         #logs = [line for line in info]
         rep.createSearch(ions, deletedIons, searchedZStates, info)
         ConfigHandler(filePaths[1], []).write(settings)
-        ConfigHandler(filePaths[2], []).write(configurations)
+        ConfigHandler(filePaths[2],[]).write(configurations)
         with open(filePaths[3], "w") as f:
             f.write(info)
         valsTup = (props.getSequence(), props.getMolecule(), props.getFragmentation(),props.getModifPattern())
@@ -213,7 +213,7 @@ class StoredAnalysesService(object):
         return peaks
 
 
-    def checkConfigs(self):
+    """def checkConfigs(self):
         allNames = self.getAllSearchNames()[0]
         correct = ConfigHandler(self.getFileNames(allNames[-1])[2], []).getAll()
         for name in allNames:
@@ -224,4 +224,4 @@ class StoredAnalysesService(object):
                 if key not in configurations.keys():
                     print(filePath, key,"added")
                     configurations[key] = correct[key]
-                    ConfigHandler(filePath, []).write(configurations)
+                    ConfigHandler(filePath, []).write(configurations)"""

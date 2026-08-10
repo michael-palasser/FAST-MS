@@ -4,8 +4,9 @@ Created on 31 Aug 2020
 @author: michael
 '''
 import json
+import traceback
 from os.path import isfile, join
-from src.resources import getRelativePath, base_path, user
+from src.resources import getRelativePath, base_path, user, processLongPaths
 
 top_down_search = {'sequName': '', 'charge': -1, 'fragmentation': '', 'modifications': '', 'nrMod': 0,
                    'spectralData': '', 'noiseLimit': 0.0, 'fragLib': '', 'calibration': False, 'calIons': ''}
@@ -43,16 +44,24 @@ class ConfigHandler(object):
         :param (str) configFile: path of json file where configuration values are stored
         '''
         self._configFile = configFile
-        if isfile(configFile):
-            with open(configFile, "r") as f:
+        if not isfile(configFile):
+            if isfile(processLongPaths(configFile)):
+                self._configFile = processLongPaths(configFile)
+            else:
+                print('not found')
+                print(configFile)
+                self._configFile = None
+                self.__parameters = default
+        if self._configFile is not None:
+            with open(self._configFile, "r") as f:
                 try:
                     self.__parameters = json.loads(json.load(f))
                 except:
-                    self.__parameters = dict()
+                    traceback.print_exc()
+                    self.__parameters = default
         else:
-            print('not found')
-            print(configFile)
-            self.__parameters = default
+            self._configFile = configFile
+
 
     def get(self,key):
         '''
@@ -82,9 +91,9 @@ class ConfigHandler(object):
         Returns all parameters as a dictionary
         :return: (dict[str,Any]) parameters
         '''
-        if self.__parameters:
-            return self.__parameters
-        print("Configuration file does not exist")
+        if not self.__parameters:
+            print("Configuration file does not exist")
+        return self.__parameters
 
     def update(self, parameter, value):
         if parameter not in self.__parameters.keys():
@@ -100,8 +109,11 @@ class ConfigurationHandlerFactory(object):
     Factory class which creates the appropriate ConfigHandler
     '''
     @staticmethod
-    def getTD_SettingHandler():
-        return ConfigHandler(getRelativePath("settings_top_down_"+user+".json"), top_down_search)
+    def getTD_SettingHandler(filePath = None):
+        if filePath is None:
+            return ConfigHandler(getRelativePath("settings_top_down_"+user+".json"), top_down_search)
+        else:
+            return ConfigHandler(filePath, top_down_search)
 
     """@staticmethod
     def getPersonalTD_SettingHandler():
@@ -117,8 +129,11 @@ class ConfigurationHandlerFactory(object):
                              ConfigurationHandlerFactory.getPersonalTD_SettingHandler().getAll())"""
 
     @staticmethod
-    def getConfigHandler():
-        return ConfigHandler(getRelativePath("configurations.json"), configurations)
+    def getConfigHandler(filePath=None):
+        if filePath is None:
+            return ConfigHandler(getRelativePath("configurations.json"), configurations)
+        else:
+            return ConfigHandler(filePath, configurations)
 
     @staticmethod
     def getExportHandler():

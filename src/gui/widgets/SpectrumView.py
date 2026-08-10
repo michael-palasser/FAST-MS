@@ -10,7 +10,7 @@ import ctypes
 if platform.system()=='Windows' and int(platform.release()) >= 8:   
     ctypes.windll.shcore.SetProcessDpiAwareness(True)
 
-from src.gui.GUI_functions import setIcon, translate
+from src.gui.GUI_functions import setWindowIcon, translate
 
 '''class BarGraphItem(pg.BarGraphItem):
 
@@ -30,7 +30,7 @@ class AbstractSpectrumView(QtWidgets.QWidget):
     '''
     QWidget which shows a part of the spectrum. Superclass of SpectrumView and TheoSpectrumView.
     '''
-    def __init__(self, parent, peaks, ions, minRange, maxRange, maxY, lblSize, ionMode, noise=None, focused=False,
+    def __init__(self, parent, title, peaks, ions, minRange, maxRange, maxY, ionMode, noise=None, focused=False,
                  profileSpec=None):
         super(AbstractSpectrumView, self).__init__(parent)
         self._peaks = peaks
@@ -47,15 +47,16 @@ class AbstractSpectrumView(QtWidgets.QWidget):
         self._focused = focused
         self._layout = QtWidgets.QVBoxLayout(self)
         self._translate = translate
-        styles = {"black": "#f00", "font-size": lblSize}
-        self._graphWidget = pg.PlotWidget(self)
+        styles = {"color": "black"}
+        self._graphWidget = pg.PlotWidget(self, axisItems={'left': SciAxis(orientation='left')})
         self._graphWidget.setLabel('left', 'signal', **styles)
         self._graphWidget.setLabel("bottom", "m/z", **styles)
         for axisName in ("left", "bottom"):
-            font=QFont()
-            font.setPointSize(10)
+            self._font=QFont()
+            self._font.setPointSize(10)
             axis = self._graphWidget.getAxis(axisName)
-            axis.setStyle(tickFont=font)
+            axis.setStyle(tickFont=self._font)
+            axis.label.setFont(self._font)
             axis.setTextPen('k')
             axis.setPen(pg.mkPen(color="k", width=0.5))
             if axisName=="left":
@@ -85,10 +86,9 @@ class AbstractSpectrumView(QtWidgets.QWidget):
         #self._cursorLabel.setStyleSheet("border: 0.1px solid black;")
         #self._graphWidget.addItem(self._cursorLabel)
         #self._graphWidget.getAxis('left').setTickSpacing(0.1,0.05)
-        setIcon(self)
-        title = "Spectrum View"
+        setWindowIcon(self)
         if focused:
-            title += ": " + self._focused[0] + ", " +str(self._focused[1])+self._ionMode
+            title = self._focused[0] + ", " +str(self._focused[1])+self._ionMode +" (" + title+")"
         self.setWindowTitle(title)
         self.show()
 
@@ -228,20 +228,21 @@ class AbstractSpectrumView(QtWidgets.QWidget):
                     size=10
                     #brush = (50,50,200,50)
                     brush = (255,255,0,50)
-                self._scatter = pg.ScatterPlotItem(x=ion.getIsotopePattern()['m/z'], y=ion.getIsotopePattern()['calcInt'],
+                scatter = pg.ScatterPlotItem(x=ion.getIsotopePattern()['m/z'], y=ion.getIsotopePattern()['calcInt'],
                                              symbol=symbol,
                                              pen =pg.mkPen(color=colour, width=2),
                                              brush=brush, size=size, pxMode=True) #Todo resize"""
-                self._items.append(self._scatter)
-                #maxMz = np.sort(ion.getIsotopePattern(), order='calcInt')[::-1]['m/z'][0]
-                #noise.append((maxMz, ion.getNoise()))
-                self._graphWidget.addItem(self._scatter)
                 if ion.getCharge() ==1:
                     charge=""
                 else:
                     charge = str(ion.getCharge())
                 text = ion.getName(True)+"<sup>"+charge+self._ionMode+"</sup>"
-                self._legend.addItem(self._scatter, text)#ion.getId())
+                scatter.setToolTip(text)
+                self._items.append(scatter)
+                #maxMz = np.sort(ion.getIsotopePattern(), order='calcInt')[::-1]['m/z'][0]
+                #noise.append((maxMz, ion.getNoise()))
+                self._graphWidget.addItem(scatter)
+                self._legend.addItem(scatter, text)#ion.getId())
                 if coulour_index == maxIndizes[0]:
                     coulour_index = 0
                 if marker_index == maxIndizes[1]:
@@ -280,8 +281,8 @@ class SpectrumView(AbstractSpectrumView):
      modelled intensities are shown as scatter plots.
     Used in top-down search.
     '''
-    def __init__(self, parent, peaks, ions, minRange, maxRange, maxY, ionMode, noise=None, focused=False, profileSpec=None):
-        super(SpectrumView, self).__init__(parent, peaks, ions, minRange-1, maxRange+1, maxY, '12pt', ionMode, noise,
+    def __init__(self, parent, title, peaks, ions, minRange, maxRange, maxY, ionMode, noise=None, focused=False, profileSpec=None):
+        super(SpectrumView, self).__init__(parent, title, peaks, ions, minRange-1, maxRange+1, maxY, ionMode, noise,
                                            focused, profileSpec)
         self.resize(700,400)
 
@@ -368,8 +369,8 @@ class TheoSpectrumView(AbstractSpectrumView):
         spectrPeaks = peaks[['m/z', 'I']]
         tolerance = (np.max(peaks['m/z'])-np.min(peaks['m/z']))*0.2
         yMax = max(np.max(peaks['calcInt']),np.max(peaks['I']))
-        super(TheoSpectrumView, self).__init__(parent, spectrPeaks, peaks,
-               np.min(peaks['m/z'])-tolerance, np.max(peaks['m/z'])+tolerance, yMax, "12pt", ionMode,
+        super(TheoSpectrumView, self).__init__(parent, "", spectrPeaks, peaks,
+               np.min(peaks['m/z'])-tolerance, np.max(peaks['m/z'])+tolerance, yMax, ionMode,
                                                noise=[(0,0)])
         self.makeWidthWidgets()
         self._spinBox.move(width - 70, 0)
@@ -420,6 +421,11 @@ class TheoSpectrumView(AbstractSpectrumView):
         """if self._noise is not None:
             self._graphWidget.plot(self._noise['m/z'], self._noise['I'], pen='r')"""
         self.show()
+
+
+class SciAxis(pg.AxisItem):
+    def tickStrings(self, values, scale, spacing):
+        return [f"{v:.1e}" if v != 0 else "0" for v in values]
 
 
 if __name__ == '__main__':

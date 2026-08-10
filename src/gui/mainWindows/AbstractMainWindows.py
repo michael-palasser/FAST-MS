@@ -1,8 +1,8 @@
 import os
 from PyQt5 import QtWidgets, QtCore
 
-from src.gui.GUI_functions import translate, setIcon
-from src.resources import autoStart, path
+from src.gui.GUI_functions import translate, setWindowIcon
+from src.resources import autoStart, base_path
 
 
 class SimpleMainWindow(QtWidgets.QMainWindow):
@@ -18,7 +18,7 @@ class SimpleMainWindow(QtWidgets.QMainWindow):
         else:
             self._centralwidget = centralWidget(self)
         self.setCentralWidget(self._centralwidget)
-        setIcon(self)
+        setWindowIcon(self)
         #self.setWindowIcon(QIcon(os.path.join(path, 'icon.ico')))
 
     def updateComboBox(self, comboBox, newOptions,empty=False):
@@ -73,8 +73,8 @@ class SimpleMainWindow(QtWidgets.QMainWindow):
         return menu, menuActions
 
     def makeHelpMenu(self):
-        manual = os.path.join(path, 'FAST MS Manual.pdf')
-        paper = os.path.join(path, 'palasser-breuker-2024-fast-ms-software-for-the-automated-analysis-of-top-down-mass-spectra-of-polymeric-molecules.pdf')
+        manual = os.path.join(base_path, 'FAST MS Manual.pdf')
+        paper = os.path.join(base_path, 'palasser-breuker-2024-fast-ms-software-for-the-automated-analysis-of-top-down-mass-spectra-of-polymeric-molecules.pdf')
         self.createMenu('Help',{'Manual':(lambda: autoStart(manual),'Open the Manual',None),
                                 'Publication':(lambda: autoStart(paper),'Open the FAST MS publication',None),
                                 'Citing FAST MS': (self.openRefWidget, "How to cite the programme", None)},None)

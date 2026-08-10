@@ -121,7 +121,7 @@ class AbstractIonView(QtWidgets.QDialog):
             peaks = self._spectrumHandler.getSpectrum()[
                 np.where((self._spectrumHandler.getSpectrum()['m/z'] > (minLimit - 5)) & (self._spectrumHandler.getSpectrum()['m/z'] < (maxLimit + 5)))]
 
-            view = SpectrumView(None, peaks, ions, minLimit, maxLimit, YLimit,
+            view = SpectrumView(None, self.windowTitle(), peaks, ions, minLimit, maxLimit, YLimit,
                                 self._spectrumHandler.getSprayMode(),
                                 self._spectrumHandler.getNoise((np.min(peaks['m/z']),np.max(peaks['m/z']))), False,
                                 self._spectrumHandler.getProfileSpectrum((np.min(peaks['m/z']), np.max(peaks['m/z']))))

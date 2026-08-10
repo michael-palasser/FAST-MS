@@ -1,14 +1,21 @@
+import ctypes
 import os
 import sys
 from functools import partial
 import pandas as pd
-
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtGui import QIcon
 
-from src.resources import path, DEVELOP
+import src.gui.icons.icons_rc #necessary
+from src.resources import base_path, DEVELOP
 
 translate = QtCore.QCoreApplication.translate
+
+def set_appusermodel_id():
+    """Set the AppUserModelID for the current process (Windows only)."""
+    # Make it unique per process, so each launch gets its own taskbar icon
+    unique_id = f"com.example.MyApp.Instance.{os.getpid()}"
+    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(unique_id)
 
 def makeLabelInputWidget(parent,labelName,*args):
     horizontalWidget = QtWidgets.QWidget(parent)
@@ -98,14 +105,18 @@ def shoot(widget):
     if DEVELOP:
         #filename = datetime.now().strftime('%Y-%m-%d_%H-%M-%S.png')
         p=widget.grab()
-        p.save(os.path.join(path,'pics',widget.windowTitle()+'.png'), 'png')
+        p.save(os.path.join(base_path, 'pics', widget.windowTitle() + '.png'), 'png')
         print('Shot taken')
 
-def setIcon(widget):
-    widget.setWindowIcon(QIcon(getIconPath('icon.ico')))
+def setWindowIcon(widget):
+    widget.setWindowIcon(QIcon(f":/icons/icon.ico"))
+    #widget.setWindowIcon(QIcon(getIconPath('icon.ico')))
+
+def setIcon(widget, icon):
+    widget.setIcon(QIcon(f":/icons/{icon}"))
 
 def getIconPath(fileName):
-    return os.path.join(getattr(sys, '_MEIPASS', path), fileName)
+    return os.path.join(getattr(sys, '_MEIPASS', base_path), fileName)
 
 def makeButton(parent, name, toolTip, fun):
     btn = QtWidgets.QPushButton(name, parent)

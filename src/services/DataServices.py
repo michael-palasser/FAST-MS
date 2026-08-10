@@ -2,7 +2,7 @@ from abc import ABC
 
 from src.Exceptions import InvalidInputException
 from src.entities.GeneralEntities import Macromolecule, Element, BuildingBlock, Sequence, rnaDict, aadict
-from src.resources import processTemplateName
+from src.resources import processTemplateName, forbiddenCharacters
 from src.repositories.sql.TD_Repositories import *
 from src.repositories.sql.MoleculeRepository import MoleculeRepository
 from src.repositories.sql.PeriodicTableRepository import PeriodicTableRepository
@@ -59,6 +59,11 @@ class AbstractService(ABC):
                 except ValueError:
                     raise InvalidInputException(item[0], "Number required, Column: " + str(i) + ", " + val)
 
+    def checkForbiddenCharacters(self, name):
+        for c in forbiddenCharacters:
+            if c in name:
+                raise InvalidInputException(c, "Character "+c+" in "+name+" is forbidden. You have to replace it")
+
 
 class AbstractServiceForPatterns(AbstractService, ABC):
     '''
@@ -74,6 +79,9 @@ class AbstractServiceForPatterns(AbstractService, ABC):
 
     def getAllPatternNames(self):
         return self._repository.getAllPatternNames()
+
+    def getAllPatternsWithObjects(self):
+        return {name:self.getPatternWithObjects(name) for name in self.getAllPatternNames()}
 
     """def updatePattern(self, *args, **kwargs):
         pass"""
@@ -189,6 +197,7 @@ class PeriodicTableService(AbstractServiceForPatterns):
     '''
     def __init__(self):
         super(PeriodicTableService, self).__init__(PeriodicTableRepository(), (0,1,2))
+        self._allElements = self.getAllElements()
 
     def makeNew(self):
         return Element("", 2*[["", "", ""]], None)
@@ -269,7 +278,7 @@ class PeriodicTableService(AbstractServiceForPatterns):
                                              ('I', np.float64), ('mass', np.float64), ('M+', np.float64)])
             self._repository.getPattern(elem)
             elementDict[elem] = """
-        return {elem:self._repository.getPattern(elem).getItems() for elem in elements}
+        return {elem:self._allElements[elem] for elem in elements}
 
     def getAllElements(self):
         return {elem:self._repository.getPattern(elem).getItems() for elem in self.getAllPatternNames()}
@@ -279,8 +288,11 @@ class MoleculeService(AbstractServiceForPatterns):
     '''
     Service handling a MoleculeRepository and Macromolecule entities.
     '''
-    def __init__(self):
-        super(MoleculeService, self).__init__(MoleculeRepository(), (0,2))
+    def __init__(self, dbPath:str|None=None):
+        if dbPath is None:
+            super(MoleculeService, self).__init__(MoleculeRepository(), (0,2))
+        else:
+            super(MoleculeService, self).__init__(MoleculeRepository(dbPath), (0,2))
 
     def makeNew(self):
         return Macromolecule("", "", "", 10 * [["", "", ""]], None)
@@ -388,8 +400,11 @@ class SequenceService(AbstractService):
     '''
     Service handling a SequenceRepository and Sequence entities.
     '''
-    def __init__(self):
-        super(SequenceService, self).__init__(SequenceRepository(),(0,1,2))
+    def __init__(self, dbPath:str|None=None):
+        if dbPath is None:
+            super(SequenceService, self).__init__(SequenceRepository(),(0,1,2))
+        else:
+            super(SequenceService, self).__init__(SequenceRepository(dbPath),(0,1,2))
 
     def makeNew(self):
         return ("", "", "")
@@ -401,7 +416,7 @@ class SequenceService(AbstractService):
         return self._repository.getAllSequences()
 
     def getAllSequenceNames(self):
-        return self._repository.getAllSequenceNames()
+        return sorted(self._repository.getAllSequenceNames(), key=str.lower)
 
     def getAllSequenceNamesAsDict(self):
         sequences = self._repository.getAllSequences()
@@ -452,9 +467,9 @@ class SequenceService(AbstractService):
                 self._repository.createSequence(sequence)
         moleculeRepository.close()
 
-    def checkSequenceNames(self, sequTuples):
-        #ToDo: Check Names: Unique, no / in name
-        pass
+    def checkSequenceNames(self, seqTupels):
+        for seqTup in seqTupels:
+            self.checkForbiddenCharacters(seqTup[0])
 
     def checkFormatOfItem(self, item, *args):
         '''
@@ -495,8 +510,11 @@ class FragmentationService(AbstractServiceForPatterns):
     '''
     Service handling a FragmentationRepository and FragmentationPattern entities.
     '''
-    def __init__(self):
-        super(FragmentationService, self).__init__(FragmentationRepository(), (0, 5, 6))
+    def __init__(self, dbPath:str|None=None):
+        if dbPath is None:
+            super(FragmentationService, self).__init__(FragmentationRepository(), (0, 5, 6))
+        else:
+            super(FragmentationService, self).__init__(FragmentationRepository(dbPath), (0, 5, 6))
 
     def makeNew(self):
         #return PatternWithItems("", [{"Name": "", "Gain": "", "Loss": "", "NrOfMod": 0, "enabled": False}], None)
@@ -511,6 +529,7 @@ class FragmentationService(AbstractServiceForPatterns):
         '''
         elementRep = PeriodicTableRepository()
         elements = elementRep.getAllPatternNames()
+        self.checkForbiddenCharacters(pattern.getName())
         self.checkFormatOfItems(pattern.getItems(), elements, self._repository.getIntegers()[0])
         for item in pattern.getItems():
             if processTemplateName(item[0])[-1].isnumeric():
@@ -555,8 +574,11 @@ class ModificationService(AbstractServiceForPatterns):
     '''
     Service handling a ModificationRepository and ModificationPattern entities.
     '''
-    def __init__(self):
-        super(ModificationService, self).__init__(ModificationRepository(), (0,6,7))
+    def __init__(self, dbPath:str|None=None):
+        if dbPath is None:
+            super(ModificationService, self).__init__(ModificationRepository(), (0,6,7))
+        else:
+            super(ModificationService, self).__init__(ModificationRepository(dbPath), (0,6,7))
 
     def makeNew(self):
         #return PatternWithItems("", [{"Name": "", "Gain": "", "Loss": "", "NrOfMod": 0, "enabled": False}], None)
@@ -571,6 +593,7 @@ class ModificationService(AbstractServiceForPatterns):
         '''
         elementRep = PeriodicTableRepository()
         elements = elementRep.getAllPatternNames()
+        self.checkForbiddenCharacters(pattern.getName())
         self.checkFormatOfItems(pattern.getItems(), elements, self._repository.getIntegers()[0])
         checkedItems = []
         mod = pattern.getModification()
@@ -605,7 +628,7 @@ class ModificationService(AbstractServiceForPatterns):
         return ModificationItem(item).getFormula()
 
     def getAllPatternNames(self):
-        return ["-"] + sorted(super(ModificationService, self).getAllPatternNames())
+        return ["-"] + sorted(super(ModificationService, self).getAllPatternNames(), key=str.lower)
 
     def getPatternWithObjects(self, name, *args):
         '''
@@ -626,11 +649,11 @@ class IntactIonService(AbstractServiceForPatterns):
     Service handling a IntactRepository and IntactPattern entities.
     '''
     def __init__(self):
-        super(IntactIonService, self).__init__(IntactRepository(),(0,4,5))
+        super(IntactIonService, self).__init__(IntactRepository(),(0,3,4,5))
 
     def makeNew(self):
         # return PatternWithItems("", [{"Name": "", "Gain": "", "Loss": "", "NrOfMod": 0, "enabled": False}], None)
-        return IntactPattern("", 10 * [["", "", "", "", '', False]], None)
+        return IntactPattern("", 10 * [["", "", "", 0, 0, False]], None)
 
     def getFormula(self, item):
         '''

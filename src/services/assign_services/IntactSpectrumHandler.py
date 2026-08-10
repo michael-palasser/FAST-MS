@@ -3,7 +3,7 @@ import logging
 import numpy as np
 
 from src.MolecularFormula import MolecularFormula
-from src.entities.Ions import IntactIon
+from src.entities.Ions import IntactIon, IntactIonRed
 from src.services.assign_services.AbstractSpectrumHandler import AbstractSpectrumHandler
 
 
@@ -19,12 +19,15 @@ class IntactSpectrumHandler(AbstractSpectrumHandler):
             mode *= -1
         super(IntactSpectrumHandler, self).__init__(settings, configs, mode, peaks)
 
-    @staticmethod
-    def getIonClass(*args):
+
+    def getIonClass(self, *args):
         '''
         Returns the constructor for an IntactIon
         '''
-        return IntactIon
+        if "subtract noise" in self._configs.keys() and self._configs["subtract noise"]:
+            return IntactIonRed
+        else:
+            return IntactIon
 
     def getChargeRange(self, mass):
         '''

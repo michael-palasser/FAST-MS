@@ -13,7 +13,7 @@ from datetime import datetime
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QInputDialog
 
-from src.resources import path, autoStart
+from src.resources import base_path, autoStart
 from src.Exceptions import InvalidInputException
 from src.gui.dialogs.StartDialogs import SpectrumComparatorStartDialog
 
@@ -89,9 +89,9 @@ def run(mainWindow):
         #outputName = input('Name of output file: ')
         if outputName == '':
             date = datetime.now().strftime("%d.%m.%Y")
-            output = os.path.join(path, 'Spectral_data','comparison', date + '_out' + '.xlsx')
+            output = os.path.join(base_path, 'Spectral_data', 'comparison', date + '_out' + '.xlsx')
         else:
-            output = os.path.join(path, 'Spectral_data','comparison', outputName + '.xlsx')
+            output = os.path.join(base_path, 'Spectral_data', 'comparison', outputName + '.xlsx')
 
         workbook = xlsxwriter.Workbook(output)
         worksheet = workbook.add_worksheet()

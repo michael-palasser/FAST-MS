@@ -230,7 +230,7 @@ class FullIntactExcelWriter(ExcelWriter, IntactExcelWriter):
             self.writePeaks(self._worksheet3, 0, 0, observedIons)
             row = self.writeIons(self._worksheet4, deletedIons, precursorRegion)
             self.writePeaks(self._worksheet4, row + 3, 0, deletedIons)
-            self.writeIons(self._worksheet5, self.sortByName(intensityModeller.getRemodelledIons()), precursorRegion)
+            #self.writeIons(self._worksheet5, self.sortByName(intensityModeller.getRemodelledIons()), precursorRegion)
             self.writeSumFormulas(neutralLibrary, spectrumHandler.getSearchedChargeStates())
         finally:
             self.closeWorkbook()

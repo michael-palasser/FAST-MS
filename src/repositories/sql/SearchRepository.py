@@ -84,7 +84,7 @@ class SearchRepository(AbstractRepository):
         '''
         return [searchVals[1] for searchVals in self.getAll()]
 
-    def getSearch(self, name):
+    def getSearch(self, name, constr):
         '''
         Finds a search by name
         :param (str) name: name of the search
@@ -100,7 +100,7 @@ class SearchRepository(AbstractRepository):
             peaks = np.array(peaks, dtype=peaksArrType)
             type, modification = processTemplateName(ionVals[1])
 
-            ion = FragmentIon(Fragment(type, ionVals[2], modification, ionVals[3], [],0),
+            ion = constr(Fragment(type, ionVals[2], modification, ionVals[3], [],0),
                               ionVals[4], ionVals[5], peaks,ionVals[6], ionVals[7], True, ionVals[8])
             #ion.setRemaining(ionVals[10], ionVals[11], ionVals[12], ionVals[13])
             if ionVals[9] == 0:

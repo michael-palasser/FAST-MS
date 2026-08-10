@@ -1,7 +1,7 @@
 import os
 from unittest import TestCase
 
-from src.resources import path
+from src.resources import base_path
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.services.assign_services.IntactSpectrumHandler import IntactSpectrumHandler
 from tests.test_services.test_Calibrator import getCalibratedSpectrum
@@ -9,7 +9,7 @@ from tests.test_services.test_Calibrator import getCalibratedSpectrum
 
 class TestIntactSpectrumHandler(TestCase):
     def test_get_charge_range(self):
-        filePath = os.path.join(path, 'tests', 'test_files', 'dummySpectrum.txt')
+        filePath = os.path.join(base_path, 'tests', 'test_files', 'dummySpectrum.txt')
         handler = IntactSpectrumHandler({'minMz':300,'maxMz':1500, 'sprayMode':1, 'spectralData':filePath, 'noiseLimit': 10 ** 6},
                                         ConfigurationHandlerFactory.getConfigHandler().getAll())
         range = handler.getChargeRange(5000)

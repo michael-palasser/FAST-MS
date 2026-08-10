@@ -1,5 +1,5 @@
 /Library/
-/Other/
+/Other/*
 /Spectral_data/comparison/*
 /Spectral_data/intact/*
 /Spectral_data/top-down/*
@@ -15,3 +15,11 @@
 /.idea/*
 /Saved Analyses/*
 /src/top_down/deprecated/*
+/src/gui/icons/sequenceTranslater.png
+/src/gui/icons/md.png
+/src/gui/icons/modelIon.png
+/src/gui/icons/msms.png
+/src/gui/icons/open.png
+/src/gui/icons/table.png
+/src/gui/icons/esi.png
+/src/gui/icons/icons.qrc

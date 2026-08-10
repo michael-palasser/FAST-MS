@@ -1,4 +1,5 @@
 from abc import ABC
+from copy import deepcopy
 
 from src.services.FormulaFunctions import stringToFormula as MF_stringToFormula
 
@@ -53,6 +54,14 @@ class PatternWithItems(AbstractPattern):
 
     def getFormula(self):
         return dict()
+
+    def convertToTable(self):
+        if type(self._items)==tuple:
+            return self
+        items = [item.toString() for item in self._items]
+        converted = deepcopy(self)
+        converted.setItems(items)
+        return converted
 
 class AbstractItem1(ABC):
     '''
@@ -138,7 +147,6 @@ class AbstractItem1(ABC):
             else:
                 dict1[element] = number
         return dict1"""
-
 
 class AbstractItem2(AbstractItem1, ABC):
     '''

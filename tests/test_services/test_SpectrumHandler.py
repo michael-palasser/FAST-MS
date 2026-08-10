@@ -4,7 +4,7 @@ from unittest import TestCase
 import numpy as np
 from numpy.random import randint
 
-from src.resources import path
+from src.resources import base_path
 from src.services.FormulaFunctions import eMass, protMass
 from src.MolecularFormula import MolecularFormula
 from src.entities.Ions import Fragment
@@ -35,7 +35,7 @@ def initTestLibraryBuilder(charge=-3, modif='CMC'):
     initTestSequences()
     configs = ConfigurationHandlerFactory.getConfigHandler().getAll()
     configs['zTolerance'] = 1.0
-    filePath = os.path.join(path, 'tests', 'test_files', 'dummySpectrum.txt')
+    filePath = os.path.join(base_path, 'tests', 'test_files', 'dummySpectrum.txt')
     settings = {'sequName': 'dummyRNA', 'charge': charge, 'fragmentation': 'RNA CAD', 'modifications': modif,
                 'nrMod': 1, 'spectralData': filePath, 'noiseLimit': 10 ** 6, 'fragLib': ''}
     props = SearchSettings(settings['sequName'], settings['fragmentation'], settings['modifications'])
@@ -60,7 +60,7 @@ class TestSpectrumHandler(TestCase):
         self.spectrumHandler = SpectrumHandler(self.props, self.builder.getPrecursor(), self.settings, self.configs)
 
         self.settingsProt = {'sequName': 'dummyProt', 'charge': 4, 'fragmentation': 'Protein CAD', 'modifications': '-',
-                             'nrMod': 0, 'spectralData': os.path.join(path, 'tests', 'test_files', 'dummySpectrum.txt'),
+                             'nrMod': 0, 'spectralData': os.path.join(base_path, 'tests', 'test_files', 'dummySpectrum.txt'),
                              'noiseLimit': 10 ** 5, 'fragLib': ''}
         self.propsProt = SearchSettings(self.settingsProt['sequName'], self.settingsProt['fragmentation'],
                                         self.settingsProt['modifications'])
@@ -78,7 +78,7 @@ class TestSpectrumHandler(TestCase):
 
     def test_calcPrecCharge(self):
         self.assertEqual(5, self.spectrumHandler.calcPrecCharge(6, 1))
-        self.assertEqual(5, self.spectrumHandler.calcPrecCharge(-6, 1))
+        self.assertEqual(5, self.spectrumHandler.calcPrecCharge(-6, -1))
 
     def test_add_spectrum_from_csv_and_txt(self):
         # with open(os.path.join(path, 'tests', 'test_files', 'dummySpectrum.csv'), 'r') as f:
@@ -463,5 +463,5 @@ class TestSpectrumHandler(TestCase):
                 self.assertAlmostEqual((Mass+z*1.007276)/abs(z), getMz(Mass, z, 0),delta=10**-6)
         self.assertAlmostEqual((Mass+5*protMass+eMass)/4, getMz(Mass, 4, 1),delta=10**-6)
         self.assertAlmostEqual((Mass+6*protMass+2*eMass)/4, getMz(Mass, 4, 2),delta=10**-6)
-        self.assertAlmostEqual((Mass-5*protMass-eMass)/4, getMz(Mass, -4, 1),delta=10**-6)
-        self.assertAlmostEqual((Mass-6*protMass-2*eMass)/4, getMz(Mass, -4, 2),delta=10**-6)
+        self.assertAlmostEqual((Mass-5*protMass-eMass)/4, getMz(Mass, -4, -1),delta=10**-6)
+        self.assertAlmostEqual((Mass-6*protMass-2*eMass)/4, getMz(Mass, -4, -2),delta=10**-6)

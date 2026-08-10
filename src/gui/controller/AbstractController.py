@@ -8,13 +8,12 @@ from abc import ABC
 
 import numpy as np
 import pandas as pd
-from PyQt5 import QtWidgets
-from PyQt5.QtCore import Qt
+from PyQt5 import QtWidgets, QtGui, QtCore
 
-from src.gui.GUI_functions import setIcon, translate
+from src.gui.GUI_functions import setWindowIcon, translate
 from src.gui.widgets.Widgets import ShowFormulaWidget
 from src.repositories.SpectralDataReader import SpectralDataReader
-from src.resources import path, DEVELOP, INTERN
+from src.resources import base_path, DEVELOP, INTERN, processLongPaths
 from src.gui.controller.IsotopePatternView import AddIonView
 from src.gui.dialogs.CalibrationView import CalibrationView
 from src.gui.tableviews.TableViews import TableView
@@ -39,6 +38,9 @@ class AbstractMainController(ABC):
         self._peakDtype = np.dtype([('m/z', float), ('I', np.int64)])
         self._snapDtype = np.dtype([('m/z', float), ('z', np.uint8), ('I', np.int64)])
 
+    @staticmethod
+    def processLongPaths(rawPath):
+        return processLongPaths(rawPath)
 
     def calibrate(self):
         dlg = CalibrationView(self._calibrator)
@@ -168,7 +170,7 @@ class AbstractMainController(ABC):
                                         "Select the window", list(widgets.keys()), 0, False)
         if ok and item:
             p=widgets[item].grab()
-            p.save(os.path.join(path,'pics',item+'.png'), 'png')
+            p.save(os.path.join(base_path, 'pics', item + '.png'), 'png')
             print('Shoot taken')
 
     def fillMainWindow(self):
@@ -235,6 +237,8 @@ class AbstractMainController(ABC):
         #table.setSelectionBehavior(QAbstractItemView.SelectRows)
         table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)"""
+        sc = QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.Key_Delete), table)
+        sc.activated.connect(self.delete_selected_rows)
         return table
 
     def showOptions(self, table, pos):
@@ -295,7 +299,7 @@ class AbstractMainController(ABC):
             df=pd.DataFrame(data=table.model().getData(), columns=table.model().getHeaders())
             df.to_clipboard(index=False,header=True)
         elif action == delAction:
-            self.deleteRow(mode, selectedIon, selectedRow)
+            self.deleteRows(mode, [selectedIon], [selectedRow])
             """choice = QtWidgets.QMessageBox.question(self._mainWindow, "",
                                         actionStrings[mode] +' ' + selectedIon.getName() +"?",
                                                     QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
@@ -319,35 +323,57 @@ class AbstractMainController(ABC):
                         self._tables[mode].model().updateData(ion.getMoreValues())
                 self._infoView.update()"""
 
-    def deleteRow(self, mode, selectedIon, selectedRow):
+    def deleteRows(self, mode, selectedIons, selectedRows):
         actionStrings = ["Delete", "Restore"]
-        choice = QtWidgets.QMessageBox.question(self._mainWindow, "",
-                                                actionStrings[mode] + ' ' + selectedIon.getName() + "?",
+        text = ", ".join([selectedIon.getName() for selectedIon in selectedIons])
+        choice = QtWidgets.QMessageBox.question(self._mainWindow, actionStrings[mode] + " Ions",
+                                                actionStrings[mode] + ' ' + text + "?",
                                                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-        if mode == 0:
-            otherTable = self._tables[1]
-        else:
-            otherTable = self._tables[0]
-        if choice == QtWidgets.QMessageBox.Yes:
+        for selectedIon, selectedRow in zip(selectedIons, selectedRows):
             if mode == 0:
-                self._info.deleteIon(selectedIon)
+                otherTable = self._tables[1]
+                docufun = self._info.deleteIon
             else:
-                self._info.restoreIon(selectedIon)
-            self._saved = False
-            ovHash = self._intensityModeller.switchIon(selectedIon)
-            self._tables[mode].model().removeByIndex(selectedRow)
-            otherTable.model().addData(selectedIon.getMoreValues())
-            if ovHash is not None:
-                choice = QtWidgets.QMessageBox.question(self._mainWindow, "Attention",
-                                                        'Deleted Ion overlapped with ' + ovHash[0] + ', ' + str(
-                                                            ovHash[1]) + '\n' +
-                                                        'Should this ion be updated?',
-                                                        QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-                if choice == QtWidgets.QMessageBox.Yes:
-                    ion = self._intensityModeller.resetIon(ovHash)
-                    self._info.resetIon(ion)
-                    self._tables[mode].model().updateData(ion.getMoreValues())
-            self._infoView.update()
+                otherTable = self._tables[0]
+                docufun = self._info.restoreIon
+            if choice == QtWidgets.QMessageBox.Yes:
+                docufun(selectedIon)
+                self._saved = False
+                ovHash = self._intensityModeller.switchIon(selectedIon)
+                #self._tables[mode].model().removeByIndex(selectedRow)
+                self._tables[mode].model().removeByIndex(selectedRow)
+                otherTable.model().addData(selectedIon.getMoreValues())
+                if ovHash is not None:
+                    choice2 = QtWidgets.QMessageBox.question(self._mainWindow, "Attention",
+                                                            'Deleted Ion overlapped with ' + ovHash[0] + ', ' + str(
+                                                                ovHash[1]) + '\n' +
+                                                            'Should this ion be updated?',
+                                                            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+                    if choice2 == QtWidgets.QMessageBox.Yes:
+                        ion = self._intensityModeller.resetIon(ovHash)
+                        self._info.resetIon(ion)
+                        self._tables[mode].model().updateData(ion.getMoreValues())
+                self._infoView.update()
+
+    def delete_selected_rows(self):
+        mode = self._tabWidget.currentIndex()
+        table = self._tables[mode]
+        sel = table.selectionModel()
+        if not sel:
+            return
+        model = table.model()
+        map_to_source = lambda idx: idx
+        selected_rows = sel.selectedRows()
+        if selected_rows:
+            rows = sorted({map_to_source(idx).row() for idx in selected_rows}, reverse=True)
+        else:
+            rows = sorted({map_to_source(idx).row() for idx in table.selectedIndexes()}, reverse=True)
+        if not rows:
+            return
+        table.closePersistentEditor(table.currentIndex())
+        self.deleteRows(mode, [self._intensityModeller.getIon(model.getHashOfRow(row)) for row in rows], rows)
+
+
 
     """def keyPressEvent(self, event):
         print("hi")
@@ -362,13 +388,18 @@ class AbstractMainController(ABC):
         else:
             super().keyPressEvent(event)"""
 
+    def generateWindowTitle(self, title=""):
+        if title == "":
+            return self._mainWindow.windowTitle().replace('Results:  ', "")
+        else:
+            return title+": " +self._mainWindow.windowTitle().replace('Results:  ', "")
 
     def getSpectrumView(self, parent, selectedHash, empty=False, view=None, strongFocus=False):
         """profileMode = False
         if 'profile' in self._settings.keys() and self._settings['profile'] == "":
             profileMode=True"""
         if empty: #nothing selected yet (start)
-            return SpectrumView(parent, self._spectrumHandler.getSpectrum(), [], 0, 0, 0,
+            return SpectrumView(parent, self.generateWindowTitle(), self._spectrumHandler.getSpectrum(), [], 0, 0, 0,
                                 self._spectrumHandler.getSprayMode())
         if selectedHash is None: #Full spec
             ajacentIons = sorted(self.getIonList(), key=lambda obj: obj.getIsotopePattern()['m/z'][0])
@@ -401,7 +432,7 @@ class AbstractMainController(ABC):
         if 'profile' in self._settings.keys() and self._settings['profile'] != "" and INTERN:
             profileSpec = self._spectrumHandler.getProfileSpectrum((minMz_total, maxMz_total))
         if view is None:
-            specView = SpectrumView(parent, peaks, ajacentIons, minMz_focus, maxMz_focus, maxI, self._spectrumHandler.getSprayMode(),
+            specView = SpectrumView(parent, self.generateWindowTitle(), peaks, ajacentIons, minMz_focus, maxMz_focus, maxI, self._spectrumHandler.getSprayMode(),
                                 noise, selectedHash,profileSpec)
             return specView
         else:
@@ -546,7 +577,7 @@ class AbstractMainController(ABC):
         verticalLayout.addWidget(scrollArea)
         remView.resize(1000, 750)
         self._openWindows.append(remView)
-        setIcon(remView)
+        setWindowIcon(remView)
         remView.show()
 
     def showRedOptions(self, table, pos):
@@ -586,7 +617,7 @@ class AbstractMainController(ABC):
             # self.setWindowTitle(ion.getName())
             layout = QtWidgets.QVBoxLayout(dlg)
             label = QtWidgets.QLabel(selectedIon.getFormula().toString())
-            label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+            label.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
             layout.addWidget(label)
             dlg.show()
         elif action == copyRowAction:

@@ -224,7 +224,7 @@ class FragmentLibraryBuilder(object):
         logging.info("********** Creating fragment library **********")
         if len(self._modifPattern.getExcluded())>0:
             #print('These nrOfModifications are excluded:')
-            logging.info('These nrOfModifications are excluded: '
+            logging.info('These modifications are excluded: '
                          +', '.join([elem for elem in self._modifPattern.getExcluded()]))
             '''for elem in self.__modifPattern.getExcluded():
                 print(elem)'''
@@ -278,6 +278,7 @@ class FragmentLibraryBuilder(object):
         '''
         #fragment.setIsotopePattern(fragment.getFormula().calculateIsotopePattern(self._maxIso))
         fragment.setIsotopePattern(fragment.getFormula().calculateIsotopePatternFFT(self._maxIso,self._accelerate))
+        print(fragment.getName())
         logging.info('\t'+fragment.getName())
         #self._bar.update(1) does not work in python 3.8
         #self._fun()

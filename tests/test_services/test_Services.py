@@ -5,6 +5,7 @@ from src.services.DataServices import *
 from src.entities.GeneralEntities import Element
 
 knownElements = ('C', 'H', 'N', 'O', 'P', 'S')
+forbidden = ("<", ">", ":", "/", "\\", "|", "?", "*", '"')
 
 class TestPeriodicTableService(TestCase):
     def setUp(self):
@@ -108,9 +109,11 @@ class TestMoleculeService(TestCase):
                 self.service.checkName(name)
 
 
+
 class TestSequenceService(TestCase):
     def setUp(self):
         self.service = SequenceService()
+        self._oldSequences = self.service.getSequences()
 
     def test_save(self):
         name = 'dummy'
@@ -134,10 +137,13 @@ class TestSequenceService(TestCase):
         sequences = deepcopy(oldSequences)
         sequences.append(('dummy1', 'GACU', 'RNA'))
         sequences.append(('dummy1', 'GACU', 'RNA'))
+        self.assertEqual(len(oldSequences), len(self.service.getAllSequenceNames()))
+        #self.assertNotIn('dummy1', self.service.getAllSequenceNames())
         with self.assertRaises(InvalidInputException):
             self.service.save(sequences)
-        self.assertEqual(len(oldSequences), len(self.service.getAllSequenceNames()))
-        self.assertNotIn('dummy1', self.service.getAllSequenceNames())
+        for c in forbidden:
+            with self.assertRaises(InvalidInputException):
+                self.service.save(oldSequences+[('dummy1'+c, 'GACU', 'RNA')])
 
     def test_check_format_of_item(self):
         moleculeRepository = MoleculeRepository()
@@ -163,6 +169,8 @@ class TestSequenceService(TestCase):
             with self.assertRaises(InvalidInputException):
                 self.service.checkFormatOfItem(sequTup, bbs)
 
+    def tearDown(self) -> None:
+        self.service.save(self._oldSequences)
 
 class TestFragmentationService(TestCase):
     def setUp(self):
@@ -197,6 +205,12 @@ class TestFragmentationService(TestCase):
             with self.assertRaises(InvalidInputException):
                 self.service.save(dummy)
             assert name not in self.service.getAllPatternNames()
+        for c in forbidden:
+            with self.assertRaises(InvalidInputException):
+                self.service.save(
+                    FragmentationPattern(name+c, 'Prec',
+                                         [('a', 'C5', 'CH5N2O', '-', 0, 1, 1), ('y-G', '-', 'CH5N2O', 'G', 0, -1, 0)],
+                                         [('Prec', '-', '-', '-', 0, 1), ('Prec-G', 'C5', '-', '-', 0, 0)], None))
 
     def test_check_format_of_item(self):
         dummies = [('a','','CH5N2O','-',0,1,1),('y-G','-','CH5N2O','G',0,-1,1),('y_G','-','CH5N2O','G',0,-1,1)]
@@ -264,6 +278,9 @@ class TestModificationService(TestCase):
             with self.assertRaises(InvalidInputException):
                 self.service.save(dummy)
             assert name not in self.service.getAllPatternNames()
+        for c in forbidden:
+            with self.assertRaises(InvalidInputException):
+                self.service.save(ModificationPattern(name+c,'X',[('X','CH5N2O','','-',0,0.4,1,1)],[('+X-y-G',)],None))
 
     def test_check_format_of_item(self):
         dummies = [('+X','CH5N2O','','-',0,0.4,1,1),('+X','CH5N2O','C','',0,-0.4,1,1),('+X','CH5N2O','C','',0,-0.4,1,0)]

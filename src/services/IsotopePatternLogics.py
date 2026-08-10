@@ -21,8 +21,8 @@ class IsotopePatternLogics(object):
     '''
     def __init__(self):
         self._moleculeService = MoleculeService()
-        self._fragService = FragmentationService()
-        self._modService = ModificationService()
+        self._fragmentations = FragmentationService().getAllPatternsWithObjects()
+        self._modifications = ModificationService().getAllPatternsWithObjects()
         self._elements = PeriodicTableService().getAllPatternNames()
         self._molecules = self._moleculeService.getAllPatternNames()
         self._configs = ConfigurationHandlerFactory.getConfigHandler().getAll()
@@ -44,13 +44,13 @@ class IsotopePatternLogics(object):
         '''
         :return: (list[str]) all stored fragmentation pattern names
         '''
-        return self._fragService.getAllPatternNames()
+        return list(self._fragmentations.keys())
 
     def getModifPatternNames(self):
         '''
         :return: (list[str]) all stored modification pattern names
         '''
-        return self._modService.getAllPatternNames()
+        return  list(self._modifications.keys())
 
     def getFragItems(self, fragmentationName):
         '''
@@ -58,9 +58,9 @@ class IsotopePatternLogics(object):
         :return: (tuple[list[str], list[str])) names of fragment templates, names of precursor templates
         '''
         return [fragTemplate.getName() for fragTemplate in
-                self._fragService.getPatternWithObjects(fragmentationName).getItems()],\
+                self._fragmentations[fragmentationName].getItems()],\
                [precTemplate.getName() for precTemplate in
-                self._fragService.getPatternWithObjects(fragmentationName).getItems2()]
+                self._fragmentations[fragmentationName].getItems2()]
 
     def getRadicals(self, moleculeName, sequString, fragmentationName, fragTemplName, modifPatternName, modifName,
                     nrMod):
@@ -77,8 +77,7 @@ class IsotopePatternLogics(object):
         :param (str) modifPatternName: name of the modification pattern
         :return: (list[str]) names of modifications
         '''
-        return [modTemplate.getName() for modTemplate in
-                self._modService.getPatternWithObjects(modifPatternName).getItems()]
+        return [modTemplate.getName() for modTemplate in self._modifications[modifPatternName].getItems()]
 
     def getIon(self):
         return self._ion
@@ -130,8 +129,11 @@ class IsotopePatternLogics(object):
             self._formula = formula
             #self._fragment = fragment
             tempFormula = self._formula#changed: tempFormula=self._formula.addFormula({'H':charge+electrons})
-            if tempFormula.getFormulaDict()['H']+charge+electrons<0:
-                raise InvalidInputException('Nr of H = '+str(tempFormula.getFormulaDict()['H']), 'not enough Hs for deprotonation')
+            numH = 0
+            if 'H' in tempFormula.getFormulaDict():
+                numH = tempFormula.getFormulaDict()['H']
+            if numH+charge+electrons<0:
+                raise InvalidInputException('Nr of H = '+str(numH), 'not enough Hs for deprotonation')
             #if tempFormula.calcIsotopePatternSlowly(1)['m/z'][0]>6000:
             if accelerate is None:
                 self._isotopePattern = tempFormula.calculateIsotopePattern(self._configs['maxIso'])
@@ -145,10 +147,10 @@ class IsotopePatternLogics(object):
                        np.sum(self._isotopePattern['calcInt'])
         """if charge != 0: changed
             self._neutralMass -= (protMass+eMass)*charge"""
-        ionMode=np.sign(charge)
+        """ionMode=np.sign(charge)
         if ionMode==0:
-            ionMode=1
-        self._isotopePattern['m/z'] = getMz(self._isotopePattern['m/z'], charge, electrons*ionMode)#self.getMz(self._isotopePattern['m/z'],charge,electrons)
+            ionMode=1"""
+        self._isotopePattern['m/z'] = getMz(self._isotopePattern['m/z'], charge, electrons)#self.getMz(self._isotopePattern['m/z'],charge,electrons)
         self._isotopePattern['calcInt'] *= intensity
         peaks = []
         for row in self._isotopePattern:
@@ -214,7 +216,7 @@ class IsotopePatternLogics(object):
             if link not in buildingBlocks:
                 raise InvalidInputException(sequString, 'Building Block "'+link+ '" unknown for '+moleculeName )
             formula = formula.addFormula(buildingBlocks[link].getFormula())
-        fragmentation = self._fragService.getPatternWithObjects(fragmentationName)
+        fragmentation = self._fragmentations[fragmentationName]
         if fragTemplName in ([precTempl.getName() for precTempl in fragmentation.getItems2()]):
             formula = formula.addFormula(molecule.getFormula())
             fragTempl = [precTempl for precTempl in fragmentation.getItems2() if precTempl.getName()==fragTemplName][0]
@@ -227,7 +229,7 @@ class IsotopePatternLogics(object):
         species, rest = processTemplateName(fragTempl.getName())
         formula = formula.addFormula(fragTempl.getFormula())
         if modifPatternName != '-' and nrMod != 0:
-            modPattern = self._modService.getPatternWithObjects(modifPatternName)
+            modPattern = self._modifications[modifPatternName]
             modif = [modif for modif in modPattern.getItems() if modif.getName()==modifName][0]
             formula = formula.addFormula({key:val*nrMod for key,val in modif.getFormula().items()})
             if nrMod != 1:

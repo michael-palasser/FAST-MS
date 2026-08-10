@@ -15,8 +15,10 @@ class SequenceRepository(AbstractRepository):
     '''
     Repository for sequences
     '''
-    def __init__(self):
-        super(SequenceRepository, self).__init__(join('shared.db'), 'sequences', ('name', 'sequenceList', 'molecule'), (),())
+    def __init__(self, dirPath=None):
+        if dirPath is None:
+            dirPath = join('shared.db')
+        super(SequenceRepository, self).__init__(dirPath, 'sequences', ('name', 'sequenceList', 'molecule'), (),())
 
     def makeTables(self):
         self._conn.cursor().execute("""

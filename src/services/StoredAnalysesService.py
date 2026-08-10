@@ -3,9 +3,13 @@ import shutil
 from copy import deepcopy
 from datetime import datetime
 
-from src.repositories.ConfigurationHandler import ConfigHandler
+from src.Exceptions import InvalidInputException
+from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory, ConfigHandler
 from src.repositories.sql.AnalysisRepository import AnalysisRepository
-from src.resources import path, DEVELOP
+from src.repositories.sql.TD_Repositories import *
+from src.repositories.sql.MoleculeRepository import MoleculeRepository
+from src.repositories.sql.SequenceRepository import SequenceRepository
+from src.resources import base_path, DEVELOP, INTERN
 from src.MolecularFormula import MolecularFormula
 from src.services.FormulaFunctions import stringToFormula2
 from src.services.IntensityModeller import calcScore
@@ -16,10 +20,11 @@ class StoredAnalysesService(object):
     Service handling a SearchRepository and Search entities.
     '''
     def __init__(self):
-        self._dir = os.path.join(path, "Saved Analyses")
+        self._dir = os.path.join(base_path, "Saved Analyses")
         if DEVELOP:
-            self._dir = os.path.join(path, "Saved Analyses_meins")
+            self._dir = os.path.join(base_path, "Saved Analyses_meins")
         self._search = None
+        #self._constructors = (SequenceRepository, MoleculeRepository, FragmentationRepository,ModificationRepository)
 
     def getAllSearchNames(self, tooltips=False):
         allAnalyses = []
@@ -61,22 +66,31 @@ class StoredAnalysesService(object):
         Returns the values of a stored analysis
         :param (str) name: name of the analysis/search
         :return: (tuple[dict[str,Any], list[FragmentIon], list[FragmentIon], list[FragmentIon], dict[str, list[int]],
-            str) settings {name:value}, observed ions, deleted ions, remodelled ions, calculated charge states per
-            fragment {fragment name: charge states}, information log
+            str, str) settings {name:value}, observed ions, deleted ions, remodelled ions, calculated charge states per
+            fragment {fragment name: charge states}, information log, databasepath
         '''
         print("*** Loading Analysis", name)
         filePaths = self.getFileNames(name)
         rep = AnalysisRepository(filePaths[0])
-        ions, delIons, searchedZStates, log = rep.getSearch()
+        configurations = ConfigurationHandlerFactory.getConfigHandler(filePaths[2]).getAll()
+        subtrNoise = False
+        if "subtract noise" in configurations.keys():
+            subtrNoise = configurations["subtract noise"]
+        ions, delIons, searchedZStates, log = rep.getSearch(subtrNoise)
         settings = ConfigHandler(filePaths[1], []).getAll()
-        configurations = ConfigHandler(filePaths[2], []).getAll()
+        if settings is None or len(settings)==0:
+            raise InvalidInputException("Configuration File not Found", "The file "+ filePaths[2]+ " could not be found. The analysis cannot be loaded")
         noiseLevel = settings['noiseLevel']
         if noiseLevel == 0:
             noiseLevel = settings['noiseLimit']
         ions = [self.ionFromDB(ion, noiseLevel) for ion in ions]
         deletedIons = [self.ionFromDB(ion, noiseLevel) for ion in delIons]
         searchedZStates = {frag: zsString.split(',') for frag, zsString in searchedZStates.items()}
-        return settings, configurations, noiseLevel, ions, deletedIons, searchedZStates, log
+        if INTERN:
+            for key in ('spectralData', 'snapData', 'profile'):
+                if key in settings.keys():
+                    settings[key] = settings[key].replace("I:/", r"//bagfa001/groupdata$/")
+        return settings, configurations, noiseLevel, ions, deletedIons, searchedZStates, log, filePaths[0]
 
     def getSettingsAndConfigs(self, log):
         limits = ("Settings:\n", "* Configurations:\n", "* Sequence:\n",
@@ -106,7 +120,7 @@ class StoredAnalysesService(object):
         return configs
 
 
-    def saveSearch(self, name, noiseLevel, settings, configurations, ions, deletedIons, searchedZStates, info):
+    def saveSearch(self, name, noiseLevel, settings, configurations, ions, deletedIons, searchedZStates, info, props):
         '''
         Saves or updates a search/analysis
         :param (str) name: name of the search/analysis
@@ -115,17 +129,17 @@ class StoredAnalysesService(object):
         :param (list[FragmentIon]) deletedIons: deleted ions
         :param (dict[str, list[int]]) searchedZStates: calculated charge states per fragment
         :param (Info) info: information log
+        :param (SearchSettings) props
         '''
         print("*** Saving Analysis", name)
-        if name in self.getAllSearchNames()[0]:
-            filePaths = self.getFileNames(name)
+        #if name in self.getAllSearchNames()[0]:
+        filePaths = self.getFileNamesNew(name)
+        if os.path.isdir(name):
             if os.path.isfile(filePaths[0]):
                 newName = os.path.join(filePaths[4], "temp.db")
                 if os.path.isfile(newName):
                     os.remove(newName)
                 os.rename(filePaths[0], newName)
-        else:
-            filePaths = self.getFileNames(name)
         rep = AnalysisRepository(filePaths[0])
         ions = [self.ionToDB(ion) for ion in ions]
         deletedIons = [self.ionToDB(ion) for ion in deletedIons]
@@ -134,17 +148,37 @@ class StoredAnalysesService(object):
         #logs = [line for line in info]
         rep.createSearch(ions, deletedIons, searchedZStates, info)
         ConfigHandler(filePaths[1], []).write(settings)
-        ConfigHandler(filePaths[2], []).write(configurations)
+        ConfigHandler(filePaths[2],[]).write(configurations)
         with open(filePaths[3], "w") as f:
             f.write(info)
+        valsTup = (props.getSequence(), props.getMolecule(), props.getFragmentation(),props.getModifPattern())
+        constructors = (SequenceRepository, MoleculeRepository, FragmentationRepository,ModificationRepository)
+        for i in range(len(constructors)):
+            rep = constructors[i](filePaths[0])
+            rep.makeTables()
+            print(i)
+            if i==0:
+                rep.createSequence(valsTup[i])
+            else:
+                rep.createPattern(valsTup[i].convertToTable())
+            rep.close()
 
     def getFileNames(self, name):
-        parentDir = os.path.join(self._dir,name)
+        if os.path.isdir(name):
+            parentDir = name
+            name = os.path.basename(name)
+        else:
+            parentDir = os.path.join(self._dir,name)
         if not os.path.isdir(parentDir):
             os.mkdir(parentDir)
         return [os.path.join(parentDir, name+fileType) for fileType in (".db", "_settings.json", "_configs.json",
                                                                         "_infos.txt")] +[parentDir]
-
+    def getFileNamesNew(self, dirPath):
+        name = os.path.basename(dirPath)
+        if not os.path.isdir(dirPath):
+            os.mkdir(dirPath)
+        return [os.path.join(dirPath, name+fileType) for fileType in (".db", "_settings.json", "_configs.json",
+                                                                        "_infos.txt")] +[dirPath]
     def ionFromDB(self, ion, noiseLevel):
         '''
         Processes the sequence and the formula of an ion which was read from the database
@@ -179,7 +213,7 @@ class StoredAnalysesService(object):
         return peaks
 
 
-    def checkConfigs(self):
+    """def checkConfigs(self):
         allNames = self.getAllSearchNames()[0]
         correct = ConfigHandler(self.getFileNames(allNames[-1])[2], []).getAll()
         for name in allNames:
@@ -190,4 +224,4 @@ class StoredAnalysesService(object):
                 if key not in configurations.keys():
                     print(filePath, key,"added")
                     configurations[key] = correct[key]
-                    ConfigHandler(filePath, []).write(configurations)
+                    ConfigHandler(filePath, []).write(configurations)"""

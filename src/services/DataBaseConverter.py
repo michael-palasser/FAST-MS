@@ -1,5 +1,7 @@
 import os
 
+from src.entities.Ions import FragmentIon, FragmentIonRed
+from src.entities.SearchSettings import SearchSettings
 from src.services.SearchService import SearchService
 from src.services.StoredAnalysesService import StoredAnalysesService
 
@@ -27,9 +29,13 @@ class DataBaseConverter(object):
             if name in newNames:
                 print("Already converted")
                 continue
-            settings, noiseLevel, ions, deletedIons, remIons, searchedZStates, info = oldService.getSearch(name)
             configs = newService.getSettingsAndConfigs(info)
-            newService.saveSearch(name, noiseLevel, settings, configs, ions, deletedIons, searchedZStates, info)
+            constr = FragmentIon
+            if "subtract noise" in configs.keys() and configs["subtract noise"]:
+                constr = FragmentIonRed
+            settings, noiseLevel, ions, deletedIons, remIons, searchedZStates, info = oldService.getSearch(name, constr)
+            props = SearchSettings(settings['sequName'], settings['fragmentation'], settings['modifications'])
+            newService.saveSearch(name, noiseLevel, settings, configs, ions, deletedIons, searchedZStates, info, props)
 
         oldService.close()
         os.rename(oldPath, oldPath[:-3]+"_old.db")

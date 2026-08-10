@@ -8,7 +8,7 @@ from src.gui.mainWindows.AbstractMainWindows import SimpleMainWindow
 from src.gui.GUI_functions import makeFormLayout, shoot, connectTable
 from src.gui.widgets.IonTableWidgets import IsoPatternIon
 from src.gui.widgets.PeakWidgets import IsoPatternPeakWidget
-from src.gui.dialogs.SimpleDialogs import OpenDialog
+from src.gui.dialogs.OpenDialogs import OpenDialog
 from src.gui.widgets.SpectrumView import TheoSpectrumView
 
 
@@ -20,8 +20,6 @@ class IsotopePatternView(SimpleMainWindow):
         super(IsotopePatternView, self).__init__(parent, 'Model Ion')
         self._ion= None
         self._logics = IsotopePatternLogics()
-        self._fragmentationOpts = self._logics.getFragmentationNames()
-        self._modifPatternOpts = self._logics.getModifPatternNames()
         self._intensity = None
         self._vertLayout = QtWidgets.QVBoxLayout(self._centralwidget)
         self._widget1,self._horizLayout1 = self.getHorizWidget(self._centralwidget, self._vertLayout, 15,5)
@@ -178,18 +176,23 @@ class IsotopePatternView(SimpleMainWindow):
         openDialog.show()
         if openDialog.exec_() and openDialog.accepted:
             sequence = service.get(openDialog.getName())
+            if "NA" in sequence.getMolecule():
+                options = ("RNA CAD", "RNA_CAD")
+            else:
+                options = ("Protein CAD", "Protein_CAD")
+            fragmentation = self.selectFrag(self._logics.getFragmentationNames(), options)
+            frag = self.selectFrag(self._logics.getFragItems(fragmentation)[1], ("intact", "Prec"))
             self._modeBox.setCurrentText(sequence.getMolecule())
             self._inputForm.setText(''.join(sequence.getSequenceString()))
-            allItems = [self._options["fragmentation"].itemText(i) for i in
-                        range(self._options["fragmentation"].count())]
-            if "NA" in sequence.getMolecule():
-                if "RNA CAD" in allItems:
-                    self._options["fragmentation"].setCurrentIndex(allItems.index("RNA CAD"))
-            elif "Protein CAD" in allItems:
-                self._options["fragmentation"].setCurrentIndex(allItems.index("Protein CAD"))
-            allItems2 = [self._options["fragment"].itemText(i) for i in range(self._options["fragment"].count())]
-            if "intact" in allItems2:
-                self._options["fragment"].setCurrentIndex(allItems2.index("intact"))
+            self._options["fragmentation"].setCurrentText(fragmentation)
+            self._options["fragment"].setCurrentText(frag)
+
+    def selectFrag(self, items, toFind):
+        for title in toFind:
+            if title in items:
+                return title
+        return items[0]
+
 
     def pauseCalculation(self):
         if self._pause:
@@ -209,8 +212,8 @@ class IsotopePatternView(SimpleMainWindow):
         elif self._modeBox.currentIndex() != 0:
             for box in self._options.values():
                 box.setDisabled(False)
-            self.updateComboBox(self._options['fragmentation'], self._fragmentationOpts)
-            self.updateComboBox(self._options['modPattern'], self._modifPatternOpts)
+            self.updateComboBox(self._options['fragmentation'], self._logics.getFragmentationNames())
+            self.updateComboBox(self._options['modPattern'], self._logics.getModifPatternNames())
             self.getFragValues()
             self.getModValues()
 

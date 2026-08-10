@@ -15,7 +15,6 @@ def getErrorLimit(mz:float, k:float, d:float) ->float:
     '''
     return k / 1000 * mz + d
 
-
 def calculateError(value:float, theoValue:float) -> float:
     '''
     Calculates the mass errror
@@ -25,20 +24,19 @@ def calculateError(value:float, theoValue:float) -> float:
     '''
     return (value - theoValue) / theoValue * 10 ** 6
 
-
-def getMz(mass, z, radicals):
+def getMz(mass, z, electrons):
     '''
     Calculates the m/z
     :param (float) mass: neutral mass
     :param (int) z: charge
-    :param (int) radicals: number of radicals
+    :param (int) electrons: number of electrons
     :return: (float) m/z
     '''
     if z != 0:
-        return abs(mass / z + protMass) + radicals * (eMass + protMass) / z
+        return abs(mass / z + protMass + electrons * (eMass + protMass) / z)
     else:
         #return abs(mass) + radicals * (eMass + protMass)
-        return abs(mass) + radicals * (eMass+ protMass)
+        return mass + electrons * (eMass+ protMass)
 
 
 peaksArrType = np.dtype([('m/z', float), ('I', float),
@@ -62,16 +60,17 @@ class AbstractSpectrumHandler(abc.ABC):
         # self._searchedChargeStates = dict()
         self._noiseLevel = 0
         self._noise = []
-        if type(self._settings['noiseLimit']) == str:
-            self._settings['noiseLimit'] = 0
-        if noise is not None:
-            self._noise = noise
-        if peaks is None:
-            self.addSpectrum(self._settings['spectralData'])
-        else:
-            self._spectrum = np.array(sorted(list(peaks), key=lambda tup: tup[0]), dtype=self._dType)
-            self._upperBound = max([peak[0] for peak in peaks])
-            # self._noiseLevel = noiseLevel
+        if 'spectralData' in self._settings.keys():
+            if type(self._settings['noiseLimit']) == str:
+                self._settings['noiseLimit'] = 0
+            if noise is not None:
+                self._noise = noise
+            if peaks is None:
+                self.addSpectrum(self._settings['spectralData'])
+            else:
+                self._spectrum = np.array(sorted(list(peaks), key=lambda tup: tup[0]), dtype=self._dType)
+                self._upperBound = max([peak[0] for peak in peaks])
+                # self._noiseLevel = noiseLevel
         #self._IonClass = IonClass
         self._foundIons = list()
         self._ionsInNoise = list()
@@ -79,7 +78,25 @@ class AbstractSpectrumHandler(abc.ABC):
         self._profileSpectrum = None
         if 'profile' in self._settings.keys() and self._settings['profile'] != "":
             self.addProfileSpectrum(self._settings["profile"])
-            # self.expectedChargeStates = dict()
+        """self._foundIons = list()
+        self._ionsInNoise = list()
+        self._searchedChargeStates = dict()
+        print("afdsdf", self._settings)
+        if 'spectralData' in self._settings.keys():
+            print("ds")
+            self._profileSpectrum = None
+            if type(self._settings['noiseLimit']) == str:
+                self._settings['noiseLimit'] = 0
+            if noise is not None:
+                self._noise = noise
+            if peaks is None:
+                self.addSpectrum(self._settings['spectralData'])
+            else:
+                self._spectrum = np.array(sorted(list(peaks), key=lambda tup: tup[0]), dtype=self._dType)
+                self._upperBound = max([peak[0] for peak in peaks])
+                if 'profile' in self._settings.keys() and self._settings['profile'] != "":
+                    self.addProfileSpectrum(self._settings["profile"])"""
+
     @staticmethod
     @abc.abstractmethod
     def getIonClass(*args):
@@ -138,6 +155,8 @@ class AbstractSpectrumHandler(abc.ABC):
                                               (self._profileSpectrum['m/z'] < limits[1]))]
 
     def addProfileSpectrum(self, fileName):
+        print("\n********** Importing profile data from:", fileName, "**********")
+        logging.info("********** Importing profile data from: "+ fileName+" **********")
         self._profileSpectrum = SpectralDataReader().openXYFile(fileName, self._upperBound)
 
     def setProfileSpectrum(self, profileSpec):
@@ -152,6 +171,8 @@ class AbstractSpectrumHandler(abc.ABC):
         Add spectrum from file
         :param (str) filePath: path of txt or csv file
         '''
+        print("\n********** Importing peak data from:", filePath, "**********")
+        logging.info("********** Importing peak data from: "+ filePath+" **********")
         self._spectrum = SpectralDataReader().openFile(filePath, self._dType)
         if self._settings['noiseLimit'] == 0:
             # smallest noise is mean of smallest 20% of peak intensities
@@ -356,7 +377,9 @@ class AbstractSpectrumHandler(abc.ABC):
             print(neutral.getName(), z)
             logging.info(neutral.getName()+ ": z=" + str(z))
             theoreticalPeaks = copy.deepcopy(sortedPattern)
+            print(theoreticalPeaks['m/z'],radicals)
             theoreticalPeaks['m/z'] = self.getMz(theoreticalPeaks['m/z'], z, radicals)
+            print(theoreticalPeaks['m/z'])
             theoreticalPeaks = self.getChargedIsotopePattern(sortedPattern, z, radicals)
             if (self._configs['lowerBound'] < theoreticalPeaks[0]['m/z'] < self._upperBound):
                 self._searchedChargeStates[neutral.getName()].append(z)
@@ -545,3 +568,19 @@ class AbstractSpectrumHandler(abc.ABC):
                 'Selected Peak: ' + '\t' + str(lowestErrorPeak['m/z']) + '\t' + str(lowestErrorPeak['I']) + '\t' +
                 str(theoPeak['calcInt']) + '\t' + str(lowestError))
             return (lowestErrorPeak['m/z'], lowestErrorPeak['I'], theoPeak['calcInt'], lowestError, True)
+
+    def generateTheoreticIons(self, fragmentLibrary):
+        self.getProtonIsotopePatterns()
+        ionDict = {}
+        for neutral in fragmentLibrary:
+            #neutralPatternFFT = formula.calculateIsotopePatternFFT(1, )
+            radicals = neutral.getRadicals()
+            zRange = self.getChargeRange(neutral)
+            monoisotopic = neutral.getMonoisotopicMass()
+            sortedPattern = np.sort(neutral.getIsotopePattern(), order='calcInt')[::-1]
+            mostAbundant = copy.deepcopy(sortedPattern)['m/z'][0]
+            ionVals = {0: (monoisotopic, mostAbundant)}
+            for z in zRange:
+                ionVals[z] = (self.getMz(monoisotopic, z, radicals), self.getMz(mostAbundant, z, radicals))
+            ionDict[neutral.getName()] = ionVals
+        return ionDict

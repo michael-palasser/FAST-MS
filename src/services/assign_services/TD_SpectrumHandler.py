@@ -7,7 +7,7 @@ from re import findall
 import logging
 import numpy as np
 
-from src.entities.Ions import FragmentIon
+from src.entities.Ions import FragmentIon, FragmentIonRed
 from src.resources import DEVELOP
 from src.services.assign_services.AbstractSpectrumHandler import AbstractSpectrumHandler
 
@@ -57,18 +57,20 @@ class SpectrumHandler(AbstractSpectrumHandler):
         self._precModCharge = self.getModCharge(self._precursor)
         self._calculatedZs = []
 
-    @staticmethod
-    def getIonClass(*args):
+    def getIonClass(self, *args):
         '''
         Returns the constructor for a FragmentIon
         '''
-        return FragmentIon
+        if "subtract noise" in self._configs.keys() and self._configs["subtract noise"]:
+            return FragmentIonRed
+        else:
+            return FragmentIon
 
     def setPrecModCharge(self, precModCharge):
         self._precModCharge = precModCharge
 
     def calcPrecCharge(self, charge, radicals):
-        return abs(charge) - radicals #must be changed if radicals turns to electrons
+        return abs(charge - radicals) #must be changed if radicals turns to electrons
 
     def setNormalisationFactor(self, factor):
         self._normalisationFactor = factor
@@ -144,26 +146,18 @@ class SpectrumHandler(AbstractSpectrumHandler):
         else:
             #probableZ = self.getChargeScore(fragment.getSequence()) * self._normalisationFactor
             probableZ = len(fragment.getSequence()) * self._normalisationFactor
-        #print("first", probableZ, fragment.getName())
-        #print('hey',probableZ,fragment.getRadicals(),self._precursor.getRadicals(),self._charge)
-        #probableZ -= (fragment.getRadicals()-self._precursor.getRadicals())
         tolerance = self._configs['zTolerance']
         lowZ, highZ = 1, self._charge
         if fragment.getNumber()==0:
             highZ = abs(self._settings['charge'])
         zEffect = (self.getModCharge(fragment)-self._precModCharge) * self._sprayMode
-        #print(1,fragment.getName(),probableZ)
         probableZ += zEffect
-        #print("second", probableZ, zEffect)
-
-        #print(2,fragment.getName(),probableZ)
         if (probableZ-tolerance)> lowZ:
             lowZ = round(probableZ-tolerance)
         if (probableZ+tolerance)< highZ:
             highZ = round(probableZ + tolerance)
             if highZ<lowZ:
                 highZ=lowZ
-        #print(fragment.getName(),lowZ,round(probableZ,2),highZ)
         logging.info(fragment.getName()+'\tmin z: '+str(lowZ)+'\tcalc. z: '+str(round(probableZ,2))+'\tmax z: '+str(highZ))
         self._calculatedZs.append((fragment.getName(),probableZ))
         return range(lowZ,highZ+1)
@@ -222,11 +216,10 @@ class SpectrumHandler(AbstractSpectrumHandler):
                 if (self._configs['lowerBound'] < monoisotopic['m/z'] < self._upperBound):
                     spectralPeak = self.findPeak(monoisotopic)
                     if spectralPeak[1] != 0:
-                        snr = peakData[peakData['m/z'] == spectralPeak[0]]['S/N']
+                        snr = peakData[peakData['m/z'] == spectralPeak[0]]['S/N'][0]
                         #m/z, z, int, name, error
                         found.append((spectralPeak[0], z, spectralPeak[1], fragment.getName(), round(monoisotopic['m/z'],5),round(spectralPeak[3],2),snr))
         try:
             return np.array(found, dtype=np.dtype([('m/z', float), ('z', int), ('I', int), ('name', 'U32'), ('m/z_theo', float), ('error', float), ('S/N', float)]))
         except OverflowError:
             return np.array(found, dtype=np.dtype([('m/z', float), ('z', int), ('I', np.int64), ('name', 'U32'), ('m/z_theo', float), ('error', float), ('S/N', float)]))
-

@@ -1,19 +1,14 @@
-import traceback
 from copy import deepcopy
-
 import numpy as np
 import matplotlib
 from matplotlib import pyplot as plt
 import matplotlib.ticker as mticker
-
-#import matplotlib.path as mpath
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 
 from PyQt5 import QtWidgets, QtGui
 from PyQt5.QtCore import Qt, QVariant
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
-from matplotlib.font_manager import FontProperties
 
-from src.gui.GUI_functions import makeLabelInputWidget, createComboBox, setIcon, translate
+from src.gui.GUI_functions import makeLabelInputWidget, createComboBox, setWindowIcon, translate
 from src.gui.tableviews.TableModels import AbstractTableModel
 from src.gui.tableviews.TableViews import TableView
 
@@ -144,7 +139,7 @@ class SequCovWidget(QtWidgets.QWidget):
         self._sequPlot = SequenceCoveragePlot(sequence, globalData[:,0].reshape((self._noCleavageSites, 1)),
                                               globalData[:,1].reshape((self._noCleavageSites, 1)), width)
         updateBtn.clicked.connect(self.updatePlot)
-        setIcon(self)
+        setWindowIcon(self)
 
     def fillGrid(self, type, row, checked=False):
         label = QtWidgets.QLabel(self._inputWidget)
@@ -225,12 +220,8 @@ class SequenceCoveragePlot(FigureCanvasQTAgg):
         rows = int(sequLength / lineWidth)+1
         step_x = 1
         step_y = 1/(2*rows)#+(len(coveragesForward[0])+len(coveragesBackward[0])-2)*0.001
-
         lenForward, lenBack = len(coveragesForward[0]), len(coveragesBackward[0])
-        font_path = 'C:/Windows/Fonts/seguisym.ttf'
-        prop = matplotlib.font_manager.FontProperties(fname=font_path)
-        #print('rows', rows, sequLength,step_y)
-        self._fig = plt.figure(figsize=(lineWidth,rows))#+(lenForward+lenBack-2)*1))
+        self._fig = plt.figure("Cleavage Map",figsize=(lineWidth,rows))#+(lenForward+lenBack-2)*1))
         matplotlib.rcParams.update({'font.size': 15})
         ax = plt.subplot(111)
         ax.set_xlim([-step_x*0.5, lineWidth+0.5])
@@ -249,54 +240,47 @@ class SequenceCoveragePlot(FigureCanvasQTAgg):
         counter = 1
         nrSize= 10
         plt.text(x=-step_x * 0.5, y=1-line, s=str(counter), fontsize=nrSize)
-        #size = 0.01
         maxFrags = lenForward
         if lenBack>maxFrags:
             maxFrags= lenBack
         for i,bb in enumerate(self._sequence):
             plt.text(x=xPos, y=1-line, s=bb, fontsize=20, ha='center')
             for j in range(maxFrags):
-                #for j,coverageForward in enumerate(coveragesForward[i]):
                 if (i != sequLength-1) and (j<lenForward):
                     coverageForward = coveragesForward[i][j]
                     if coverageForward and not np.isnan(coverageForward):
-                        #yPos_j=1-line+step_y*(0.6+(len(coveragesForward[i])-j-1)*0.2)
-                        yPos_j=1-line+step_y*(0.12+(lenForward-j-1)*0.2)
-                        #plt.text(x=xPos+step_x*0.491, y=yPos_j, s='L', ha='center', c=coloursF[j],rotation=180)
-                        plt.text(x=xPos+step_x*0.5, y=yPos_j, s=u"\u23CB", fontproperties=prop, ha='center', c=coloursF[j], fontsize=22)
-
-                        #plt.text(x=xPos+step_x*0.586, y=1-line+step_y*0.15, s='I', ha='center', c=coloursF[-1])
-                '''if (i+1)%lineWidth:
-                    xPos+=step_x'''
-                '''if not (i + 1) % lineWidth:
-                    line += 2 * step_y
-                    plt.text(x=-step_x * 0.5, y=1 - line, s=str(counter), fontsize=nrSize)
-                    xPos = step_x / 2'''
-                if (i != sequLength-1) and (j<lenBack):#(i != 0) and (j<lenBack):
-                    #for j,coverageBackward in enumerate(coveragesBackward[i-1]):
-                    #coverageBackward = coveragesBackward[i-1][lenBack-j-1]
+                        #size = step_y * 2.2
+                        self.draw_corner(ax,
+                                    xPos + step_x * 0.48,
+                                    1-line+step_y*0.25,
+                                    step_y*(0.5+(lenForward-j-1)*0.2),
+                                         j,
+                                    coloursF[j],True)
+                if (i != sequLength-1) and (j<lenBack):
                     coverageBackward = coveragesBackward[i][j]
                     if coverageBackward and not np.isnan(coverageBackward):
-                        #yPos_j=1-line-step_y*0.3-(len(coveragesBackward[i-1])-j-1)*step_y*0.2
-                        #yPos_j=1-line-step_y*(0.3-(lenBack-j-1)*0.2)
-                        #yPos_j=1-line-step_y*(0.12+(lenBack-j-1)*0.2) last
-                        yPos_j=1-line-step_y*(0.12+j*0.2)
-                        #plt.text(x=xPos-step_x*0.375, y=yPos_j, s='L', ha='center', c=coloursB[j])
-                        #plt.text(x=xPos-step_x*0.449, y=yPos_j, s=u'\u23BF', fontproperties=prop, ha='center', c=coloursB[j], fontsize=22) last
-                        plt.text(x=xPos+step_x*0.503, y=yPos_j, s=u'\u23BF', fontproperties=prop, ha='center', c=coloursB[j], fontsize=22)
-                        #plt.text(x=xPos-step_x*0.414, y=1-line-step_y*0.15, s='I', ha='center', c=coloursB[-1])
-                        #if (not coveragesForward[i]) or (xPos==step_x/2):
-                        #plt.text(x=xPos+step_x*0.62, y=1-line-step_y*0.05, s='I', ha='left', c=coloursB[-1])
-
+                        self.draw_corner(ax,
+                                    xPos + step_x * 0.48,
+                                    1-line+step_y*0.25,
+                                    step_y*(0.5+j*0.2),
+                                         j,
+                                    coloursB[j],False)
             counter += 1
-        #plt.savefig('foo.png')
             if (i+1)%lineWidth:
                 xPos+=step_x
             else:
                 line += step_y*(2+(len(coveragesForward[0])+len(coveragesBackward[0])-2)*0.08)
                 plt.text(x=-step_x * 0.5, y=1 - line, s=str(counter), fontsize=nrSize)
                 xPos = step_x / 2
-
+        plt.tight_layout()
         plt.show()
 
-
+    def draw_corner(self, ax, x, y, dy, order,color, forward):
+        if forward:
+            sign = 1
+        else:
+            sign = -1
+        ax.add_line(matplotlib.lines.Line2D([x, x],[y + dy*sign, y],color=color, linewidth=1.5,
+                           solid_joinstyle='miter',solid_capstyle='butt', zorder=order, antialiased=False))
+        ax.add_line(matplotlib.lines.Line2D([x- 0.1*sign, x], [y + dy*sign, y + dy*sign],color=color, linewidth=1.5,
+                           solid_joinstyle='miter',solid_capstyle='butt', zorder=order, antialiased=False))

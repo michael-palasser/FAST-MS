@@ -1,12 +1,12 @@
 from PyQt5 import QtCore, QtWidgets
 from os.path import join
 
-from src.resources import path
+from src.resources import base_path
 from src.gui.GUI_functions import shoot
 from src.gui.dialogs.AbstractDialogs import DialogWithTabs
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 
-dataPath = join(path, 'src', 'data')
+dataPath = join(base_path, 'src', 'data')
 
 
 class ConfigurationDialog(DialogWithTabs):
@@ -141,10 +141,11 @@ class ConfigurationDialog(DialogWithTabs):
         self._widgets["d"].setMinimum(-9.99)
         #self._qualityBox = QtWidgets.QGroupBox(self._modellingTab)
 
-        self._noiseBox = self.fillBox(self._findingTab, "Noise Calculation", ("window size", "noise threshold tolerance"),
+        self._noiseBox = self.fillBox(self._findingTab, "Noise Calculation", ("window size", "noise threshold tolerance", "subtract noise"),
                                       {"noiseWindowSize": (QtWidgets.QDoubleSpinBox(),"window size for noise calculation"),
                                        "thresholdFactor": (QtWidgets.QDoubleSpinBox(),
-                                                           "set it lower to search for more isotope peaks")})
+                                                           "set it lower to search for more isotope peaks"),
+                                       "subtract noise": (QtWidgets.QCheckBox(), "The noise will be subtracted from each isotope peak when calculating the S/N")})
         self._isoPatternBox = self.fillBox(self._modellingTab, "Isotope Pattern Calculation",
                                           ("min. proportion", "approximation"),
                                           {"maxIso": (QtWidgets.QDoubleSpinBox(),

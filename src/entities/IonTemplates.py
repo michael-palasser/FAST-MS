@@ -61,6 +61,11 @@ class FragmentationPattern(PatternWithItems):
                 string += '\n\t' + '\t'.join([str(val) for val in item])
         return string
 
+    def convertToTable(self):
+        converted = super().convertToTable()
+        items2 = [item.toString() for item in self.__items2]
+        converted.setItems2(items2)
+        return converted
 
 class PrecursorItem(AbstractItem3):
     '''
@@ -125,6 +130,9 @@ class ModificationPattern(PatternWithItems):
     def getItems2(self):
         return self.__items2
 
+    def setItems2(self, items):
+        self.__items2 = items
+
     def getExcluded(self):
         excluded = []
         for tuple in self.getItems2():
@@ -142,6 +150,11 @@ class ModificationPattern(PatternWithItems):
         string += '\n\t-Excluded:\n\t' + ', '.join([tup[0] for tup in self.__items2])
         return string
 
+    def convertToTable(self):
+        converted = super().convertToTable()
+        items2 = [item.toString() for item in self.__items2]
+        converted.setItems2(items2)
+        return converted
 
 class ModificationItem(AbstractItem3):
     '''

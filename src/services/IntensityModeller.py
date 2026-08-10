@@ -505,7 +505,7 @@ class IntensityModeller(object):
                 ionHash = undeletedIons[j]
                 if ionHash in self.usedPeaks[peak[0]]:
                     equ_matrix[i,j] = self._correctedIons[ionHash].getIsotopePattern()[
-                        np.where(self._correctedIons[ionHash].getIsotopePattern()['m/z'] == peak[0])]['calcInt']
+                        np.where(self._correctedIons[ionHash].getIsotopePattern()['m/z'] == peak[0])]['calcInt'][0]
         return equ_matrix, undeletedIons
 
     @staticmethod
@@ -677,7 +677,7 @@ class IntensityModeller(object):
         '''
         overlappingIons = findall('ov.:\[(.*?)\]', ion.getComment())
         if len(overlappingIons)>0:
-            ionStrings = overlappingIons[-1].split(',')
+            ionStrings = overlappingIons[-1].split(',') #ToDo
             counter=0
             returnedHash=None
             for ionString in ionStrings:
@@ -704,7 +704,7 @@ class IntensityModeller(object):
         self._correctedIons[ionHash] = self.calculateIntensity(ion)
         self._correctedIons[ionHash].addComment(ion.getComment())
         self._correctedIons[ionHash].addComment('reset')
-        logging.info(ionHash[0]+","+str(hash[1])+" resetted")
+        logging.info(ionHash[0]+","+str(ionHash[1])+" resetted")
         return self._correctedIons[ionHash]
 
     def getAdjacentIons(self, ionHash, distance=50):

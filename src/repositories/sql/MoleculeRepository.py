@@ -8,8 +8,8 @@ class MoleculeRepository(AbstractRepositoryWithItems):
     '''
     Repository for molecule types
     '''
-    def __init__(self):
-        super(MoleculeRepository, self).__init__(join('shared.db'), 'molecules',
+    def __init__(self, dirPath=join('shared.db')):
+        super(MoleculeRepository, self).__init__(dirPath, 'molecules',
                                                  ("name", "gain", "loss"),
                                                  {"buildingBlocks": ('name', 'translation', 'formula', 'gbP', 'gbN','patternId')},(3,4),())
 

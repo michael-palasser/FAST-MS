@@ -57,3 +57,8 @@ class CanceledException(Exception):
         :param (str) message:
         '''
         self.message = message
+
+class CorruptedStorageException(Exception):
+    def __init__(self, message, original_exception=None):
+        self.original_exception = original_exception
+        super().__init__(message)

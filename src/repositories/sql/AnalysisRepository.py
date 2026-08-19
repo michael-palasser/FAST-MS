@@ -3,6 +3,7 @@ import sqlite3
 import numpy as np
 from tqdm import tqdm
 
+from src.Exceptions import CorruptedStorageException
 from src.entities.InternalFragments import InternalFragmentIon, InternalFragment, InternalFragmentIonRed
 from src.entities.Ions import FragmentIon, Fragment, FragmentIonRed
 from src.entities.Search import Search
@@ -77,41 +78,43 @@ class AnalysisRepository(object):
         :return: (Search) search
         '''
         ions, delIons = [], []
-        ionVals = self.getAll('ions')
-        bar = tqdm(total=len(ionVals)+4)
-        for ionVals in ionVals:
-            peaks = [(peak[1], peak[2], peak[3], peak[4], peak[5]) for peak in self.getItems(ionVals[0],'peaks')]
-            
-            peaks = np.array(peaks, dtype=peaksArrType)
-            type, modification = processTemplateName(ionVals[1])
+        try:
+            ionVals = self.getAll('ions')
+            bar = tqdm(total=len(ionVals)+4)
+            for ionVals in ionVals:
+                peaks = [(peak[1], peak[2], peak[3], peak[4], peak[5]) for peak in self.getItems(ionVals[0],'peaks')]
 
-            if (ionVals[2] < 0) and "[" in type:
-                numbers = re.findall(r'\[.*?\]', type)[0][1:-1].split(":")
-                if subtrNoise:
-                    constr = InternalFragmentIonRed
+                peaks = np.array(peaks, dtype=peaksArrType)
+                type, modification = processTemplateName(ionVals[1])
+                if (ionVals[2] < 0) and "[" in type:
+                    numbers = re.findall(r'\[.*?\]', type)[0][1:-1].split(":")
+                    if subtrNoise:
+                        constr = InternalFragmentIonRed
+                    else:
+                        constr = InternalFragmentIon
+                    ion = constr(InternalFragment("i", int(numbers[1]), modification, ionVals[3], [], 0, type[1:3],
+                                                  int(numbers[0])), ionVals[4], ionVals[5], peaks, ionVals[6], ionVals[7],
+                                 True, ionVals[8])
                 else:
-                    constr = InternalFragmentIon
-                ion = constr(InternalFragment("i", int(numbers[1]), modification, ionVals[3], [], 0, type[1:3],
-                                              int(numbers[0])), ionVals[4], ionVals[5], peaks, ionVals[6], ionVals[7],
-                             True, ionVals[8])
-            else:
-                if subtrNoise:
-                    constr = FragmentIonRed
-                else:
-                    constr = FragmentIon
-                ion = constr(Fragment(type, ionVals[2], modification, ionVals[3], [],0), ionVals[4], ionVals[5],
-                             peaks,ionVals[6], ionVals[7], True, ionVals[8])
-            #ion.setRemaining(ionVals[10], ionVals[11], ionVals[12], ionVals[13])
-            if ionVals[9] == 0:
-                ions.append(ion)
-            elif ionVals[9] == 1:
-                delIons.append(ion)
-            bar.update(1)
-        searchedZStates = {ionVals[1]:ionVals[2] for ionVals in self.getAll('chargeStates')}
-        bar.update(2)
-        log = self.getAll('logs')[0][1]
-        bar.update(2)
-        self._conn.close()
+                    if subtrNoise:
+                        constr = FragmentIonRed
+                    else:
+                        constr = FragmentIon
+                    ion = constr(Fragment(type, ionVals[2], modification, ionVals[3], [],0), ionVals[4], ionVals[5],
+                                 peaks,ionVals[6], ionVals[7], True, ionVals[8])
+                #ion.setRemaining(ionVals[10], ionVals[11], ionVals[12], ionVals[13])
+                if ionVals[9] == 0:
+                    ions.append(ion)
+                elif ionVals[9] == 1:
+                    delIons.append(ion)
+                bar.update(1)
+            searchedZStates = {ionVals[1]:ionVals[2] for ionVals in self.getAll('chargeStates')}
+            bar.update(2)
+            log = self.getAll('logs')[0][1]
+            bar.update(2)
+            self._conn.close()
+        except sqlite3.OperationalError as e:
+            raise CorruptedStorageException(f"Storage corrupted: {e}",original_exception=e) from e
         return ions, delIons, searchedZStates, log
 
     def getAll(self, table:str):

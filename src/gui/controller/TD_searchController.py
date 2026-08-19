@@ -13,7 +13,7 @@ from PyQt5 import QtWidgets
 
 from src.entities.InternalFragments import InternalFragmentIon
 from src.resources import base_path, autoStart, DEVELOP, getRelativePath
-from src.Exceptions import InvalidIsotopePatternException, InvalidInputException
+from src.Exceptions import InvalidIsotopePatternException, InvalidInputException, CorruptedStorageException
 from src.entities.Info import Info
 from src.gui.mainWindows.AbstractMainWindows import SimpleMainWindow
 from src.gui.controller.AbstractController import AbstractMainController
@@ -154,10 +154,16 @@ class TD_MainController(AbstractMainController):
 
     def load(self, analysisName, searchService):
         start=time.time()
-        self._settings, self._configs, noiseLevel, observedIons, delIons, searchedZStates, logs, dbPath = \
-            searchService.getSearch(analysisName)
+        try:
+            self._settings, self._configs, noiseLevel, observedIons, delIons, searchedZStates, logs, dbPath = \
+                searchService.getSearch(analysisName)
+        except CorruptedStorageException as e:
+            traceback.print_exc()
+            logging.exception(analysisName+": " + e.__str__())
+            QtWidgets.QMessageBox.warning(None, "Corrupted Data", e.__str__() + "<br>Loading is not possible.",
+                                          QtWidgets.QMessageBox.Ok)
+            return
         print('time:', time.time()-start)
-
         self._info = Info(logs)
         self._savedPath = analysisName
         peaks = None

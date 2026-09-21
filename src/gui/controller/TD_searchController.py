@@ -653,12 +653,20 @@ class TD_MainController(AbstractMainController):
         print('Saving analysis', self._savedPath)
         #start=time.time()
         self._info.save(self._savedPath)
-        searchService.saveSearch(self._savedPath, self._spectrumHandler.getNoiseLevel(), self._settings, self._configs,
-                                 self._intensityModeller.getObservedIons().values(),
-                                 self._intensityModeller.getDeletedIons().values(),
-                                 self._spectrumHandler.getSearchedChargeStates(), self._info.toString(), self._propStorage)
-        self._saved = True
-        print('done')
-        logging.info('Analysis saved: ' + self._savedPath)
-        self._infoView.update()
+        try:
+            searchService.saveSearch(self._savedPath, self._spectrumHandler.getNoiseLevel(), self._settings, self._configs,
+                                     self._intensityModeller.getObservedIons().values(),
+                                     self._intensityModeller.getDeletedIons().values(),
+                                     self._spectrumHandler.getSearchedChargeStates(), self._info.toString(), self._propStorage)
+            self._saved = True
+            print('done')
+            logging.info('Analysis saved: ' + self._savedPath)
+            self._infoView.update()
+        except CorruptedStorageException as e:
+            logging.exception(e.__str__())
+            QtWidgets.QMessageBox.warning(None, "Saving Unsuccesful",
+                                          'Due to unknown reasons, the analysis could not be saved. Please, try again '
+                                          'or report the problem to michael.palasser@tutamail.com. Traceback:<br>'+e.__str__(),
+                                          QtWidgets.QMessageBox.Ok)
+            return ""
         return self._savedPath

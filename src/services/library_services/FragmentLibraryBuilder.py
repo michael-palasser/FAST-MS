@@ -197,7 +197,7 @@ class FragmentLibraryBuilder(object):
                 templateRadicals = precTemplate.getRadicals()
                 newFragment = Fragment(sequenceName, 0, templateName, tempFormula, sequence, templateRadicals)
                 precursorFragments.append(newFragment)
-                if (sequenceName+templateName == precName):  #ToDo: check no Modification
+                if (sequenceName+templateName == precName):
                     self._precursor = newFragment
                 for nrMod in range(1, self._maxMod + 1):
                     for modifTemplate in self._modifPattern.getItems():

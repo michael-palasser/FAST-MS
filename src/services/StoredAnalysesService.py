@@ -3,7 +3,7 @@ import shutil
 from copy import deepcopy
 from datetime import datetime
 
-from src.Exceptions import InvalidInputException
+from src.Exceptions import InvalidInputException, CorruptedStorageException
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory, ConfigHandler
 from src.repositories.sql.AnalysisRepository import AnalysisRepository
 from src.repositories.sql.TD_Repositories import *
@@ -140,13 +140,18 @@ class StoredAnalysesService(object):
                 if os.path.isfile(newName):
                     os.remove(newName)
                 os.rename(filePaths[0], newName)
-        rep = AnalysisRepository(filePaths[0])
         ions = [self.ionToDB(ion) for ion in ions]
         deletedIons = [self.ionToDB(ion) for ion in deletedIons]
         searchedZStates = {frag: ','.join([str(z) for z in zs]) for frag,zs in searchedZStates.items()}
         settings['noiseLevel']=noiseLevel
         #logs = [line for line in info]
-        rep.createSearch(ions, deletedIons, searchedZStates, info)
+        rep = AnalysisRepository(filePaths[0])
+        try:
+            rep.createSearch(ions, deletedIons, searchedZStates, info)
+        except Exception as e:
+            raise CorruptedStorageException(f"Storage corrupted: {e}",original_exception=e) from e
+        finally:
+            rep.close()
         ConfigHandler(filePaths[1], []).write(settings)
         ConfigHandler(filePaths[2],[]).write(configurations)
         with open(filePaths[3], "w") as f:
@@ -155,13 +160,16 @@ class StoredAnalysesService(object):
         constructors = (SequenceRepository, MoleculeRepository, FragmentationRepository,ModificationRepository)
         for i in range(len(constructors)):
             rep = constructors[i](filePaths[0])
-            rep.makeTables()
-            print(i)
-            if i==0:
-                rep.createSequence(valsTup[i])
-            else:
-                rep.createPattern(valsTup[i].convertToTable())
-            rep.close()
+            try:
+                rep.makeTables()
+                if i==0:
+                    rep.createSequence(valsTup[i])
+                else:
+                    rep.createPattern(valsTup[i].convertToTable())
+            except Exception as e:
+                raise CorruptedStorageException(f"Storage corrupted: {e}",original_exception=e) from e
+            finally:
+                rep.close()
 
     def getFileNames(self, name):
         if os.path.isdir(name):

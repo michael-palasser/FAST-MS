@@ -179,6 +179,8 @@ class AnalysisRepository(object):
         self._conn.commit()
         return cur.lastrowid
 
+    def close(self):
+        self._conn.close()
 
 
     """def updateSearch(self, search):

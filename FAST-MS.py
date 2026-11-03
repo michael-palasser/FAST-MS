@@ -1,7 +1,6 @@
 import sys
 from multiprocessing import freeze_support
-from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QApplication
+from PySide6 import QtWidgets
 #import numpy.core.multiarray #ModuleNotFoundError: No module named 'numpy.core.multiarray' otherwise
 
 from src.gui.GUI_functions import setWindowIcon, set_appusermodel_id
@@ -13,7 +12,7 @@ def run():
     global gui
     if sys.platform == "win32":
         set_appusermodel_id()
-    app = QApplication(sys.argv)
+    app = QtWidgets.QApplication(sys.argv)
     app.setStyle(QtWidgets.QStyleFactory.create("Fusion"))
     app.setApplicationName("FAST MS")
     setWindowIcon(app)
@@ -22,7 +21,7 @@ def run():
     else:
         from src.gui.StartWindow import Window
     gui = Window()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
 
 if __name__ == '__main__':
     freeze_support()  #Required for frozen executable: https://github.com/pyinstaller/pyinstaller/wiki/Recipe-Multiprocessing

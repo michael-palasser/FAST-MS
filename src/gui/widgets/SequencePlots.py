@@ -1,8 +1,8 @@
 import sys
 import numpy as np
-from PyQt5.QtWidgets import QApplication
+from PySide6 import QtGui
+from PySide6.QtWidgets import QApplication
 from matplotlib import pyplot as plt
-from PyQt5 import QtGui
 import pyqtgraph as pg
 from matplotlib.ticker import MultipleLocator
 
@@ -427,4 +427,4 @@ if __name__ == '__main__':
     plot = plotFactory.showOccupancyPlot(sequ, forwardVals, backwardVals,1, 'CMCT')
     plotBars(sequ, arr, ['c','y'], '')
 
-    sys.exit(app.exec_())
+    sys.exit(app.exec())

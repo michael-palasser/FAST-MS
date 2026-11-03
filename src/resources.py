@@ -9,7 +9,10 @@ from datetime import datetime
 import logging
 
 DEVELOP = False
+UNI = False
 INTERN = False
+if INTERN:
+    UNI = True
 COMPILATION = False
 
 forbiddenCharacters = ("\\", "/", ":", "*", "?", '"', "<", ">", "|")
@@ -43,7 +46,10 @@ def autoStart(file):
     if os_system == 'Darwin':
         call(['open', file])
     elif os_system == 'Windows':
-        os.startfile(file)
+        try:
+            os.startfile(file)
+        except FileNotFoundError:
+            os.startfile(processLongPaths(file))
     else:
         call(('xdg-open', file))
 

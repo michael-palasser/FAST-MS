@@ -1,10 +1,6 @@
 from math import log10
 
-'''try:
-    from Tkinter import Tk
-except ImportError:
-    from tkinter import Tk'''
-from PyQt5 import QtCore, QtGui
+from PySide6 import QtCore, QtGui
 
 
 class AbstractTableModel(QtCore.QAbstractTableModel):
@@ -25,7 +21,7 @@ class AbstractTableModel(QtCore.QAbstractTableModel):
         Overwrites the data method of QAbstractTableModel to correctly format each value
         '''
         if index.isValid():
-            if role == QtCore.Qt.DisplayRole:
+            if role == QtCore.Qt.ItemDataRole.DisplayRole:
                 col = index.column()
                 item = self._data[index.row()][col]
                 formatString = self._format[col]
@@ -54,8 +50,8 @@ class AbstractTableModel(QtCore.QAbstractTableModel):
         return len(self._data[0])
 
     def headerData(self, section, orientation, role):
-        if role == QtCore.Qt.DisplayRole:
-            if orientation == QtCore.Qt.Horizontal:
+        if role == QtCore.Qt.ItemDataRole.DisplayRole:
+            if orientation == QtCore.Qt.Orientation.Horizontal:
                 return self._headers[section]
 
     def sort(self, Ncol, order):
@@ -63,15 +59,8 @@ class AbstractTableModel(QtCore.QAbstractTableModel):
         Sort table by selected column
         """
         self.layoutAboutToBeChanged.emit()
-        reverse = (order == QtCore.Qt.DescendingOrder)
+        reverse = (order == QtCore.Qt.SortOrder.DescendingOrder)
         self._data = sorted(self._data, key= lambda tup:tup[Ncol], reverse=reverse)
-        #self._data = self._data.sort_values(self._headers[Ncol], ascending=order == QtCore.Qt.AscendingOrder)
-        """if order == QtCore.Qt.AscendingOrder:
-            #self._data.sort(key= lambda tup:tup[Ncol])
-            self._data = sorted(self._data, key= lambda tup:tup[Ncol])
-        else:
-            #self._data.sort(key= lambda tup:tup[Ncol], reverse=True)
-            self._data = sorted(self._data,key= lambda tup:tup[Ncol], reverse=True)"""
         self.layoutChanged.emit()
 
 
@@ -89,9 +78,6 @@ class IonTableModel(AbstractTableModel):
         self._maxQual = maxQual
         self._maxScore = maxScore
 
-    """def flags(self, index):
-        return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable"""
-
     def data(self, index, role):
         '''
         Overwrites the data method of AbstractTableModel to correctly format each value
@@ -99,7 +85,7 @@ class IonTableModel(AbstractTableModel):
         if index.isValid():
             col = index.column()
             item = self._data[index.row()][col]
-            if role == QtCore.Qt.DisplayRole:
+            if role == QtCore.Qt.ItemDataRole.DisplayRole:
                 if self._data[0][0] == '':
                     return ''
                 formatString = self._format[col]
@@ -111,17 +97,17 @@ class IonTableModel(AbstractTableModel):
                         formatString = '{:' + lg10 + 'd}'
                     return formatString.format(item)
                 return formatString.format(item)
-            elif role == QtCore.Qt.TextAlignmentRole:
+            elif role == QtCore.Qt.ItemDataRole.TextAlignmentRole:
                 if col == 3 or col == 8:
-                    return QtCore.Qt.AlignLeft
+                    return QtCore.Qt.AlignmentFlag.AlignLeft
                 else:
-                    return QtCore.Qt.AlignRight
-            elif role == QtCore.Qt.FontRole:
+                    return QtCore.Qt.AlignmentFlag.AlignRight
+            elif role == QtCore.Qt.ItemDataRole.FontRole:
                 if col == 8:
                     font = QtGui.QFont()
                     font.setPointSize(10)
                     return font
-            elif role == QtCore.Qt.ForegroundRole:
+            elif role == QtCore.Qt.ItemDataRole.ForegroundRole:
                 if item == '':
                     return QtGui.QColor('k')
                 if (col == 0) and (self._precRegion is not None):
@@ -175,11 +161,9 @@ class PeakTableModel(AbstractTableModel):
         super(PeakTableModel, self).__init__(data, ('{:10.5f}', '{:11d}', '{:11d}', '{:4.2f}', ''),
                          ('m/z', 'Int. (Spectrum)', 'Int. (Calc.)', 'Error /ppm', 'Used'))
         self._data = data
-        #print('data',data)
-        #self._format = ['{:10.5f}', '{:11d}', '{:11d}','{:4.2f}', '']
 
     def flags(self, index):
-        return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
+        return QtCore.Qt.ItemFlag.ItemIsEnabled | QtCore.Qt.ItemFlag.ItemIsSelectable
 
 
     def data(self, index, role):
@@ -187,10 +171,9 @@ class PeakTableModel(AbstractTableModel):
         Overwrites the data method of AbstractTableModel to correctly format each value
         '''
         if index.isValid():
-            if role == QtCore.Qt.DisplayRole:
+            if role == QtCore.Qt.ItemDataRole.DisplayRole:
                 col = index.column()
                 item = self._data[index.row()][col]
-                #print(item)
                 formatString = self._format[col]
                 if col == 1 or col ==2:
                     item = int(round(item))
@@ -202,21 +185,8 @@ class PeakTableModel(AbstractTableModel):
                         return 'True'
                     return 'False'
                 return formatString.format(item)
-        if role == QtCore.Qt.TextAlignmentRole:
-            return QtCore.Qt.AlignRight
-
-
-    """def rowCount(self, index):
-        return len(self._data.values)
-
-    def columnCount(self, index):
-        return self._data.columns.size
-
-    def headerData(self, section, orientation, role):
-        if role == QtCore.Qt.DisplayRole:
-            if orientation == QtCore.Qt.Horizontal:
-                return ('m/z','z','intensity','fragment','error /ppm', 'used')[section]"""
-
+        if role == QtCore.Qt.ItemDataRole.TextAlignmentRole:
+            return QtCore.Qt.AlignmentFlag.AlignRight
 
 
 class CalibrationInfoTable1(AbstractTableModel):
@@ -226,11 +196,9 @@ class CalibrationInfoTable1(AbstractTableModel):
     def __init__(self, data, precision):
         super(CalibrationInfoTable1, self).__init__(data, ['',precision],
                          ['Variable','Value'])
-        #print('data',data)
-        #self._format = ['{:10.5f}', '{:11d}', '{:11d}','{:4.2f}', '']
 
     def flags(self, index):
-        return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
+        return QtCore.Qt.ItemFlag.ItemIsEnabled | QtCore.Qt.ItemFlag.ItemIsSelectable
 
 
     def data(self, index, role):
@@ -238,19 +206,18 @@ class CalibrationInfoTable1(AbstractTableModel):
         Overwrites the data method of AbstractTableModel to correctly format each value
         '''
         if index.isValid():
-            if role == QtCore.Qt.DisplayRole:
+            if role == QtCore.Qt.ItemDataRole.DisplayRole:
                 col = index.column()
                 item = self._data[index.row()][col]
                 if col == 0:
                     return item
-                #print(item)
                 formatString = self._format[col]
                 return formatString.format(item)
-        if role == QtCore.Qt.TextAlignmentRole:
+        if role == QtCore.Qt.ItemDataRole.TextAlignmentRole:
             col = index.column()
             if col == 0:
-                return QtCore.Qt.AlignCenter
-            return QtCore.Qt.AlignRight
+                return QtCore.Qt.AlignmentFlag.AlignCenter
+            return QtCore.Qt.AlignmentFlag.AlignRight
 
 class CalibrationInfoTable2(CalibrationInfoTable1):
     '''
@@ -266,26 +233,26 @@ class TheoIonTableModel(AbstractTableModel):
     Tablemodel for theo. m/z of fragment ions
     '''
     def __init__(self, headers, data):
-        super().__init__(data, ['']+['{:8.4f}' for _ in range(len(data[0]))],headers)
+        super().__init__(data, ['', '']+['{:8.4f}' for _ in range(len(data[0]))],headers)
 
     def flags(self, index):
-        return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
+        return QtCore.Qt.ItemFlag.ItemIsEnabled | QtCore.Qt.ItemFlag.ItemIsSelectable
 
     def data(self, index, role):
         '''
         Overwrites the data method of QAbstractTableModel to correctly format each value
         '''
         if index.isValid():
-            if role == QtCore.Qt.DisplayRole:
+            if role == QtCore.Qt.ItemDataRole.DisplayRole:
                 col = index.column()
                 item = self._data[index.row()][col]
-                if col==0 or item =="":
+                if col<2 or item =="":
                     return item
                 formatString = self._format[col]
                 return formatString.format(item)
             elif role == QtCore.Qt.ItemDataRole.TextAlignmentRole:
                 return QtCore.Qt.AlignmentFlag.AlignCenter
-            if role == QtCore.Qt.UserRole:
+            if role == QtCore.Qt.ItemDataRole.UserRole:
                 item = self._data[index.row()][index.column()]
                 if item == "" or item is None:
                     return float('-inf')  # or None → sorted last
@@ -306,6 +273,6 @@ class TheoIonTableModel(AbstractTableModel):
                 return float(value)
             except Exception:
                 return float("-inf")
-        reverse = (order == QtCore.Qt.DescendingOrder)
+        reverse = (order == QtCore.Qt.SortOrder.DescendingOrder)
         self._data = sorted(self._data, key=sort_key, reverse=reverse)
         self.layoutChanged.emit()

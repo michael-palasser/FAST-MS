@@ -3,8 +3,8 @@ import shutil
 from datetime import datetime
 from os.path import join
 
-from PyQt5 import QtWidgets
-from PyQt5.QtCore import Qt
+from PySide6 import QtWidgets, QtGui
+from PySide6.QtCore import Qt
 
 from src.gui.GUI_functions import createComboBox
 from src.gui.dialogs.AbstractDialogs import AbstractDialog
@@ -17,23 +17,16 @@ class SelectSearchDlgNew(AbstractDialog):
     '''
     def __init__(self, parent):
         super(SelectSearchDlgNew, self).__init__(parent,'Load Analysis')
-        #self.root_path = join(path, 'Saved Analyses')
         self.resize(900, 600)
-
-        #formLayout.setWidget(index+1, QtWidgets.QFormLayout.LabelRole, self._delBtn)
-        #formLayout.setWidget(index + 2, QtWidgets.QFormLayout.SpanningRole, self._buttonBox)
-
         self._layout = QtWidgets.QVBoxLayout(self)
         toolbar = QtWidgets.QToolBar(self)
         self._layout.addWidget(toolbar)
-        openBtn = QtWidgets.QAction("Open Root…", self)
+        openBtn = QtGui.QAction("Open Root…", self)
         openBtn.triggered.connect(self.choose_root)
         toolbar.addAction(openBtn)
-        delBtn = QtWidgets.QAction("Delete", self)
+        delBtn = QtGui.QAction("Delete", self)
         delBtn.triggered.connect(self.delete)
         toolbar.addAction(delBtn)
-
-        # formLayout = self.makeFormLayout(self)
         self._tree = QtWidgets.QTreeWidget(self)
         self._tree.setColumnCount(1)
         self._tree.setExpandsOnDoubleClick(True)
@@ -71,8 +64,7 @@ class SelectSearchDlgNew(AbstractDialog):
         if not self.root_path:
             return
         root_item = QtWidgets.QTreeWidgetItem([os.path.basename(self.root_path) or self.root_path])
-        root_item.setData(0, Qt.UserRole, self.root_path)
-        #root_item.setToolTip(0, self.tooltip_provider.tooltip(self.root_path))
+        root_item.setData(0, Qt.ItemDataRole.UserRole, self.root_path)
         self._tree.addTopLevelItem(root_item)
         self.add_subfolders(root_item, self.root_path)
         self._tree.expandItem(root_item)
@@ -86,8 +78,7 @@ class SelectSearchDlgNew(AbstractDialog):
             return
         for entry in sortedEntries:
             item = QtWidgets.QTreeWidgetItem([entry.name])
-            item.setData(0, Qt.UserRole, entry.path)
-            #item.setToolTip(0, self.tooltip_provider.tooltip(entry.path))
+            item.setData(0, Qt.ItemDataRole.UserRole, entry.path)
             parent_item.addChild(item)
             # Recursively add only if this folder itself has subfolders
             if self.has_subfolders(entry.path):
@@ -125,7 +116,7 @@ class SelectSearchDlgNew(AbstractDialog):
 
     # ----- interactions -----
     def on_double_click(self, item:QtWidgets.QTreeWidgetItem, col):
-        path = item.data(0, Qt.UserRole)
+        path = item.data(0, Qt.ItemDataRole.UserRole)
         if self.has_subfolders(path):
             # navigate (new root)
             self.load_folder(path)
@@ -138,7 +129,7 @@ class SelectSearchDlgNew(AbstractDialog):
         if not item:
             QtWidgets.QMessageBox.information(self, "No selection", "Please select an analysis.")
             return
-        itemPath = item.data(0, Qt.UserRole)
+        itemPath = item.data(0, Qt.ItemDataRole.UserRole)
         if self.has_subfolders(itemPath):
             QtWidgets.QMessageBox.information(self, "Not an analysis", "This folder has subfolders. Double-click to navigate into it.")
             return
@@ -150,22 +141,17 @@ class SelectSearchDlgNew(AbstractDialog):
         if not item:
             QtWidgets.QMessageBox.information(self, "No selection", "Please select an analysis.")
             return
-        currentPath = item.data(0, Qt.UserRole)
+        currentPath = item.data(0, Qt.ItemDataRole.UserRole)
         if self.has_subfolders(currentPath):
             QtWidgets.QMessageBox.information(self, "Not a leaf",
                                               "This folder has subfolders. Double-click to navigate into it.")
             return
         choice = QtWidgets.QMessageBox.question(self, "Deleting", "Do you really want to permanently delete analysis "
                                                 +currentPath+'\nWarning: This cannot be undone',
-                                                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-        if choice == QtWidgets.QMessageBox.Yes:
+                                                QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No)
+        if choice == QtWidgets.QMessageBox.StandardButton.Yes:
             shutil.rmtree(currentPath)
             self.refresh()
-            """shutil.rmtree(self.getFileNames(name)[4])
-            self._deleteFun(currentPath, self._service)
-            index = self._options.index(currentPath)
-            del self._options[index]
-            self._comboBox.removeItem(index)"""
 
     def getName(self):
         if self.accepted:
@@ -184,28 +170,21 @@ class SelectSearchDlg(AbstractDialog):
         self._service = service
         formLayout = self.makeFormLayout(self)
         self._options = [tup[0] for tup in options]
-        #self._options = ['search1, 23.01.1992, 08:12', 'search2, 28.01.1992, 08:12']
         self._comboBox = createComboBox(self, self._options, tooltips=[tup[1] for tup in options])
         index = self.fill(self, formLayout, ("Enter Name:",), {'name':(self._comboBox, '')})
-
         self._delBtn = QtWidgets.QPushButton(self)
-        #sizePolicy = self.makeSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
-        #sizePolicy.setHeightForWidth(self._delBtn.sizePolicy().hasHeightForWidth())
-        #self._delBtn.setSizePolicy(sizePolicy)
-        #self._delBtn.setMinimumSize(QtCore.QSize(113, 0))
         self._delBtn.clicked.connect(self.delete)
         self._delBtn.setText(self._translate(self.objectName(), "Delete"))
-
-        formLayout.setWidget(index+1, QtWidgets.QFormLayout.LabelRole, self._delBtn)
-        formLayout.setWidget(index + 2, QtWidgets.QFormLayout.SpanningRole, self._buttonBox)
+        formLayout.setWidget(index+1, QtWidgets.QFormLayout.ItemRole.LabelRole, self._delBtn)
+        formLayout.setWidget(index + 2, QtWidgets.QFormLayout.ItemRole.SpanningRole, self._buttonBox)
         self.show()
 
     def delete(self):
         name = self._comboBox.currentText()
         choice = QtWidgets.QMessageBox.question(self, "Deleting", "Do you really want to permanently delete analysis "
                                                 +name+'\nWarning: This cannot be undone',
-                                                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-        if choice == QtWidgets.QMessageBox.Yes:
+                                                QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No)
+        if choice == QtWidgets.QMessageBox.StandardButton.Yes:
             self._deleteFun(name, self._service)
             index = self._options.index(name)
             del self._options[index]

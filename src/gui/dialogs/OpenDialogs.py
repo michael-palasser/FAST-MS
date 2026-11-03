@@ -1,4 +1,4 @@
-from PyQt5 import QtWidgets
+from PySide6 import QtWidgets
 from os.path import join
 
 from src.resources import base_path
@@ -17,7 +17,7 @@ class OpenDialog(AbstractDialog):
         formLayout = self.makeFormLayout(self)
         self._comboBox = createComboBox(self, options)
         index = self.fill(self, formLayout, ("Enter Name:",), {'name':(self._comboBox, '')})
-        formLayout.setWidget(index + 1, QtWidgets.QFormLayout.SpanningRole, self._buttonBox)
+        formLayout.setWidget(index + 1, QtWidgets.QFormLayout.ItemRole.SpanningRole, self._buttonBox)
         self.show()
 
     def getName(self):
@@ -33,14 +33,11 @@ class OpenSpectralDataDlg(AbstractDialog):
     def __init__(self, parent):
         super(OpenSpectralDataDlg, self).__init__(parent,'Select File Location')
         formLayout = self.makeFormLayout(self)
-        #label = QtWidgets.QLabel(self)
-        #label.setText(self._translate(self.objectName(), 'Select the location of the file.'))
-        #formLayout.setWidget(0, QtWidgets.QFormLayout.LabelRole, label)
         self._fileWidget = OpenFileWidget(parent, 1, join(base_path, 'Spectral_data', 'top-down'), "Open File",
                                           defaultFilters)
         self.fill(self, formLayout, ("File name:",), {'spectralData':(self._fileWidget,
                                   'Name of the file with spectral peaks (txt or csv format)')})
-        formLayout.setWidget(2, QtWidgets.QFormLayout.FieldRole, self._buttonBox)
+        formLayout.setWidget(2, QtWidgets.QFormLayout.ItemRole.FieldRole, self._buttonBox)
         self.show()
 
     def getValue(self):

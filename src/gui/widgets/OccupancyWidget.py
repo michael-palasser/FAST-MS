@@ -1,4 +1,4 @@
-from PyQt5 import QtWidgets
+from PySide6 import QtWidgets
 
 from src.gui.GUI_functions import setWindowIcon
 from src.gui.tableviews.PlotTables import PlotTableView
@@ -13,26 +13,12 @@ class OccupancyWidget(QtWidgets.QWidget):
         super().__init__(parent=None)
         verticalLayout = QtWidgets.QVBoxLayout(self)
         self.setWindowTitle(title)
-        #scrollArea = QtWidgets.QScrollArea(self)
-        #_scrollArea.setGeometry(QtCore.QRect(10, 10, len(typeData[0])*50+200, len(typeData)*22+25))
-        #scrollArea.setWidgetResizable(True)
-        # _scrollArea.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
-        # _scrollArea.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-
         table1 = PlotTableView(None, percData, percHeaders, 'Localise: ' + modification, 3,
                                modificationLoss)
         table1.sortBy(1)
         verticalLayout.addWidget(table1)
-        '''self._table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self._table.customContextMenuRequested['QPoint'].connect(partial(self.showOptions, self._table))'''
-        #scrollArea.setWidget(table1)
-        #self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        #self._table.move(0,0)
-
         table2 = PlotTableView(None, absData, absHeaders, 'Rel. Abundances: ' + modification, 1)
         table2.sortBy(1)
         verticalLayout.addWidget(table2)
         setWindowIcon(self)
         self.show()
-        #self.setObjectName('Occupancioes')
-        #self._translate = QtCore.QCoreApplication.translate

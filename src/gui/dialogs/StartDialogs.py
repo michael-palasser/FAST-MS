@@ -1,11 +1,10 @@
 import traceback
 from os.path import join
 
-from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QMessageBox
+from PySide6 import QtWidgets
 
 from src.gui.dialogs.OpenDialogs import defaultFilters
-from src.resources import base_path, INTERN, DEVELOP
+from src.resources import base_path, UNI
 from src.Exceptions import InvalidInputException
 from src.services.DataServices import FragmentationService, ModificationService, SequenceService, IntactIonService
 from src.gui.dialogs.AbstractDialogs import StartDialog, AbstractDialog
@@ -21,41 +20,23 @@ class TDStartDialog(StartDialog):
     '''
     def __init__(self, parent):
         super().__init__(parent, "Settings")
-        #self._formLayout = self.makeFormLayout(self)
         self._configHandler = ConfigurationHandlerFactory.getTD_SettingHandler()
         self.setupUi()
         shoot(self)
 
     def setupUi(self):
-        '''widgets = self.getWidgets(SequenceService().getAllSequenceNames(),
-                                  FragmentationService().getAllPatternNames(), ModificationService().getAllPatternNames())
-               #(QtWidgets.QLineEdit(startDialog), "output",
-                    #"Name of the output Excel file\ndefault: name of spectral pattern file + _out.xlsx"))
-        index = self.fill(self, self._formLayout, self.getLabels(), widgets)'''
         super(TDStartDialog, self).setupUi(SequenceService().getAllSequenceNames(),
                                   FragmentationService().getAllPatternNames(), ModificationService().getAllPatternNames())
-        #xPos, yPos = self.createWidgets(widgets,200,linewidth)
-        #self._widgets['charge'].setMinimum(-99)
-        #self.setValueOfWidget(self._widgets['charge'],self._configHandler.get('charge'))
-        #self._widgets['noiseLimit'].setMinimum(0)
         self._widgets['noiseLimit'].setMaximum(99)
         self._widgets['noiseLimit'].setDecimals(5)
         self._widgets['modifications'].currentTextChanged.connect(self.changeNrOfMods)
-        #self._buttonBox.setGeometry(QtCore.QRect(210, yPos+20, 164, 32))
-        #self._widgets['_charge'].setValue(2)
         if self._configHandler.getAll() != None:
             try:
                 self._widgets["fragmentation"].setCurrentText(self._configHandler.get('fragmentation'))
                 self._widgets["modifications"].setCurrentText(self._configHandler.get('modifications'))
                 self.changeNrOfMods()
-                #self._widgets["nrMod"].setValue(self._configHandler.get('nrMod'))
             except KeyError:
                 traceback.print_exc()
-        #self.makeButtonBox(self)
-        '''self._formLayout.addItem(QtWidgets.QSpacerItem(0,1))
-        self._defaultButton = self.makeDefaultButton(self)
-        self._formLayout.setWidget(index + 1, QtWidgets.QFormLayout.FieldRole, self._buttonBox)
-        self._formLayout.setWidget(index+1, QtWidgets.QFormLayout.LabelRole, self._defaultButton)'''
         self._widgets['calibration'].stateChanged.connect(lambda: self.updateCal(self._widgets['calibration'].isChecked()))
         self.updateCal(self._widgets['calibration'].isChecked())
         self.backToLast()
@@ -84,33 +65,11 @@ class TDStartDialog(StartDialog):
                 "calIons": (OpenFileWidget(self, 1, self.getDefaultDirectory("spectralData"), "Open Files",
                                             defaultFilters),
                              "Name of the file with ions for calibration (txt format)"),}
-        if INTERN:
+        if UNI:
             widgets["profile"] = (OpenFileWidget(self, 1, self.getDefaultDirectory("spectralData"),
                                            "Open File","xy File (*xy);;Plain Text Files (*txt);;Comma Separated Values (*csv);;All Files (*)"),
                            "Optional; name of the file containing the profile spectrum (xy, txt or csv format)")
         return widgets
-        """return {"sequName": (createComboBox(self,sequences), "Name of the sequence"),
-                "charge": (chargeWidget, "Charge of the precursor ion"),
-                "fragmentation": (createComboBox(self,fragPatterns), "Name of the fragmentation - pattern"),
-                "modifications": (createComboBox(self,modPatterns), "Name of the modification/ligand - pattern"),
-                "nrMod": (QtWidgets.QSpinBox(self), "How often is the precursor ion modified?"),
-                "spectralData": (OpenFileWidget(self, 1, self.getDefaultDirectory("spectralData"),
-                                "Open File","Plain Text Files (*txt);;Comma Separated Values (*csv);;All Files (*)"),
-                            "Name of the file with spectral peaks (txt or csv format)\n"
-                             "If no file is stated, the program will just calculate the fragment library"),
-                'noiseLimit': (QtWidgets.QDoubleSpinBox(self), "Minimal noise level"),
-
-                "calibration": (QtWidgets.QCheckBox(), "Spectral data will be calibrated if this option is ticked"),
-                "calIons": (OpenFileWidget(self, 1, self.getDefaultDirectory("spectralData"), "Open Files",
-                                            "Plain Text Files (*txt);;Comma Separated Values (*csv);;All Files (*)"),
-                             "Name of the file with ions for calibration (txt format)"),
-                "profile": (OpenFileWidget(self, 1, self.getDefaultDirectory("spectralData"),
-                                           "Open File","xy File (*xy);;Plain Text Files (*txt);;Comma Separated Values (*csv);;All Files (*)"),
-                           "Optional; name of the file containing the profile spectrum (xy, txt or csv format)")}"""
-
-    """"fragLib": (QtWidgets.QLineEdit(self), "If the fragment list has / should have a special name.\n"
-                                           "If no file is stated, the program will search for the file with the standard name or create"
-                                           " a new one with that name"),"""
 
     def changeNrOfMods(self):
         if self._widgets['modifications'].currentText() == '-':
@@ -147,7 +106,7 @@ class TDStartDialog(StartDialog):
             return newSettings
         except InvalidInputException as e:
             traceback.print_exc()
-            QMessageBox.warning(self, "Problem occured", e.__str__(), QMessageBox.Ok)
+            QtWidgets.QMessageBox.warning(self, "Problem occured", e.__str__(), QtWidgets.QMessageBox.StandardButton.Ok)
 
     def checkValues(self, configs, *args):
         if self._widgets['charge'].value() == 0:
@@ -178,19 +137,10 @@ class IntactStartDialog(StartDialog):
         shoot(self)
 
     def setupUi(self):
-        #self._formLayout = self.makeFormLayout(self)
-        #widgets = self.getWidgets(SequenceService().getAllSequenceNames(), IntactIonService().getAllPatternNames())
-        #index = self.fill(self, self._formLayout, self.getLabels(), widgets)
-        index = super(IntactStartDialog, self).setupUi(SequenceService().getAllSequenceNames(), IntactIonService().getAllPatternNames())
+        super(IntactStartDialog, self).setupUi(SequenceService().getAllSequenceNames(), IntactIonService().getAllPatternNames())
         if self._configHandler.getAll() != None:
             self._widgets['sprayMode'].setCurrentText(self._translate(self.objectName(), self._configHandler.get('sprayMode')))
-        #self.backToLast()
 
-        '''self._formLayout.addItem(QtWidgets.QSpacerItem(0, 1))
-        self._defaultButton = self.makeDefaultButton(self)
-        self._formLayout.setWidget(index + 1, QtWidgets.QFormLayout.FieldRole, self._buttonBox)
-        self._formLayout.setWidget(index + 1, QtWidgets.QFormLayout.LabelRole, self._defaultButton)'''
-        #self._verticalLayout.addWidget(self.makeButtonWidget(self), 0, QtCore.Qt.AlignRight)
 
     def getLabels(self):
         return ["Sequence Name:", "Modifications:", "Spectral File:", "Spray Mode:", 'Input Mode:', "Min. m/z:", "Max. m/z:",
@@ -218,15 +168,6 @@ class IntactStartDialog(StartDialog):
         minMzWidget.setMaximum(99999)
         return minMzWidget
 
-    '''def makeButtonWidget(self, parent):
-        widget = QtWidgets.QWidget(parent)
-        horizontLayout = QtWidgets.QHBoxLayout(widget)
-        self._buttonBox.setParent(widget)
-        self._defaultButton = self.makeDefaultButton(widget)
-        horizontLayout.addWidget(self._defaultButton)
-        horizontLayout.addSpacing(50)
-        horizontLayout.addWidget(self._buttonBox)
-        return widget'''
 
     def accept(self):
         newSettings = self.getNewSettings()
@@ -280,7 +221,7 @@ class IntactStartDialogFull(IntactStartDialog):
                  "calIons": (OpenFileWidget(self, 1, join(base_path, 'Spectral_data', 'intact'), "Open Files",
                                             defaultFilters),
                              "Name of the file with ions for calibration (txt format)")}
-        if INTERN:
+        if UNI:
             widgets["profile"] = (OpenFileWidget(self, 1, self.getDefaultDirectory("spectralData"),
                                            "Open File","xy File (*xy);;Plain Text Files (*txt);;Comma Separated Values (*csv);;All Files (*)"),
                            "Optional; name of the file containing the profile spectrum (xy, txt or csv format)")
@@ -358,8 +299,7 @@ class SpectrumComparatorStartDialog(AbstractDialog):
             super(SpectrumComparatorStartDialog, self).accept()
         except InvalidInputException as e:
             traceback.print_exc()
-            QtWidgets.QMessageBox.warning(self, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
-
+            QtWidgets.QMessageBox.warning(self, "Problem occured", e.__str__(), QtWidgets.QMessageBox.StandardButton.Ok)
 
 
 
@@ -378,7 +318,7 @@ class OccupancyRecalcStartDialog(AbstractDialog):
                                            "search for.\nIf you want to search for a special number of modifications, "
                                               "enter the number as a prefix without any spaces")})
         formLayout.addItem(QtWidgets.QSpacerItem(0,1))
-        formLayout.setWidget(index + 1, QtWidgets.QFormLayout.FieldRole, self._buttonBox)
+        formLayout.setWidget(index + 1, QtWidgets.QFormLayout.ItemRole.FieldRole, self._buttonBox)
         self.show()
 
     def getSequence(self):
@@ -456,7 +396,7 @@ class TableStartDialog(StartDialog):
             return newSettings
         except InvalidInputException as e:
             traceback.print_exc()
-            QMessageBox.warning(self, "Problem occured", e.__str__(), QMessageBox.Ok)
+            QtWidgets.QMessageBox.warning(self, "Problem occured", e.__str__(), QtWidgets.QMessageBox.StandardButton.Ok)
 
     def checkValues(self, configs, *args):
         if self._widgets['charge'].value() == 0:

@@ -1,5 +1,5 @@
-from PyQt5 import QtWidgets
-from PyQt5.QtCore import Qt
+from PySide6 import QtWidgets
+from PySide6.QtCore import Qt
 
 
 class ExportTable(QtWidgets.QTableWidget):
@@ -10,11 +10,10 @@ class ExportTable(QtWidgets.QTableWidget):
     def __init__(self, parent, options, stored):
         super(ExportTable, self).__init__(parent)
         self._headers = ('Value', 'Include')
-        self._options = options#('m/z', 'z','intensity', 'fragment', 'error /ppm', 'S/N', 'quality', 'formula', 'score',
-        #                 'comment', 'molecular mass', 'average mass', 'noise')
+        self._options = options
         self.setColumnCount(len(self._headers))
-        self.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
-        self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum)
         self.setRowCount(len(self._options))
         self.fill(stored)
         self.setDragEnabled(True)
@@ -22,9 +21,8 @@ class ExportTable(QtWidgets.QTableWidget):
         self.viewport().setAcceptDrops(True)
         self.setDragDropOverwriteMode(False)
         self.setDropIndicatorShown(True)
-        self.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
-        self.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
-        #self.setSelectionBehavior(QtGui.QAbstractItemView.SingleSelection)
+        self.setDragDropMode(QtWidgets.QAbstractItemView.DragDropMode.InternalMove)
+        self.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
         self.setHorizontalHeaderLabels(self._headers)
         self.setSortingEnabled(True)
         self.show()
@@ -34,18 +32,16 @@ class ExportTable(QtWidgets.QTableWidget):
         '''
         Fills the table with the peak data
         '''
-        #print(self.getValue(ion))
         for row, option in enumerate(self._options):
             items = [QtWidgets.QTableWidgetItem(option), QtWidgets.QTableWidgetItem()]
             if option in stored:
-                items[1].setCheckState(Qt.Checked)
+                items[1].setCheckState(Qt.CheckState.Checked)
             else:
-                items[1].setCheckState(Qt.Unchecked)
+                items[1].setCheckState(Qt.CheckState.Unchecked)
             for i in range(2):
-                items[i].setTextAlignment(Qt.AlignCenter)
+                items[i].setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                 self.setItem(row, i, items[i])
         self.resizeRowsToContents()
-        #self.resizeColumnsToContents()
 
 
     def dropEvent(self, event):
@@ -82,7 +78,7 @@ class ExportTable(QtWidgets.QTableWidget):
     def readTable(self):
         options = []
         for row in range(self.rowCount()):
-            if int(self.item(row, 1).checkState()/2)==1:
+            if self.item(row, 1).checkState() == Qt.CheckState.Checked:
                 options.append(self.item(row, 0).text())
         return options
 

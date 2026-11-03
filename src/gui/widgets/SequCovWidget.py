@@ -3,10 +3,10 @@ import numpy as np
 import matplotlib
 from matplotlib import pyplot as plt
 import matplotlib.ticker as mticker
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
 
-from PyQt5 import QtWidgets, QtGui
-from PyQt5.QtCore import Qt, QVariant
+from PySide6 import QtWidgets, QtGui
+from PySide6.QtCore import Qt
 
 from src.gui.GUI_functions import makeLabelInputWidget, createComboBox, setWindowIcon, translate
 from src.gui.tableviews.TableModels import AbstractTableModel
@@ -26,34 +26,26 @@ class SequCovPlotTableModel(AbstractTableModel):
         Overwrites the data method of AbstractTableModel to correctly format each value
         '''
         if index.isValid():
-            if role == Qt.DisplayRole:
+            if role == Qt.ItemDataRole.DisplayRole:
                 return self._data[index.row()][index.column()]
-        if role == Qt.TextAlignmentRole:
-            return Qt.AlignCenter
-        if role == Qt.BackgroundRole:
+        if role == Qt.ItemDataRole.TextAlignmentRole:
+            return Qt.AlignmentFlag.AlignCenter
+        if role == Qt.ItemDataRole.BackgroundRole:
             row,col = index.row(), index.column()
-            #if (row!=0) and (row!=len(self._data)-1) and (col!=0):
-            #if (row != len(self._data) - 1) and (col != 0):
             if self._data[row][col]==1:
-                return QVariant(QtGui.QColor(Qt.darkGreen))
+                return QtGui.QColor(Qt.GlobalColor.darkGreen)
             elif self._data[row][col]==0:
-                return QVariant(QtGui.QColor(Qt.lightGray))
+                return QtGui.QColor(Qt.GlobalColor.lightGray)
 
     def sort(self, Ncol, order):
         """
         Sort table by selected column
         """
         self.layoutAboutToBeChanged.emit()
-        #self._data = self._data.sort_values(self._headers[Ncol], ascending=order == Qt.AscendingOrder)
-        if order == Qt.AscendingOrder:
-            #self._data.sort(key= lambda tup:tup[Ncol])
-            #data = sorted(self._data[1:-1], key= lambda tup:tup[Ncol])
+        if order == Qt.SortOrder.AscendingOrder:
             data = sorted(self._data[:-1], key= lambda tup:tup[Ncol])
         else:
-            #self._data.sort(key= lambda tup:tup[Ncol], reverse=True)
-            #data = sorted(self._data[1:-1],key= lambda tup:tup[Ncol], reverse=True)
             data = sorted(self._data[:-1],key= lambda tup:tup[Ncol], reverse=True)
-        #self._data = [self._data[0]]+data+[self._data[-1]]
         self._data = data + [self._data[-1]]
         self.layoutChanged.emit()
 
@@ -70,15 +62,14 @@ class SequCovTableModel(AbstractTableModel):
         Overwrites the data method of AbstractTableModel to correctly format each value
         '''
         if index.isValid():
-            if role == Qt.DisplayRole:
+            if role == Qt.ItemDataRole.DisplayRole:
                 col = index.column()
                 item = self._data[index.row()][col]
                 if col == 0:
                     return item
-                # print(item)
                 return '{:2.1f}'.format(item)
-        if role == Qt.TextAlignmentRole:
-            return Qt.AlignCenter
+        if role == Qt.ItemDataRole.TextAlignmentRole:
+            return Qt.AlignmentFlag.AlignCenter
 
 
 class SequCovWidget(QtWidgets.QWidget):
@@ -94,14 +85,8 @@ class SequCovWidget(QtWidgets.QWidget):
         self._globalData = globalData
         self._noCleavageSites = len(sequence) - 1
         verticalLayout = QtWidgets.QVBoxLayout(self)
-        """model = SequCovTableModel(values)
-        table = QtWidgets.QTableView(self)
-        table.setModel(model)
-        table.setSortingEnabled(True)
-        connectTable(table,showOptions)"""
         table = TableView(self, SequCovTableModel(values))
-        table.sortByColumn(0, Qt.AscendingOrder)
-        #table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        table.sortByColumn(0, Qt.SortOrder.AscendingOrder)
         table.resizeColumnsToContents()
         [table.setRowHeight(i,23) for i in range(len(values))]
         table.setMinimumHeight((len(values)+1)*23)
@@ -110,8 +95,6 @@ class SequCovWidget(QtWidgets.QWidget):
         all.update(coveragesBackw)
         coverageData = self.addCleavageSites([[key] + list(val) for key,val in all.items()])
         verticalLayout.addWidget(self.makeCoverageTable(coverageData, ['fragm.'] + [i+1 for i in range(len(sequence)-1)]))
-        #verticalLayout.addWidget(self.makeCoverageTable(coverageData, ['Fragm.'] + [str(i+1) for i in range(self._sequLength)]))
-        #verticalLayout.addWidget(self.makeCoverageTable(globalData, ['direction'] + sequence))
         width = 10
         if self._noCleavageSites>=200:
             width = 30
@@ -156,19 +139,12 @@ class SequCovWidget(QtWidgets.QWidget):
         self._fragments[type] = (tickBox,comboBox)
 
     def makeCoverageTable(self, data, headers):
-        """model = SequCovPlotTableModel(data, headers)
-        table = QtWidgets.QTableView(self)
-        # self._table.setSortingEnabled(True)
-        table.setModel(model)
-        connectTable(table,showOptions)"""
-        #table.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
         table = TableView(self, SequCovPlotTableModel(data, headers))
-        table.sortByColumn(0, Qt.AscendingOrder)
+        table.sortByColumn(0, Qt.SortOrder.AscendingOrder)
         table.setSortingEnabled(False)
         table.resizeColumnsToContents()
         table.setColumnWidth(0,70)
         table.resizeRowsToContents()
-        #table.resize(70+len(data[0])*table.columnWidth(1), (len(data)+1)*table.rowHeight(0))
         return table
 
 

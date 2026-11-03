@@ -1,6 +1,6 @@
 import traceback
 
-from PyQt5 import QtWidgets
+from PySide6 import QtWidgets
 
 from src.Exceptions import InvalidInputException, InvalidIsotopePatternException
 from src.entities.SearchSettings import SearchSettings
@@ -10,8 +10,8 @@ from src.gui.tableviews.TableModels import TheoIonTableModel
 from src.gui.tableviews.TableViews import TableView
 from src.repositories.ConfigurationHandler import ConfigurationHandlerFactory
 from src.repositories.IsotopePatternRepository import IsotopePatternRepository
+from src.resources import UNI
 from src.services.assign_services.TD_SpectrumHandler import SpectrumHandler
-from src.services.library_services.FragmentLibraryBuilder import FragmentLibraryBuilder
 
 
 class IonTableController(AbstractMainController):
@@ -26,7 +26,7 @@ class IonTableController(AbstractMainController):
         '''
         super().__init__(window)
         dialog = self.startDialog(parent)
-        dialog.exec_()
+        dialog.exec()
         if dialog.canceled():
             return
         self._settings = dialog.newSettings()
@@ -39,7 +39,7 @@ class IonTableController(AbstractMainController):
                 self.setUpUi()
         except InvalidInputException as e:
             traceback.print_exc()
-            QtWidgets.QMessageBox.warning(None, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
+            QtWidgets.QMessageBox.warning(None, "Problem occured", e.__str__(), QtWidgets.QMessageBox.StandardButton.Ok)
 
     @staticmethod
     def startDialog(parent):
@@ -68,8 +68,8 @@ class IonTableController(AbstractMainController):
                 choice = QtWidgets.QMessageBox.question(None, "Problem with importing list of isotope patterns",
                         "Imported Fragment Library from " + patternReader.getFile() + " incomplete<br>"
                         "Should a new library be created?<br>The search will be stopped otherwise",
-                                                        QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-                if choice != QtWidgets.QMessageBox.Yes:
+                                                        QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No)
+                if choice != QtWidgets.QMessageBox.StandardButton.Yes:
                     return 1
                     #sys.exit()
         if libraryImported == False:
@@ -82,8 +82,9 @@ class IonTableController(AbstractMainController):
                                                 self._configs)
         allCharges = [z for z in range(abs(self._settings["charge"])+1)]
         self._monoIso, self._mostAb = [], []
+        formulas = {frag.getName():frag.getFormula().toString() for frag in self._libraryBuilder.getFragmentLibrary()}
         for fragName, vals in self._spectrumHandler.generateTheoreticIons(self._libraryBuilder.getFragmentLibrary()).items():
-            rowMono, rowMostAb = [fragName], [fragName]
+            rowMono, rowMostAb = [fragName, formulas[fragName]], [fragName, formulas[fragName]]
             for i in allCharges:
                 if i in vals.keys():
                     rowMono.append(float(vals[i][0]))
@@ -96,15 +97,21 @@ class IonTableController(AbstractMainController):
         sprayMode = "+"
         if self._settings['charge'] < 0:
             sprayMode = "-"
-        self._headers = ["Name", "Mass"] + [str(z)+sprayMode for z in allCharges[1:]]
+        self._headers = ["Name", "Formula", "Mass"] + [str(z)+sprayMode for z in allCharges[1:]]
         return 0
 
     def getSpectrumHandlerConstructor(self):
         return SpectrumHandler
 
     def constructLibraryBuilder(self):
-        return FragmentLibraryBuilder(self._propStorage, self._settings['nrMod'], self._configs['maxIso'],
-                                      self._configs['approxIso'])
+        if UNI:
+            from src.BACHEM_extension.services.BACHEM_LibraryBuilder import BACHEM_LibraryBuilder
+            return BACHEM_LibraryBuilder(self._propStorage, self._settings['nrMod'], self._configs['maxIso'],
+                                         self._configs['approxIso'])
+        else:
+            from src.services.library_services.FragmentLibraryBuilder import FragmentLibraryBuilder
+            return FragmentLibraryBuilder(self._propStorage, self._settings['nrMod'], self._configs['maxIso'],
+                                          self._configs['approxIso'])
 
     def setUpUi(self):
         self._layout = QtWidgets.QVBoxLayout(self._mainWindow.centralWidget())
@@ -119,8 +126,8 @@ class IonTableController(AbstractMainController):
             scrollArea.setWidgetResizable(True)
             model = TheoIonTableModel(self._headers, data)
             table = TableView(scrollArea, model)
-            table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
-            table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+            table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
+            table.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum)
             table.resizeRowsToContents()
             table.resizeColumnsToContents()
             scrollArea.setWidget(table)

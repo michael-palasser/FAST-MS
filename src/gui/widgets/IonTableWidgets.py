@@ -1,9 +1,9 @@
 from math import log10
 
-from PyQt5 import QtWidgets
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QFont
-from PyQt5.QtWidgets import QTableWidget
+from PySide6 import QtWidgets
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QFont
+from PySide6.QtWidgets import QTableWidget
 
 from src.Exceptions import InvalidInputException
 from src.gui.GUI_functions import connectTable, showOptions
@@ -17,12 +17,11 @@ class IonTableWidget(QTableWidget):
     '''
     def __init__(self, parent, ions, yPos):
         super(IonTableWidget, self).__init__(parent)
-        #self._headers = ['m/z', 'z', 'I', 'fragment', 'error /ppm', 'S/N', 'qual.']
         self._ions = ions
         self.setColumnCount(len(self.getHeaders()))
         self.move(20, yPos)  # 70
-        self.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
-        self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        self.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
         self.setRowCount(len(ions))
         self._smallFnt = QFont()
         self._smallFnt.setPointSize(10)
@@ -31,20 +30,7 @@ class IonTableWidget(QTableWidget):
             self.fill(i, ion)
         self.setHorizontalHeaderLabels(self.getHeaders())
         self.resizeColumnsToContents()
-        #self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.setSortingEnabled(True)
-        #connectTable(self, self.showOptions)
-        # self.customContextMenuRequested['QPoint'].connect(partial(self.editRow, self, bools))
-
-    '''def getIonValues(self):
-        return self._ionValues'''
-    '''def getData(self):
-        data = []
-        for i in range(self.rowCount()):
-            data.append([self.item(i,j).text() for j in range(5)] + [self.item(i, 5).checkState()==2])
-            #itemList.append([self.item(row, col).text() for col in range(len(self.getHeaders()))])
-        print(data)
-        return data'''
 
     def getFormat(self):
         return ['{:10.5f}','{:2d}', '{:12d}', '','{:4.2f}', '{:6.1f}', '{:4.2f}', '']
@@ -67,21 +53,21 @@ class IonTableWidget(QTableWidget):
             ionVal.append(item)
             if j == 3 or j==7:
                 newItem = QtWidgets.QTableWidgetItem(str(item))
-                newItem.setTextAlignment(Qt.AlignLeft)
+                newItem.setTextAlignment(Qt.AlignmentFlag.AlignLeft)
                 if j==7:
                     newItem.setFont(self._smallFnt)
             else:
                 newItem = QtWidgets.QTableWidgetItem()
-                newItem.setTextAlignment(Qt.AlignRight)
+                newItem.setTextAlignment(Qt.AlignmentFlag.AlignRight)
                 if j == 2:
                     formatString = formats[2]
                     if item >= 10 ** 13:
                         lg10 = str(int(log10(item) + 1))
                         formatString = '{:' + lg10 + 'd}'
-                    newItem.setData(Qt.DisplayRole, formatString.format(item))
+                    newItem.setData(Qt.ItemDataRole.DisplayRole, formatString.format(item))
                 else:
-                    newItem.setData(Qt.DisplayRole, formats[j].format(item))
-            newItem.setFlags(Qt.ItemIsEnabled)
+                    newItem.setData(Qt.ItemDataRole.DisplayRole, formats[j].format(item))
+            newItem.setFlags(Qt.ItemFlag.ItemIsEnabled)
             self.setItem(row, j, newItem)
         self.resizeRowsToContents()
         self._ionValues.append(ionVal)
@@ -90,24 +76,6 @@ class IonTableWidget(QTableWidget):
         for ion in self._ions:
             if ion.getName() == self.item(row, 3).text() and ion.getCharge() == int(self.item(row, 1).text()):
                 return ion
-
-    '''def showOptions(self, table, pos):
-        menu = QtWidgets.QMenu()
-        copyAllAction = menu.addAction("Copy Table")
-        copyAction = menu.addAction("Copy Cell")
-        action = menu.exec_(table.viewport().mapToGlobal(pos))
-        vals = self.getData()
-        if action == copyAction:
-            it = table.indexAt(pos)
-            if it is None:
-                return
-            selectedRow = it.row()
-            selectedCol = it.column()
-            df = pd.DataFrame([vals[selectedRow][selectedCol]])
-            df.to_clipboard(index=False, header=False)
-        if action == copyAllAction:
-            df = pd.DataFrame(data=vals, columns=self.getHeaders())
-            df.to_clipboard(index=False, header=True)'''
 
     def getData(self):
         itemList = []
@@ -139,23 +107,22 @@ class IsoPatternIon(IonTableWidget):
         for j, item in enumerate(ion):
             if j == 3 or j==5:
                 newItem = QtWidgets.QTableWidgetItem(str(item))
-                newItem.setTextAlignment(Qt.AlignLeft)
-                newItem.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
+                newItem.setTextAlignment(Qt.AlignmentFlag.AlignLeft)
+                newItem.setFlags(Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEnabled)
             else:
                 newItem = QtWidgets.QTableWidgetItem()
-                newItem.setTextAlignment(Qt.AlignRight)
+                newItem.setTextAlignment(Qt.AlignmentFlag.AlignRight)
                 if j == 2:
                     formatString = formats[2]
                     if item >= 10 ** 13:
                         lg10 = str(int(log10(item) + 1))
                         formatString = '{:' + lg10 + 'd}'
-                    newItem.setData(Qt.DisplayRole, formatString.format(item))
+                    newItem.setData(Qt.ItemDataRole.DisplayRole, formatString.format(item))
                 else:
-                    newItem.setData(Qt.DisplayRole, formats[j].format(item))
-                    newItem.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
+                    newItem.setData(Qt.ItemDataRole.DisplayRole, formats[j].format(item))
+                    newItem.setFlags(Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEnabled)
             self.setItem(row, j, newItem)
         self.resizeRowsToContents()
-        #self.customContextMenuRequested['QPoint'].connect(partial(self.showOptions, self))
 
     def getIntensity(self):
         if self._ions == ((),):
@@ -165,43 +132,8 @@ class IsoPatternIon(IonTableWidget):
         except ValueError:
             raise InvalidInputException('Unvalid intensity', self.item(0, 2).text())
 
-
     def getIon(self, row):
         return self._ions[row]
-
-    '''def showOptions(self, table, pos):
-        menu = QtWidgets.QMenu()
-        copyAllAction = menu.addAction("Copy Table")
-        copyAction = menu.addAction("Copy Cell")
-        action = menu.exec_(table.viewport().mapToGlobal(pos))
-        vals = self.getData()
-        if action == copyAction:
-            it = table.indexAt(pos)
-            if it is None:
-                return
-            selectedRow = it.row()
-            selectedCol = it.column()
-            df = pd.DataFrame([vals[selectedRow][selectedCol]])
-            df.to_clipboard(index=False, header=False)
-        if action == copyAllAction:
-            df = pd.DataFrame(data=vals, columns=self.getHeaders())
-            df.to_clipboard(index=False, header=True)'''
-
-    '''def showOptions(self, table, pos):
-        menu = QtWidgets.QMenu()
-        copyAllAction = menu.addAction("Copy Table")
-        copyAction = menu.addAction("Copy Cell")
-        action = menu.exec_(table.viewport().mapToGlobal(pos))
-        if action == copyAction:
-            it = table.indexAt(pos)
-            if it is None:
-                return
-            selectedCol = it.column()
-            df = pd.DataFrame([self._ions[0][selectedCol]])
-            df.to_clipboard(index=False, header=False)
-        elif action == copyAllAction:
-            df = pd.DataFrame(data=self._ions, columns=self.getHeaders())
-            df.to_clipboard(index=False, header=True)'''
 
     def updateTable(self, newIons):
         self._ions = newIons
@@ -229,19 +161,15 @@ class TickIonTableWidget(IonTableWidget):
         '''
         super(TickIonTableWidget, self).fill(row, ion)
         checkItem = QtWidgets.QTableWidgetItem()
-        checkItem.setCheckState(Qt.Unchecked)  # QtCore.Qt.Unchecked
+        checkItem.setCheckState(Qt.CheckState.Unchecked)  # QtCore.Qt.CheckState.Unchecked
         self.setItem(row, len(self.getHeaders())-1, checkItem)
-        #print(ion)
         self.checkBoxes.append((checkItem, ion))
-        #self.resizeColumnsToContents()
-        #self.resizeRowsToContents()
 
 
     def getDumpList(self):
         dumpList = []
         for row in self.checkBoxes:
-            #checkBox = self.item(row, self.columnCount()-1)
-            if row[0].checkState():
+            if row[0].checkState() == Qt.CheckState.Checked:
                 dumpList.append(row[1])
         return dumpList
 
@@ -250,7 +178,7 @@ class TickIonTableWidget(IonTableWidget):
         columns = len(self.getHeaders())
         for row in range(self.rowCount()):
             items = [self.item(row, col).text() for col in range(columns-1)]
-            items.append(self.item(row, columns-1).checkState() == 2)
+            items.append(self.item(row, columns-1).checkState() == Qt.CheckState.Checked)
             itemList.append(items)
         return itemList
 
@@ -261,26 +189,19 @@ class CalibrationIonTableWidget(QTableWidget):
     '''
     def __init__(self, parent, ions):
         super(CalibrationIonTableWidget, self).__init__(parent)
-        #self._headers = ['m/z', 'z', 'I', 'fragment', 'error /ppm', 'S/N', 'qual.']
         self._ions = ions
         self.setColumnCount(len(self.getHeaders()))
-        #self.move(20, yPos)  # 70
-        self.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
-        self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        self.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
         self.setRowCount(len(ions))
         self._ionValues = []
         for i, ion in enumerate(ions):
             self.fill(i, ion)
         self.setHorizontalHeaderLabels(self.getHeaders())
         self.resizeColumnsToContents()
-        #self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.setSortingEnabled(True)
         connectTable(self, showOptions)
-        #connectTable(self, self.showOptions)
-        # self.customContextMenuRequested['QPoint'].connect(partial(self.editRow, self, bools))
 
-    '''def getIonValues(self):
-        return self._ionValues'''
 
     def getFormat(self):
         return ['{:10.5f}','{:2d}', '{:12d}', '', '{:5.2f}', '']
@@ -288,8 +209,6 @@ class CalibrationIonTableWidget(QTableWidget):
     def getHeaders(self):
         return ['m/z','z','intensity','name','error /ppm', 'use']
 
-    '''def getValue(self,ion):
-        return ion.getValues()'''
 
     def fill(self, row, ionVals):
         '''
@@ -298,60 +217,32 @@ class CalibrationIonTableWidget(QTableWidget):
         :param (FragmentIon) ion:
         '''
         formats=self.getFormat()
-        #ionVal = []
         for j, item in enumerate(ionVals):
-            #ionVal.append(item)
             if j == 3:
                 newItem = QtWidgets.QTableWidgetItem(str(item))
-                newItem.setTextAlignment(Qt.AlignLeft)
+                newItem.setTextAlignment(Qt.AlignmentFlag.AlignLeft)
             else:
                 newItem = QtWidgets.QTableWidgetItem()
-                newItem.setTextAlignment(Qt.AlignRight)
+                newItem.setTextAlignment(Qt.AlignmentFlag.AlignRight)
                 if j == 2:
                     formatString = formats[2]
                     if item >= 10 ** 13:
                         lg10 = str(int(log10(item) + 1))
                         formatString = '{:' + lg10 + 'd}'
-                    newItem.setData(Qt.DisplayRole, formatString.format(item))
-                #elif j == 4:
-                #    newItem.setData(Qt.DisplayRole, item)
+                    newItem.setData(Qt.ItemDataRole.DisplayRole, formatString.format(item))
                 elif j == 5:
                     continue
                 elif j == 6:
                     checkItem = QtWidgets.QTableWidgetItem()
                     if item:
-                        checkItem.setCheckState(Qt.Checked)  # Qt.Unchecked
+                        checkItem.setCheckState(Qt.CheckState.Checked)  # Qt.CheckState.Unchecked
                     else:
-                        checkItem.setCheckState(Qt.Unchecked)  # Qt.Unchecked
+                        checkItem.setCheckState(Qt.CheckState.Unchecked)  # Qt.CheckState.Unchecked
                     self.setItem(row, 5, checkItem)
                 else:
-                    newItem.setData(Qt.DisplayRole, formats[j].format(item))
-            newItem.setFlags(Qt.ItemIsEnabled)
+                    newItem.setData(Qt.ItemDataRole.DisplayRole, formats[j].format(item))
+            newItem.setFlags(Qt.ItemFlag.ItemIsEnabled)
             self.setItem(row, j, newItem)
-        #self.resizeRowsToContents()
-
-    '''def getIon(self, row):
-        for ion in self._ions:
-            if ion.getName() == self.item(row, 3).text() and ion.getCharge() == int(self.item(row, 1).text()):
-                return ion'''
-
-    '''def showOptions(self, table, pos):
-        menu = QtWidgets.QMenu()
-        copyAllAction = menu.addAction("Copy Table")
-        copyAction = menu.addAction("Copy Cell")
-        action = menu.exec_(table.viewport().mapToGlobal(pos))
-        vals = self.checkStatus()
-        if action == copyAction:
-            it = table.indexAt(pos)
-            if it is None:
-                return
-            selectedRow = it.row()
-            selectedCol = it.column()
-            df = pd.DataFrame([vals[selectedRow][selectedCol]])
-            df.to_clipboard(index=False, header=False)
-        if action == copyAllAction:
-            df = pd.DataFrame(data=vals, columns=self.getHeaders())
-            df.to_clipboard(index=False, header=True)'''
 
     def checkStatus(self):
         itemList = []
@@ -362,14 +253,6 @@ class CalibrationIonTableWidget(QTableWidget):
     def getData(self):
         data = []
         for i in range(self.rowCount()):
-            data.append([self.item(i,j).text() for j in range(5)] + [self.item(i, 5).checkState()==2])
+            data.append([self.item(i,j).text() for j in range(5)] + [self.item(i, 5).checkState() == Qt.CheckState.Checked])
             #itemList.append([self.item(row, col).text() for col in range(len(self.getHeaders()))])
         return data
-
-
-"""class FinalIonTable(TickIonTableWidget):
-    def getHeaders(self):
-        return ['m/z', 'z', 'I', 'fragment', 'error /ppm', 'S/N', 'qual.','comment', 'del.?']
-
-    def getValue(self,ion):
-        return ion.getValues()+ [ion.comment]"""

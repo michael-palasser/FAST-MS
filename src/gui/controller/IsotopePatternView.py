@@ -1,4 +1,4 @@
-from PyQt5 import QtWidgets, QtCore
+from PySide6 import QtWidgets, QtCore
 from pandas import DataFrame
 
 from src.resources import DEVELOP
@@ -68,14 +68,14 @@ class IsotopePatternView(SimpleMainWindow):
 
         self._spectrumView = QtWidgets.QFrame(self._rightWidget)
         self._spectrumView.setMinimumSize(335, 270)
-        self._spectrumView.setFrameShape(QtWidgets.QFrame.StyledPanel)
-        self._spectrumView.setAttribute(QtCore.Qt.WA_StyledBackground, True)
+        self._spectrumView.setFrameShape(QtWidgets.QFrame.Shape.StyledPanel)
+        self._spectrumView.setAttribute(QtCore.Qt.WidgetAttribute.WA_StyledBackground, True)
         self._spectrumView.setStyleSheet('background-color: white')
         self._vertLayoutRight.addWidget(self._spectrumView)
         self._vertLayout.addSpacing(10)
         self.makeIonTable(None, None, None)
 
-        self._vertLayout.addItem(QtWidgets.QSpacerItem(0, 10, QtWidgets.QSizePolicy.Expanding))
+        self._vertLayout.addItem(QtWidgets.QSpacerItem(0, 10, QtWidgets.QSizePolicy.Policy.Expanding))
 
         self._peakLabel = QtWidgets.QLabel(self._centralwidget)
         self._peakLabel.setText(self._translate(self.objectName(), "Peaks:"))
@@ -123,8 +123,8 @@ class IsotopePatternView(SimpleMainWindow):
         formlayout = makeFormLayout(self._frame)
         formlayout.setContentsMargins(5,5,5,5)
         self._frame.setLayout(formlayout)
-        self._frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
-        self._frame.setFrameShadow(QtWidgets.QFrame.Raised)
+        self._frame.setFrameShape(QtWidgets.QFrame.Shape.StyledPanel)
+        self._frame.setFrameShadow(QtWidgets.QFrame.Shadow.Raised)
         self._options = {key:QtWidgets.QComboBox(self._frame) for key in ('fragmentation', 'fragment', 'modPattern', 'modif')}
         for key, fun in {'fragmentation':self.getFragValues, 'fragment':self.changeRadicals,
                          'modPattern':self.getModValues, 'modif':self.changeRadicals}.items():
@@ -151,15 +151,15 @@ class IsotopePatternView(SimpleMainWindow):
         Inserts the ion option (fragmentation, modification, ...) widgets into the QFrame
         '''
         labelNames = ("Fragmentation:", "Fragment:", "Modif. Pattern:", "Modification:", "Nr. of Mod.:")
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
         for i, key in enumerate(self._options.keys()):
             label = QtWidgets.QLabel(self._frame)
             label.setText(self._translate(self.objectName(), labelNames[i]))
             self._options[key].setToolTip(toolTips[i])
             self._options[key].setDisabled(True)
             self._options[key].setSizePolicy(sizePolicy)
-            formlayout.setWidget(i, QtWidgets.QFormLayout.LabelRole, label)
-            formlayout.setWidget(i, QtWidgets.QFormLayout.FieldRole, self._options[key])
+            formlayout.setWidget(i, QtWidgets.QFormLayout.ItemRole.LabelRole, label)
+            formlayout.setWidget(i, QtWidgets.QFormLayout.ItemRole.FieldRole, self._options[key])
 
     def changeRadicals(self):
         radicals = self._logics.getRadicals(self._modeBox.currentText(), self._inputForm.text(),
@@ -174,7 +174,7 @@ class IsotopePatternView(SimpleMainWindow):
         service = SequenceService()
         openDialog = OpenDialog('Sequences', service.getAllSequenceNames())
         openDialog.show()
-        if openDialog.exec_() and openDialog.accepted:
+        if openDialog.exec() and openDialog.accepted:
             sequence = service.get(openDialog.getName())
             if "NA" in sequence.getMolecule():
                 options = ("RNA CAD", "RNA_CAD")
@@ -266,7 +266,7 @@ class IsotopePatternView(SimpleMainWindow):
                                                                        self._options['modPattern'].currentText(), self._options['modif'].currentText(), self._options['nrMod'].value(),
                                                                        accelerate)
         except InvalidInputException as e:
-            QtWidgets.QMessageBox.warning(self, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
+            QtWidgets.QMessageBox.warning(self, "Problem occured", e.__str__(), QtWidgets.QMessageBox.StandardButton.Ok)
             return
         self.renderView(self._ion, neutralMass, avMass,charge)
 
@@ -321,7 +321,7 @@ class IsotopePatternView(SimpleMainWindow):
             self._ion = self._logics.model(peaks)
             self._intensity = round(self._ion.getIntensity())
         except InvalidInputException as e:
-            QtWidgets.QMessageBox.warning(self, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
+            QtWidgets.QMessageBox.warning(self, "Problem occured", e.__str__(), QtWidgets.QMessageBox.StandardButton.Ok)
             return
         self.renderView(self._ion, self._logics.getNeutralMass(), self._logics.getAvMass(), int(self._charge.text()))
 
@@ -333,7 +333,7 @@ class IsotopePatternView(SimpleMainWindow):
         copyAllAction = menu.addAction("Copy Table")
         copyAction = menu.addAction("Copy Cell")
         deleteAction = menu.addAction("Delete Last Peak")
-        action = menu.exec_(table.viewport().mapToGlobal(pos))
+        action = menu.exec(table.viewport().mapToGlobal(pos))
         if action == copyAllAction:
             # df = self.getDataframe()
             df = DataFrame(table.getData(), columns=table.getHeaders())
@@ -390,16 +390,16 @@ class AddIonView(IsotopePatternView):
 
     def accept(self):
         if self._ion == None:
-            dlg = QtWidgets.QMessageBox(QtWidgets.QMessageBox.Information, 'Invalid Request',
-                                        'No input, sequence is empty', QtWidgets.QMessageBox.Ok, self)
+            dlg = QtWidgets.QMessageBox(QtWidgets.QMessageBox.Icon.Information, 'Invalid Request',
+                                        'No input, sequence is empty', QtWidgets.QMessageBox.StandardButton.Ok, self)
             dlg.show()
         if self._ion.getIntensity() == 0:
-            dlg = QtWidgets.QMessageBox(QtWidgets.QMessageBox.Information, 'Invalid Request',
-                                        'Intensity of the new ion must not be 0!', QtWidgets.QMessageBox.Ok, self)
+            dlg = QtWidgets.QMessageBox(QtWidgets.QMessageBox.Icon.Information, 'Invalid Request',
+                                        'Intensity of the new ion must not be 0!', QtWidgets.QMessageBox.StandardButton.Ok, self)
             dlg.show()
         elif self._ion.getCharge() == 0:
-            dlg = QtWidgets.QMessageBox(QtWidgets.QMessageBox.Information, 'Invalid Request',
-                                        'Charge of the new ion must not be 0!', QtWidgets.QMessageBox.Ok, self)
+            dlg = QtWidgets.QMessageBox(QtWidgets.QMessageBox.Icon.Information, 'Invalid Request',
+                                        'Charge of the new ion must not be 0!', QtWidgets.QMessageBox.StandardButton.Ok, self)
             dlg.show()
         else:
             self._signal(self)

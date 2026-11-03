@@ -7,8 +7,8 @@ import logging
 import sys
 import traceback
 
-from PyQt5 import QtWidgets
-from PyQt5.QtCore import QSize
+from PySide6 import QtWidgets
+from PySide6.QtCore import QSize
 
 from src.Exceptions import CanceledException, InvalidInputException
 from src.gui.GUI_functions import setIcon
@@ -137,26 +137,12 @@ class Window(SimpleMainWindow):
         from src.gui.dialogs.StartDialogs import IntactStartDialog
         from src.intact.Main import run as IntactIonsSearch
         dialog = IntactStartDialog(self)
-        if dialog.exec_() and dialog.ok:
+        if dialog.exec() and dialog.ok:
             self.startApp(IntactIonsSearch)
-            """IntactIonsSearch()
-            except InvalidInputException as e:
-                traceback.print_exc()
-                QtWidgets.QMessageBox.warning(self, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)"""
 
     def openIonModeller(self):
         from src.gui.controller.IsotopePatternView import IsotopePatternView
         self._openWindows.append(IsotopePatternView(None))
-
-    """
-    def compareSpectra(self):
-        self.startApp(spectrumComparator)
-       try:
-            spectrumComparator(self)
-        except InvalidInputException as e:
-            traceback.print_exc()
-            QtWidgets.QMessageBox.warning(self, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)"""
-
 
     def close_application(self):
         print('exit')
@@ -165,7 +151,7 @@ class Window(SimpleMainWindow):
     def editTopDownConfig(self):
         from src.gui.dialogs.ParameterDialogs import ConfigurationDialog
         dialog = ConfigurationDialog(self)
-        dialog.exec_()
+        dialog.exec()
 
     def editData(self, controller):
         from src.gui.controller.EditorController import IntactIonEditorController, ElementEditorController, \
@@ -178,7 +164,7 @@ class Window(SimpleMainWindow):
             pass
         except InvalidInputException as e:
             traceback.print_exc()
-            QtWidgets.QMessageBox.warning(self, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
+            QtWidgets.QMessageBox.warning(self, "Problem occured", e.__str__(), QtWidgets.QMessageBox.StandardButton.Ok)
 
     def addAdditionalMenu(self):
         pass
@@ -190,20 +176,5 @@ class Window(SimpleMainWindow):
         except Exception as e:
             traceback.print_exc()
             logging.exception(e.__str__())
-            QtWidgets.QMessageBox.warning(None, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
+            QtWidgets.QMessageBox.warning(None, "Problem occured", e.__str__(), QtWidgets.QMessageBox.StandardButton.Ok)
             raise e
-
-"""def run():
-    app = QApplication(sys.argv)
-    app.setStyle(QtWidgets.QStyleFactory.create("Fusion"))
-    app.setApplicationName("FAST MS")
-    setIcon(app)
-    if INTERN:
-        gui = InternalWindow()
-    else:
-        gui = Window()
-    sys.exit(app.exec_())
-
-
-if __name__ == '__main__':
-    run()"""

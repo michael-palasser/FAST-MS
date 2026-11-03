@@ -1,4 +1,4 @@
-from PyQt5 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 from os.path import join
 
 from src.resources import base_path
@@ -19,9 +19,9 @@ class ConfigurationDialog(DialogWithTabs):
         self._interestingIons = list()
         self._addIons = list()
         self._tabs = dict()
-        self._boxSizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        self._boxSizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
         self.setupUi(self)
-        self._verticalLayout.addWidget(self._buttonBox, 0, QtCore.Qt.AlignRight)
+        self._verticalLayout.addWidget(self._buttonBox, 0, QtCore.Qt.AlignmentFlag.AlignRight)
         shoot(self)
 
 
@@ -60,7 +60,7 @@ class ConfigurationDialog(DialogWithTabs):
         box.setGeometry(QtCore.QRect(5, 10, 320, 90))
         gridLayout = QtWidgets.QGridLayout(box)
         gridLayout.setContentsMargins(0,0,0,0)
-        gridLayout.setSizeConstraint(QtWidgets.QLayout.SetMinimumSize)
+        gridLayout.setSizeConstraint(QtWidgets.QLayout.SizeConstraint.SetMinimumSize)
         box.setTitle(self._translate(self.objectName(), "Interesting Ions"))
         box.setToolTip(self._translate(self.objectName(), "Tick fragment types which should be more analysed in more detail."))
         column = 0
@@ -177,11 +177,8 @@ class ConfigurationDialog(DialogWithTabs):
                                                    "Ticked if the abundaces (int./z) of the ions should be used for the "
                                                    "quantitative analysis. Otherwise, the intensities (int.) are used.")})
         self._interestingIonsBox = self.fillInterestingIonsBox(self._outputTab)
-        self._verticalLayout.addWidget(self._buttonBox, 0, QtCore.Qt.AlignHCenter)
+        self._verticalLayout.addWidget(self._buttonBox, 0, QtCore.Qt.AlignmentFlag.AlignHCenter)
         self.backToLast()
-        '''for fragItem in self._interestingIons:
-            if fragItem.objectName() in (self._configHandler.get('interestingIons')):
-                fragItem.setChecked(True)'''
         self._tabWidget.setCurrentIndex(3)
 
 

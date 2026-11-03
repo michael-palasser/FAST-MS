@@ -1,6 +1,6 @@
 
-from PyQt5 import QtWidgets
-from PyQt5.QtCore import Qt
+from PySide6 import QtWidgets
+from PySide6.QtCore import Qt
 
 from src.gui.GUI_functions import setWindowIcon, translate
 from src.gui.tableviews.PlotTables import PlotTableView
@@ -21,7 +21,7 @@ class FragmentationTableModel(AbstractTableModel):
         Overwrites the typeData method of AbstractTableModel to correctly format each value
         '''
         if index.isValid():
-            if role == Qt.DisplayRole:
+            if role == Qt.ItemDataRole.DisplayRole:
                 col = index.column()
                 item = self._data[index.row()][col]
                 formatString = self._format[col]
@@ -29,8 +29,8 @@ class FragmentationTableModel(AbstractTableModel):
                     return item
                 else:
                     return formatString.format(item)
-        if role == Qt.TextAlignmentRole:
-            return Qt.AlignCenter
+        if role == Qt.ItemDataRole.TextAlignmentRole:
+            return Qt.AlignmentFlag.AlignCenter
 
 
 class FragmentationTable(QtWidgets.QWidget):
@@ -40,38 +40,16 @@ class FragmentationTable(QtWidgets.QWidget):
     def __init__(self, typeData, siteData, siteHeaders, title):
         super().__init__(parent=None)
         verticalLayout = QtWidgets.QVBoxLayout(self)
-        #scrollArea = QtWidgets.QScrollArea(self)
-        #_scrollArea.setGeometry(QtCore.QRect(10, 10, len(typeData[0])*50+200, len(typeData)*22+25))
-        #scrollArea.setWidgetResizable(True)
-        # _scrollArea.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
-        # _scrollArea.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self._table = TableView(self, FragmentationTableModel(typeData))
-        self._table.sortByColumn(0, Qt.AscendingOrder)
-        """model = FragmentationTableModel(typeData)
-        self._table = QtWidgets.QTableView(self)
-        self._table.setSortingEnabled(True)
-        self._table.setModel(model)
-        self._table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
-        self._table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        #self._table.setSelectionBehavior(QAbstractItemView.SelectRows)
-        connectTable(self._table, showOptions)"""
-        '''self._table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self._table.customContextMenuRequested['QPoint'].connect(partial(self.showOptions, self._table))'''
+        self._table.sortByColumn(0, Qt.SortOrder.AscendingOrder)
 
-        #scrollArea.setWidget(self._table)
-
-        #self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        #self._table.move(0,0)
-        self.setObjectName(title)#'Fragmentation Efficiencies')
+        self.setObjectName(title)
         self._translate = translate
         self.setWindowTitle(self._translate(self.objectName(), self.objectName()))
         self._table.resizeColumnsToContents()
         self._table.resizeRowsToContents()
-        #verticalLayout.addWidget(scrollArea)
         verticalLayout.addWidget(self._table)
-        #self.resize(len(typeData[0])*50+200, len(typeData)*22+25)
         table2 = PlotTableView(None, siteData, siteHeaders,'Fragmentation Efficiencies: ',0)
-        #table2.setContentsMargins(0,0,0,0)
         table2.sortBy(1)
         verticalLayout.addWidget(table2)
         setWindowIcon(self)

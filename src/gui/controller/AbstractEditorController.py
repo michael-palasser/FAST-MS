@@ -4,8 +4,8 @@ from abc import ABC
 from functools import partial
 
 import pandas as pd
-from PyQt5 import QtWidgets
-from PyQt5.QtCore import Qt
+from PySide6 import QtWidgets
+from PySide6.QtCore import Qt
 
 from src.Exceptions import CanceledException, InvalidInputException
 from src.resources import DEVELOP
@@ -51,10 +51,10 @@ class AbstractSimpleEditorController(ABC):
         tableWidget = self.formatTableWidget(headers, tableWidget, data, bools)
         tableWidget.setHorizontalHeaderLabels(headers)
         tableWidget.resizeColumnsToContents()
-        tableWidget.setContextMenuPolicy(Qt.CustomContextMenu)
+        tableWidget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         tableWidget.customContextMenuRequested['QPoint'].connect(partial(self.editRow, tableWidget, bools))
         tableWidget.setSortingEnabled(True)
-        tableWidget.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        tableWidget.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
         maxWidth = 500
         for i in range(len(headers)):
             if tableWidget.columnWidth(i)>maxWidth:
@@ -77,15 +77,15 @@ class AbstractSimpleEditorController(ABC):
         headerKeys = list(headers.keys())
         tableWidget.setRowCount(len(data))
         #tableWidget.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
-        tableWidget.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+        tableWidget.setSizePolicy(QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Minimum)
         for i, row in enumerate(data):
             for j, item in enumerate(row):
                 if j in boolVals:
                     newItem = QtWidgets.QTableWidgetItem(item)
                     if item == 1:
-                        newItem.setCheckState(Qt.Checked)
+                        newItem.setCheckState(Qt.CheckState.Checked)
                     elif item == 0:
-                        newItem.setCheckState(Qt.Unchecked)
+                        newItem.setCheckState(Qt.CheckState.Unchecked)
                     tableWidget.setItem(i, j, newItem)
                 else:
                     newItem = QtWidgets.QTableWidgetItem(str(item))
@@ -125,11 +125,11 @@ class AbstractSimpleEditorController(ABC):
                     print(type(widgetItem), widgetItem)"""
                 if col in boolVals:
                     try:
-                        rowData.append(int(widgetItem.checkState()/2))
+                        rowData.append(int(widgetItem.checkState() == Qt.CheckState.Checked))
                     except AttributeError as e:
                         #print(row, col)
                         newItem = QtWidgets.QTableWidgetItem()
-                        newItem.setCheckState(Qt.Checked)
+                        newItem.setCheckState(Qt.CheckState.Checked)
                         table.setItem(row,col, newItem)
                         rowData.append(1)
                         logging.warning(e.__str__())
@@ -169,7 +169,7 @@ class AbstractSimpleEditorController(ABC):
         copyPasteAction = menu.addAction("Copy and insert row")
         deleteRowAction = menu.addAction("Delete row")
         copyAction = menu.addAction("Copy table")
-        action = menu.exec_(table.viewport().mapToGlobal(pos))
+        action = menu.exec(table.viewport().mapToGlobal(pos))
         if action == insertRowAction:
             self.insertRow(table, bools)
             table.resizeRowsToContents()
@@ -238,7 +238,7 @@ class AbstractSimpleEditorController(ABC):
         table.insertRow(table.rowCount())
         for i in bools:
             newitem = QtWidgets.QTableWidgetItem(0)
-            newitem.setCheckState(Qt.Unchecked)
+            newitem.setCheckState(Qt.CheckState.Unchecked)
             table.setItem(table.rowCount() - 1, i, newitem)
 
 
@@ -282,14 +282,15 @@ class AbstractEditorController(AbstractSimpleEditorController, ABC):
             label = QtWidgets.QLabel(parent)
             width = len(labelName)*10
             label.setText(self._translate(self._mainWindow.objectName(), labelName))
-            formLayout.setWidget(i, QtWidgets.QFormLayout.LabelRole, label)
+            formLayout.setWidget(i, QtWidgets.QFormLayout.ItemRole.LabelRole, label)
             if width>maxWidth:
                 maxWidth = width
         self._widgets = dict()
         counter = 0
         for widgetName, widget in widgets.items():
-            widget.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed))
-            formLayout.setWidget(counter, QtWidgets.QFormLayout.FieldRole, widget)
+            widget.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding,
+                                                       QtWidgets.QSizePolicy.Policy.Fixed))
+            formLayout.setWidget(counter, QtWidgets.QFormLayout.ItemRole.FieldRole, widget)
             self._widgets[widgetName] = widget
             counter+=1
         for widget, initVal in zip(self._widgets.values(), initialValues):
@@ -318,7 +319,7 @@ class AbstractEditorController(AbstractSimpleEditorController, ABC):
         '''
         openDialog = OpenDialog(title, self._service.getAllPatternNames() + ['--New--'])
         openDialog.show()
-        if openDialog.exec_() and openDialog.accepted:
+        if openDialog.exec() and openDialog.accepted:
             name = openDialog.getName()
             if name != "--New--":
                 return self._service.get(name)
@@ -331,7 +332,8 @@ class AbstractEditorController(AbstractSimpleEditorController, ABC):
             self.openAgain(title=False)
         except InvalidInputException as e:
             traceback.print_exc()
-            QtWidgets.QMessageBox.warning(self._mainWindow, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
+            QtWidgets.QMessageBox.warning(self._mainWindow, "Problem occured", e.__str__(),
+                                          QtWidgets.QMessageBox.StandardButton.Ok)
 
     def delete(self):
         '''
@@ -339,15 +341,15 @@ class AbstractEditorController(AbstractSimpleEditorController, ABC):
         '''
         openDialog = OpenDialog("Delete", self._service.getAllPatternNames())
         #openDialog.show()
-        if openDialog.exec_() and openDialog.accepted:
+        if openDialog.exec() and openDialog.accepted:
             text = openDialog.getName()
             if text != "--New--":
                 print('Deleting '+text)
                 choice = QtWidgets.QMessageBox.question(self._mainWindow, 'Deleting ',
                                                         "Warning: Deleting " + text +
                                                         " cannot be undone!\n\nResume?",
-                                                        QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-                if choice == QtWidgets.QMessageBox.Yes:
+                                                        QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No)
+                if choice == QtWidgets.QMessageBox.StandardButton.Yes:
                     print("deleting",text)
                     self._pattern = self._service.delete(text)
 
@@ -358,7 +360,7 @@ class AbstractEditorController(AbstractSimpleEditorController, ABC):
         rowCount = self._table.rowCount()
         columnCount = self._table.columnCount()
         rowSelecter = RowSelecter(rowCount, "Copy Row")
-        if rowSelecter.exec_() and rowSelecter.accepted:
+        if rowSelecter.exec() and rowSelecter.accepted:
             self._table.insertRow(self._table.rowCount())
             copiedRow = rowSelecter.spinBox.value() - 1
             for j in range(columnCount):
@@ -400,7 +402,7 @@ class AbstractEditorControllerWithTabs(AbstractEditorController, ABC):
     def makeUpperWidget(self):
         upperWidget = QtWidgets.QWidget(self._centralwidget)
         formLayout = QtWidgets.QFormLayout(upperWidget)
-        formLayout.setFieldGrowthPolicy(QtWidgets.QFormLayout.ExpandingFieldsGrow)
+        formLayout.setFieldGrowthPolicy(QtWidgets.QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow)
         self._verticalLayout.addWidget(upperWidget)
         return upperWidget
 

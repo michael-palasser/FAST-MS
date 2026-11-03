@@ -1,4 +1,4 @@
-from PyQt5 import QtWidgets, QtCore
+from PySide6 import QtWidgets, QtCore
 
 from src.gui.GUI_functions import connectTable, showOptions
 
@@ -11,8 +11,8 @@ class TableView(QtWidgets.QTableView):
         super(TableView, self).__init__(parent)
         self.setModel(model)
         self.setSortingEnabled(True)
-        self.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
-        self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum)
         connectTable(self, optionFun)
         if sort is not None:
-            self.sortByColumn(sort, QtCore.Qt.AscendingOrder)
+            self.sortByColumn(sort, QtCore.Qt.SortOrder.AscendingOrder)

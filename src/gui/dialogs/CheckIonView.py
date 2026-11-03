@@ -1,4 +1,4 @@
-from PyQt5 import QtWidgets, QtCore
+from PySide6 import QtWidgets, QtCore
 import numpy as np
 import pandas as pd
 
@@ -26,16 +26,6 @@ class AbstractIonView(QtWidgets.QDialog):
         label.setText(translate(self.objectName(), message))
         self._verticalLayout.addWidget(label)
         self._verticalLayout.addSpacing(12)
-        """self.loading_lbl = QLabel(self)
-        #self.loading_lbl.setStyleSheet('border: 1px solid red')  # just for illustration
-        #self.loading_lbl.setAlignment(QtCore.Qt.AlignCenter)
-        #self..addWidget(self.loading_lbl)
-        loading_movie = QMovie("loading.gif")
-        self.loading_lbl.setMovie(loading_movie)
-        loading_movie.start()
-        self.show()"""
-        #widget = LoadingWidget()
-        #widget.exec_()
         yPos = 60
         yPos = self.makeTables(yPos)
         width = sum(self._widths)
@@ -59,9 +49,6 @@ class AbstractIonView(QtWidgets.QDialog):
     def makeTables(self, yPos):
         return yPos
 
-    '''def connectTable(self, table):
-        connectTable(table, self.showOptions)'''
-
     @staticmethod
     def hash(ion):
         return ion.getHash()
@@ -72,15 +59,13 @@ class AbstractIonView(QtWidgets.QDialog):
         self._scrollArea = QtWidgets.QScrollArea(self)
         self._contents = QtWidgets.QWidget()
         self._formlayout = QtWidgets.QFormLayout(self._contents)
-        self._formlayout.setFieldGrowthPolicy(QtWidgets.QFormLayout.ExpandingFieldsGrow)
-        #self._contents.setLayout(self._formlayout)
+        self._formlayout.setFieldGrowthPolicy(QtWidgets.QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow)
         self._scrollArea.setGeometry(QtCore.QRect(20, 60, 361, 161))
-        #self._scrollArea.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self._scrollArea.setWidgetResizable(True)
 
     def makeButtonBox(self, width, yPos):
         self._buttonBox = QtWidgets.QDialogButtonBox(self)
-        self._buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
+        self._buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.StandardButton.Cancel | QtWidgets.QDialogButtonBox.StandardButton.Ok)
         self._buttonBox.accepted.connect(self.accept)
         self._buttonBox.rejected.connect(self.reject)
         self._buttonBox.move(width - self._buttonBox.width() - 50, yPos)
@@ -92,8 +77,8 @@ class AbstractIonView(QtWidgets.QDialog):
 
     def reject(self):
         choice = QtWidgets.QMessageBox.question(self, 'Closing ',
-            "Unsaved Results!\nDo you really want to cancel?", QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-        if choice == QtWidgets.QMessageBox.Yes:
+            "Unsaved Results!\nDo you really want to cancel?", QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No)
+        if choice == QtWidgets.QMessageBox.StandardButton.Yes:
             self._canceled = True
             super(AbstractIonView, self).reject()
 
@@ -114,7 +99,7 @@ class AbstractIonView(QtWidgets.QDialog):
         peakAction = menu.addAction("Show Peaks")
         copyAllAction = menu.addAction("Copy Table")
         copyAction = menu.addAction("Copy Cell")
-        action = menu.exec_(table.viewport().mapToGlobal(pos))
+        action = menu.exec(table.viewport().mapToGlobal(pos))
         if action == showAction:
             ions = self.getIons(table)
             minLimit, maxLimit, YLimit = self.getLimits(ions)
@@ -185,12 +170,11 @@ class CheckOverlapsView(AbstractIonView):
             table = TickIonTableWidget(self._contents, pattern.values(), yPos) #self.createTableWidget(self, pattern, yPos)
             for i,width in enumerate(self._widths):
                 table.setColumnWidth(i,width)
-            #self.formLayout.setWidget(i+1, QtWidgets.QFormLayout.SpanningRole, table)  # ToDo
             connectTable(table, self.showOptions)
             self._tables.append(table)
             yPos += len(pattern.values())*20+50
             self._formlayout.addWidget(table)
-            spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+            spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Expanding)
             self._formlayout.addItem(spacerItem)
         return yPos
 
@@ -221,7 +205,7 @@ class CheckMonoisotopicOverlapView(AbstractIonView):
             self._tables.append(table)
             yPos += len(pattern.values())*20+50+50
             self._formlayout.addWidget(table)
-            spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+            spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Expanding)
             self._formlayout.addItem(spacerItem)
 
         return yPos

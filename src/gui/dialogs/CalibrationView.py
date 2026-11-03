@@ -1,9 +1,9 @@
-from PyQt5 import QtWidgets
-from PyQt5.QtCore import Qt
+from PySide6 import QtWidgets
+from PySide6.QtCore import Qt
 import pyqtgraph as pg
 import numpy as np
 
-from src.gui.GUI_functions import translate, showOptions, shoot
+from src.gui.GUI_functions import translate, shoot
 from src.gui.tableviews.TableModels import CalibrationInfoTable2, CalibrationInfoTable1
 from src.gui.tableviews.TableViews import TableView
 from src.gui.widgets.IonTableWidgets import CalibrationIonTableWidget
@@ -66,22 +66,15 @@ class CalibrationView(QtWidgets.QDialog):
             model = CalibrationInfoTable1(data, '{:1.2}')
         else:
             model = CalibrationInfoTable2(data, '{:2.6}')
-        '''table = QtWidgets.QTableView(parent)
-        table.setSortingEnabled(True)
-        table.setModel(model)
-        table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
-        table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)'''
         table = TableView(parent, model)
         table.resizeRowsToContents()
-        #connectTable(table, self.showOptions)
         table.setToolTip(toolTip)
-        table.sortByColumn(0, Qt.AscendingOrder)
+        table.sortByColumn(0, Qt.SortOrder.AscendingOrder)
         return table
 
 
     def plot(self):
         self._plot1 = pg.plot()
-        #self._plot1.addLegend(labelTextSize='14pt')
         self._plot1.setBackground('w')
         styles = {"black": "#f00", "font-size": "14px"}
         self._plot1.setLabel('bottom', 'm/z (observed)', **styles)
@@ -143,31 +136,3 @@ class CalibrationView(QtWidgets.QDialog):
 
     def canceled(self):
         return self._canceled
-
-    '''def showOptions(self, table, pos):
-        menu = QtWidgets.QMenu()
-        copyAllAction = menu.addAction("Copy Table")
-        copyAction = menu.addAction("Copy Cell")
-        action = menu.exec_(table.viewport().mapToGlobal(pos))
-        if table == self._table2:
-            df = pd.DataFrame(data = table.getData(), columns=table.getHeaders())
-        else:
-            df = pd.DataFrame(data=table.model().getData(), columns=table.model().getHeaders())
-        df.to_clipboard(index=False, header=True)
-        if action == copyAction:
-            it = table.indexAt(pos)
-            if it is None:
-                return
-            selectedRow = it.row()
-            selectedCol = it.column()
-            if table == self._table2:
-                df = pd.DataFrame(data = [table.getData()[selectedRow][selectedCol]])
-            else:
-                df = pd.DataFrame(data=[table.model().getData()[selectedRow][selectedCol]])
-            df.to_clipboard(index=False, header=True)
-        elif action == copyAllAction:
-            if table == self._table2:
-                df = pd.DataFrame(data = table.getData(), columns=table.getHeaders())
-            else:
-                df = pd.DataFrame(data=table.model().getData(), columns=table.model().getHeaders())
-            df.to_clipboard(index=False, header=True)'''

@@ -1,9 +1,8 @@
 import traceback
 import os
 
-from PyQt5 import QtWidgets
-from PyQt5.QtCore import QSize
-from PyQt5.QtWidgets import QMessageBox
+from PySide6 import QtWidgets
+from PySide6.QtCore import QSize
 
 from src.resources import base_path, processLongPaths
 from src.Exceptions import InvalidInputException
@@ -19,13 +18,10 @@ class AbstractDialog(QtWidgets.QDialog):
     '''
     def __init__(self, parent, title):
         super().__init__(parent)
-        #self.setObjectName(dialogName)
-        #self.lineSpacing = lineSpacing
         self._widgets = dict()
-        #self.sizePolicy = self.makeSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         self._translate = translate
         self.setWindowTitle(self._translate(self.objectName(), title))
-        self._widgetSizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        self._widgetSizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
         self._widgetSizePolicy.setHorizontalStretch(0)
         self._widgetSizePolicy.setVerticalStretch(0)
         self.makeButtonBox(self)
@@ -83,20 +79,19 @@ class AbstractDialog(QtWidgets.QDialog):
         if args and args[0]:
             label.setMinimumWidth(args[0][0])
             widget.setMaximumWidth(args[0][1])
-        formLayout.setWidget(yPos, QtWidgets.QFormLayout.LabelRole, label)
+        formLayout.setWidget(yPos, QtWidgets.QFormLayout.ItemRole.LabelRole, label)
         widget.setParent(parent)
-        #widget.setObjectName(widgetName)
         widget.setToolTip(self._translate(self.objectName(), widgetTuple[1]))
         self._widgetSizePolicy.setHeightForWidth(widget.sizePolicy().hasHeightForWidth())
         widget.setSizePolicy(self._widgetSizePolicy)
         self._widgets[widgetName] = widget
-        formLayout.setWidget(yPos, QtWidgets.QFormLayout.FieldRole, widget)
+        formLayout.setWidget(yPos, QtWidgets.QFormLayout.ItemRole.FieldRole, widget)
 
 
 
     def makeButtonBox(self, parent):
         self._buttonBox = QtWidgets.QDialogButtonBox(parent)
-        self._buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
+        self._buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.StandardButton.Cancel | QtWidgets.QDialogButtonBox.StandardButton.Ok)
         self._buttonBox.accepted.connect(self.accept)
         self._buttonBox.rejected.connect(self.reject)
         return self._buttonBox
@@ -188,19 +183,18 @@ class StartDialog(AbstractDialog):
 
     def setupUi(self, *args):
         widgets = self.getWidgets(args)
-        # (QtWidgets.QLineEdit(startDialog), "output",
         # "Name of the output Excel file\ndefault: name of spectral pattern file + _out.xlsx"))
         index = self.fill(self, self._formLayout, self.getLabels(), widgets)
         self._formLayout.addItem(QtWidgets.QSpacerItem(0, 1))
         self._defaultButton = self.makeDefaultButton(self)
-        self._formLayout.setWidget(index + 1, QtWidgets.QFormLayout.FieldRole, self._buttonBox)
-        self._formLayout.setWidget(index + 1, QtWidgets.QFormLayout.LabelRole, self._defaultButton)
+        self._formLayout.setWidget(index + 1, QtWidgets.QFormLayout.ItemRole.FieldRole, self._buttonBox)
+        self._formLayout.setWidget(index + 1, QtWidgets.QFormLayout.ItemRole.LabelRole, self._defaultButton)
         self.backToLast()
         #return index
 
     def makeDefaultButton(self, parent):
         self._defaultButton = QtWidgets.QPushButton(parent)
-        sizePolicy = self.makeSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy = self.makeSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
         sizePolicy.setHeightForWidth(self._defaultButton.sizePolicy().hasHeightForWidth())
         self._defaultButton.setSizePolicy(sizePolicy)
         self._defaultButton.setMinimumSize(QSize(113, 0))
@@ -217,7 +211,7 @@ class StartDialog(AbstractDialog):
             return newSettings
         except InvalidInputException as e:
             traceback.print_exc()
-            QMessageBox.warning(self, "Problem occured", e.__str__(), QMessageBox.Ok)
+            QtWidgets.QMessageBox.warning(self, "Problem occured", e.__str__(), QtWidgets.QMessageBox.StandardButton.Ok)
 
     def newSettings(self):
         return self._newSettings
@@ -248,10 +242,9 @@ class DialogWithTabs(AbstractDialog):
         super().__init__(parent, title)
         self._verticalLayout = QtWidgets.QVBoxLayout(self)
         self._verticalLayout.setContentsMargins(0, 12, 0, 12)
-        #self._verticalLayout.setObjectName("_verticalLayout")
         self._tabWidget = QtWidgets.QTabWidget(self)
         self._tabWidget.setEnabled(True)
-        tabSizePolicy = self.makeSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+        tabSizePolicy = self.makeSizePolicy(QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Minimum)
         tabSizePolicy.setHeightForWidth(self._tabWidget.sizePolicy().hasHeightForWidth())
         self._tabWidget.setSizePolicy(tabSizePolicy)
         self._verticalLayout.addWidget(self._tabWidget)

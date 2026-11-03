@@ -5,15 +5,14 @@ Created on 21 Jul 2020
 '''
 import os
 from abc import ABC
-
 import numpy as np
 import pandas as pd
-from PyQt5 import QtWidgets, QtGui, QtCore
+from PySide6 import QtWidgets, QtGui, QtCore
 
 from src.gui.GUI_functions import setWindowIcon, translate
 from src.gui.widgets.Widgets import ShowFormulaWidget
 from src.repositories.SpectralDataReader import SpectralDataReader
-from src.resources import base_path, DEVELOP, INTERN, processLongPaths
+from src.resources import base_path, DEVELOP, UNI, processLongPaths
 from src.gui.controller.IsotopePatternView import AddIonView
 from src.gui.dialogs.CalibrationView import CalibrationView
 from src.gui.tableviews.TableViews import TableView
@@ -44,7 +43,7 @@ class AbstractMainController(ABC):
 
     def calibrate(self):
         dlg = CalibrationView(self._calibrator)
-        dlg.exec_()
+        dlg.exec()
         if dlg and not dlg.canceled():
             reader = SpectralDataReader()
             self._calibrator.calibratePeaks(self._spectrumHandler.getSpectrum())
@@ -53,21 +52,6 @@ class AbstractMainController(ABC):
             self._spectrumHandler.setSpectrum(peaks)
             self.calibrateAndWrite(reader.openFile(self._settings['calIons'], self._snapDtype), self._settings['calIons'],
                                    reader)
-            """try:
-                peaks = self.calibrateAndWrite(reader.openFile(self._settings['spectralData'], peakDtype),
-                                               self._settings['spectralData'], reader)
-            except InvalidInputException:
-                alternativeDtype = np.dtype([('m/z', float), ('I', np.int64)])
-                peaks = self.calibrateAndWrite(reader.openFile(self._settings['spectralData'], alternativeDtype),
-                                               self._settings['spectralData'], reader)
-            self._spectrumHandler.setSpectrum(peaks)
-            try:
-                self.calibrateAndWrite(reader.openFile(self._settings['calIons'], snapDtype), self._settings['calIons'],
-                                       reader)
-            except InvalidInputException:
-                alternativeDtype = np.dtype([('m/z', float), ('z', np.uint8), ('I', np.int64)])
-                self.calibrateAndWrite(reader.openFile(self._settings['calIons'], alternativeDtype), self._settings['calIons'],
-                                       reader)"""
             if 'profile' in self._settings.keys() and self._settings['profile'] != "":
                 profile = self.calibrateAndWrite(self._spectrumHandler.getProfileSpectrum(), self._settings['profile'], reader)
                 self._spectrumHandler.setProfileSpectrum(profile)
@@ -76,21 +60,6 @@ class AbstractMainController(ABC):
             return True
         else:
             return False
-        """dlg = CalibrationView(self._calibrator)
-        dlg.exec_()
-        if dlg and not dlg.canceled():
-            print('calibrating')
-            peaks = self._calibrator.calibratePeaks(self._spectrumHandler.getSpectrum())
-            fileName = self._settings['spectralData']
-            if not self._configs['overwrite']:
-                fileName = fileName[:-4]+'_cal'+fileName[-4:]
-                self._settings['spectralData'] = fileName
-            self._calibrator.writePeaks(peaks, fileName)
-            vals = self._calibrator.getCalibrationValues()
-            self._info.calibrate(vals[0], vals[1], self._calibrator.getQuality(), self._calibrator.getUsedIons())
-            return True
-        else:
-            return False"""
 
     def calibrateAndWrite(self, data, fileName, reader):
         calibrated = self._calibrator.calibratePeaks(data)
@@ -216,8 +185,8 @@ class AbstractMainController(ABC):
         # _scrollArea.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         # _scrollArea.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         table = self.makeTable(scrollArea, data, fun)
-        table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
-        table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
+        table.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum)
         scrollArea.setWidget(table)
         return scrollArea, table
 
@@ -237,7 +206,7 @@ class AbstractMainController(ABC):
         #table.setSelectionBehavior(QAbstractItemView.SelectRows)
         table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)"""
-        sc = QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.Key_Delete), table)
+        sc = QtGui.QShortcut(QtGui.QKeySequence(QtCore.Qt.Key.Key_Delete), table)
         sc.activated.connect(self.delete_selected_rows)
         return table
 
@@ -258,7 +227,7 @@ class AbstractMainController(ABC):
             mode = 1
             #other = 0
         delAction = menu.addAction(actionStrings[mode])
-        action = menu.exec_(table.viewport().mapToGlobal(pos))
+        action = menu.exec(table.viewport().mapToGlobal(pos))
         it = table.indexAt(pos)
         if it is None:
             return
@@ -300,35 +269,13 @@ class AbstractMainController(ABC):
             df.to_clipboard(index=False,header=True)
         elif action == delAction:
             self.deleteRows(mode, [selectedIon], [selectedRow])
-            """choice = QtWidgets.QMessageBox.question(self._mainWindow, "",
-                                        actionStrings[mode] +' ' + selectedIon.getName() +"?",
-                                                    QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-            if choice == QtWidgets.QMessageBox.Yes:
-                if mode ==0:
-                    self._info.deleteIon(selectedIon)
-                else:
-                    self._info.restoreIon(selectedIon)
-                self._saved = False
-                ovHash = self._intensityModeller.switchIon(selectedIon)
-                table.model().removeByIndex(selectedRow)
-                self._tables[other].model().addData(selectedIon.getMoreValues())
-                if ovHash is not None:
-                    choice = QtWidgets.QMessageBox.question(self._mainWindow, "Attention",
-                                                            'Deleted Ion overlapped with '+ovHash[0]+', '+str(ovHash[1])+'\n'+
-                                                            'Should this ion be updated?',
-                                                            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-                    if choice == QtWidgets.QMessageBox.Yes:
-                        ion = self._intensityModeller.resetIon(ovHash)
-                        self._info.resetIon(ion)
-                        self._tables[mode].model().updateData(ion.getMoreValues())
-                self._infoView.update()"""
 
     def deleteRows(self, mode, selectedIons, selectedRows):
         actionStrings = ["Delete", "Restore"]
         text = ", ".join([selectedIon.getName() for selectedIon in selectedIons])
         choice = QtWidgets.QMessageBox.question(self._mainWindow, actionStrings[mode] + " Ions",
                                                 actionStrings[mode] + ' ' + text + "?",
-                                                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+                                                QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No)
         for selectedIon, selectedRow in zip(selectedIons, selectedRows):
             if mode == 0:
                 otherTable = self._tables[1]
@@ -348,8 +295,8 @@ class AbstractMainController(ABC):
                                                             'Deleted Ion overlapped with ' + ovHash[0] + ', ' + str(
                                                                 ovHash[1]) + '\n' +
                                                             'Should this ion be updated?',
-                                                            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-                    if choice2 == QtWidgets.QMessageBox.Yes:
+                                                            QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No)
+                    if choice2 == QtWidgets.QMessageBox.StandardButton.Yes:
                         ion = self._intensityModeller.resetIon(ovHash)
                         self._info.resetIon(ion)
                         self._tables[mode].model().updateData(ion.getMoreValues())
@@ -429,7 +376,7 @@ class AbstractMainController(ABC):
             maxI = np.max(selectedIon.getIsotopePattern()['I'])
             noise = self._spectrumHandler.getNoise((minMz_total, maxMz_total))
         profileSpec = None
-        if 'profile' in self._settings.keys() and self._settings['profile'] != "" and INTERN:
+        if 'profile' in self._settings.keys() and self._settings['profile'] != "" and UNI:
             profileSpec = self._spectrumHandler.getProfileSpectrum((minMz_total, maxMz_total))
         if view is None:
             specView = SpectrumView(parent, self.generateWindowTitle(), peaks, ajacentIons, minMz_focus, maxMz_focus, maxI, self._spectrumHandler.getSprayMode(),
@@ -451,14 +398,14 @@ class AbstractMainController(ABC):
             index = 1
         oldIon = ionDict[newIonHash]
         if newIon.getIntensity() == 0:
-            dlg = QtWidgets.QMessageBox(QtWidgets.QMessageBox.Information, 'Invalid Request',
-                                        'New intensity must not be 0', QtWidgets.QMessageBox.Ok, self._mainWindow)
+            dlg = QtWidgets.QMessageBox(QtWidgets.QMessageBox.Icon.Information, 'Invalid Request',
+                                        'New intensity must not be 0', QtWidgets.QMessageBox.StandardButton.Ok, self._mainWindow)
             dlg.show()
         elif oldIon.getIntensity() != newIon.getIntensity():
             choice = QtWidgets.QMessageBox.question(self._mainWindow, 'Saving Ion',
                                                     "Please confirm to change the values of ion: " + oldIon.getId(),
-                                                    QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
-            if choice == QtWidgets.QMessageBox.Ok:
+                                                    QtWidgets.QMessageBox.StandardButton.Ok | QtWidgets.QMessageBox.StandardButton.Cancel)
+            if choice == QtWidgets.QMessageBox.StandardButton.Ok:
                 self._info.changeIon(oldIon, newIon)
                 self._infoView.update()
                 self._saved = False
@@ -497,8 +444,9 @@ class AbstractMainController(ABC):
         if hash in list(self._intensityModeller.getObservedIons().keys()) + list(self._intensityModeller.getDeletedIons().keys()):
             warning = newIon.getName() + ', ' + str(newIon.getCharge()) + ' is already in the list. \n' \
                                                                           'Should the old ion be overwritten?'
-            choice = QtWidgets.QMessageBox.question(self._mainWindow, 'Warning',warning, QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-            if choice == QtWidgets.QMessageBox.No:
+            choice = QtWidgets.QMessageBox.question(self._mainWindow, 'Warning',warning,
+                                                    QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No)
+            if choice == QtWidgets.QMessageBox.StandardButton.No:
                 return
             if hash in self._intensityModeller.getObservedIons().keys():
                 oldIon = self._intensityModeller.getObservedIons()[hash]
@@ -528,7 +476,27 @@ class AbstractMainController(ABC):
         self._saved = False
         self._intensityModeller.setMonoisotopicList()
         self._intensityModeller.findIsomers()
-        self._intensityModeller.remodelOverlaps(True)
+        overlapPatterns, _ = self._intensityModeller.findOverlaps(100)
+        ignored = []
+        if self._spectrumHandler.getSprayMode() > 0:
+            sign = "+"
+        else:
+            sign = "-"
+        for pattern in overlapPatterns:
+            ions = [self._intensityModeller.getObservedIons()[ionHash] for ionHash in pattern]
+            for ion in ions:
+                if 'man.mod.' in ion.getComment():
+                    choice = QtWidgets.QMessageBox.question(self._mainWindow, 'Remodelling',
+                                                            "One or more of the following ions were already manually fitted: "
+                                                            + ", ".join([ion.getFullName(sign) for ion in ions])+
+                                                            "<br>Should they also be remodelled?",
+                                                            QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No)
+                    if choice == QtWidgets.QMessageBox.StandardButton.No:
+                        ignored.append(pattern)
+                    break
+        print(ignored)
+        self._intensityModeller.remodelIntensity([pattern for pattern in overlapPatterns if pattern not in ignored], [])
+        #self._intensityModeller.remodelOverlaps(True)
         self.verticalLayout.removeWidget(self._tabWidget)
         self._tabWidget.hide()
         del self._tabWidget
@@ -539,7 +507,7 @@ class AbstractMainController(ABC):
         print('not yet implemented')
         dlg = QtWidgets.QMessageBox(QtWidgets.QMessageBox.Information, 'Unvalid Request',
                     'Sorry, not implemented yet', QtWidgets.QMessageBox.Ok, self._mainWindow, )
-        if dlg.exec_() and dlg == QtWidgets.QMessageBox.Ok:
+        if dlg.exec() and dlg == QtWidgets.QMessageBox.Ok:
             return'''
 
     def close(self):
@@ -551,8 +519,8 @@ class AbstractMainController(ABC):
             message = 'Warning: Unsaved Results\n'
         choice = QtWidgets.QMessageBox.question(self._mainWindow, 'Close Search',
                                                 message + "Do you really want to close the analysis?",
-                                                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-        if choice == QtWidgets.QMessageBox.Yes:
+                                                QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No)
+        if choice == QtWidgets.QMessageBox.StandardButton.Yes:
             for w in self._openWindows:
                 #if w is not None:
                 try:
@@ -590,7 +558,7 @@ class AbstractMainController(ABC):
         formulaAction = menu.addAction("Get Formula")
         copyRowAction = menu.addAction("Copy Row")
         copyTableAction = menu.addAction("Copy Table")
-        action = menu.exec_(table.viewport().mapToGlobal(pos))
+        action = menu.exec(table.viewport().mapToGlobal(pos))
         it = table.indexAt(pos)
         if it is None:
             return
@@ -617,7 +585,7 @@ class AbstractMainController(ABC):
             # self.setWindowTitle(ion.getName())
             layout = QtWidgets.QVBoxLayout(dlg)
             label = QtWidgets.QLabel(selectedIon.getFormula().toString())
-            label.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
+            label.setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.TextSelectableByMouse)
             layout.addWidget(label)
             dlg.show()
         elif action == copyRowAction:

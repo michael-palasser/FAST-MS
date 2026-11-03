@@ -1,7 +1,7 @@
 from math import log10
 
-from PyQt5 import QtWidgets
-from PyQt5.QtCore import Qt
+from PySide6 import QtWidgets
+from PySide6.QtCore import Qt
 
 from src.Exceptions import InvalidInputException
 from src.gui.GUI_functions import connectTable, showOptions
@@ -19,88 +19,48 @@ class GeneralPeakWidget(QtWidgets.QTableWidget):
         self._peaks = peaks
         self.setWindowTitle('')
         self.setColumnCount(len(self._headers))
-        self.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
-        self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum)
         self.setRowCount(len(self._peaks))
         self.fill()
         self.setHorizontalHeaderLabels(self._headers)
         self.setSortingEnabled(True)
-        #connectTable(self, self.showOptions)
-
-        '''self.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.customContextMenuRequested['QPoint'].connect(partial(self.showOptions, self))'''
 
 
     def fill(self):
         '''
         Fills the table with the peak data
         '''
-        #print(self.getValue(ion))
         for row, peak in enumerate(self._peaks):
             for j, item in enumerate(peak):
                 newItem = QtWidgets.QTableWidgetItem()
-                newItem.setTextAlignment(Qt.AlignRight)
+                newItem.setTextAlignment(Qt.AlignmentFlag.AlignRight)
                 if j == 1 or j==2:
                     formatString = self._format[2]
                     item = int(round(item))
                     if item >= 10 ** 12:
                         lg10 = str(int(log10(item) + 1))
                         formatString = '{:' + lg10 + 'd}'
-                    newItem.setData(Qt.DisplayRole, formatString.format(item))
+                    newItem.setData(Qt.ItemDataRole.DisplayRole, formatString.format(item))
                     if j==2:
-                        newItem.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
+                        newItem.setFlags(Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEnabled)
                 elif j==len(peak)-1:
                     newItem = QtWidgets.QTableWidgetItem()
                     if item:
-                        newItem.setCheckState(Qt.Checked)
+                        newItem.setCheckState(Qt.CheckState.Checked)
                     else:
-                        newItem.setCheckState(Qt.Unchecked)
+                        newItem.setCheckState(Qt.CheckState.Unchecked)
                 else:
-                    newItem.setData(Qt.DisplayRole, self._format[j].format(item))
-                    newItem.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
+                    newItem.setData(Qt.ItemDataRole.DisplayRole, self._format[j].format(item))
+                    newItem.setFlags(Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEnabled)
                 self.setItem(row, j, newItem)
-        #self.resizeColumnsToContents()
         self.resizeRowsToContents()
         self.resizeColumnsToContents()
-
-
-
-    """def showOptions(self, table, pos):
-        '''
-        Right click options of the table
-        '''
-        menu = QtWidgets.QMenu()
-        copyAllAction = menu.addAction("Copy Table")
-        copyAction = menu.addAction("Copy Cell")
-        action = menu.exec_(table.viewport().mapToGlobal(pos))
-        if action == copyAllAction:
-            df = self.getDataframe()
-            df.to_clipboard(index=False,header=True)
-        if action == copyAction:
-            it = table.indexAt(pos)
-            if it is None:
-                return
-            selectedRow = it.row()
-            selectedCol = it.column()
-            df = pd.DataFrame([self._peaks[selectedRow][selectedCol]])
-            df.to_clipboard(index=False, header=False)
-
-    def getDataframe(self):
-        '''
-        Returns a dataframe with the peak data
-        '''
-        df = pd.DataFrame()#data=self._peaks), columns=self._headers)
-        df['m/z'] = self._peaks['m/z']
-        df['int. (spectrum)'] = self._peaks['I']
-        df['int. (calc.)'] = self._peaks['calcInt']
-        df['error /ppm'] = self._peaks['error']
-        df['used'] = self._peaks['used']
-        return df"""
 
     def readTable(self):
         itemList = []
         for row in range(self.rowCount()):
-            itemList.append((int(self.item(row, 1).text()), int(self.item(row, 4).checkState()/2)==1))
+            itemList.append((int(self.item(row, 1).text()), self.item(row, 4).checkState() == Qt.CheckState.Checked))
         return itemList
 
     def setPeaks(self, peaks):
@@ -132,7 +92,7 @@ class PeakWidget(GeneralPeakWidget):
                 if self.item(row, 1).text() != '':
                     intensity = int(self.item(row, 1).text())
                 data.append((self.item(row, 0).text(), intensity, self.item(row, 2).text(), self.item(row, 3).text(),
-                             int(self.item(row, 4).checkState()/2)==1))
+                             self.item(row, 4).checkState() == Qt.CheckState.Checked))
             except ValueError:
                 raise InvalidInputException('Intensities must be numeric', 'Incorrect entry: '+self.item(row, 1).text())
         return data
@@ -145,21 +105,6 @@ class IsoPatternPeakWidget(GeneralPeakWidget):
     def __init__(self, parent, peaks):
         super(IsoPatternPeakWidget, self).__init__(parent, ('m/z','int. (spectrum)','int. (calc.)', 'used'),
                                          ('{:10.5f}','{:11d}', '{:11d}', ''), peaks)
-        #connectTable(self, self.showOptions)
-
-
-    '''def readTable(self):
-        itemList = []
-        for row in range(self.rowCount()):
-            try:
-                intensity = 0
-                if self.item(row, 1).text() != '':
-                    intensity = int(self.item(row, 1).text())
-                itemList.append((intensity, int(self.item(row, 3).checkState()/2)==1, float(self.item(row, 0).text()),
-                                 ))
-            except ValueError:
-                raise InvalidInputException('Intensities must be numbers', 'Incorrect entry: '+self.item(row, 1).text())
-        return itemList'''
 
     def getData(self):
         data = []
@@ -169,25 +114,10 @@ class IsoPatternPeakWidget(GeneralPeakWidget):
                 if self.item(row, 1).text() != '':
                     intensity = int(self.item(row, 1).text())
                 data.append((self.item(row, 0).text(), intensity, self.item(row, 2).text(),
-                             int(self.item(row, 3).checkState()/2)==1))
+                             self.item(row, 3).checkState() == Qt.CheckState.Checked))
             except ValueError:
                 raise InvalidInputException('Intensities must be numeric', 'Incorrect entry: '+self.item(row, 1).text())
         return data
-
-    """def getDataframe(self):
-        '''
-        Returns a dataframe with the peak data
-        '''
-        '''df = pd.DataFrame(data=self._peaks, columns=self._headers)
-        df['int. (spectrum)'] = self._peaks['I']
-        df['int. (calc.)'] = self._peaks['calcInt']'''
-        df = pd.DataFrame()#data=self._peaks), columns=self._headers)
-        df['m/z'] = self._peaks['m/z']
-        df['int. (spectrum)'] = self._peaks['I']
-        df['int. (calc.)'] = self._peaks['calcInt']
-        df['used'] = self._peaks['used']
-        return df"""
-
 
     def updateTable(self, newPeaks):
         self._peaks = newPeaks
@@ -203,30 +133,3 @@ class IsoPatternPeakWidget(GeneralPeakWidget):
         for i, oldPeak in enumerate(self.getData()[:-1]):
             self._peaks[i][1] = oldPeak[1]
         self.updateTable(self._peaks[:-1])
-
-    """def showOptions(self, table, pos):
-        '''
-        Right click options of the table
-        '''
-        menu = QtWidgets.QMenu()
-        copyAllAction = menu.addAction("Copy Table")
-        copyAction = menu.addAction("Copy Cell")
-        deleteAction = menu.addAction("Delete Last Peak")
-        action = menu.exec_(table.viewport().mapToGlobal(pos))
-        if action == copyAllAction:
-            #df = self.getDataframe()
-            df = pd.DataFrame(self.getData(), columns=self._headers)
-            df.to_clipboard(index=False, header=True)
-        if action == copyAction:
-            it = table.indexAt(pos)
-            if it is None:
-                return
-            selectedRow = it.row()
-            selectedCol = it.column()
-            #df = pd.DataFrame([self._peaks[selectedRow][selectedCol]])
-            df = pd.DataFrame([self.getData()[selectedRow][selectedCol]])
-            df.to_clipboard(index=False, header=False)
-        if action == deleteAction:
-            for i,oldPeak in enumerate(self.getData()[:-1]):
-                self._peaks[i][1]=oldPeak[1]
-            self.updateTable(self._peaks[:-1])"""

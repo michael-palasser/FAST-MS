@@ -3,8 +3,8 @@ import os
 import sys
 from functools import partial
 import pandas as pd
-from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtGui import QIcon
+from PySide6 import QtWidgets, QtCore
+from PySide6.QtGui import QIcon
 
 import src.gui.icons.icons_rc #necessary
 from src.resources import base_path, DEVELOP
@@ -34,51 +34,39 @@ def createComboBox(parent, options, comboBox=None, tooltips=None):
         comboBox.addItem("")
         comboBox.setItemText(i, translate(parent.objectName(), option))
         if tooltips is not None:
-            comboBox.setItemData(i, tooltips[i], QtCore.Qt.ToolTipRole)
+            comboBox.setItemData(i, tooltips[i], QtCore.Qt.ItemDataRole.ToolTipRole)
     return comboBox
 
 def makeToolBox(parent, options):
     button = QtWidgets.QToolButton(parent)
     menu = QtWidgets.QMenu()
     for key, vals in options.items():
-        #sub_menu = menu.addMenu(key)
         sub_menu = QtWidgets.QMenu(key, menu)
         for i, option in enumerate(vals):
             print(option)
             action = sub_menu.addAction(option)
-            #action.triggered.connect(lambda: button.setText('{0}_{1}'.format(key, option)))
     button.setMenu(menu)
-    """button.setPopupMode(QtWidgets.QToolButton.InstantPopup)
-    button.setStyleSheet('QToolButton::menu-indicator { image: none; }')"""
     return button
 
 
 def makeFormLayout(parent):
     formLayout = QtWidgets.QFormLayout(parent)
     formLayout.setHorizontalSpacing(12)
-    formLayout.setFieldGrowthPolicy(QtWidgets.QFormLayout.ExpandingFieldsGrow)
-    formLayout.setLabelAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
-    formLayout.setFormAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignTop)
+    formLayout.setFieldGrowthPolicy(QtWidgets.QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow)
+    formLayout.setLabelAlignment(QtCore.Qt.AlignmentFlag.AlignLeading|QtCore.Qt.AlignmentFlag.AlignLeft|QtCore.Qt.AlignmentFlag.AlignVCenter)
+    formLayout.setFormAlignment(QtCore.Qt.AlignmentFlag.AlignLeading|QtCore.Qt.AlignmentFlag.AlignLeft|QtCore.Qt.AlignmentFlag.AlignTop)
     return formLayout
 
 
 def connectTable(table, fun):
-    table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+    table.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
     table.customContextMenuRequested['QPoint'].connect(partial(fun, table))
-
-'''def showOptions(table, pos):
-    menu = QtWidgets.QMenu()
-    copyAction = menu.addAction("Copy Table")
-    action = menu.exec_(table.viewport().mapToGlobal(pos))
-    if action == copyAction:
-        df=pd.DataFrame(data=table.model().getData(), columns=table.model().getHeaders())
-        df.to_clipboard(index=False,header=True)'''
 
 def showOptions(table, pos):
     menu = QtWidgets.QMenu()
     copyAllAction = menu.addAction("Copy Table")
     copyAction = menu.addAction("Copy Cell")
-    action = menu.exec_(table.viewport().mapToGlobal(pos))
+    action = menu.exec(table.viewport().mapToGlobal(pos))
     data, headers = getData(table)
     if action == copyAction:
         it = table.indexAt(pos)
@@ -86,7 +74,6 @@ def showOptions(table, pos):
             return
         selectedRow = it.row()
         selectedCol = it.column()
-        #df = pd.DataFrame(data=[table.model().getData()[selectedRow][selectedCol]])
         df = pd.DataFrame(data=[data[selectedRow][selectedCol]])
         df.to_clipboard(index=False, header=False)
     elif action == copyAllAction:
@@ -154,20 +141,19 @@ def makeLine(parent, formLayout, yPos, labelName, widgetTuple, *args):
     :param (tuple[QWidget, str]) widgetTuple: (widget, tooltip)
     :param (tuple(tuple[int,int])) args: tuple of minimum and maximum width
     '''
-    widgetSizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+    widgetSizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed)
     label = QtWidgets.QLabel(parent)
     label.setText(translate(label.objectName(), labelName))
     widget = widgetTuple[0]
     if args and args[0]:
         label.setMinimumWidth(args[0][0])
         widget.setMaximumWidth(args[0][1])
-    formLayout.setWidget(yPos, QtWidgets.QFormLayout.LabelRole, label)
+    formLayout.setWidget(yPos, QtWidgets.QFormLayout.ItemRole.LabelRole, label)
     widget.setParent(parent)
-    #widget.setObjectName(widgetName)
     widget.setToolTip(translate(widget.objectName(), widgetTuple[1]))
     widgetSizePolicy.setHeightForWidth(widget.sizePolicy().hasHeightForWidth())
     widget.setSizePolicy(widgetSizePolicy)
-    formLayout.setWidget(yPos, QtWidgets.QFormLayout.FieldRole, widget)
+    formLayout.setWidget(yPos, QtWidgets.QFormLayout.ItemRole.FieldRole, widget)
 
 
 def makeScrollArea(parent, table):
@@ -177,8 +163,8 @@ def makeScrollArea(parent, table):
     scrollArea = QtWidgets.QScrollArea(parent)
     scrollArea.setWidgetResizable(True)
     table.setParent(scrollArea)
-    table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
-    table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+    table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
+    table.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum)
     scrollArea.setWidget(table)
     return scrollArea
 

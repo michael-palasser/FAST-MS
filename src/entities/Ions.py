@@ -299,6 +299,19 @@ class FragmentIon(Fragment, Ion):
     def getTheoMz(self):
         return self._monoisotopicRaw
 
+    def getFullName(self, sign:str)->str:
+        if self._number == 0:
+            number=""
+        ionType = self._type
+        for char,esc in {"_": r"\_", "^": r"\^{}", "%": r"\%", "$": r"\$", "#": r"\#", "{": r"\{", "}": r"\}", "&": r"\&"}.items():
+            ionType = ionType.replace(char, esc)
+        if self._modification:
+            modification = self._modification.replace("H2O", "H<sub>2</sub>O").replace("NH3", "NH<sub>3</sub>")
+            ionString = f"[<b>{ionType}<sub>{self._number}</sub></b>{modification}]"
+        else:
+            ionString = f"<b>{ionType}<sub>{self._number}</sub></b>"
+        charge = "" if self._charge == 1 else str(self._charge)
+        return f"{ionString}<sup>{charge}{sign}</sup>"
 
 class FragmentIonRed(FragmentIon):
     def getSignalToNoise(self):

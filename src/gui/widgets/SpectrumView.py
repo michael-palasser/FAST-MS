@@ -1,7 +1,7 @@
 import pyqtgraph as pg
-from PyQt5 import QtWidgets
-from PyQt5.QtCore import QRect
-from PyQt5.QtGui import QFont
+from PySide6 import QtWidgets
+from PySide6.QtCore import QRect
+from PySide6.QtGui import QFont
 import numpy as np
 
 #Delete if not working
@@ -404,22 +404,16 @@ class TheoSpectrumView(AbstractSpectrumView):
         self._spinBox.setToolTip("Change Width of Peaks (in Da)")
         self._spinBox.valueChanged.connect(self.changeWidth)
         try:
-            self._spinBox.setStepType(QtWidgets.QAbstractSpinBox.AdaptiveDecimalStepType)
+            self._spinBox.setStepType(QtWidgets.QAbstractSpinBox.StepType.AdaptiveDecimalStepType)
         except AttributeError as e:
             print(e)
-        #self._cursorLabel = QtWidgets.QLabel(self)
-        #self._cursorLabel.setGeometry(QRect(70, 40, 200, 26))
-
 
     def changeWidth(self):
-        #self._graphWidget.removeItem(bars)
         self._width = self._spinBox.value()
         self.plot(self._width, False)
         for item in self._items:
             self._graphWidget.removeItem(item)
             self._graphWidget.addItem(item)
-        """if self._noise is not None:
-            self._graphWidget.plot(self._noise['m/z'], self._noise['I'], pen='r')"""
         self.show()
 
 

@@ -9,7 +9,7 @@ import traceback
 import os
 import numpy as np
 import time
-from PyQt5 import QtWidgets
+from PySide6 import QtWidgets
 
 from src.entities.InternalFragments import InternalFragmentIon
 from src.resources import base_path, autoStart, DEVELOP, getRelativePath
@@ -60,7 +60,7 @@ class TD_MainController(AbstractMainController):
         super(TD_MainController, self).__init__(window)
         if new:
             dialog = self.startDialog(parent)
-            dialog.exec_()
+            dialog.exec()
             if dialog.canceled():
                 return
             self._settings = dialog.newSettings()
@@ -78,19 +78,19 @@ class TD_MainController(AbstractMainController):
                     self.setUpUi()
             except InvalidInputException as e:
                 traceback.print_exc()
-                QtWidgets.QMessageBox.warning(None, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
+                QtWidgets.QMessageBox.warning(None, "Problem occured", e.__str__(), QtWidgets.QMessageBox.StandardButton.Ok)
         else:
             try:
                 self.loadSearch(parent,special)
             except IndexError as e:
                 traceback.print_exc()
                 logging.exception(e.__str__())
-                QtWidgets.QMessageBox.warning(None, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
+                QtWidgets.QMessageBox.warning(None, "Problem occured", e.__str__(), QtWidgets.QMessageBox.StandardButton.Ok)
 
             """searchService = SearchService()
             #self._search =
             dialog = SelectSearchDlg(parent, searchService.getAllSearchNames(),self.deleteSearch, searchService)
-            if dialog.exec_() and not dialog.canceled():
+            if dialog.exec() and not dialog.canceled():
                 self._configs = ConfigurationHandlerFactory.getConfigHandler().getAll()
                 start=time.time()
                 self._settings, noiseLevel, observedIons, delIons, remIons, searchedZStates, logFile = \
@@ -107,7 +107,7 @@ class TD_MainController(AbstractMainController):
                         QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
                     if choice == QtWidgets.QMessageBox.Yes:
                         dlg = OpenSpectralDataDlg(parent)
-                        if dlg.exec_() and not dlg.canceled():
+                        if dlg.exec() and not dlg.canceled():
                             self._settings['spectralData'] = dlg.getValue()
                     elif choice == QtWidgets.QMessageBox.No:
                         peaks = searchService.getAllAssignedPeaks(observedIons+delIons)
@@ -146,7 +146,7 @@ class TD_MainController(AbstractMainController):
                     for searchName in corrupt:
                         searchService.deleteSearch(searchName)"""
             dialog = SelectSearchDlgNew(parent)#, allNames,self.deleteSearch, searchService)
-            if dialog.exec_() and not dialog.canceled():
+            if dialog.exec() and not dialog.canceled():
                 self.load(dialog.getName(), searchService)
         else:
             self.load(special, searchService)
@@ -161,7 +161,7 @@ class TD_MainController(AbstractMainController):
             traceback.print_exc()
             logging.exception(analysisName+": " + e.__str__())
             QtWidgets.QMessageBox.warning(None, "Corrupted Data", e.__str__() + "<br>Loading is not possible.",
-                                          QtWidgets.QMessageBox.Ok)
+                                          QtWidgets.QMessageBox.StandardButton.Ok)
             return
         print('time:', time.time()-start)
         self._info = Info(logs)
@@ -190,12 +190,12 @@ class TD_MainController(AbstractMainController):
                         'File with spectral data (' +self._settings[key]+ ') could not be found.<br>'
                         'Do you want to manually select the file? Otherwise, the analysis will be loaded without the '
                         'spectral data.',
-                        QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-                    if choice == QtWidgets.QMessageBox.Yes:
+                        QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No)
+                    if choice == QtWidgets.QMessageBox.StandardButton.Yes:
                         dlg = OpenSpectralDataDlg(None)
-                        if dlg.exec_() and not dlg.canceled():
+                        if dlg.exec() and not dlg.canceled():
                             self._settings[key] = self.processLongPaths(dlg.getValue())
-                    elif choice == QtWidgets.QMessageBox.No:
+                    elif choice == QtWidgets.QMessageBox.StandardButton.No:
                         peaks = searchService.getAllAssignedPeaks(observedIons+delIons)
         try:
             self._propStorage = SearchSettings(self._settings['sequName'], self._settings['fragmentation'],
@@ -225,7 +225,7 @@ class TD_MainController(AbstractMainController):
         for ion in self._intensityModeller.getObservedIons().values():
             if (ion.getType() not in types) and not isinstance(ion, InternalFragmentIon):
                 QtWidgets.QMessageBox.warning(None, "Fragment type not found", '"'+ ion.getType() + '" was not found in fragmentation template list. Add the template to "'
-                                              + self._propStorage.getFragmentation().getName() + '" to ensure correct behaviour', QtWidgets.QMessageBox.Ok)
+                                              + self._propStorage.getFragmentation().getName() + '" to ensure correct behaviour', QtWidgets.QMessageBox.StandardButton.Ok)
         self._analyser = Analyser(None, self._propStorage.getSequenceList(), self._settings['charge'],
                                     self._propStorage.getModificationName(), self._configs['useAb'])
         self._saved = True
@@ -237,8 +237,8 @@ class TD_MainController(AbstractMainController):
         if os.path.isfile(getRelativePath("search.db")):
             choice = QtWidgets.QMessageBox.question(None, "Convert Database","A database containing stored analyses in a deprecated format was found.<br>"
                                                     +"Should the data be converted? Depending on the number of stored analyses, this step can take some time.",
-                                                    QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-            if choice == QtWidgets.QMessageBox.Yes:
+                                                    QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No)
+            if choice == QtWidgets.QMessageBox.StandardButton.Yes:
                 DataBaseConverter()
 
     def constructLibraryBuilder(self):
@@ -279,8 +279,8 @@ class TD_MainController(AbstractMainController):
                 choice = QtWidgets.QMessageBox.question(None, "Problem with importing list of isotope patterns",
                         "Imported Fragment Library from " + patternReader.getFile() + " incomplete<br>"
                         "Should a new library be created?<br>The search will be stopped otherwise",
-                                                        QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-                if choice != QtWidgets.QMessageBox.Yes:
+                                                        QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No)
+                if choice != QtWidgets.QMessageBox.StandardButton.Yes:
                     return 1
                     #sys.exit()
         if libraryImported == False:
@@ -310,16 +310,6 @@ class TD_MainController(AbstractMainController):
             allSettings.update(self._configs)
             self._calibrator = Calibrator(self._libraryBuilder.getFragmentLibrary(),allSettings,
                                           self._spectrumHandler.getChargeRange)
-            '''allSettings = dict(self._settings)
-            allSettings.update(self._configs)
-            self._calibrator = Calibrator(self._libraryBuilder.getFragmentLibrary(),allSettings,
-                                          self._spectrumHandler.getChargeRange)
-            dlg = CalibrationView(self._mainWindow, self._calibrator)
-            dlg.exec_()
-            if dlg and not dlg.canceled():
-                self._calibrator.calibratePeaks(self._spectrumHandler.getSpectrum())
-                vals = self._calibrator.getCalibrationValues()
-                self._info.calibrate(vals[0], vals[1], self._calibrator.getQuality(), self._calibrator.getUsedIons())'''
             if not self.calibrate():
                 return 1
         #except KeyError:
@@ -345,7 +335,7 @@ class TD_MainController(AbstractMainController):
         if len(sameMonoisotopics) > 0:
             view = CheckMonoisotopicOverlapView(sameMonoisotopics, self._spectrumHandler)
             print("User Input requested")
-            view.exec_()
+            view.exec()
             if view and not view.canceled():
                 dumpList = view.getDumplist()
                 [self._info.deleteMonoisotopic(ion) for ion in dumpList]
@@ -360,7 +350,7 @@ class TD_MainController(AbstractMainController):
         if len(complexPatterns) > 0:
             view = CheckOverlapsView(complexPatterns, self._spectrumHandler)
             print("User Input requested")
-            view.exec_()
+            view.exec()
             if view and not view.canceled():
                 dumpList = view.getDumplist()
                 [self._info.deleteIon(ion) for ion in dumpList]
@@ -425,7 +415,7 @@ class TD_MainController(AbstractMainController):
         else:
             options = ('charge states (int.)','charge states (int./z)')
         dlg = ExportDialog(self._mainWindow, options, lastOptions) #'sequence coverage'), lastOptions)
-        dlg.exec_()
+        dlg.exec()
         if dlg and not dlg.canceled():
             newOptions = dlg.getOptions()
             exportConfigHandler.write(newOptions)
@@ -442,8 +432,8 @@ class TD_MainController(AbstractMainController):
             if os.path.isfile(output):
                 choice = QtWidgets.QMessageBox.question(self._mainWindow, "Warning",
                                                         "There is already an file with the name: " + filename + "<br>Do you want to overwrite it?",
-                                                        QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-                if choice == QtWidgets.QMessageBox.No:
+                                                        QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No)
+                if choice == QtWidgets.QMessageBox.StandardButton.No:
                     return
             self._configs['interestingIons'] = self.getInterestingIons()
             excelWriter = ExcelWriter(output, self._configs, newOptions)
@@ -463,17 +453,17 @@ class TD_MainController(AbstractMainController):
             except KeyError as e:
                 traceback.print_exc()
                 print(e.__str__(), 'not found')
-                dlg = QtWidgets.QMessageBox(QtWidgets.QMessageBox.Information, 'Inaccurate Fragment List',
+                dlg = QtWidgets.QMessageBox(QtWidgets.QMessageBox.Icon.Information, 'Inaccurate Fragment List',
                                             e.__str__() + ' not found\n' +
                                         'The fragmentation pattern or the modification pattern was altered. '
                                         'Please change the corresponding values to the original ones (see protocol) and '
-                                        'reload the analysis.', QtWidgets.QMessageBox.Ok, self._mainWindow, )
-                if dlg.exec_() and dlg == QtWidgets.QMessageBox.Ok:
+                                        'reload the analysis.', QtWidgets.QMessageBox.StandardButton.Ok, self._mainWindow, )
+                if dlg.exec() and dlg == QtWidgets.QMessageBox.StandardButton.Ok:
                     return
             except Exception as e:
                 if "Permission" in e.__str__():
                     QtWidgets.QMessageBox.warning(None, "File not closed", 'You have to close the file "'+
-                                                  filename+'" to overwrite it', QtWidgets.QMessageBox.Ok)
+                                                  filename+'" to overwrite it', QtWidgets.QMessageBox.StandardButton.Ok)
                 else:
                     raise e
 
@@ -496,10 +486,8 @@ class TD_MainController(AbstractMainController):
             for key in fragPerSite.keys():
                 if (key not in forwardKeys) and (key not in backwardKeys):
                     QtWidgets.QMessageBox.warning(None, "Fragment type not found", '"'+ key + '" was not found in fragmentation template list. Add the template "'+
-                                                key+'" to "' + self._propStorage.getFragmentation().getName() + '" and try again', QtWidgets.QMessageBox.Ok)
+                                                key+'" to "' + self._propStorage.getFragmentation().getName() + '" and try again', QtWidgets.QMessageBox.StandardButton.Ok)
                     return
-                    """raise InvalidInputException("Fragment type not found", key + " was not found in fragmentation template list. Add the template "+
-                                                key+" to " + self._propStorage.getFragmentation().getName() + " and try again")"""
         table = self._analyser.toTable(forwardVals.values(), backwardVals.values())
         headers= list(fragPerSite.keys())
         title = self.generateWindowTitle('Fragmentation Efficiencies')
@@ -634,17 +622,15 @@ class TD_MainController(AbstractMainController):
         Saves the results to the "search" - database
         '''
         searchService = StoredAnalysesService()
-        #names = searchService.getAllSearchNames()[0]
         while True:
             dlg = SaveSearchDialog(self._savedPath)
-            #name, ok = QtWidgets.QInputDialog.getText(self._mainWindow, 'Save Analysis', 'Enter the name: ')
-            if dlg.exec_() and dlg.ok:
+            if dlg.exec() and dlg.ok:
                 self._savedPath = dlg.getFilename()
                 if os.path.isdir(self._savedPath):
                     choice = QtWidgets.QMessageBox.question(self._mainWindow, "Overwriting",
                                 "There is already a saved analysis with the name: " + os.path.basename(self._savedPath) + " in " + os.path.dirname(self._savedPath) + "<br>Do you want to overwrite it?",
-                                                            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-                    if choice == QtWidgets.QMessageBox.Yes:
+                                                            QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No)
+                    if choice == QtWidgets.QMessageBox.StandardButton.Yes:
                         break
                 else:
                     break
@@ -667,6 +653,6 @@ class TD_MainController(AbstractMainController):
             QtWidgets.QMessageBox.warning(None, "Saving Unsuccesful",
                                           'Due to unknown reasons, the analysis could not be saved. Please, try again '
                                           'or report the problem to michael.palasser@tutamail.com. Traceback:<br>'+e.__str__(),
-                                          QtWidgets.QMessageBox.Ok)
+                                          QtWidgets.QMessageBox.StandardButton.Ok)
             return ""
         return self._savedPath

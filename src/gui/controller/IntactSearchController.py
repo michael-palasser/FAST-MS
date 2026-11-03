@@ -6,9 +6,8 @@ Created on 21 Jul 2020
 import traceback
 import os
 from datetime import datetime
-
 import time
-from PyQt5 import QtWidgets
+from PySide6 import QtWidgets
 
 from src.resources import base_path, autoStart
 from src.Exceptions import InvalidInputException
@@ -27,8 +26,6 @@ from src.gui.dialogs.CheckIonView import CheckMonoisotopicOverlapView
 from src.gui.dialogs.SaveDialogs import ExportDialog
 from src.gui.dialogs.StartDialogs import IntactStartDialogFull
 
-
-
 class IntactMainController(AbstractMainController):
     '''
     Controller class for starting, saving, exporting and loading a top-down search/analysis
@@ -43,7 +40,7 @@ class IntactMainController(AbstractMainController):
         #self._mainWindow= window
         #if new:
         dialog = IntactStartDialogFull(parent)
-        dialog.exec_()
+        dialog.exec()
         if dialog.canceled():
             return
         self._settings = dialog.newSettings()
@@ -62,7 +59,7 @@ class IntactMainController(AbstractMainController):
                 self.setUpUi()
         except InvalidInputException as e:
             traceback.print_exc()
-            QtWidgets.QMessageBox.warning(None, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
+            QtWidgets.QMessageBox.warning(None, "Problem occured", e.__str__(), QtWidgets.QMessageBox.StandardButton.Ok)
 
     def getEditOptions(self):
         return {'Repeat Ovl. Modelling':
@@ -114,7 +111,7 @@ class IntactMainController(AbstractMainController):
         if len(sameMonoisotopics) > 0:
             view = CheckMonoisotopicOverlapView(sameMonoisotopics, self._spectrumHandler)
             print("User Input requested")
-            view.exec_()
+            view.exec()
             if view and not view.canceled():
                 dumpList = view.getDumplist()
                 [self._info.deleteMonoisotopic(ion) for ion in dumpList]
@@ -154,7 +151,7 @@ class IntactMainController(AbstractMainController):
         lastOptions['dir'] = os.path.dirname(self._settings['spectralData'])
         lastOptions['file'] = os.path.basename(self._settings['spectralData'])
         dlg = ExportDialog(self._mainWindow, (), lastOptions, "intact")
-        dlg.exec_()
+        dlg.exec()
         if dlg and not dlg.canceled():
             newOptions = dlg.getOptions()
             exportConfigHandler.write(newOptions)
@@ -171,8 +168,8 @@ class IntactMainController(AbstractMainController):
             if os.path.isfile(output):
                 choice = QtWidgets.QMessageBox.question(self._mainWindow, "Overwriting",
                                                         "There is already an file with the name: " + filename + "\nDo you want to overwrite it?",
-                                                        QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-                if choice == QtWidgets.QMessageBox.No:
+                                                        QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No)
+                if choice == QtWidgets.QMessageBox.StandardButton.No:
                     return
             parameters = {'data:': outputPath, 'date:': datetime.now().strftime("%d/%m/%Y %H:%M")}
             parameters.update(self._settings)

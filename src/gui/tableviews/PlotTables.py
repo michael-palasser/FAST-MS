@@ -1,7 +1,7 @@
 from math import isnan
 
-from PyQt5 import QtWidgets
-from PyQt5.QtCore import Qt
+from PySide6 import QtWidgets
+from PySide6.QtCore import Qt
 
 from src.gui.GUI_functions import setWindowIcon, translate
 from src.gui.tableviews.TableModels import AbstractTableModel
@@ -25,7 +25,7 @@ class PlotTableModel(AbstractTableModel):
         Overwrites the data method of AbstractTableModel to correctly format each value
         '''
         if index.isValid():
-            if role == Qt.DisplayRole:
+            if role == Qt.ItemDataRole.DisplayRole:
                 col = index.column()
                 item = self._data[index.row()][col]
                 if col == 0 or col == len(self._data[0])-1:
@@ -34,8 +34,8 @@ class PlotTableModel(AbstractTableModel):
                 elif isnan(item):
                     return ''
                 return self._format[col].format(item)
-        if role == Qt.TextAlignmentRole:
-            return Qt.AlignRight
+        if role == Qt.ItemDataRole.TextAlignmentRole:
+            return Qt.AlignmentFlag.AlignRight
 
 
 class PlotTableView(QtWidgets.QWidget):
@@ -51,47 +51,23 @@ class PlotTableView(QtWidgets.QWidget):
             formLayout = QtWidgets.QFormLayout(horizontalWidget)
             label = QtWidgets.QLabel(horizontalWidget)
             label.setText(self._translate(self.objectName(), '% modified precursor ions:'))
-            formLayout.setWidget(0, QtWidgets.QFormLayout.LabelRole, label)
+            formLayout.setWidget(0, QtWidgets.QFormLayout.ItemRole.LabelRole, label)
             valLabel = QtWidgets.QLabel(horizontalWidget)
             valLabel.setText(self._translate(self.objectName(), str(round(firstLine*100,1))+' %'))
-            valLabel.setTextInteractionFlags(Qt.TextSelectableByMouse | Qt.TextSelectableByKeyboard)
-            formLayout.setWidget(0, QtWidgets.QFormLayout.FieldRole, valLabel)
+            valLabel.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse | Qt.TextInteractionFlag.TextSelectableByKeyboard)
+            formLayout.setWidget(0, QtWidgets.QFormLayout.ItemRole.FieldRole, valLabel)
             verticalLayout.addWidget(horizontalWidget)
         scrollArea = QtWidgets.QScrollArea(self)
-        #_scrollArea.setGeometry(QtCore.QRect(10, 10, len(data[0])*50+200, len(data)*22+25))
         scrollArea.setWidgetResizable(True)
-        # _scrollArea.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
-        # _scrollArea.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self._table = TableView(self, PlotTableModel(data, keys,precision))
-        """model = PlotTableModel(data, keys,precision)
-        self._table = QtWidgets.QTableView(self)
-        self._table.setSortingEnabled(True)
-        self._table.setModel(model)
-        self._table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
-        self._table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        #self._table.setSelectionBehavior(QAbstractItemView.SelectRows)
-        connectTable(self._table,showOptions)"""
-        '''self._table.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self._table.customContextMenuRequested['QPoint'].connect(partial(self.showOptions, self._table))'''
         scrollArea.setWidget(self._table)
-        #self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        #self._table.move(0,0)
         self.setObjectName(title)
         self.setWindowTitle(self._translate(self.objectName(), self.objectName()))
         self._table.resizeColumnsToContents()
         self._table.resizeRowsToContents()
         verticalLayout.addWidget(scrollArea)
-        #self.resize(len(data[0])*50+200, len(data)*22+25)
         setWindowIcon(self)
         self.show()
 
     def sortBy(self, columnIndex):
-        self._table.sortByColumn(columnIndex, Qt.AscendingOrder)
-
-    '''def showOptions(self, table, pos):
-        menu = QtWidgets.QMenu()
-        copyAction = menu.addAction("Copy Table")
-        action = menu.exec_(table.viewport().mapToGlobal(pos))
-        if action == copyAction:
-            df=pd.DataFrame(data=self._table.model().getData(), columns=self._table.model().getHeaders())
-            df.to_clipboard(index=False,header=True)'''
+        self._table.sortByColumn(columnIndex, Qt.SortOrder.AscendingOrder)

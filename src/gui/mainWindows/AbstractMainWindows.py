@@ -1,5 +1,5 @@
 import os
-from PyQt5 import QtWidgets, QtCore
+from PySide6 import QtWidgets, QtCore, QtGui
 
 from src.gui.GUI_functions import translate, setWindowIcon
 from src.resources import autoStart, base_path
@@ -59,7 +59,7 @@ class SimpleMainWindow(QtWidgets.QMainWindow):
             function, tooltip, shortcut = vals
             if separatorPosition != None and pos == separatorPosition:
                 menu.addSeparator()
-            action = QtWidgets.QAction(self)
+            action = QtGui.QAction(self)
             action.setText(self._translate(self.objectName(),option))
             if tooltip is not None:
                 action.setToolTip(tooltip)
@@ -89,7 +89,7 @@ class SimpleMainWindow(QtWidgets.QMainWindow):
                "DOI: 10.1021/jasms.4c00236"
         label = QtWidgets.QLabel(refWidget)
         label.setText(text)
-        label.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
+        label.setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.TextSelectableByMouse)
         layout.addWidget(label)
         refWidget.setWindowTitle("Citing FAST MS")
         refWidget.show()

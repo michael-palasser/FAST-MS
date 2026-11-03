@@ -4,7 +4,7 @@ Created on 21 Jul 2020
 @author: michael
 '''
 import os
-from PyQt5 import QtWidgets
+from PySide6 import QtWidgets
 
 from src.gui.GUI_functions import translate
 from src.gui.mainWindows.AbstractMainWindows import SimpleMainWindow
@@ -77,8 +77,8 @@ class ResultWindow(SimpleMainWindow):
         scrollArea = QtWidgets.QScrollArea(parent)
         scrollArea.setWidgetResizable(True)
         table = self.makeTable(scrollArea, data, fun)
-        table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
-        table.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        table.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
+        table.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum)
         scrollArea.setWidget(table)
         return scrollArea, table
 

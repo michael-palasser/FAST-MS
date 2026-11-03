@@ -158,7 +158,7 @@ class AbstractServiceForPatterns(AbstractService, ABC):
         pattern.setItems(items)
         return pattern
 
-    def checkName(self, name):
+    def checkName(self, name, forbidden=("+","-")):
         '''
         Checks the format of a name.
         The name must start with an uppercase letter and must not contain any additional uppercase letters.
@@ -168,14 +168,8 @@ class AbstractServiceForPatterns(AbstractService, ABC):
         if (name == '') or (name[0].islower()) or (len(name) > 1 and any(x.isupper() for x in name[1:])):
             raise InvalidInputException(name, "First Letter must be uppercase, all other letters must be lowercase!")
         for char in name:
-            if char in ("+","-"):
-                raise InvalidInputException(name, "Character(s): " + ', '.join(("+","-")) + ' are not allowed')
-        #if any(char.isdigit() for char in name):
-        #    raise InvalidInputException(name, 'Numbers are not are not allowed')
-        #specialChars = #[char for char in re.findall('[@_!#$%^&*()<>?/|}{~:]', name) if char!='']
-        #if len(specialChars) >0 :
-        #    raise InvalidInputException(name, "Character(s): " + ', '.join(specialChars) + ' are not allowed')
-
+            if char in forbidden:
+                raise InvalidInputException(name, "Character(s): " + ', '.join(forbidden) + ' are not allowed')
 
     def restart(self):
         '''
@@ -316,20 +310,13 @@ class MoleculeService(AbstractServiceForPatterns):
         for key in pattern.getFormula().keys():
             if key not in elements:
                 raise InvalidInputException(pattern.getName(), "Element: " + key + " unknown")
-        [self.checkName(bb[0]) for bb in pattern.getItems()]
+        [self.checkName(bb[0], ("+", "-", ",","!")) for bb in pattern.getItems()]
         self.checkFormatOfItems(pattern.getItems(), elements, self._repository.getIntegers())
         if len(pattern.getItems()[0])!=5:
             pattern.setItems([bb+[1,1] for bb in pattern.getItems()])
         pattern = super(MoleculeService, self).save(pattern)
         elementRep.close()
         return pattern
-
-    '''def checkName(self, name):
-        super(MoleculeService, self).checkName(name)
-        if any(char.isdigit() for char in name):
-            raise InvalidInputException(name, "Building block name must not contain numbers!")'''
-    '''if (name[0].islower() or (len(name) > 1 and any(x.isupper() for x in name[1:]))):
-            raise InvalidInputException(name, "First Letter must be uppercase, all other letters must be lowercase!")'''
 
     def getPatternWithObjects(self, name, *args):
         '''

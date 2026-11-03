@@ -1,6 +1,5 @@
 import traceback
-
-from PyQt5 import QtWidgets
+from PySide6 import QtWidgets
 
 from src.Exceptions import InvalidInputException
 from src.entities.GeneralEntities import Element, Macromolecule
@@ -24,7 +23,7 @@ class ElementEditorController(AbstractEditorController):
         self._widgets['name'].setToolTip('First Letter must be uppercase, all other letters must be lowercase')
         self._table = self.createTableWidget(self._centralwidget, self._pattern.getItems(),
                                             self._service.getHeaders(), self._service.getBoolVals())
-        self._formLayout.setWidget(1, QtWidgets.QFormLayout.SpanningRole, self._table)   #ToDo
+        self._formLayout.setWidget(1, QtWidgets.QFormLayout.ItemRole.SpanningRole, self._table)   #ToDo
         self._mainWindow.show()
 
     def save(self, *args):
@@ -51,7 +50,7 @@ class MoleculeEditorController(AbstractEditorController):
                                         "of the corresponding building blocks")
         self._table = self.createTableWidget(self._centralwidget, self._pattern.getItems(),
                                              self._service.getHeaders(), self._service.getBoolVals())
-        self._formLayout.setWidget(3, QtWidgets.QFormLayout.SpanningRole, self._table)   #ToDo
+        self._formLayout.setWidget(3, QtWidgets.QFormLayout.ItemRole.SpanningRole, self._table)   #ToDo
         #QtWidgets.QTableWidget().horizontalHeader().setMaximumSectionSize(20)
         self._mainWindow.show()
 
@@ -130,7 +129,7 @@ class SequenceEditorController(AbstractSimpleEditorController):
             super(SequenceEditorController, self).save(sequences)
         except InvalidInputException as e:
             traceback.print_exc()
-            QtWidgets.QMessageBox.warning(self._mainWindow, "Problem occured", e.__str__(), QtWidgets.QMessageBox.Ok)
+            QtWidgets.QMessageBox.warning(self._mainWindow, "Problem occured", e.__str__(), QtWidgets.QMessageBox.StandardButton.Ok)
 
     def formatTableWidget(self, headers, tableWidget, data, boolVals):
         '''
@@ -154,7 +153,7 @@ class SequenceEditorController(AbstractSimpleEditorController):
                                               'The molecule type "'+molecule+'" of sequence "'+ row[0] +
                                               '" is unknown. Change the molecule to an existing type or add '
                                               'the corresponding molecule type.',
-                                              QtWidgets.QMessageBox.Ok)
+                                              QtWidgets.QMessageBox.StandardButton.Ok)
             tableWidget.setCellWidget(i, lastCol, comboBox)
         tableWidget.horizontalHeader().setMaximumSectionSize(1500)
         return tableWidget
@@ -255,7 +254,7 @@ class ModificationEditorController(AbstractEditorControllerWithTabs):
         '''
         openDialog = OpenDialog(title, self._service.getAllPatternNames()[1:] + ['--New--'])
         openDialog.show()
-        if openDialog.exec_() and openDialog.accepted:
+        if openDialog.exec() and openDialog.accepted:
             name = openDialog.getName()
             if name != "--New--":
                 return self._service.get(name)
@@ -276,20 +275,20 @@ class ModificationEditorController(AbstractEditorControllerWithTabs):
         '''
         openDialog = OpenDialog("Delete", self._service.getAllPatternNames())
         # openDialog.show()
-        if openDialog.exec_() and openDialog.accepted:
+        if openDialog.exec() and openDialog.accepted:
             text = openDialog.getName()
             if text != "--New--" and text != '-':
                 choice = QtWidgets.QMessageBox.question(self._mainWindow, 'Deleting ',
                                                         "Warning: Deleting " + text +
                                                         " cannot be undone!\n\nResume?",
-                                                        QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-                if choice == QtWidgets.QMessageBox.Yes:
+                                                        QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No)
+                if choice == QtWidgets.QMessageBox.StandardButton.Yes:
                     print("deleting", text)
                     self._pattern = self._service.delete(text)
             else:
                 #raise InvalidInputException('Deleting', 'Deleting "'+text+ '" not possible')
                 QtWidgets.QMessageBox.warning(self._mainWindow, "Problem occured", 'Deleting "'+text+ '" not possible',
-                                              QtWidgets.QMessageBox.Ok)
+                                              QtWidgets.QMessageBox.StandardButton.Ok)
 
 
     def insertRow(self, table, bools):
@@ -310,7 +309,7 @@ class IntactIonEditorController(AbstractEditorController):
                                   {"name": QtWidgets.QLineEdit(self._centralwidget)}, [self._pattern.getName()])
         self._table = self.createTableWidget(self._centralwidget, self._pattern.getItems(), self._service.getHeaders(),
                                              self._service.getBoolVals())
-        self._formLayout.setWidget(1, QtWidgets.QFormLayout.SpanningRole, self._table)
+        self._formLayout.setWidget(1, QtWidgets.QFormLayout.ItemRole.SpanningRole, self._table)
         self._mainWindow.resize(500, 300)
         self._mainWindow.show()
 

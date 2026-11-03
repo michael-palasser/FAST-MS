@@ -9,7 +9,7 @@ from src.repositories.sql.AnalysisRepository import AnalysisRepository
 from src.repositories.sql.TD_Repositories import *
 from src.repositories.sql.MoleculeRepository import MoleculeRepository
 from src.repositories.sql.SequenceRepository import SequenceRepository
-from src.resources import base_path, DEVELOP, INTERN
+from src.resources import base_path, DEVELOP, UNI
 from src.MolecularFormula import MolecularFormula
 from src.services.FormulaFunctions import stringToFormula2
 from src.services.IntensityModeller import calcScore
@@ -86,7 +86,7 @@ class StoredAnalysesService(object):
         ions = [self.ionFromDB(ion, noiseLevel) for ion in ions]
         deletedIons = [self.ionFromDB(ion, noiseLevel) for ion in delIons]
         searchedZStates = {frag: zsString.split(',') for frag, zsString in searchedZStates.items()}
-        if INTERN:
+        if UNI:
             for key in ('spectralData', 'snapData', 'profile'):
                 if key in settings.keys():
                     settings[key] = settings[key].replace("I:/", r"//bagfa001/groupdata$/")

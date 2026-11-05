@@ -1,9 +1,8 @@
 import os
 import sys
 
-from PySide6 import QtWidgets, QtCore
+from PySide6 import QtWidgets, QtCore, QtGui
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QFileDialog, QApplication
 
 from src.gui.GUI_functions import createComboBox, setIcon
 
@@ -17,7 +16,7 @@ class OpenFileWidget(QtWidgets.QWidget):
         super(OpenFileWidget, self).__init__(parent)
         self._horizontalLayout = QtWidgets.QHBoxLayout(self)
         self._horizontalLayout.setContentsMargins(0, 0, 0, 0)
-        self._lineEdit = QtWidgets.QLineEdit(self)
+        self._lineEdit = DropTextEdit(self, mode)
         self._horizontalLayout.addWidget(self._lineEdit)
         self._pushButton = QtWidgets.QPushButton(self)
         setIcon(self._pushButton, 'open.png')
@@ -35,13 +34,13 @@ class OpenFileWidget(QtWidgets.QWidget):
         if not os.path.isdir(startPath):
             startPath = self.__startPath
         if mode == 2:
-            files, _ = QFileDialog.getOpenFileNames(self, self.__title, startPath, self.__formats)#, options=options)
+            files, _ = QtWidgets.QFileDialog.getOpenFileNames(self, self.__title, startPath, self.__formats)#, options=options)
             self._lineEdit.setText(',  '.join(files))
         elif mode == 1:
-            file, _ = QFileDialog.getOpenFileName(self, self.__title, startPath, self.__formats)#, options=options)
+            file, _ = QtWidgets.QFileDialog.getOpenFileName(self, self.__title, startPath, self.__formats)#, options=options)
             self._lineEdit.setText(file)
         else:
-            dir = QFileDialog.getExistingDirectory(self, self.__title, startPath)
+            dir = QtWidgets.QFileDialog.getExistingDirectory(self, self.__title, startPath)
             if dir:
                 dir = QtCore.QDir.toNativeSeparators(dir)
             self._lineEdit.setText(dir)
@@ -63,6 +62,28 @@ class OpenFileWidget(QtWidgets.QWidget):
 
     def accepted(self):
         return self._accepted
+
+class DropTextEdit(QtWidgets.QLineEdit):
+    def __init__(self, parent=None, mode=1):
+        super().__init__(parent)
+        self.setAcceptDrops(True)
+        self._mode = mode
+
+    def dragEnterEvent(self, event: QtGui.QDragEnterEvent):
+        event.acceptProposedAction() if event.mimeData().hasUrls() else super().dragEnterEvent(event)
+
+    def dropEvent(self, event: QtGui.QDropEvent):
+        paths = [u.toLocalFile() for u in event.mimeData().urls() if u.isLocalFile()]
+        if not paths:
+            return super().dropEvent(event)
+        #current = self.toPlainText().strip()
+        #self.setPlainText((current + "\n" if current else "") + "\n".join(paths))
+        current = self.text().strip()
+        if self._mode==2:
+            self.setText((current + ",  " if current else "") + ",  ".join(paths))
+        else:
+            self.setText(paths[0])
+        event.acceptProposedAction()
 
 class LoadingWidget(QtWidgets.QWidget):
     '''
@@ -163,6 +184,6 @@ class ShowFormulaWidget(QtWidgets.QWidget):
 
 
 if __name__ == '__main__':
-    app = QApplication(sys.argv)
+    app = QtWidgets.QApplication(sys.argv)
     gui =LoadingWidget(100, True)
     sys.exit(app.exec())

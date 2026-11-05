@@ -13,6 +13,7 @@ from PySide6.QtCore import QSize
 from src.Exceptions import CanceledException, InvalidInputException
 from src.gui.GUI_functions import setIcon
 from src.gui.mainWindows.AbstractMainWindows import SimpleMainWindow
+from src.resources import UNI
 from src.top_down.SpectrumComparator import run as spectrumComparator
 
 
@@ -92,7 +93,13 @@ class Window(SimpleMainWindow):
         return btnWidget1, btnLayout1, btnWidget2, btnLayout2
 
     def startTopDown(self, new):
-        from src.gui.controller.TD_searchController import TD_MainController
+        if UNI:
+            try:
+                from src.BACHEM_extension.gui.MainController_extension import BACHEM_MainController as TD_MainController
+            except:
+                from src.gui.controller.TD_searchController import TD_MainController
+        else:
+            from src.gui.controller.TD_searchController import TD_MainController
         self._lastSearch = SimpleMainWindow(None, '')
         self.startApp(TD_MainController, self, new, self._lastSearch)
         """try:

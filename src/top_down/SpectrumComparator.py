@@ -5,13 +5,11 @@ Created on 15 Oct 2020
 '''
 import os
 import sys
-
 import numpy as np
 import xlsxwriter
 from datetime import datetime
 
-from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QInputDialog
+from PySide6 import QtWidgets
 
 from src.resources import base_path, autoStart
 from src.Exceptions import InvalidInputException
@@ -81,7 +79,7 @@ def run(mainWindow):
             spectra.append(np.array(spectrum,
                                     dtype=[('m/z', float), ('z', np.uint8), ('intensity', float), ('name', 'U32')]))
         outputName = None
-        text, ok = QInputDialog.getText(mainWindow, "Results", "Name of the output file:")
+        text, ok = QtWidgets.QInputDialog.getText(mainWindow, "Results", "Name of the output file:")
         if ok:
             outputName = text
         if outputName == None:
@@ -128,10 +126,8 @@ def run(mainWindow):
 
 
 
-
-
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
     run(None)
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
 

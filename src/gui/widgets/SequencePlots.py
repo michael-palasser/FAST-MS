@@ -16,23 +16,13 @@ class PlotFactory(object):
     '''
     def __init__(self, parent):
         self._parent = parent
-        self._colours = ['r', 'm', 'y', 'c', 'g', 'b']
-        """if parent is not None:
-            self._baseName = parent.windowTitle().replace('Results:  ', ": ")"""
-        """if INTERN:
-            self._colours = list({'tab:red':'#d62728', 'tab:orange':'#ff7f0e',
-                             'tab:purple':'#9467bd', 'tab:brown':'#8c564b',
-                             'gold':'#dbb40c', 'm':'m', 'darkred':'#840000',
-                             'limegreen':'#aaff32','tab:gray':'#7f7f7f',
-                             'tab:olive':'#bcbd22', 'tab:cyan':'#17becf',
-                             'tab:green':'#2ca02c', 'royalblue':'#0504aa'}.values())"""
         self._colours = list({'tab:red': '#d62728', 'royalblue': '#4169e1',
                               'tab:green': '#2ca02c', 'tab:orange': '#ff7f0e',
                               'tab:purple': '#9467bd', 'tab:cyan': '#17becf',
                               'tab:brown': '#8c564b', 'tab:olive': '#bcbd22',
                               'tab:gray': '#7f7f7f', 'm': 'm', 'gold': '#dbb40c',
                               'darkred': '#840000', 'limegreen': '#aaff32'}.values())
-
+        pg.setConfigOptions(antialias=True)
         if DEVELOP:
             self._fontsize = 10
         else:
